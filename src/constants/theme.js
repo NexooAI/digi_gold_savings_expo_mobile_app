@@ -20,7 +20,7 @@ const theme = {
     lightGrey: "#f0f0f0",
     darkGrey: "#808080",
     lightBlack: "#000000",
-    support_container: ["#FFD700", "#c42101", "#FFD700"],
+    support_container: ["#1a4a6d", "#2a5a8d", "#3a6aad"],
   },
   image: {
     splashScreen: require("../../assets/images/splashscreen_logo.png"),
@@ -50,7 +50,8 @@ const theme = {
   constants: {
     customerName: "Akila Jewells",
   },
-  baseUrl: "https://jwlgold.api.ramcarmotor.com",
+  // baseUrl: "https://jwlgold.api.ramcarmotor.com",
+  baseUrl: "https://api.dcjewellers.org",
   youtubeUrl: "",
 };
 
