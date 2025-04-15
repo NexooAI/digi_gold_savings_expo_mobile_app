@@ -2,7 +2,7 @@
 
 const theme = {
   colors: {
-    primary: process.env.APP_COLOR || "#850111", //850111
+    primary: process.env.APP_COLOR || "#1a2a39", //850111
     secondary: "#ffc90c", //
     background: "#ffffff",
     textPrimary: "#ffffff",
@@ -48,10 +48,10 @@ const theme = {
     translate: require("../../assets/images/translate.png"),
   },
   constants: {
-    customerName: "DC Jewellers",
+    customerName: "Akila Jewells",
   },
   baseUrl: "https://jwlgold.api.ramcarmotor.com",
-  youtubeUrl: "https://youtu.be/8RAhdn5b9Bw",
+  youtubeUrl: "",
 };
 
 module.exports = { theme };
