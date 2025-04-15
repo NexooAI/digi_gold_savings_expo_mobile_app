@@ -2,7 +2,7 @@
 
 const theme = {
   colors: {
-    primary: process.env.APP_COLOR || "#850111", //850111
+    primary: process.env.APP_COLOR || "#e00e05",
     secondary: "#ffc90c", //
     background: "#ffffff",
     textPrimary: "#ffffff",
@@ -48,10 +48,10 @@ const theme = {
     translate: require("../../assets/images/translate.png"),
   },
   constants: {
-    customerName: "DC Jewellers",
+    customerName: "Sri Murugan Thangamaligai",
   },
   baseUrl: "https://jwlgold.api.ramcarmotor.com",
-  youtubeUrl: "https://youtu.be/8RAhdn5b9Bw",
+  youtubeUrl: "",
 };
 
 module.exports = { theme };
