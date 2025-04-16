@@ -165,7 +165,6 @@ export default function MpinVerify() {
               //   await AsyncStorage.removeItem("userToken");
               await SecureStore.deleteItemAsync("authToken");
               await SecureStore.deleteItemAsync("user_mpin");
-              console.log("------------------2 logout");
               logout();
               setMpinPins(["", "", "", ""]);
               router.replace("/login");

@@ -49,7 +49,6 @@ export default function ProfileScreen() {
   }
 
   const handleLogout = () => {
-    console.log("--------------------profile Logout");
     Alert.alert(
       "Confirm Logout",
       "Are you sure you want to logout?",
@@ -62,7 +61,6 @@ export default function ProfileScreen() {
             try {
               // await AsyncStorage.multiRemove(["userMpin"]);
               // useGlobalStore.getState().logout();
-              console.log("------------------1 logout");
               logout();
               router.replace("/(auth)/login");
             } catch (error) {
@@ -84,7 +82,7 @@ export default function ProfileScreen() {
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
+      allowsEditing: false,
       aspect: [1, 1],
       quality: 1,
     });
@@ -158,9 +156,9 @@ export default function ProfileScreen() {
             <View className="bg-white rounded-2xl p-6 mb-6 shadow-lg">
               <View className="flex-row justify-between items-center mb-4">
                 <Text className="text-lg font-bold">{t("personal_info")}</Text>
-                <TouchableOpacity>
+                {/* <TouchableOpacity>
                   <Icon name="edit" size={24} color="#3b82f6" />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
               <InfoRow label={t("user_id")} value={user?.idProof || "N/A"} />
               <View className="border-b border-gray-200 my-3" />
@@ -192,12 +190,12 @@ export default function ProfileScreen() {
                 ) : (
                   <View className="flex-row items-center flex-2">
                     <Text className="text-gray-800">{user?.mobile}</Text>
-                    <TouchableOpacity
+                    {/* <TouchableOpacity
                       className="ml-2"
                       onPress={() => setEditingMobile(true)}
                     >
                       <Icon name="edit" size={20} color="#3b82f6" />
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
                   </View>
                 )}
               </View>
@@ -217,7 +215,7 @@ export default function ProfileScreen() {
                   <Text className="text-primary font-bold mr-2">
                     {user?.referralCode}
                   </Text>
-                  <Icon name="content-copy" size={18} color="#3b82f6" />
+                  {/* <Icon name="content-copy" size={18} color="#3b82f6" /> */}
                 </TouchableOpacity>
               </View>
               <View className="flex-row justify-between items-center">

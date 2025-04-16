@@ -43,7 +43,6 @@ export default function TermsAndConditions() {
         api
           .get("/policies/type/terms_and_conditions")
           .then((response) => {
-            console.log(response.data.data);
             setPolicy(response.data.data);
           })
           .catch((err) => {

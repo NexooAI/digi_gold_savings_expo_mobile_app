@@ -50,9 +50,7 @@ const PaymentProcessScreen = () => {
     const socketInstance = io(theme.baseUrl); // Replace with your server URL
     setSocket(socketInstance);
 
-    socketInstance.on("connect", () => {
-      console.log("Connected to socket server");
-    });
+    socketInstance.on("connect", () => {});
 
     return () => {
       socketInstance.disconnect();
@@ -69,7 +67,6 @@ const PaymentProcessScreen = () => {
   const testPayment = () => {
     // alert("Payment initiated waiting for payment gateway ");
     if (!isNavigationReady) {
-      console.log("Navigation not ready yet");
       return;
     }
     setIsLoading(true);
@@ -82,7 +79,6 @@ const PaymentProcessScreen = () => {
         timestamp: new Date().toISOString(),
       });
     }
-    console.log("Parsed User Details:", parsedUserDetails);
     const payload = {
       userId: parsedUserDetails.data?.data?.userId || parsedUserDetails.userId,
       amount: amount,
@@ -105,7 +101,6 @@ const PaymentProcessScreen = () => {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
       })
       .then((response) => {
-        console.log("Initiate response:", response);
         const paymentUrl = response.data.session.payment_links.web;
         router.push({
           pathname: "/(tabs)/home/PaymentWebView",
@@ -136,7 +131,6 @@ const PaymentProcessScreen = () => {
       if (processedPaymentRef.current) return;
       processedPaymentRef.current = true;
 
-      console.log("Received payment status update:", data);
       const paymentSuccess = data.status === "success";
       let paymentStsId = null;
       try {
@@ -157,7 +151,6 @@ const PaymentProcessScreen = () => {
             orderId: data?.orderId,
           };
           const paymentResult = await postPayment(paymentPayload);
-          console.log("Payment API result:", paymentResult);
           paymentStsId = paymentResult?.data?.paymentId || null;
           // Investment API call
           const investmentPayload = {
@@ -181,7 +174,6 @@ const PaymentProcessScreen = () => {
             parsedUserDetails.data?.data?.id || parsedUserDetails.investmentId,
             investmentPayload
           );
-          console.log("Investment API result:", investmentResult);
 
           router.push({
             pathname: "/(tabs)/home/PaymentSuccess",
@@ -236,7 +228,6 @@ const PaymentProcessScreen = () => {
         };
 
         const transactionResult = await postTransaction(transactionPayload);
-        console.log("Transaction API result:", transactionResult);
       } catch (error) {
         console.error("Error processing payment status update:", error);
         Alert.alert(
@@ -256,7 +247,6 @@ const PaymentProcessScreen = () => {
   const postTransaction = async (payload) => {
     try {
       const response = await apiService.post("/transactions", payload);
-      console.log("Transaction posted successfully:", response.data);
       return response.data;
     } catch (error) {
       console.error("Error posting transaction:", error);
@@ -267,7 +257,6 @@ const PaymentProcessScreen = () => {
   const postPayment = async (payload) => {
     try {
       const response = await apiService.post("/payment", payload);
-      console.log("Payment posted successfully:", response.data);
       return response.data;
     } catch (error) {
       console.error("Error posting payment:", error);
@@ -278,7 +267,6 @@ const PaymentProcessScreen = () => {
   const updateInversment = async (id, payload) => {
     try {
       const response = await apiService.put(`/investments/${id}`, payload);
-      console.log("Investment updated successfully:", response.data);
       return response.data;
     } catch (error) {
       console.error("Error updating investment:", error);

@@ -6,19 +6,8 @@ import { AppLocale } from "@/i18n";
 import { theme } from "@/constants/theme";
 const LanguageSwitcher = () => {
   const { setLanguage, language } = useGlobalStore();
-
   const { locale, setLocale } = useLanguage();
-
-  // function LanguageSelector() {
-  //   console.log("locale Language ", locale);
-  //   console.log("Existing Language ", language);
-  //   const newLang = language === "en" ? "ta" : "en";
-  //   console.log("New Language ", language);
-  //   setLocale(newLang);
-  //   setLanguage(newLang);
-  // }
   const handleLanguageChange = async (newLocale: AppLocale) => {
-    console.log(newLocale);
     await setLanguage(newLocale);
     await setLocale(newLocale);
   };

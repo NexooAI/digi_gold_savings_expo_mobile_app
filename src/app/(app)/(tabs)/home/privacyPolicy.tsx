@@ -38,11 +38,6 @@ export default function PrivacyPolicy() {
     const fetchPolicy = async () => {
       try {
         api.get("/policies/type/privacy_policy").then((response) => {
-          console.log(
-            "==============>",
-            response.data.data,
-            "<=================="
-          );
           setPolicy(response.data.data);
         });
       } catch (err) {

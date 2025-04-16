@@ -20,7 +20,7 @@ const theme = {
     lightGrey: "#f0f0f0",
     darkGrey: "#808080",
     lightBlack: "#000000",
-    support_container: ["#FFD700", "#c42101", "#FFD700"],
+    support_container: ["#721c0b", "#c42101", "#fc320a"],
   },
   image: {
     splashScreen: require("../../assets/images/splashscreen_logo.png"),
@@ -49,6 +49,11 @@ const theme = {
   },
   constants: {
     customerName: "DC Jewellers",
+    address:
+      "Road Fathima Nagar, Mission Quarters, Anchery, Thrissur, Kerala 680005",
+    mobile: "+91 9061803999",
+    email: "dcjewellerstcr@gmail.com",
+    website: "https://www.dcjewellers.org",
   },
   baseUrl: "https://jwlgold.api.ramcarmotor.com",
   youtubeUrl: "https://youtu.be/8RAhdn5b9Bw",

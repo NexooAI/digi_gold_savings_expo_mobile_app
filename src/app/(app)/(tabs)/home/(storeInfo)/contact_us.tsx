@@ -9,6 +9,8 @@ import {
   Animated,
   useWindowDimensions,
   StyleSheet,
+  Linking,
+  Alert,
 } from "react-native";
 import { moderateScale } from "react-native-size-matters";
 
@@ -32,7 +34,21 @@ export default function ContactUs() {
     outputRange: [1, 0],
     extrapolate: "clamp",
   });
+  const openGoogleMaps = async () => {
+    const url =
+      "https://www.google.com/maps/place/DC+Jewellers,+Gold+and+Diamonds/data=!4m2!3m1!1s0x0:0x7ee60c0c1146bf78?sa=X&ved=1t:2428&ictx=111";
 
+    const supported = await Linking.canOpenURL(url);
+
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      Alert.alert("Can't open the map link");
+    }
+  };
+  const handleCall = () => {
+    Linking.openURL(`tel:${theme.constants.mobile}`);
+  };
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -132,7 +148,7 @@ export default function ContactUs() {
                 </Text>
               </View>
               <Text style={{ fontSize: 16, color: "#555", marginBottom: 16 }}>
-                dcjewellerstcr@gmail.com
+                {theme.constants.email}
               </Text>
               {/* <View
                 style={{
@@ -175,9 +191,18 @@ export default function ContactUs() {
                   Mobile
                 </Text>
               </View>
-              <Text style={{ fontSize: 16, color: "#555", marginBottom: 16 }}>
-                +91 9061803999
-              </Text>
+              <TouchableOpacity onPress={handleCall}>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    color: "#555",
+                    marginBottom: 16,
+                    textDecorationLine: "underline",
+                  }}
+                >
+                  {theme.constants.mobile}
+                </Text>
+              </TouchableOpacity>
               <View
                 style={{
                   flexDirection: "row",
@@ -202,8 +227,14 @@ export default function ContactUs() {
                 </Text>
               </View>
               <Text style={{ fontSize: 16, color: "#555" }}>
-                205/64A, Main Bazar, Udangudi, Thoothukudi(D), Tamil Nadu -
-                628203
+                {theme.constants.address}
+                <TouchableOpacity onPress={openGoogleMaps}>
+                  <Text
+                    style={{ color: "blue", textDecorationLine: "underline" }}
+                  >
+                    Open in Google Maps
+                  </Text>
+                </TouchableOpacity>
               </Text>
             </View>
           </View>

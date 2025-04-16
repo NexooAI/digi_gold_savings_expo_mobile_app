@@ -33,7 +33,7 @@ export default function ReferCodeScreen() {
     try {
       const result = await Share.share({
         title: "Refer & Earn",
-        message: `Use my referral code ${code} to sign up and earn rewards! Download the app here: https://example.com`,
+        message: `Use my referral code ${code} to sign up and earn rewards! Download the app here: https://play.google.com/store/search?q=dcjewellers&c=apps`,
       });
       if (result.action === Share.sharedAction) {
         console.log("Shared successfully");

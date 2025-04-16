@@ -56,7 +56,6 @@ apiClient.interceptors.response.use(
 export const getInvestmentsByUser = async (userId: number | string): Promise<any> => {
   try {
     const response: AxiosResponse = await apiClient.get(`/investments/?userId=${userId}`);
-    console.log('---********** ---', response);
     return response.data;
   } catch (error) {
     throw error;
@@ -67,7 +66,6 @@ export const getInvestmentsByUser = async (userId: number | string): Promise<any
 export const processPayment = async (amount: number | string): Promise<any> => {
   try {
     const response: AxiosResponse = await apiClient.post(`/initiate`);
-    console.log('---********** ---payment process-------------', response);
     return response;
   } catch (error) {
     throw error;

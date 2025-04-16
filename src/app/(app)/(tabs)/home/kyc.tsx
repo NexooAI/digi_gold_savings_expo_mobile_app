@@ -317,8 +317,6 @@ export default function KycForm() {
       try {
         // Send API request
         let response = await api.post("/kyc", requestBody);
-        console.log("Response:", response.data);
-
         // Check API response for success
         if (response.data?.data?.affectedRows > 0) {
           Alert.alert(
@@ -469,7 +467,7 @@ export default function KycForm() {
                 </Picker> */}
                 <RNPickerSelect
                   onValueChange={(value) => handleChange("state", value)}
-                  onDonePress={() => console.log("Picker dismissed")}
+                  onDonePress={() => {}}
                   placeholder={{ label: "Select your state", value: "" }}
                   value={formData.state}
                   items={indianStates.map((state) => ({
@@ -534,7 +532,7 @@ export default function KycForm() {
                   onValueChange={(value) =>
                     handleChange("addressprooftype", value)
                   }
-                  onDonePress={() => console.log("Picker dismissed")}
+                  onDonePress={() => {}}
                   placeholder={{ label: "Select your ID proof", value: "" }}
                   value={formData.addressprooftype} // Corrected: use addressprooftype here
                   items={idTypes.map((id) => ({
@@ -617,7 +615,7 @@ export default function KycForm() {
                   onValueChange={(value) =>
                     handleChange("nominee_relationship", value)
                   }
-                  onDonePress={() => console.log("Picker dismissed")}
+                  onDonePress={() => {}}
                   placeholder={{ label: "Select Nominee Type", value: "" }}
                   value={formData.nominee_relationship} // Corrected: use addressprooftype here
                   items={nomineeRelationship.map((id) => ({

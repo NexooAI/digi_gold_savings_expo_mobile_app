@@ -31,8 +31,6 @@ const hashMPIN = async (mpin) => {
       Crypto.CryptoDigestAlgorithm.SHA256,
       salt + mpin
     );
-    console.log("------------------------->> Hashed MPIN:", hashedMPIN);
-
     // Store hashedMPIN securely
     await SecureStore.setItemAsync("user_mpin", hashedMPIN);
     // You can also store the salt alongside the hashed MPIN if you need to verify later.

@@ -46,8 +46,6 @@ export default function JoinSavings() {
     }
     return null;
   }, [schemeData, schemeId]);
-
-  console.log("parsedSchemeData----------------->> : ", parsedData);
   let i = 0;
   useEffect(() => {
     const fetchBranche = async () => {
@@ -78,8 +76,6 @@ export default function JoinSavings() {
           const response = await api.get(`/kyc/status/${user?.id}`);
 
           if (response.data) {
-            console.log("KYC data:", response.data);
-
             // Set KYC status
             setKycStatus(response.data.kyc_status || "Not Completed");
 
@@ -605,22 +601,9 @@ export default function JoinSavings() {
         associated_branch: formData.associated_branch,
       };
 
-      console.log(
-        "Creating savings scheme with payload:--------------->> ** ",
-        payload
-      );
-
       api
         .post("/investments", payload)
         .then((data: any) => {
-          console.log(
-            "Savings scheme created:",
-            data,
-            "users==========",
-            user,
-            formData
-          );
-
           // Alert.alert(translations.successTitle, translations.successMessage);
           router.push({
             pathname: "/(tabs)/home/payment",

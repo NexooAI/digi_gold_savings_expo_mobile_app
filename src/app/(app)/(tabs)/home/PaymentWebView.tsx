@@ -20,9 +20,6 @@ const PaymentWebView = () => {
         timestamp: new Date().toISOString(),
         status: "webview_closed",
       });
-      console.log(
-        "Payment flow exited webview close +++++++++++++++++++++++++++++++++++++"
-      );
     }
   };
 
@@ -42,9 +39,6 @@ const PaymentWebView = () => {
             timestamp: new Date().toISOString(),
             status: "user_cancelled",
           });
-          console.log(
-            "Payment flow exited webview user cancel----------------------------------"
-          );
         }
         return false; // Allow default back behavior
       }
@@ -53,13 +47,10 @@ const PaymentWebView = () => {
   }, [socket]);
 
   const handleNavigationStateChange = (navState: any) => {
-    console.log("Navigation State:", navState);
     const currentUrl = navState.url.toLowerCase();
     // api.get()
     // Check for success keyword anywhere in the URL
     if (currentUrl.includes("success")) {
-      console.log("currentUrl: " + currentUrl);
-      debugger;
       let paymentId = "";
       let amount = "";
       let transaction_no = "";

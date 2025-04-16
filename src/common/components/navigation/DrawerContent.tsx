@@ -74,7 +74,6 @@ export function CustomDrawerContent(props) {
             setIsNavigating(true);
             try {
               await AsyncStorage.multiRemove(["userMpin"]);
-              console.log("------------------3 logout");
               logout();
               router.replace("/(auth)/login");
             } catch (error) {

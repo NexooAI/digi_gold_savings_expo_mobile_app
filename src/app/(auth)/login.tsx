@@ -162,7 +162,6 @@ export default function Login() {
         }
       })
       .catch((error) => {
-        console.log("Error verifying OTP:", error);
         Alert.alert("Error", error.response?.data?.error || "Invalid OTP");
       })
       .finally(() => setLoading(false));

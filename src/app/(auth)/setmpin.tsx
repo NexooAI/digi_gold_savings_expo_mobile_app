@@ -139,7 +139,6 @@ export default function MpinLogin() {
   };
 
   const handleLogin = async () => {
-    console.log("Login Details----------->> ", mobile, mpin);
     router.replace("/(tabs)/home");
   };
   const [pins, setPins] = useState(["", "", "", ""]);

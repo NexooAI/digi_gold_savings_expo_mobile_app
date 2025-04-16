@@ -86,10 +86,7 @@ export default function SavingsScreen() {
     setError(null);
     try {
       const response = await api.get(`user_investments/${user.id}`);
-      console.log("Response: << User Savings >>", response.data);
-
       const investments = response.data.investments || [];
-
       // Transform each investment into your Scheme structure
       const transformedSavings: Scheme[] = investments.map((item: any) => {
         const schemeObj = item.scheme || {};
@@ -138,11 +135,6 @@ export default function SavingsScreen() {
           transactions: [],
         };
       });
-      console.log(
-        "|----data of transaction",
-        transformedSavings,
-        "transactions----|"
-      );
       setSavings(transformedSavings);
     } catch (err: any) {
       console.error("Error fetching data:", err.message);
@@ -178,7 +170,6 @@ export default function SavingsScreen() {
 
   // Enhanced Scheme Card Component
   const EnhancedSchemeCard = ({ item }: { item: Scheme }) => {
-    console.log(item, "------------");
     // Use metalType from scheme to determine background
     const bgColor = ["#5e4c14 ", "#863339"]; // Default black gradient
     const bgColors =
@@ -186,9 +177,7 @@ export default function SavingsScreen() {
         ? ["#e1c875", "#d6b240"]
         : ["#f0ebeb", "#cccccc"]; // silver gradient if not gold
     const handleNavigation = (item) => {
-      console.log(item, "item in card");
       if (!item) return;
-
       router.push({
         pathname: "/savings/SavingsDetail",
         params: {

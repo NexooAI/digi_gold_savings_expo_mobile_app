@@ -56,7 +56,6 @@ export default function KnowProduct() {
     api
       .get(`/schemesknowmore/scheme/${schemeId}`)
       .then((response) => {
-        console.log("Fetched scheme data:", response.data);
         if (
           response.data &&
           response.data.data &&

@@ -1,17 +1,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import i18n, { AppLocale,  } from '@/i18n'; // Add i18n import
+import i18n, { AppLocale, } from '@/i18n'; // Add i18n import
 import * as SecureStore from 'expo-secure-store';
 
 interface GlobalStore {
   isLoggedIn: boolean;
   token: string | null;
-  user: { id?: string; name?: string; email?: string; mobile?: number, profileImage:string,
-    idProof:string,
-    referralCode:string,
-    rewards:number
-   } | null;
+  user: {
+    id?: string; name?: string; email?: string; mobile?: number, profileImage: string,
+    idProof: string,
+    referralCode: string,
+    rewards: number
+  } | null;
   language: AppLocale; // Change type to AppLocale
   login: (token: string, user: any) => void;
   logout: () => void;
@@ -26,12 +27,11 @@ const useGlobalStore = create<GlobalStore>()(
       token: null,
       user: null,
       language: 'en',
-      login: async(token, user) => {
+      login: async (token, user) => {
         await SecureStore.setItemAsync('authToken', token);
         set({ isLoggedIn: true, token, user })
       },
       logout: async () => {
-        console.log('-----------------------------------------Logging out');
         await SecureStore.deleteItemAsync('authToken');
         set({ isLoggedIn: false, token: null, user: null })
       },

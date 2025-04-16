@@ -19,7 +19,6 @@ export const initiatePayment = ({
   userId,
 }) => {
   if (!navigation) {
-    console.log("Navigation not ready yet");
     return;
   }
 
@@ -84,7 +83,6 @@ export const initiatePayment = ({
 export const postTransaction = async (payload) => {
   try {
     const response = await apiService.post("/transactions", payload);
-    console.log("Transaction posted successfully:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error posting transaction:", error);
@@ -95,7 +93,6 @@ export const postTransaction = async (payload) => {
 export const postPayment = async (payload) => {
   try {
     const response = await apiService.post("/payment", payload);
-    console.log("Payment posted successfully:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error posting payment:", error);
@@ -106,7 +103,6 @@ export const postPayment = async (payload) => {
 export const updateInvestment = async (id, payload) => {
   try {
     const response = await apiService.put(`/investments/${id}`, payload);
-    console.log("Investment updated successfully:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error updating investment:", error);
@@ -123,7 +119,6 @@ export const setupPaymentStatusListener = (socket, parsedUserDetails, router, pr
     if (processedPaymentRef.current) return;
     processedPaymentRef.current = true;
 
-    console.log("Received payment status update:", data);
     const paymentSuccess = data.status === "success";
 
     try {
@@ -138,7 +133,6 @@ export const setupPaymentStatusListener = (socket, parsedUserDetails, router, pr
           transactionId: data?.paymentResponse?.txn_id,
         };
         const paymentResult = await postPayment(paymentPayload);
-        console.log("Payment API result:", paymentResult);
 
         // Investment API call
         const investmentPayload = {
@@ -154,7 +148,6 @@ export const setupPaymentStatusListener = (socket, parsedUserDetails, router, pr
           parsedUserDetails.data?.data?.id,
           investmentPayload
         );
-        console.log("Investment API result:", investmentResult);
 
         router.push({
           pathname: "/(tabs)/home/PaymentSuccess",
@@ -192,7 +185,6 @@ export const setupPaymentStatusListener = (socket, parsedUserDetails, router, pr
       };
 
       const transactionResult = await postTransaction(transactionPayload);
-      console.log("Transaction API result:", transactionResult);
     } catch (error) {
       console.error("Error processing payment status update:", error);
       Alert.alert(

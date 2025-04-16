@@ -107,9 +107,7 @@ const SavingsDetail = () => {
   useEffect(() => {
     const socketInstance = initializeSocket();
     setSocket(socketInstance);
-    socketInstance.on("connect", () => {
-      console.log("Connected to socket server");
-    });
+    socketInstance.on("connect", () => {});
     return () => {
       socketInstance.disconnect();
     };
@@ -138,11 +136,6 @@ const SavingsDetail = () => {
       investmentId: params.id,
     };
     let responce = await api.post("investments/check-payment", payload);
-    console.log(
-      "Payment Status Response:--------------->> ",
-      responce.data,
-      responce?.data?.success === false
-    );
     if (responce?.data?.success === false) {
       // alert(responce?.data?.message);
       setAlertMessage(responce?.data.message || "Something went wrong");
@@ -164,7 +157,6 @@ const SavingsDetail = () => {
       //   setIsLoading,
       //   userId: user.id,
       // });
-      console.log("params", params);
       // return;
       router.push({
         pathname: "/(tabs)/home/payment",
@@ -191,12 +183,6 @@ const SavingsDetail = () => {
     const fetchTransactions = async () => {
       try {
         const response = await api.get(`investments/${params.id}`);
-        console.log(
-          "Payment Status Response:",
-          response.data.data.paymentHistory,
-          "==========",
-          params
-        );
         if (response.data.data.paymentHistory) {
           setPaymentHistrory(response.data.data.paymentHistory);
         }

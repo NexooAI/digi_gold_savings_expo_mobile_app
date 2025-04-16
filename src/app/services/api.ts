@@ -52,13 +52,11 @@ api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     // For example, get a token from AsyncStorage or state management
     const token = await checkTokenValidity(); // Replace with your token retrieval logic
-    console.log('Token:----------------------->> ', token);
     if (token) {
       // Ensure headers exist
       config.headers = config.headers || new axios.AxiosHeaders();
       config.headers.Authorization = `Bearer ${token}`;
     }
-    // console.log('Request config:', config);
     return config;
   },
   (error: AxiosError) => {
@@ -71,7 +69,6 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response: AxiosResponse) => {
     // Process the response if needed (e.g., logging)
-    console.log('Response:----------------------->> ', response);
     return response;
   },
   async (error: AxiosError) => {
