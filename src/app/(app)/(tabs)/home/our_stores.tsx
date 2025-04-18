@@ -23,10 +23,10 @@ const stores = [
   {
     id: 1,
     name: "DC Jewellers ",
-    latitude: 8.427828080550306,
-    longitude: 78.02855977120382,
+    latitude: 10.519531086895093,
+    longitude: 76.22355145836895,
     address:
-      "205/64A, Main Bazar, Udangudi, Thoothukudi(D), Tamil Nadu - 628203",
+      "Road Fathima Nagar, Mission Quarters, Anchery, Thrissur, Kerala 680005",
   },
 ];
 

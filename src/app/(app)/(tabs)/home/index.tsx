@@ -138,7 +138,7 @@ export default function Home() {
       silver: {
         price: "101.00",
         purity: translations.silverPurity,
-        image: theme.image.gold_image,
+        image: theme.image.silver_image,
       },
     },
     sliderImages: theme.image.sliderImages,
@@ -234,9 +234,12 @@ export default function Home() {
 const styles = ScaledSheet.create({
   safeArea: {
     flex: 1,
+    backgroundColor: "#fff",
   },
   background: {
     flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   backgroundImage: {
     width: "100%",
@@ -244,33 +247,38 @@ const styles = ScaledSheet.create({
     opacity: 0.98,
   },
   headerWrapper: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-    backgroundColor: "transparent",
-    paddingHorizontal: moderateScale(16),
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 10,
+    // Optionally, add a border for debugging:
+    // borderWidth: 1,
+    // borderColor: 'red',
   },
   scrollContent: {
     flexGrow: 1,
-    paddingTop: moderateScale(100),
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 20,
   },
   ratesContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    marginTop: moderateScale(50),
     paddingHorizontal: moderateScale(16),
-    marginBottom: moderateScale(5),
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginVertical: 10,
   },
   rateCard: {
     flex: 1,
-    minWidth: "50%",
-    maxWidth: "50%",
-    marginBottom: moderateScale(5),
+    margin: 5,
+    alignItems: "center",
   },
   mainContent: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
+    width: "100%",
+    alignItems: "center",
+    paddingHorizontal: 15,
   },
   loadingText: {
     textAlign: "center",

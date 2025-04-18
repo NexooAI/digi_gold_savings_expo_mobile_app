@@ -55,7 +55,7 @@ const theme = {
     email: "dcjewellerstcr@gmail.com",
     website: "https://www.dcjewellers.org",
   },
-  baseUrl: "https://jwlgold.api.ramcarmotor.com",
+  baseUrl: "https://api.dcjewellers.org",
   youtubeUrl: "https://youtu.be/8RAhdn5b9Bw",
 };
 

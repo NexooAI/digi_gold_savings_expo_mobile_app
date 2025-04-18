@@ -12,6 +12,7 @@ import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import io from "socket.io-client";
 import apiService from "../../../services/api";
 import { theme } from "@/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 
 const PaymentProcessScreen = () => {
   const router = useRouter();
@@ -277,6 +278,9 @@ const PaymentProcessScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
+        <TouchableOpacity onPress={() => router.back()} style={{ padding: 8 }}>
+          <Ionicons name="arrow-back" size={24} color={theme.colors.primary} />
+        </TouchableOpacity>
         <Text style={styles.title}>Payment Overview</Text>
 
         <View style={styles.amountCard}>

@@ -85,7 +85,7 @@ const CardComponent = ({ item, index }: CardProps) => {
             source={
               fallback
                 ? theme.image.digigoldproduct
-                : { uri: `http://jwlgold.api.ramcarmotor.com${item.IMAGE}` }
+                : { uri: `${theme.baseUrl}${item.IMAGE}` }
             }
             style={{
               width: IMAGE_SIZE,

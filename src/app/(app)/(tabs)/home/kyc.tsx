@@ -616,7 +616,7 @@ export default function KycForm() {
                     handleChange("nominee_relationship", value)
                   }
                   onDonePress={() => {}}
-                  placeholder={{ label: "Select Nominee Type", value: "" }}
+                  placeholder={{ label: "Select Branch", value: "" }}
                   value={formData.nominee_relationship} // Corrected: use addressprooftype here
                   items={nomineeRelationship.map((id) => ({
                     label: id.name,

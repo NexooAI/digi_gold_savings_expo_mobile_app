@@ -21,6 +21,7 @@ import { Picker } from "@react-native-picker/picker";
 import { useFocusEffect } from "@react-navigation/native";
 import api from "../../../services/api";
 import { theme } from "@/constants/theme";
+import RNPickerSelect from "react-native-picker-select";
 
 const { width } = Dimensions.get("window");
 
@@ -46,12 +47,13 @@ export default function JoinSavings() {
     }
     return null;
   }, [schemeData, schemeId]);
-  let i = 0;
   useEffect(() => {
     const fetchBranche = async () => {
       try {
         const branches = await api.get(`/branches`);
-        formData.associated_branch = branches.data.data[0].branch_name;
+        console.log("branches", branches.data.data);
+        setBranch(branches.data.data);
+        // formData.associated_branch = branches.data.data[0].branch_name;
       } catch (error) {
         console.error("Error fetching branches:", error);
       }
@@ -66,6 +68,7 @@ export default function JoinSavings() {
   const [kycStatus, setKycStatus] = useState(null);
   const [kycDetails, setKycDetails] = useState(null);
   const [isKycLoading, setIsKycLoading] = useState(true);
+  const [branch, setBranch] = useState([]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -230,7 +233,7 @@ export default function JoinSavings() {
         newErrors.accountname = !value.trim() ? "Account Name is required" : "";
         break;
       case "associated_branch":
-        newErrors.associated_branch = !value.trim()
+        newErrors.associated_branch = !value
           ? "Associated Branch is required"
           : "";
         break;
@@ -339,7 +342,7 @@ export default function JoinSavings() {
         <Text style={styles.errorText}>{errors.accountname}</Text>
       )}
       <Text style={styles.label}>Branch</Text>
-      <TextInput
+      {/* <TextInput
         style={[
           styles.input,
           errors.associated_branch ? styles.inputError : null,
@@ -349,6 +352,18 @@ export default function JoinSavings() {
         value={formData.associated_branch}
         onChangeText={(value) => handleChange("associated_branch", value)}
         editable={!formData.associated_branch}
+      /> */}
+      <RNPickerSelect
+        onValueChange={(value) => handleChange("associated_branch", value)}
+        onDonePress={() => {}}
+        placeholder={{ label: "Select Nominee Type", value: "" }}
+        value={formData.associated_branch} // Corrected: use addressprooftype here
+        items={branch.map((id) => ({
+          label: id.branch_name,
+          value: id.id,
+        }))}
+        style={pickerSelectStyles}
+        useNativeAndroidPickerStyle={false}
       />
       {errors.associated_branch && (
         <Text style={styles.errorText}>{errors.associated_branch}</Text>
@@ -703,6 +718,30 @@ export default function JoinSavings() {
   );
 }
 
+const pickerSelectStyles = StyleSheet.create({
+  inputIOS: {
+    backgroundColor: "#fff",
+    borderColor: "#CCCCCC",
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    fontSize: 16,
+    color: "black",
+    paddingRight: 30,
+    marginBottom: 10,
+  },
+  inputAndroid: {
+    fontSize: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: "#CCCCCC",
+    borderRadius: 8,
+    color: "black",
+    paddingRight: 30,
+  },
+});
 const styles = StyleSheet.create({
   container: {
     flex: 1,

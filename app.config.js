@@ -2,7 +2,7 @@ const theme = require("./src/constants/theme.config");
 export default {
   expo: {
     name: theme.customerName,
-    slug: theme.customerName,
+    slug: theme.slug,
     version: "1.0.0",
     orientation: "portrait",
     userInterfaceStyle: "automatic",
