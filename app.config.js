@@ -3,7 +3,7 @@ export default {
   expo: {
     name: theme.customerName,
     slug: theme.slug,
-    version: "1.0.0",
+    version: "1.0.1",
     orientation: "portrait",
     userInterfaceStyle: "automatic",
     scheme: "acme",
@@ -35,8 +35,8 @@ export default {
         xxhdpi: theme.adaptiveIcon,
         xxxhdpi: theme.adaptiveIcon,
       },
-      package: "com.nexooai.srimuruganthangamaligai",
-      versionCode: 1,
+      package: "com.nexooai.dcjewellery",
+      versionCode: 5,
       config: {
         googleMaps: {
           apiKey: "AIzaSyAkuOcNddEvozQR4D4yPdTrbwXCiPsuEFc",
@@ -52,7 +52,7 @@ export default {
         backgroundColor: theme.primaryColor,
         tabletImage: theme.adaptiveIcon,
       },
-      bundleIdentifier: "com.nexooai.dcjewellers",
+      bundleIdentifier: "com.nexooai.dcjewellery",
     },
 
     plugins: [
