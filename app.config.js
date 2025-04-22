@@ -3,7 +3,7 @@ export default {
   expo: {
     name: theme.customerName,
     slug: theme.slug,
-    version: "1.0.1",
+    version: "2.0.0",
     orientation: "portrait",
     userInterfaceStyle: "automatic",
     scheme: "acme",
@@ -36,7 +36,7 @@ export default {
         xxxhdpi: theme.adaptiveIcon,
       },
       package: "com.nexooai.dcjewellery",
-      versionCode: 5,
+      versionCode:2,
       config: {
         googleMaps: {
           apiKey: "AIzaSyAkuOcNddEvozQR4D4yPdTrbwXCiPsuEFc",
