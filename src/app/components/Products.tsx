@@ -34,10 +34,12 @@ interface CardProps {
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const CARD_WIDTH = SCREEN_WIDTH * 0.7; // Increased card width
 const IMAGE_SIZE = CARD_WIDTH * 0.5; // Slightly larger image
+const BANNER_HEIGHT = 60; // Height for the banner
 
 const CardComponent = ({ item, index }: CardProps) => {
   const router = useRouter();
   const [fallback, setFallback] = useState(false);
+  const [bannerFallback, setBannerFallback] = useState(false);
   const [pressed, setPressed] = useState(false);
 
   // Animation for card press
@@ -106,7 +108,28 @@ const CardComponent = ({ item, index }: CardProps) => {
           style={styles.cardGradient}
           className="rounded-3xl shadow-2xl"
         >
-          <View className="p-6 pt-24">
+          {/* Banner Image at the top of the card */}
+          <View style={styles.bannerContainer}>
+            <Image
+              source={
+                bannerFallback
+                  ? theme.image.bannerPlaceholder // You'll need to add this to your theme
+                  : { uri: `${theme.baseUrl}/banners/${item.SCHEMETYPE.toLowerCase()}_banner.png` } // Adjust path as needed
+              }
+              style={styles.bannerImage}
+              resizeMode="cover"
+              onError={() => setBannerFallback(true)}
+            />
+            <LinearGradient
+              colors={['rgba(0,0,0,0.5)', 'transparent']}
+              style={styles.bannerOverlay}
+            />
+            <View style={styles.schemeTypeTag}>
+              <Text style={styles.schemeTypeText}>{item.SCHEMETYPE}</Text>
+            </View>
+          </View>
+
+          <View className="p-6 pt-16">
             <View className="items-center justify-center">
               <Text
                 style={styles.schemeName}
@@ -230,8 +253,37 @@ const styles = StyleSheet.create({
   },
   cardGradient: {
     borderRadius: 24,
-    padding: 6,
-    overflow: "hidden",
+    overflow: "hidden", // This ensures the banner doesn't overflow
+  },
+  bannerContainer: {
+    height: BANNER_HEIGHT,
+    width: "100%",
+    position: "relative",
+  },
+  bannerImage: {
+    width: "100%",
+    height: "100%",
+  },
+  bannerOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: BANNER_HEIGHT,
+  },
+  schemeTypeTag: {
+    position: "absolute",
+    right: 10,
+    bottom: 5,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  schemeTypeText: {
+    color: "white",
+    fontSize: 10,
+    fontWeight: "bold",
   },
   separator: {
     height: 1,

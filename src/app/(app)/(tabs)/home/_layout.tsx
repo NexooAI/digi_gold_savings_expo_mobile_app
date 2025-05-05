@@ -13,6 +13,10 @@ export default function HomeLayout() {
         options={{ title: "Join Schemes", headerShown: false }}
       />
       <Stack.Screen
+        name="schemes"
+        options={{ title: "Schemes", headerShown: false }}
+      />
+      <Stack.Screen
         name="kyc"
         options={{ title: "Know your customer", headerShown: false }}
       />

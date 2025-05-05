@@ -63,7 +63,7 @@ export default function AuthScreen({ navigation }) {
   const handleVerifyMpin = async () => {
     const storedMpin = await SecureStore.getItemAsync(MPIN_KEY);
     if (enteredMpin === storedMpin) {
-      Alert.alert("Success", "MPIN verified!");
+      // Alert.alert("Success", "MPIN verified!");
       navigation.navigate("Home"); // Replace "Home" with your main screen's route
     } else {
       Alert.alert("Error", "Incorrect MPIN");

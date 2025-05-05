@@ -68,7 +68,7 @@ export default function MpinVerify() {
     try {
       const isValid = await verifyMPINCheck(enteredMpin);
       if (isValid) {
-        Alert.alert("Success", "MPIN verified successfully!");
+        // Alert.alert("Success", "MPIN verified successfully!");
 
         // const token = await AsyncStorage.getItem("userToken");
         const token = await SecureStore.getItem("authToken");
