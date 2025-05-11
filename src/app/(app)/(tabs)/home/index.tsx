@@ -278,7 +278,8 @@ const styles = ScaledSheet.create({
   mainContent: {
     width: "100%",
     alignItems: "center",
-    paddingHorizontal: 15,
+    paddingHorizontal: 0,
+    marginHorizontal: 0,
   },
   loadingText: {
     textAlign: "center",

@@ -155,12 +155,13 @@ export default function SetMpin() {
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
         style={styles.container}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
           <View style={styles.contentContainer}>
             <Image
@@ -230,10 +231,12 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     justifyContent: "center",
+    paddingBottom: 50,
   },
   contentContainer: {
     paddingHorizontal: 20,
     alignItems: "center",
+    paddingBottom: 20,
   },
   logo: {
     aspectRatio: 1,

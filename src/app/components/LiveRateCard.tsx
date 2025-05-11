@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -6,29 +6,134 @@ import {
   StyleSheet,
   Animated,
   Dimensions,
+  Easing,
 } from "react-native";
 
 const { width } = Dimensions.get("window");
 
 const LiveRateCard = ({ type, rate, lastupdated, image }) => {
-  const isGold = type.toLowerCase() === "gold"; // Check if it's gold or silver
+  const isGold = type.toLowerCase() === "gold";
+  const glowAnim = useRef(new Animated.Value(0)).current;
+  const rateAnim = useRef(new Animated.Value(0)).current;
+  const liveDotAnim = useRef(new Animated.Value(0)).current;
+
+  // Glow animation
+  useEffect(() => {
+    const glow = Animated.sequence([
+      Animated.timing(glowAnim, {
+        toValue: 1,
+        duration: 1500,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      }),
+      Animated.timing(glowAnim, {
+        toValue: 0,
+        duration: 1500,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      }),
+    ]);
+
+    Animated.loop(glow).start();
+  }, []);
+
+  // Rate number animation
+  useEffect(() => {
+    Animated.spring(rateAnim, {
+      toValue: 1,
+      friction: 8,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  }, [rate]);
+
+  // Live dot animation
+  useEffect(() => {
+    const pulse = Animated.sequence([
+      Animated.timing(liveDotAnim, {
+        toValue: 1,
+        duration: 1000,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      }),
+      Animated.timing(liveDotAnim, {
+        toValue: 0,
+        duration: 1000,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      }),
+    ]);
+
+    Animated.loop(pulse).start();
+  }, []);
+
+  const glowStyle = {
+    shadowOpacity: glowAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0.5, 0.8],
+    }),
+    shadowRadius: glowAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: [10, 20],
+    }),
+  };
 
   return (
     <Animated.View
       style={[
         styles.cardContainer,
-        isGold ? styles.goldGlow : styles.silverGlow, // Apply different glows
+        isGold ? styles.goldGlow : styles.silverGlow,
+        glowStyle,
       ]}
     >
-      {/* Image Overflow (Moves Image More Outside the Card) */}
       <View style={styles.imageContainer}>
         <Image source={image} style={styles.image} resizeMode="contain" />
       </View>
 
-      {/* Card Content */}
       <View style={styles.cardContent}>
-        <Text style={styles.type}>{type}</Text>
-        <Text style={styles.rate}>₹{rate}</Text>
+        <View style={styles.typeContainer}>
+          <Text style={styles.type}>{type}</Text>
+          <View style={styles.liveIndicator}>
+            <Animated.View
+              style={[
+                styles.liveDot,
+                {
+                  opacity: liveDotAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.4, 1],
+                  }),
+                  transform: [
+                    {
+                      scale: liveDotAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.8, 1.2],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            />
+            <Text style={styles.liveText}>LIVE</Text>
+          </View>
+        </View>
+        <Animated.Text 
+          style={[
+            styles.rate,
+            {
+              transform: [
+                { scale: rateAnim },
+                { translateY: rateAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [20, 0],
+                  })
+                }
+              ],
+              opacity: rateAnim
+            }
+          ]}
+        >
+          ₹{rate}
+        </Animated.Text>
         <Text style={styles.lastUpdated}>{lastupdated}</Text>
       </View>
     </Animated.View>
@@ -36,61 +141,68 @@ const LiveRateCard = ({ type, rate, lastupdated, image }) => {
 };
 
 const styles = StyleSheet.create({
-  // Smaller Card with Shadow
   cardContainer: {
     backgroundColor: "white",
     borderRadius: 15,
-    width: width * 0.42, // Responsive width
+    width: width * 0.42,
     maxWidth: 200,
     alignItems: "center",
-    paddingTop: 30, // Space for the image above
-    paddingBottom: 10, // Less height
+    paddingTop: 30,
+    paddingBottom: 10,
     marginBottom: 20,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 6,
     elevation: 5,
-    overflow: "visible", // Allows image to overflow
+    overflow: "visible",
   },
-
-  // Gold Lightning Glow
   goldGlow: {
-    shadowColor: "#FFD700", // Gold glow
-    shadowRadius: 15,
-    shadowOpacity: 0.8,
+    shadowColor: "#FFD700",
     borderWidth: 2,
     borderColor: "#FFD700",
   },
-
-  // Silver Lightning Glow
   silverGlow: {
-    shadowColor: "#C0C0C0", // Silver glow
-    shadowRadius: 15,
-    shadowOpacity: 0.8,
+    shadowColor: "#C0C0C0",
     borderWidth: 2,
     borderColor: "#C0C0C0",
   },
-
-  // Image (Moves More Outside the Card)
   imageContainer: {
     position: "absolute",
-    top: "-80%", // Moves the image out even more
+    top: "-80%",
     left: "50%",
     transform: [{ translateX: -50 }],
-    zIndex: 10, // Ensures image is on top
+    zIndex: 10,
   },
   image: {
-    width: 80, // Slightly bigger for effect
+    width: 80,
     height: 95,
     borderRadius: 10,
   },
-
-  // Text Content Inside Card
   cardContent: {
     alignItems: "center",
     justifyContent: "center",
   },
-
+  typeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  liveIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#4CAF50',
+  },
+  liveText: {
+    fontSize: 10,
+    color: '#4CAF50',
+    fontWeight: 'bold',
+  },
   type: {
     fontSize: 14,
     color: "#555",

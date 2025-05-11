@@ -145,6 +145,7 @@ export default function Login() {
     api
       .post("/auth/verify-otp", { mobile_number: mobile, otp })
       .then(async (res) => {
+        console.log("OTP verification response:", res);
         if (res.data.success) {
           await SecureStore.setItemAsync("authToken", res.data.token);
           await AsyncStorage.setItem("userData", JSON.stringify(res.data.user));

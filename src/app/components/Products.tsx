@@ -32,9 +32,8 @@ interface CardProps {
 }
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
-const CARD_WIDTH = SCREEN_WIDTH * 0.7; // Increased card width
-const IMAGE_SIZE = CARD_WIDTH * 0.5; // Slightly larger image
-const BANNER_HEIGHT = 60; // Height for the banner
+const CARD_WIDTH = SCREEN_WIDTH * 0.85;
+const BANNER_HEIGHT = 40;
 
 const CardComponent = ({ item, index }: CardProps) => {
   const router = useRouter();
@@ -65,16 +64,11 @@ const CardComponent = ({ item, index }: CardProps) => {
     }).start();
   };
 
-  // Alternate card styles based on index
-  const cardColors: [string, string] =
-    index % 2 === 0 ? ["#fff1f0", "#fff"] : ["#fffaf0", "#fff"];
-
   return (
     <Animated.View
       style={[
         {
           width: CARD_WIDTH,
-          marginTop: IMAGE_SIZE / 2,
           transform: [{ scale: scaleAnim }],
         },
         styles.cardContainer,
@@ -82,111 +76,100 @@ const CardComponent = ({ item, index }: CardProps) => {
       className="mr-4"
     >
       <View className="relative">
-        <View style={styles.imageContainer}>
-          <Image
-            source={
-              fallback
-                ? theme.image.digigoldproduct
-                : { uri: `${theme.baseUrl}${item.IMAGE}` }
-            }
-            style={{
-              width: IMAGE_SIZE,
-              height: IMAGE_SIZE,
-              left: (CARD_WIDTH - IMAGE_SIZE) / 2,
-              top: -IMAGE_SIZE / 2,
-            }}
-            className="absolute z-10"
-            resizeMode="contain"
-            onError={() => setFallback(true)}
-          />
-          {/* Add shine effect over image */}
-          <View style={styles.shine} />
-        </View>
-
         <LinearGradient
-          colors={cardColors}
+          colors={["#1a1a1a", "#2d2d2d"]}
           style={styles.cardGradient}
-          className="rounded-3xl shadow-2xl"
+          className="rounded-3xl shadow-2xl overflow-hidden"
         >
-          {/* Banner Image at the top of the card */}
-          <View style={styles.bannerContainer}>
-            <Image
-              source={
-                bannerFallback
-                  ? theme.image.bannerPlaceholder // You'll need to add this to your theme
-                  : { uri: `${theme.baseUrl}/banners/${item.SCHEMETYPE.toLowerCase()}_banner.png` } // Adjust path as needed
-              }
-              style={styles.bannerImage}
-              resizeMode="cover"
-              onError={() => setBannerFallback(true)}
-            />
-            <LinearGradient
-              colors={['rgba(0,0,0,0.5)', 'transparent']}
-              style={styles.bannerOverlay}
-            />
-            <View style={styles.schemeTypeTag}>
-              <Text style={styles.schemeTypeText}>{item.SCHEMETYPE}</Text>
-            </View>
-          </View>
-
-          <View className="p-6 pt-16">
-            <View className="items-center justify-center">
-              <Text
-                style={styles.schemeName}
-                className="text-gray-700 text-xl font-bold text-center"
-              >
-                {item.SCHEMENAME}
-              </Text>
-              <Text className="text-gray-600 text-sm text-center mt-2">
-                {item.SLOGAN}
-              </Text>
-
-              <View style={styles.separator} />
-
-              <View className="flex-row justify-between space-x-2 mt-6 w-full">
-                <TouchableOpacity
-                  className="flex-1 border bg-[#850111] rounded-full py-3 mr-2"
-                  style={styles.knowMoreButton}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/home/productsdetails",
-                      params: { schemeId: item.SCHEMEID },
-                    })
-                  }
-                  onPressIn={handlePressIn}
-                  onPressOut={handlePressOut}
-                >
-                  <Text className="text-red-700 text-center text-sm font-semibold">
-                    {t("knowMore")}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  className="flex-1 rounded-full py-3"
-                  style={styles.joinButton}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/home/join_savings",
-                      params: {
-                        schemeId: item.SCHEMEID,
-                        schemeData: JSON.stringify({
-                          name: item.SCHEMENAME,
-                          description: item.DESCRIPTION,
-                          type: item.SCHEMETYPE,
-                          chit: item.chits,
-                        }),
-                      },
-                    })
-                  }
-                  onPressIn={handlePressIn}
-                  onPressOut={handlePressOut}
-                >
-                  <Text className="text-white text-center text-sm font-semibold">
-                    {t("joinNow")}
-                  </Text>
-                </TouchableOpacity>
+          <Image
+            source={require("../../../assets/images/scheme_card_bg.png")}
+            style={styles.backgroundImage}
+            resizeMode="cover"
+          />
+          <LinearGradient
+            colors={['rgba(0,0,0,0.4)', 'rgba(0,0,0,0.6)']}
+            style={styles.contentOverlay}
+          >
+            <View style={styles.bannerContainer}>
+              <Image
+                source={
+                  bannerFallback
+                    ? theme.image.bannerPlaceholder
+                    : { uri: `${theme.baseUrl}/banners/${item.SCHEMETYPE.toLowerCase()}_banner.png` }
+                }
+                style={styles.bannerImage}
+                resizeMode="cover"
+                onError={() => setBannerFallback(true)}
+              />
+              <LinearGradient
+                colors={['rgba(0,0,0,0.5)', 'transparent']}
+                style={styles.bannerOverlay}
+              />
+              <View style={styles.schemeTypeTag}>
+                <Text style={styles.schemeTypeText}>{item.SCHEMETYPE}</Text>
               </View>
             </View>
-          </View>
+
+            <View className="p-4">
+              <View className="items-center justify-center">
+                <Text
+                  style={styles.schemeName}
+                  className="text-white text-lg font-bold text-center"
+                >
+                  {item.SCHEMENAME}
+                </Text>
+                <Text className="text-gray-300 text-sm text-center mt-1">
+                  {item.SLOGAN}
+                </Text>
+
+                <View style={styles.separator} />
+
+                <View className="flex-row justify-between space-x-2 mt-4 w-full">
+                  <TouchableOpacity
+                    className="flex-1 border border-[#850111] rounded-full py-2 mr-2"
+                    style={styles.knowMoreButton}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/home/productsdetails",
+                        params: { schemeId: item.SCHEMEID },
+                      })
+                    }
+                    onPressIn={handlePressIn}
+                    onPressOut={handlePressOut}
+                  >
+                    <Text className="text-white text-center text-sm font-semibold">
+                      {t("knowMore")}
+                    </Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    className="flex-1 rounded-full py-2"
+                    style={styles.joinButton}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/home/join_savings",
+                        params: {
+                          schemeId: item.SCHEMEID,
+                          schemeData: JSON.stringify({
+                            name: item.SCHEMENAME,
+                            description: item.DESCRIPTION,
+                            type: item.SCHEMETYPE,
+                            chit: item.chits,
+                          }),
+                        },
+                      })
+                    }
+                    onPressIn={handlePressIn}
+                    onPressOut={handlePressOut}
+                  >
+                    <Text className="text-white text-center text-sm font-semibold">
+                      {t("joinNow")}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </LinearGradient>
         </LinearGradient>
       </View>
     </Animated.View>
@@ -209,7 +192,7 @@ const InvestmentCards = ({ schemes }: InvestmentCardsProps) => {
   }
 
   return (
-    <View className="flex-1">
+    <View className="flex-1 bg-white" style={{ margin: 0 }}>
       <FlatList
         data={schemes.data}
         horizontal
@@ -219,7 +202,7 @@ const InvestmentCards = ({ schemes }: InvestmentCardsProps) => {
         )}
         contentContainerStyle={{
           paddingHorizontal: 16,
-          paddingVertical: 24, // Increased vertical padding
+          paddingVertical: 24,
         }}
         snapToInterval={CARD_WIDTH + 16}
         decelerationRate="fast"
@@ -231,29 +214,29 @@ const InvestmentCards = ({ schemes }: InvestmentCardsProps) => {
 
 const styles = StyleSheet.create({
   cardContainer: {
-    elevation: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-  },
-  imageContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  shine: {
-    position: "absolute",
-    top: -IMAGE_SIZE / 2,
-    left: (CARD_WIDTH - IMAGE_SIZE) / 2,
-    width: IMAGE_SIZE,
-    height: IMAGE_SIZE,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    transform: [{ rotate: "45deg" }],
-    zIndex: 20,
+    elevation: 12,
+    shadowColor: "#850111",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    backgroundColor: 'transparent',
   },
   cardGradient: {
     borderRadius: 24,
-    overflow: "hidden", // This ensures the banner doesn't overflow
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  backgroundImage: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    opacity: 0.9,
+  },
+  contentOverlay: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'transparent',
   },
   bannerContainer: {
     height: BANNER_HEIGHT,
@@ -275,42 +258,53 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 10,
     bottom: 5,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    backgroundColor: "rgba(133,1,17,0.9)",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   schemeTypeText: {
     color: "white",
     fontSize: 10,
     fontWeight: "bold",
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   separator: {
     height: 1,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "rgba(255,255,255,0.15)",
     width: "80%",
-    marginTop: 12,
+    marginTop: 8,
+    shadowColor: "#850111",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   schemeName: {
-    textShadowColor: "rgba(0, 0, 0, 0.1)",
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
     textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 1,
+    textShadowRadius: 3,
   },
   knowMoreButton: {
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    backgroundColor: "white",
-  },
-  joinButton: {
-    elevation: 5,
-    shadowColor: "#000",
+    elevation: 4,
+    shadowColor: "#850111",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
-    backgroundColor: theme.colors.primary, // Deeper red
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderWidth: 1,
+    borderColor: '#850111',
+  },
+  joinButton: {
+    elevation: 5,
+    shadowColor: "#850111",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    backgroundColor: theme.colors.primary,
     borderWidth: 1,
     borderColor: theme.colors.primary,
   },

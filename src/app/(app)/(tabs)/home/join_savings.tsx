@@ -22,6 +22,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import api from "../../../services/api";
 import { theme } from "@/constants/theme";
 import RNPickerSelect from "react-native-picker-select";
+import Slider from '@react-native-community/slider';
 
 const { width } = Dimensions.get("window");
 
@@ -114,8 +115,9 @@ export default function JoinSavings() {
   const initialAmount = "";
 
   const [step, setStep] = useState(1);
+  const [schemeType, setSchemeType] = useState(null); // 'fixed' or 'flexi'
   const [formData, setFormData] = useState({
-    amount: initialAmount,
+    amount: "",
     accountname: "",
     associated_branch: "",
     name: "",
@@ -198,8 +200,8 @@ export default function JoinSavings() {
       case "amount":
         newErrors.amount = !value
           ? "Amount is required"
-          : value < 1000
-          ? translations.minAmountError
+          : value < 500
+          ? "Minimum amount should be ₹500"
           : "";
         break;
       case "name":
@@ -252,7 +254,7 @@ export default function JoinSavings() {
 
   const renderProgressBar = () => (
     <View style={styles.progressContainer}>
-      {[1, 2, 3].map((num) => (
+      {[1, 2, 3, 4, 5].map((num) => (
         <View
           key={num}
           style={[
@@ -266,37 +268,114 @@ export default function JoinSavings() {
 
   const renderStep1 = () => (
     <View style={styles.stepContainer}>
+      <Text style={styles.sectionTitle}>Select Scheme Type</Text>
+      <View style={styles.schemeTypeContainer}>
+        <TouchableOpacity
+          style={[
+            styles.schemeTypeCard,
+            schemeType === 'fixed' && styles.selectedSchemeTypeCard,
+          ]}
+          onPress={() => setSchemeType('fixed')}
+        >
+          <Ionicons 
+            name="calendar" 
+            size={32} 
+            color={schemeType === 'fixed' ? '#fff' : theme.colors.primary} 
+          />
+          <Text style={[
+            styles.schemeTypeText,
+            schemeType === 'fixed' && styles.selectedSchemeTypeText
+          ]}>Fixed Amount</Text>
+          <Text style={[
+            styles.schemeTypeDescription,
+            schemeType === 'fixed' && styles.selectedSchemeTypeDescription
+          ]}>Choose from predefined monthly amounts</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.schemeTypeCard,
+            schemeType === 'flexi' && styles.selectedSchemeTypeCard,
+          ]}
+          onPress={() => setSchemeType('flexi')}
+        >
+          <Ionicons 
+            name="options" 
+            size={32} 
+            color={schemeType === 'flexi' ? '#fff' : theme.colors.primary} 
+          />
+          <Text style={[
+            styles.schemeTypeText,
+            schemeType === 'flexi' && styles.selectedSchemeTypeText
+          ]}>Flexi Amount</Text>
+          <Text style={[
+            styles.schemeTypeDescription,
+            schemeType === 'flexi' && styles.selectedSchemeTypeDescription
+          ]}>Choose your own monthly amount</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderStep2 = () => (
+    <View style={styles.stepContainer}>
       <Text style={styles.label}>{translations.amountPlaceholder}</Text>
 
-      {/* Custom Amount Picker Component */}
-      <AmountPicker
-        chits={chits}
-        formData={formData}
-        handleChange={handleChange}
-      />
+      {schemeType === 'fixed' ? (
+        <AmountPicker
+          chits={chits}
+          formData={formData}
+          handleChange={handleChange}
+        />
+      ) : (
+        <View style={styles.flexiAmountContainer}>
+          <View style={styles.amountDisplayContainer}>
+            <Text style={styles.amountValue}>₹{formData.amount || '0'}</Text>
+            <Text style={styles.amountLabel}>Monthly Amount</Text>
+          </View>
+          <View style={styles.sliderContainer}>
+            <Slider
+              style={styles.slider}
+              minimumValue={500}
+              maximumValue={100000}
+              step={500}
+              value={parseFloat(formData.amount) || 500}
+              onValueChange={(value) => handleChange('amount', String(value))}
+              minimumTrackTintColor={theme.colors.primary}
+              maximumTrackTintColor="#D3D3D3"
+              thumbTintColor={theme.colors.primary}
+            />
+            <View style={styles.sliderLabels}>
+              <Text style={styles.sliderLabel}>₹500</Text>
+              <Text style={styles.sliderLabel}>₹1,00,000</Text>
+            </View>
+          </View>
+          <View style={styles.amountInfoContainer}>
+            <View style={styles.amountInfoItem}>
+              <Ionicons name="information-circle-outline" size={20} color={theme.colors.primary} />
+              <Text style={styles.amountInfoText}>Minimum amount: ₹500</Text>
+            </View>
+            <View style={styles.amountInfoItem}>
+              <Ionicons name="information-circle-outline" size={20} color={theme.colors.primary} />
+              <Text style={styles.amountInfoText}>Maximum amount: ₹1,00,000</Text>
+            </View>
+            <View style={styles.amountInfoItem}>
+              <Ionicons name="information-circle-outline" size={20} color={theme.colors.primary} />
+              <Text style={styles.amountInfoText}>Increment: ₹500</Text>
+            </View>
+          </View>
+        </View>
+      )}
 
       {errors.amount && <Text style={styles.errorText}>{errors.amount}</Text>}
-      {chits.length === 0 && (
+      {chits.length === 0 && schemeType === 'fixed' && (
         <Text style={styles.errorText}>
           No chit amounts available. Please check the data.
         </Text>
       )}
-
-      {/* {parseFloat(formData.amount) >= 1000 && (
-        <View style={styles.returnsCard}>
-          <Text style={styles.returnsTitle}>
-            {translations.projectedReturnsYear}
-          </Text>
-          <Text style={styles.returnsAmount}>
-            ₹{calculateReturns(formData.amount).toLocaleString()}
-          </Text>
-          <Text style={styles.returnsRate}>
-            {translations.returnRateDetail}
-          </Text>
-        </View>
-      )} */}
     </View>
   );
+
   const AmountPicker = ({ chits, formData, handleChange }) => {
     return (
       <View style={styles.amountPickerContainer}>
@@ -328,8 +407,84 @@ export default function JoinSavings() {
     );
   };
 
-  const renderStep2 = () => (
+  const [paymentFrequency, setPaymentFrequency] = useState(null); // 'monthly', 'weekly', 'daily'
+
+  const renderStep3 = () => (
     <View style={styles.stepContainer}>
+      <Text style={styles.sectionTitle}>Select Payment Frequency</Text>
+      <View style={styles.frequencyContainer}>
+        <TouchableOpacity
+          style={[
+            styles.frequencyCard,
+            paymentFrequency === 'monthly' && styles.selectedFrequencyCard,
+          ]}
+          onPress={() => setPaymentFrequency('monthly')}
+        >
+          <Ionicons 
+            name="calendar" 
+            size={32} 
+            color={paymentFrequency === 'monthly' ? '#fff' : theme.colors.primary} 
+          />
+          <Text style={[
+            styles.frequencyText,
+            paymentFrequency === 'monthly' && styles.selectedFrequencyText
+          ]}>Monthly</Text>
+          <Text style={[
+            styles.frequencyDescription,
+            paymentFrequency === 'monthly' && styles.selectedFrequencyDescription
+          ]}>Pay once every month</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.frequencyCard,
+            paymentFrequency === 'weekly' && styles.selectedFrequencyCard,
+          ]}
+          onPress={() => setPaymentFrequency('weekly')}
+        >
+          <Ionicons 
+            name="calendar-outline" 
+            size={32} 
+            color={paymentFrequency === 'weekly' ? '#fff' : theme.colors.primary} 
+          />
+          <Text style={[
+            styles.frequencyText,
+            paymentFrequency === 'weekly' && styles.selectedFrequencyText
+          ]}>Weekly</Text>
+          <Text style={[
+            styles.frequencyDescription,
+            paymentFrequency === 'weekly' && styles.selectedFrequencyDescription
+          ]}>Pay once every week</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.frequencyCard,
+            paymentFrequency === 'daily' && styles.selectedFrequencyCard,
+          ]}
+          onPress={() => setPaymentFrequency('daily')}
+        >
+          <Ionicons 
+            name="today" 
+            size={32} 
+            color={paymentFrequency === 'daily' ? '#fff' : theme.colors.primary} 
+          />
+          <Text style={[
+            styles.frequencyText,
+            paymentFrequency === 'daily' && styles.selectedFrequencyText
+          ]}>Daily</Text>
+          <Text style={[
+            styles.frequencyDescription,
+            paymentFrequency === 'daily' && styles.selectedFrequencyDescription
+          ]}>Pay every day</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderStep4 = () => (
+    <View style={styles.stepContainer}>
+      <Text style={styles.sectionTitle}>Account Details</Text>
       <Text style={styles.label}>Account Name</Text>
       <TextInput
         style={[styles.input, errors.accountname ? styles.inputError : null]}
@@ -341,23 +496,13 @@ export default function JoinSavings() {
       {errors.accountname && (
         <Text style={styles.errorText}>{errors.accountname}</Text>
       )}
+      
       <Text style={styles.label}>Branch</Text>
-      {/* <TextInput
-        style={[
-          styles.input,
-          errors.associated_branch ? styles.inputError : null,
-        ]}
-        placeholder="Enter your account name"
-        placeholderTextColor={"#999"}
-        value={formData.associated_branch}
-        onChangeText={(value) => handleChange("associated_branch", value)}
-        editable={!formData.associated_branch}
-      /> */}
       <RNPickerSelect
         onValueChange={(value) => handleChange("associated_branch", value)}
         onDonePress={() => {}}
-        placeholder={{ label: "Select Nominee Type", value: "" }}
-        value={formData.associated_branch} // Corrected: use addressprooftype here
+        placeholder={{ label: "Select Branch", value: "" }}
+        value={formData.associated_branch}
         items={branch.map((id) => ({
           label: id.branch_name,
           value: id.id,
@@ -371,118 +516,27 @@ export default function JoinSavings() {
     </View>
   );
 
-  // const renderStep2 = () => (
-  //   <View style={styles.stepContainer}>
-  //     {/* Step 2 fields remain unchanged */}
-  //     <View style={styles.row}>
-  //       <View style={styles.column}>
-  //         <Text style={styles.label}>{translations.fullName}</Text>
-  //         <TextInput
-  //           style={styles.input}
-  //           placeholder={translations.fullNamePlaceholder}
-  //           value={formData.name}
-  //           onChangeText={(value) => handleChange('name', value)}
-  //         />
-  //       </View>
-  //     </View>
-
-  //     <View style={styles.row}>
-  //       <View style={styles.column}>
-  //         <Text style={styles.label}>{translations.mobileNumber}</Text>
-  //         <TextInput
-  //           style={[styles.input, errors.mobile ? styles.inputError : null]}
-  //           placeholder={translations.mobilePlaceholder}
-  //           keyboardType="numeric"
-  //           value={formData.mobile}
-  //           onChangeText={(value) => handleChange('mobile', value)}
-  //         />
-  //         {errors.mobile && <Text style={styles.errorText}>{errors.mobile}</Text>}
-  //       </View>
-  //     </View>
-
-  //     <View style={styles.row}>
-  //       <View style={styles.column}>
-  //         <Text style={styles.label}>{translations.emailAddress}</Text>
-  //         <TextInput
-  //           style={[styles.input, errors.email ? styles.inputError : null]}
-  //           placeholder={translations.emailPlaceholder}
-  //           keyboardType="email-address"
-  //           value={formData.email}
-  //           onChangeText={(value) => handleChange('email', value)}
-  //         />
-  //         {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
-  //       </View>
-  //     </View>
-
-  //     <View style={styles.row}>
-  //       <View style={styles.column}>
-  //         <Text style={styles.label}>{translations.address}</Text>
-  //         <TextInput
-  //           style={styles.input}
-  //           placeholder={translations.addressPlaceholder}
-  //           value={formData.address}
-  //           onChangeText={(value) => handleChange('address', value)}
-  //         />
-  //       </View>
-  //     </View>
-
-  //     <View style={styles.row}>
-  //       <View style={styles.column}>
-  //         <Text style={styles.label}>{translations.pincode}</Text>
-  //         <TextInput
-  //           style={[styles.input, errors.pincode ? styles.inputError : null]}
-  //           placeholder={translations.pincodePlaceholder}
-  //           keyboardType="numeric"
-  //           value={formData.pincode}
-  //           onChangeText={(value) => handleChange('pincode', value)}
-  //         />
-  //         {errors.pincode && <Text style={styles.errorText}>{errors.pincode}</Text>}
-  //       </View>
-  //     </View>
-
-  //     <View style={styles.row}>
-  //       <View style={styles.column}>
-  //         <Text style={styles.label}>{translations.panNumber}</Text>
-  //         <TextInput
-  //           style={[styles.input, errors.pan ? styles.inputError : null]}
-  //           placeholder={translations.panPlaceholder}
-  //           value={formData.pan}
-  //           autoCapitalize="characters"
-  //           onChangeText={(value) => handleChange('pan', value.toUpperCase())}
-  //         />
-  //         {errors.pan && <Text style={styles.errorText}>{errors.pan}</Text>}
-  //       </View>
-  //     </View>
-
-  //     <View style={styles.row}>
-  //       <View style={styles.column}>
-  //         <Text style={styles.label}>{translations.nomineeName}</Text>
-  //         <TextInput
-  //           style={styles.input}
-  //           placeholder={translations.nomineePlaceholder}
-  //           value={formData.nominee}
-  //           onChangeText={(value) => handleChange('nominee', value)}
-  //         />
-  //       </View>
-  //     </View>
-  //   </View>
-  // );
-
-  // Render Step 3: Display both Savings Summary and KYC Details (if KYC is completed)
-  const renderStep3 = () => (
+  const renderStep5 = () => (
     <View style={styles.stepContainer}>
       <Text style={styles.sectionTitle}>Savings Summary</Text>
       <View style={styles.summaryCard}>
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Monthly Amount</Text>
+          <Text style={styles.summaryLabel}>Scheme Type</Text>
+          <Text style={styles.summaryValue}>{schemeType === 'fixed' ? 'Fixed Amount' : 'Flexi Amount'}</Text>
+        </View>
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Amount</Text>
           <Text style={styles.summaryValue}>₹{formData.amount}</Text>
         </View>
-        {/* <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Projected Returns</Text>
-          <Text style={styles.summaryValue}>
-            ₹{calculateReturns(formData.amount).toLocaleString()}
-          </Text>
-        </View> */}
+        {schemeType === 'fixed' && (
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Payment Frequency</Text>
+            <Text style={styles.summaryValue}>
+              {paymentFrequency === 'monthly' ? 'Monthly' : 
+               paymentFrequency === 'weekly' ? 'Weekly' : 'Daily'}
+            </Text>
+          </View>
+        )}
       </View>
 
       {kycStatus === "Completed" && kycDetails && (
@@ -550,8 +604,18 @@ export default function JoinSavings() {
   );
 
   const handleNext = () => {
-    // Step 1: Amount selection
+    // Step 1: Scheme Type selection
     if (step === 1) {
+      if (!schemeType) {
+        Alert.alert("Error", "Please select a scheme type");
+        return;
+      }
+      setStep(2);
+      return;
+    }
+
+    // Step 2: Amount selection
+    if (step === 2) {
       if (!validate("amount", formData.amount)) return;
 
       if (isKycLoading) {
@@ -559,7 +623,6 @@ export default function JoinSavings() {
         return;
       }
 
-      // If KYC is NOT completed, show alert and prompt the user
       if (kycStatus !== "Completed") {
         Alert.alert(
           "KYC Not Completed",
@@ -576,50 +639,59 @@ export default function JoinSavings() {
           ]
         );
         return;
+      }
+
+      // If fixed amount is selected, go to payment frequency step
+      if (schemeType === 'fixed') {
+        setStep(3);
       } else {
-        // If KYC is completed, move to Step 2 to collect account name
-        setStep(2);
+        // If flexi amount, skip to account details
+        setStep(4);
       }
       return;
     }
 
-    // Step 2: KYC / personal details (only if reached)
-    if (step === 2) {
+    // Step 3: Payment Frequency (only for fixed amount)
+    if (step === 3) {
+      if (!paymentFrequency) {
+        Alert.alert("Error", "Please select a payment frequency");
+        return;
+      }
+      setStep(4);
+      return;
+    }
+
+    // Step 4: Account details
+    if (step === 4) {
       if (
         !validate("accountname", formData.accountname) ||
         !validate("associated_branch", formData.associated_branch)
-        // !validate('mobile', formData.mobile) ||
-        // !validate('email', formData.email) ||
-        // !validate('pan', formData.pan) ||
-        // !validate('nominee', formData.nominee)
       ) {
         return;
       }
-      // Proceed to summary step
-      setStep(3);
+      setStep(5);
       return;
     }
 
-    // Step 3: Final submission
-    if (step === 3) {
-      // Find the selected chit from the parsed data based on the selected amount
+    // Step 5: Final submission
+    if (step === 5) {
       const selectedChit = chits.find(
         (chit) => String(chit.AMOUNT) === formData.amount
       );
 
-      // Build the payload
       const payload = {
-        userId: user.id, // Replace with actual logged in user id from your global store or auth state
-        schemeId: Number(schemeId), // from query params
+        userId: user.id,
+        schemeId: Number(schemeId),
         chitId: selectedChit ? selectedChit.CHITID : null,
         accountName: formData.accountname,
         associated_branch: formData.associated_branch,
+        schemeType: schemeType,
+        paymentFrequency: paymentFrequency,
       };
 
       api
         .post("/investments", payload)
         .then((data: any) => {
-          // Alert.alert(translations.successTitle, translations.successMessage);
           router.push({
             pathname: "/(tabs)/home/payment",
             params: {
@@ -631,6 +703,8 @@ export default function JoinSavings() {
                 mobile: user.mobile,
                 email: user.email,
                 investmentId: data.id,
+                schemeType: schemeType,
+                paymentFrequency: paymentFrequency,
                 ...data,
               }),
             },
@@ -643,19 +717,6 @@ export default function JoinSavings() {
             "There was an error creating the savings scheme. Please try again."
           );
         });
-
-      // router.push({
-      //   pathname: '/(tabs)/home/payment',
-      //   params: {
-      //     amount: formData.amount,
-      //     userDetails: JSON.stringify({
-      //       name: formData.name,
-      //       email: formData.email,
-      //       mobile: formData.mobile,
-      //     }),
-      //   },
-      // });
-      // Alert.alert(translations.successTitle, translations.successMessage);
     }
   };
 
@@ -668,10 +729,7 @@ export default function JoinSavings() {
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => {
-              // If on step 3 and KYC is already completed, skip going back to step 2
-              if (step === 3 && kycStatus === "Completed") {
-                setStep(1);
-              } else if (step > 1) {
+              if (step > 1) {
                 setStep(step - 1);
               } else {
                 router.back();
@@ -703,13 +761,15 @@ export default function JoinSavings() {
             {step === 1 && renderStep1()}
             {step === 2 && renderStep2()}
             {step === 3 && renderStep3()}
+            {step === 4 && renderStep4()}
+            {step === 5 && renderStep5()}
           </ScrollView>
         )}
 
         <View style={styles.footer}>
           <TouchableOpacity style={styles.button} onPress={handleNext}>
             <Text style={styles.buttonText}>
-              {step === 3 ? translations.confirmAndJoin : translations.next}
+              {step === 5 ? translations.confirmAndJoin : translations.next}
             </Text>
           </TouchableOpacity>
         </View>
@@ -938,5 +998,144 @@ const styles = StyleSheet.create({
     color: "gray",
     textAlign: "center",
     width: "100%",
+  },
+  schemeTypeContainer: {
+    flexDirection: 'column',
+    gap: 16,
+    marginTop: 16,
+  },
+  schemeTypeCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#e5e5e5',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  selectedSchemeTypeCard: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  schemeTypeText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 12,
+    color: theme.colors.primary,
+  },
+  selectedSchemeTypeText: {
+    color: '#fff',
+  },
+  schemeTypeDescription: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  selectedSchemeTypeDescription: {
+    color: '#fff',
+  },
+  flexiAmountContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+    marginTop: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  amountDisplayContainer: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  amountValue: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: theme.colors.primary,
+    marginBottom: 8,
+  },
+  amountLabel: {
+    fontSize: 16,
+    color: '#666',
+  },
+  sliderContainer: {
+    marginBottom: 24,
+  },
+  slider: {
+    width: '100%',
+    height: 50,
+  },
+  sliderLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 12,
+    paddingHorizontal: 4,
+  },
+  sliderLabel: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  amountInfoContainer: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+  },
+  amountInfoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  amountInfoText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#666',
+  },
+  frequencyContainer: {
+    flexDirection: 'column',
+    gap: 16,
+    marginTop: 16,
+  },
+  frequencyCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#e5e5e5',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  selectedFrequencyCard: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  frequencyText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 12,
+    color: theme.colors.primary,
+  },
+  selectedFrequencyText: {
+    color: '#fff',
+  },
+  frequencyDescription: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  selectedFrequencyDescription: {
+    color: '#fff',
   },
 });

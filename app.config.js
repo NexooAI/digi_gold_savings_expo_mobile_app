@@ -1,4 +1,5 @@
 const theme = require("./src/constants/theme.config");
+
 export default {
   expo: {
     name: theme.customerName,
@@ -12,23 +13,23 @@ export default {
     splash: {
       image: theme.splashLogo,
       resizeMode: "contain",
-      backgroundColor: theme.primaryColor,
+      backgroundColor: "#850111",
     },
 
     androidStatusBar: {
-      backgroundColor: theme.primaryColor,
+      backgroundColor: "#850111",
       translucent: false,
     },
 
     android: {
       adaptiveIcon: {
         foregroundImage: theme.adaptiveIcon,
-        backgroundColor: theme.primaryColor,
+        backgroundColor: "#850111",
       },
       splash: {
         image: theme.adaptiveIcon,
         resizeMode: "contain",
-        backgroundColor: theme.primaryColor,
+        backgroundColor: "#850111",
         mdpi: theme.adaptiveIcon,
         hdpi: theme.adaptiveIcon,
         xhdpi: theme.adaptiveIcon,
