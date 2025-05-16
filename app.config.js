@@ -37,6 +37,7 @@ export default {
         xxxhdpi: theme.adaptiveIcon,
       },
       package: "com.nexooai.dcjewellery",
+      googleServicesFile: "./google-services.json",
       versionCode:2,
       config: {
         googleMaps: {
@@ -62,6 +63,15 @@ export default {
       ["expo-router", { origin: "https://n" }],
       "expo-secure-store",
       "expo-localization",
+      [
+        "expo-notifications",
+        {
+          icon: "./assets/images/icon.png",
+          color: "#850111",
+          sounds: ["./assets/sound/notification.wav"]
+        }
+      ],
+      "./plugins/withAndroidManifest"
     ],
 
     extra: {

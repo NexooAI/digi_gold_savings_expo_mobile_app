@@ -1,11 +1,11 @@
 import { Drawer } from "expo-router/drawer";
-import { Slot, useRouter, useNavigation } from "expo-router";
+import { Slot, useRouter, useNavigation, Stack } from "expo-router";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useFirstLaunch } from "@/common/hooks/useFirstLaunch";
 import { ActivityIndicator, View, StyleSheet, Alert } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "../global.css";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { initializeAppLocale } from "@/i18n";
 import { LanguageProvider1 } from "@/contexts/LanguageContext";
 import useGlobalStore from "@/store/global.store";
@@ -13,6 +13,8 @@ import * as SecureStore from "expo-secure-store";
 import LoadingService from "./services/loadingServices";
 import setupAppStateListener from "@/store/appState";
 import { theme } from "@/constants/theme";
+import NotificationService from '@/services/NotificationService';
+import * as Notifications from 'expo-notifications';
 
 export default function RootLayout() {
   const { isFirstLaunch, isLoading: isAppLoading } = useFirstLaunch();
@@ -20,6 +22,8 @@ export default function RootLayout() {
   const [isNavigationReady, setIsNavigationReady] = useState(false);
   const router = useRouter();
   const { isLoggedIn } = useGlobalStore();
+  const notificationListener = useRef<Notifications.Subscription>();
+  const responseListener = useRef<Notifications.Subscription>();
 
   // Initialize locale
   useEffect(() => {
@@ -44,22 +48,33 @@ export default function RootLayout() {
     setupAppStateListener();
   }, []);
 
-  // Auth check with navigation readiness
-  // useEffect(() => {
-  //   if (!isNavigationReady) return;
+  useEffect(() => {
+    // Register for push notifications
+    NotificationService.registerForPushNotificationsAsync();
 
-  //   const checkAuth = async () => {
-  //     const token = await SecureStore.getItemAsync("authToken");
-  //     if (token) {
-  //       Alert.alert( "User is logged in",token);
-  //       router.replace("/(auth)/mpin_verify");
-  //       // router.replace("/login");
-  //     } else {
-  //       router.replace("/login");
-  //     }
-  //   };
-  //   checkAuth();
-  // }, [isLoggedIn, isNavigationReady]);
+    // Listen for incoming notifications while the app is foregrounded
+    notificationListener.current = NotificationService.addNotificationReceivedListener(notification => {
+      console.log('Notification received:', notification);
+    });
+
+    // Listen for user interactions with notifications
+    responseListener.current = NotificationService.addNotificationResponseReceivedListener(response => {
+      console.log('Notification response:', response);
+      // Handle notification response here
+      // You can navigate to specific screens based on the notification data
+    });
+
+    // Cleanup listeners on unmount
+    return () => {
+      if (notificationListener.current) {
+        Notifications.removeNotificationSubscription(notificationListener.current);
+      }
+      if (responseListener.current) {
+        Notifications.removeNotificationSubscription(responseListener.current);
+      }
+    };
+  }, []);
+
   useEffect(() => {
     if (!isNavigationReady) return;
 
