@@ -51,7 +51,7 @@ class NotificationService {
         token = (await Notifications.getExpoPushTokenAsync({
           projectId,
         })).data;
-        
+        // alert(`Push token: ${token}`);
         console.log('Push token:', token);
       } catch (error) {
         console.error('Error getting push token:', error);

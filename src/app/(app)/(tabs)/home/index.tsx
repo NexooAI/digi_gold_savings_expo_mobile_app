@@ -2,13 +2,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
-  ImageBackground,
   ScrollView,
   Text,
   Alert,
   Dimensions,
   RefreshControl,
 } from "react-native";
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from "expo-router";
 import LanguageSwitcher from "@/contexts/LanguageSwitcher";
 import LiveRateCard from "@/app/components/LiveRateCard";
@@ -146,11 +146,11 @@ export default function Home() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ImageBackground
-        source={theme.image.menu_bg}
-        resizeMode="repeat"
+      <LinearGradient
+        colors={['#5a000b', '#2e0406']}
         style={styles.background}
-        imageStyle={styles.backgroundImage}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
         {/* Fixed Header */}
         <View style={styles.headerWrapper}>
@@ -225,7 +225,7 @@ export default function Home() {
             <LanguageSwitcher />
           </View>
         </ScrollView>
-      </ImageBackground>
+      </LinearGradient>
     </SafeAreaView>
   );
 }
@@ -234,17 +234,12 @@ export default function Home() {
 const styles = ScaledSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#5a000b",
   },
   background: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  backgroundImage: {
-    width: "100%",
-    height: "100%",
-    opacity: 0.98,
   },
   headerWrapper: {
     width: "100%",

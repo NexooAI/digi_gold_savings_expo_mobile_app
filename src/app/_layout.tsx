@@ -2,7 +2,7 @@ import { Drawer } from "expo-router/drawer";
 import { Slot, useRouter, useNavigation, Stack } from "expo-router";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useFirstLaunch } from "@/common/hooks/useFirstLaunch";
-import { ActivityIndicator, View, StyleSheet, Alert } from "react-native";
+import { ActivityIndicator, View, StyleSheet, Alert, BackHandler } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "../global.css";
 import { useEffect, useState, useRef } from "react";
@@ -22,8 +22,10 @@ export default function RootLayout() {
   const [isNavigationReady, setIsNavigationReady] = useState(false);
   const router = useRouter();
   const { isLoggedIn } = useGlobalStore();
-  const notificationListener = useRef<Notifications.Subscription>();
-  const responseListener = useRef<Notifications.Subscription>();
+  const notificationListener = useRef<Notifications.Subscription | null>(null);
+  const responseListener = useRef<Notifications.Subscription | null>(null);
+  const [backPressCount, setBackPressCount] = useState(0);
+  const backPressTimeout = useRef<NodeJS.Timeout>();
 
   // Initialize locale
   useEffect(() => {
@@ -44,6 +46,44 @@ export default function RootLayout() {
     return unsubscribe;
   }, [navigation]);
 
+  // Handle back button press
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (isLoggedIn) {
+        setBackPressCount(prev => {
+          const newCount = prev + 1;
+          
+          // Clear previous timeout
+          if (backPressTimeout.current) {
+            clearTimeout(backPressTimeout.current);
+          }
+
+          // Reset count after 2 seconds
+          backPressTimeout.current = setTimeout(() => {
+            setBackPressCount(0);
+          }, 2000);
+
+          // Close app after 2 presses
+          if (newCount >= 2) {
+            BackHandler.exitApp();
+            return 0;
+          }
+
+          return newCount;
+        });
+        return true;
+      }
+      return false;
+    });
+
+    return () => {
+      backHandler.remove();
+      if (backPressTimeout.current) {
+        clearTimeout(backPressTimeout.current);
+      }
+    };
+  }, [isLoggedIn]);
+
   useEffect(() => {
     setupAppStateListener();
   }, []);
@@ -60,11 +100,8 @@ export default function RootLayout() {
     // Listen for user interactions with notifications
     responseListener.current = NotificationService.addNotificationResponseReceivedListener(response => {
       console.log('Notification response:', response);
-      // Handle notification response here
-      // You can navigate to specific screens based on the notification data
     });
 
-    // Cleanup listeners on unmount
     return () => {
       if (notificationListener.current) {
         Notifications.removeNotificationSubscription(notificationListener.current);
@@ -87,22 +124,20 @@ export default function RootLayout() {
     const checkAuth = async () => {
       const token = await SecureStore.getItemAsync("authToken");
       if (token) {
-        // Alert.alert( "User is logged in",token);
         router.replace("/(auth)/mpin_verify");
       } else {
-        // Alert.alert( "User is logged in",token);
         router.replace("/login");
       }
     };
     checkAuth();
   }, [isLoggedIn, isNavigationReady]);
+
   const overallLoading = isAppLoading || apiLoading;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
         <LanguageProvider1>
-          {/* Always render drawer */}
           <Drawer
             screenOptions={{
               headerShown: false,
@@ -115,7 +150,7 @@ export default function RootLayout() {
               name="index"
               options={{ drawerLabel: "Welcome", title: "Welcome" }}
             />
-            {/* <Drawer.Screen
+            <Drawer.Screen
               name="(tabs)"
               options={{ drawerLabel: "Home", title: "Home" }}
             />
@@ -125,10 +160,9 @@ export default function RootLayout() {
                 drawerLabel: "Authentication",
                 title: "Login/Register",
               }}
-            /> */}
+            />
           </Drawer>
 
-          {/* Loading overlay */}
           {overallLoading && (
             <View style={styles.loadingOverlay}>
               <ActivityIndicator size="large" color="#fff" />

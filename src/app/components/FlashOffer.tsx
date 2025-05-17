@@ -1,14 +1,13 @@
 import React, { useEffect } from "react";
 import { View, Text, StyleSheet, Dimensions, Animated } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 
 const { width } = Dimensions.get("window");
 
 const FlashOffer = ({
   messages = ["🎉 Special Offer: Get 20% off on all investments today!"],
-  backgroundColor = "#FFD700",
-  textColor = "#000",
+  textColor = "#fff",
   duration = 10000,
-  className = "bg-[#850111] text-white py-4",
 }) => {
   const translateX = new Animated.Value(width);
   const spacing = 30; // Gap between messages
@@ -33,19 +32,26 @@ const FlashOffer = ({
   }, [messages]);
 
   return (
-    <View className={className}>
-      <Animated.View
-        style={[styles.textContainer, { transform: [{ translateX }] }]}
+    <View style={styles.container}>
+      <LinearGradient
+        colors={['#850111', '#2e0406']}
+        style={styles.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
-        {messages.map((msg, index) => (
-          <Text
-            key={index}
-            style={[styles.text, { color: textColor, marginRight: spacing }]}
-          >
-            {msg}
-          </Text>
-        ))}
-      </Animated.View>
+        <Animated.View
+          style={[styles.textContainer, { transform: [{ translateX }] }]}
+        >
+          {messages.map((msg, index) => (
+            <Text
+              key={index}
+              style={[styles.text, { color: textColor, marginRight: spacing }]}
+            >
+              {msg}
+            </Text>
+          ))}
+        </Animated.View>
+      </LinearGradient>
     </View>
   );
 };
@@ -55,11 +61,16 @@ const styles = StyleSheet.create({
     height: 40,
     overflow: "hidden",
     justifyContent: "center",
-    shadowColor: "#000",
+    borderRadius: 8,
+    shadowColor: "#850111",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+  gradient: {
+    flex: 1,
+    justifyContent: "center",
   },
   textContainer: {
     flexDirection: "row",

@@ -21,6 +21,8 @@ const PaymentWebView = () => {
         status: "webview_closed",
       });
     }
+    // Navigate back to home screen when WebView is closed
+    router.replace("/(tabs)/home");
   };
 
   useEffect(() => {
@@ -40,7 +42,9 @@ const PaymentWebView = () => {
             status: "user_cancelled",
           });
         }
-        return false; // Allow default back behavior
+        // Navigate back to home screen when back is pressed
+        router.replace("/(tabs)/home");
+        return true; // Prevent default back behavior
       }
     );
     return () => backHandler.remove();
@@ -48,7 +52,7 @@ const PaymentWebView = () => {
 
   const handleNavigationStateChange = (navState: any) => {
     const currentUrl = navState.url.toLowerCase();
-    // api.get()
+    
     // Check for success keyword anywhere in the URL
     if (currentUrl.includes("success")) {
       let paymentId = "";
@@ -78,7 +82,7 @@ const PaymentWebView = () => {
       });
     }
     // Check for failure keyword anywhere in the URL
-    else if (currentUrl.includes("failure")) {
+    else if (currentUrl.includes("failure") || currentUrl.includes("cancel")) {
       if (socket) {
         socket.emit("payment_failed", {
           status: "failure",
@@ -87,6 +91,7 @@ const PaymentWebView = () => {
       }
       router.replace({
         pathname: "/(tabs)/home/PaymentFailure",
+        params: { status: "cancelled" }
       });
     }
   };
@@ -102,9 +107,9 @@ const PaymentWebView = () => {
       <WebView
         source={{ uri: Array.isArray(paymentUrl) ? paymentUrl[0] : paymentUrl }}
         style={styles.webview}
-        // onLoadStart={() => setIsLoading(true)}
-        // onLoad={() => setIsLoading(false)}
-        // onLoadEnd={() => setIsLoading(false)}
+        onLoadStart={() => setIsLoading(true)}
+        onLoad={() => setIsLoading(false)}
+        onLoadEnd={() => setIsLoading(false)}
         onNavigationStateChange={handleNavigationStateChange}
         onError={(syntheticEvent) => {
           const { nativeEvent } = syntheticEvent;
@@ -116,8 +121,20 @@ const PaymentWebView = () => {
               timestamp: new Date().toISOString(),
             });
           }
+          // Navigate to failure screen on error
+          router.replace({
+            pathname: "/(tabs)/home/PaymentFailure",
+            params: { status: "error" }
+          });
         }}
-        onHttpError={() => setIsLoading(false)}
+        onHttpError={() => {
+          setIsLoading(false);
+          // Navigate to failure screen on HTTP error
+          router.replace({
+            pathname: "/(tabs)/home/PaymentFailure",
+            params: { status: "error" }
+          });
+        }}
       />
     </SafeAreaView>
   );

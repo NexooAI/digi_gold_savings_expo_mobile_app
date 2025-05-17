@@ -6,8 +6,20 @@ import { theme } from "@/constants/theme";
 const PaymentFailure = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const status = params.status || "failure";
+
+  const getFailureMessage = () => {
+    switch (status) {
+      case "cancelled":
+        return "Payment was cancelled";
+      case "error":
+        return "An error occurred during payment";
+      default:
+        return "Something went wrong while processing your payment";
+    }
+  };
+
   const handleRetryPayment = () => {
-    // Navigate back to payment page or wherever you want the user to retry
     router.push("/(tabs)/home");
   };
 
@@ -19,15 +31,19 @@ const PaymentFailure = () => {
         style={styles.icon}
       />
       <View style={styles.detailsContainer}>
-        <Text style={styles.detailText}>
-          Failed Order ID: {params.order_id}
-        </Text>
-        <Text style={styles.detailText}>Amount: {params.amount}</Text>
+        {params.order_id && (
+          <Text style={styles.detailText}>
+            Failed Order ID: {params.order_id}
+          </Text>
+        )}
+        {params.amount && (
+          <Text style={styles.detailText}>Amount: {params.amount}</Text>
+        )}
       </View>
 
-      <Text style={styles.title}>Payment Failed</Text>
+      <Text style={styles.title}>Payment {status === "cancelled" ? "Cancelled" : "Failed"}</Text>
       <Text style={styles.message}>
-        Something went wrong while processing your payment.
+        {getFailureMessage()}
       </Text>
 
       <TouchableOpacity style={styles.button} onPress={handleRetryPayment}>
