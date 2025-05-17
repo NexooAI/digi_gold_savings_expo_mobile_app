@@ -221,10 +221,12 @@ export default function Home() {
             <SupportContactCard />
 
             <View style={styles.spacer} />
-
-            <LanguageSwitcher />
           </View>
         </ScrollView>
+
+        <View style={styles.languageSwitcherContainer}>
+          <LanguageSwitcher />
+        </View>
       </LinearGradient>
     </SafeAreaView>
   );
@@ -293,5 +295,11 @@ const styles = ScaledSheet.create({
   supportCard: {
     marginHorizontal: moderateScale(16),
     marginTop: moderateScale(16),
+  },
+  languageSwitcherContainer: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
+    zIndex: 999,
   },
 });

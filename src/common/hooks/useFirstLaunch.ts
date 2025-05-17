@@ -1,20 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
+
+const FIRST_LAUNCH_KEY = 'hasLaunchedBefore';
 
 export const useFirstLaunch = () => {
   const [isFirstLaunch, setIsFirstLaunch] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkFirstLaunch = async () => {
       try {
-        const hasLaunched = await SecureStore.getItemAsync('hasLaunched');
+        const hasLaunched = await SecureStore.getItemAsync(FIRST_LAUNCH_KEY);
         setIsFirstLaunch(!hasLaunched);
       } catch (error) {
-        console.error(error);
-        setIsFirstLaunch(true);
-      } finally {
-        setIsLoading(false);
+        console.error('Error checking first launch:', error);
+        setIsFirstLaunch(false);
       }
     };
 
@@ -23,12 +22,12 @@ export const useFirstLaunch = () => {
 
   const markAsLaunched = async () => {
     try {
-      await SecureStore.setItemAsync('hasLaunched', 'true');
+      await SecureStore.setItemAsync(FIRST_LAUNCH_KEY, 'true');
       setIsFirstLaunch(false);
     } catch (error) {
-      console.error(error);
+      console.error('Error marking as launched:', error);
     }
   };
 
-  return { isFirstLaunch, isLoading, markAsLaunched };
+  return { isFirstLaunch, markAsLaunched };
 };

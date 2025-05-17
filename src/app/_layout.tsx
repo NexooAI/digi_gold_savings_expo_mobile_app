@@ -1,5 +1,5 @@
 import { Drawer } from "expo-router/drawer";
-import { Slot, useRouter, useNavigation, Stack } from "expo-router";
+import { Stack, useRouter, useNavigation } from "expo-router";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useFirstLaunch } from "@/common/hooks/useFirstLaunch";
 import { ActivityIndicator, View, StyleSheet, Alert, BackHandler } from "react-native";
@@ -17,7 +17,7 @@ import NotificationService from '@/services/NotificationService';
 import * as Notifications from 'expo-notifications';
 
 export default function RootLayout() {
-  const { isFirstLaunch, isLoading: isAppLoading } = useFirstLaunch();
+  const { isFirstLaunch } = useFirstLaunch();
   const [apiLoading, setApiLoading] = useState<boolean>(false);
   const [isNavigationReady, setIsNavigationReady] = useState(false);
   const router = useRouter();
@@ -25,7 +25,7 @@ export default function RootLayout() {
   const notificationListener = useRef<Notifications.Subscription | null>(null);
   const responseListener = useRef<Notifications.Subscription | null>(null);
   const [backPressCount, setBackPressCount] = useState(0);
-  const backPressTimeout = useRef<NodeJS.Timeout>();
+  const backPressTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize locale
   useEffect(() => {
@@ -112,16 +112,23 @@ export default function RootLayout() {
     };
   }, []);
 
+  // Handle navigation based on first launch and auth state
   useEffect(() => {
-    if (!isNavigationReady) return;
+    if (!isNavigationReady || isFirstLaunch === null) return;
 
-    // If user is already logged in, redirect to home.
-    if (isLoggedIn) {
-      router.replace("/(tabs)/home");
-      return;
-    }
+    const handleNavigation = async () => {
+      if (isFirstLaunch) {
+        router.replace("/intro");
+        return;
+      }
 
-    const checkAuth = async () => {
+      // If user is already logged in, redirect to home
+      if (isLoggedIn) {
+        router.replace("/(tabs)/home");
+        return;
+      }
+
+      // Check for existing auth token
       const token = await SecureStore.getItemAsync("authToken");
       if (token) {
         router.replace("/(auth)/mpin_verify");
@@ -129,39 +136,37 @@ export default function RootLayout() {
         router.replace("/login");
       }
     };
-    checkAuth();
-  }, [isLoggedIn, isNavigationReady]);
 
-  const overallLoading = isAppLoading || apiLoading;
+    handleNavigation();
+  }, [isFirstLaunch, isLoggedIn, isNavigationReady]);
+
+  const overallLoading = apiLoading;
+
+  if (isFirstLaunch === null) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
         <LanguageProvider1>
-          <Drawer
-            screenOptions={{
-              headerShown: false,
-              drawerActiveBackgroundColor: theme.colors.primary,
-              drawerActiveTintColor: "white",
-              drawerInactiveTintColor: "black",
-            }}
-          >
-            <Drawer.Screen
-              name="index"
-              options={{ drawerLabel: "Welcome", title: "Welcome" }}
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="intro" options={{ gestureEnabled: false }} />
+            <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
+            <Stack.Screen name="(auth)" options={{ gestureEnabled: false }} />
+            <Stack.Screen name="login" options={{ gestureEnabled: false }} />
+            <Stack.Screen 
+              name="[...missing]" 
+              options={{ 
+                gestureEnabled: false,
+                animation: 'fade',
+              }} 
             />
-            <Drawer.Screen
-              name="(tabs)"
-              options={{ drawerLabel: "Home", title: "Home" }}
-            />
-            <Drawer.Screen
-              name="(auth)"
-              options={{
-                drawerLabel: "Authentication",
-                title: "Login/Register",
-              }}
-            />
-          </Drawer>
+          </Stack>
 
           {overallLoading && (
             <View style={styles.loadingOverlay}>

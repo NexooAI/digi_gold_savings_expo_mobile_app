@@ -7,57 +7,80 @@ import {
   ImageBackground,
   TouchableOpacity,
   FlatList,
+  Animated,
 } from "react-native";
-import { router, useRouter } from "expo-router";
+import { router } from "expo-router";
 import { useFirstLaunch } from "@/common/hooks/useFirstLaunch";
-const handleGetStarted = () => {
-  markAsLaunched();
-  router.replace("/");
-};
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width, height } = Dimensions.get("window");
 
-const slides = [
+// Static data - will be replaced with API data
+const staticSlides = [
   {
     id: "1",
     image: require("../../assets/images/intro_1.png"),
-    title: "Welcome to GoldApp",
-    subtitle: "Your trusted gold trading platform",
   },
   {
     id: "2",
     image: require("../../assets/images/intro_2.png"),
-    title: "Trade with Confidence",
-    subtitle: "Secure and reliable transactions",
   },
   {
     id: "3",
     image: require("../../assets/images/intro_3.png"),
-    title: "Start Your Journey",
-    subtitle: "Join thousands of successful traders",
   },
 ];
+
+// API service for intro slides
+const IntroService = {
+  // TODO: Replace with actual API endpoint
+  // async fetchIntroSlides() {
+  //   try {
+  //     const response = await fetch('YOUR_API_ENDPOINT/intro-slides');
+  //     const data = await response.json();
+  //     return data;
+  //   } catch (error) {
+  //     console.error('Error fetching intro slides:', error);
+  //     return staticSlides; // Fallback to static data
+  //   }
+  // }
+};
 
 export default function Intro() {
   const { markAsLaunched } = useFirstLaunch();
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const router = useRouter();
   const flatListRef = useRef<FlatList>(null);
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const [slides, setSlides] = useState(staticSlides);
+
+  // TODO: Uncomment when API is ready
+  // useEffect(() => {
+  //   const loadSlides = async () => {
+  //     const apiSlides = await IntroService.fetchIntroSlides();
+  //     setSlides(apiSlides);
+  //   };
+  //   loadSlides();
+  // }, []);
+
+  const handleGetStarted = async () => {
+    await markAsLaunched();
+    router.replace("/login");
+  };
 
   const renderSlide = ({ item }) => {
     return (
-      <ImageBackground
-        source={item.image}
-        style={styles.slide}
-        resizeMode="cover"
-      >
-        {/* <View style={styles.overlay}>
-          <View style={styles.textContainer}>
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.subtitle}>{item.subtitle}</Text>
-          </View>
-        </View> */}
-      </ImageBackground>
+      <View style={styles.slide}>
+        <ImageBackground
+          source={item.image}
+          style={styles.backgroundImage}
+          resizeMode="cover"
+        >
+          <LinearGradient
+            colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.7)']}
+            style={styles.overlay}
+          />
+        </ImageBackground>
+      </View>
     );
   };
 
@@ -65,15 +88,38 @@ export default function Intro() {
     return (
       <View style={styles.footer}>
         <View style={styles.indicatorContainer}>
-          {slides.map((_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.indicator,
-                currentSlideIndex === index && styles.activeIndicator,
-              ]}
-            />
-          ))}
+          {slides.map((_, index) => {
+            const inputRange = [
+              (index - 1) * width,
+              index * width,
+              (index + 1) * width,
+            ];
+
+            const dotWidth = scrollX.interpolate({
+              inputRange,
+              outputRange: [8, 20, 8],
+              extrapolate: 'clamp',
+            });
+
+            const opacity = scrollX.interpolate({
+              inputRange,
+              outputRange: [0.4, 1, 0.4],
+              extrapolate: 'clamp',
+            });
+
+            return (
+              <Animated.View
+                key={index}
+                style={[
+                  styles.indicator,
+                  {
+                    width: dotWidth,
+                    opacity,
+                  },
+                ]}
+              />
+            );
+          })}
         </View>
 
         <View style={styles.buttonContainer}>
@@ -83,6 +129,7 @@ export default function Intro() {
               onPress={() => {
                 flatListRef.current?.scrollToIndex({
                   index: currentSlideIndex + 1,
+                  animated: true,
                 });
               }}
             >
@@ -91,7 +138,7 @@ export default function Intro() {
           ) : (
             <TouchableOpacity
               style={[styles.button, styles.getStartedButton]}
-              onPress={() => router.replace("/(tabs)")}
+              onPress={handleGetStarted}
             >
               <Text style={styles.buttonText}>Get Started</Text>
             </TouchableOpacity>
@@ -99,12 +146,6 @@ export default function Intro() {
         </View>
       </View>
     );
-  };
-
-  const onScroll = (event) => {
-    const { contentOffset } = event.nativeEvent;
-    const index = Math.round(contentOffset.x / width);
-    setCurrentSlideIndex(index);
   };
 
   return (
@@ -116,8 +157,15 @@ export default function Intro() {
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        onScroll={onScroll}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+          { useNativeDriver: false }
+        )}
         scrollEventThrottle={16}
+        onMomentumScrollEnd={(event) => {
+          const index = Math.round(event.nativeEvent.contentOffset.x / width);
+          setCurrentSlideIndex(index);
+        }}
       />
       <Footer />
     </View>
@@ -127,33 +175,19 @@ export default function Intro() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#000",
   },
   slide: {
     width,
     height,
   },
+  backgroundImage: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+  },
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.3)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  textContainer: {
-    alignItems: "center",
-    paddingHorizontal: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#ffffff",
-    textAlign: "center",
-    marginBottom: 15,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: "#ffffff",
-    textAlign: "center",
-    paddingHorizontal: 20,
   },
   footer: {
     position: "absolute",
@@ -167,14 +201,9 @@ const styles = StyleSheet.create({
   },
   indicator: {
     height: 8,
-    width: 8,
     borderRadius: 4,
-    backgroundColor: "rgba(255,255,255,0.4)",
-    marginHorizontal: 5,
-  },
-  activeIndicator: {
     backgroundColor: "#ffc90c",
-    width: 20,
+    marginHorizontal: 5,
   },
   buttonContainer: {
     paddingHorizontal: 20,
@@ -184,6 +213,14 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 25,
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   getStartedButton: {
     backgroundColor: "#7c0a12",
@@ -194,6 +231,3 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
-function markAsLaunched() {
-  throw new Error("Function not implemented.");
-}

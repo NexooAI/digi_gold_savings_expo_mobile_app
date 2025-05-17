@@ -43,19 +43,8 @@ export default function Offers() {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      {/* <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="white" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Exclusive Offers</Text>
-      </View> */}
+    <SafeAreaView style={styles.container} edges={['top']}>
       <AppHeader showBackButton={true} backRoute="index" />
-
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Hero Section */}
         <LinearGradient
@@ -123,23 +112,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F9F9F9",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: theme.colors.primary,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    elevation: 4,
-  },
-  backButton: {
-    marginRight: 16,
-  },
-  headerTitle: {
-    color: "white",
-    fontSize: 20,
-    fontWeight: "600",
-    letterSpacing: 0.5,
   },
   scrollContent: {
     paddingVertical: 24,
