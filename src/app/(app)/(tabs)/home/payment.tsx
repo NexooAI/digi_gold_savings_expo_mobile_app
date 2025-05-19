@@ -13,6 +13,7 @@ import io from "socket.io-client";
 import apiService from "../../../services/api";
 import { theme } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import CustomAlert from "@/app/components/Alert";
 
 const PaymentProcessScreen = () => {
   const router = useRouter();
@@ -21,6 +22,23 @@ const PaymentProcessScreen = () => {
   const amount = parseFloat(
     Array.isArray(amountString) ? amountString[0] : amountString
   );
+  const [alertState, setAlertState] = React.useState({
+    visible: false,
+    title: "",
+    message: "",
+    type: "error" as "success" | "error" | "info",
+    txn_id: "",
+    order_id: "",
+    amount: "",
+    buttons: [{ text: "OK", onPress: () => {} }],
+  });
+  const [paymentSuccessData, setPaymentSuccessData] = useState<{
+    txn_id?: string;
+    amount?: number | string;
+    order_id?: string;
+  } | null>(null);
+  const MAX_RETRY = 3;
+  const [retryCount, setRetryCount] = useState(MAX_RETRY);
 
   // Memoize parsed details so they don’t change on every render.
   const parsedUserDetails = useMemo(
@@ -65,11 +83,134 @@ const PaymentProcessScreen = () => {
     return unsubscribe;
   }, [navigation]);
 
-  const testPayment = () => {
+  const handlePaymentSuccess = (data: any) => {
+    setPaymentSuccessData({
+      txn_id: data?.paymentResponse?.txn_id,
+      amount: data?.paymentResponse?.amount,
+      order_id: data?.orderId,
+    });
+    setAlertState({
+      visible: true,
+      title: "Payment Successful",
+      message: data.message || "Your payment was processed successfully",
+      type: "success",
+      txn_id: data?.paymentResponse?.txn_id || "",
+      order_id: data?.orderId || "",
+      amount:
+        data?.paymentResponse?.amount !== undefined &&
+        data?.paymentResponse?.amount !== null
+          ? String(data?.paymentResponse?.amount)
+          : "",
+      buttons: [
+        {
+          text: "Continue",
+          onPress: () => {
+            setAlertState((prev) => ({ ...prev, visible: false }));
+            setPaymentSuccessData(null);
+            router.push("/(tabs)/savings");
+          },
+        },
+      ],
+    });
+  };
+
+  // const handlePaymentFailure = (data: {
+  //   paymentResponse?: { txn_id?: string; amount?: string | number };
+  //   orderId?: string;
+  //   errorMessage?: string;
+  // }) => {
+  //   setAlertState({
+  //     visible: true,
+  //     title: "Payment Failed",
+  //     message:
+  //       data.errorMessage || "Your payment has failed. Please try again.",
+  //     type: "error",
+  //     txn_id: data?.paymentResponse?.txn_id || "",
+  //     order_id: data?.orderId || "",
+  //     amount:
+  //       data?.paymentResponse?.amount !== undefined &&
+  //       data?.paymentResponse?.amount !== null
+  //         ? String(data?.paymentResponse?.amount)
+  //         : "",
+  //     buttons: [
+  //       ...(retryCount > 0
+  //         ? [
+  //             {
+  //               text: `Retry (${retryCount})`,
+  //               onPress: () => {
+  //                 setRetryCount((prev) => prev - 1);
+  //                 retryPayment(data?.orderId);
+  //                 setAlertState((prev) => ({ ...prev, visible: false }));
+  //                 setPaymentSuccessData(null);
+  //               },
+  //             },
+  //           ]
+  //         : []),
+  //       {
+  //         text: "Cancel",
+  //         onPress: () => {
+  //           router.push("/(tabs)/home");
+  //           setAlertState((prev) => ({ ...prev, visible: false }));
+  //           setPaymentSuccessData(null);
+  //         },
+  //       },
+  //     ],
+  //   });
+  // };
+  const handlePaymentFailure = (data) => {
+    showPaymentFailureAlert(data);
+  };
+  const showPaymentFailureAlert = (data) => {
+    setAlertState({
+      visible: true,
+      title: "Payment Failed",
+      message:
+        data.errorMessage || "Your payment has failed. Please try again.",
+      type: "error",
+      txn_id: data?.paymentResponse?.txn_id || "",
+      order_id: data?.orderId || "",
+      amount:
+        data?.paymentResponse?.amount !== undefined &&
+        data?.paymentResponse?.amount !== null
+          ? String(data?.paymentResponse?.amount)
+          : "",
+      buttons: [
+        ...(retryCount > 0
+          ? [
+              {
+                text: `Retry (${retryCount})`,
+                onPress: () => {
+                  setAlertState((prev) => ({ ...prev, visible: false }));
+                  setPaymentSuccessData(null);
+                  setRetryCount((prev) => prev - 1);
+                  retryPayment(data?.orderId); // <== call retry (will call handlePaymentFailure if fails)
+                },
+              },
+            ]
+          : []),
+        {
+          text: "Cancel",
+          onPress: () => {
+            router.push("/(tabs)/home");
+            setAlertState((prev) => ({ ...prev, visible: false }));
+            setPaymentSuccessData(null);
+          },
+        },
+      ],
+    });
+  };
+
+  const retryPayment = (orderId) => {
+    // Your retry implementation
+    console.log("Retrying payment for order:", orderId);
+    processedPaymentRef.current = false;
+    paymentInit();
+    // Example: router.push(`/payment?orderId=${orderId}`);
+  };
+  const paymentInit = () => {
     // alert("Payment initiated waiting for payment gateway ");
-    if (!isNavigationReady) {
-      return;
-    }
+    if (!isNavigationReady) return;
+    processedPaymentRef.current = false;
     setIsLoading(true);
 
     // Notify server that payment was initiated
@@ -131,7 +272,7 @@ const PaymentProcessScreen = () => {
       // Prevent processing the same event twice.
       if (processedPaymentRef.current) return;
       processedPaymentRef.current = true;
-
+      console.log("Payment status update received:", data);
       const paymentSuccess = data.status === "success";
       let paymentStsId = null;
       try {
@@ -175,28 +316,29 @@ const PaymentProcessScreen = () => {
             parsedUserDetails.data?.data?.id || parsedUserDetails.investmentId,
             investmentPayload
           );
-
-          router.push({
-            pathname: "/(tabs)/home/PaymentSuccess",
-            params: {
-              txn_id: data?.paymentResponse?.txn_id,
-              amount: data?.paymentResponse?.amount,
-              order_id: data?.orderId,
-            },
-          });
+          handlePaymentSuccess(data);
+          // router.push({
+          //   pathname: "/(tabs)/home/PaymentSuccess",
+          //   params: {
+          //     txn_id: data?.paymentResponse?.txn_id,
+          //     amount: data?.paymentResponse?.amount,
+          //     order_id: data?.orderId,
+          //   },
+          // });
         } else if (data.status === "failure") {
-          Alert.alert(
-            "Payment Failed",
-            data.message || "Payment could not be completed"
-          );
-          router.push({
-            pathname: "/(tabs)/home/PaymentFailure",
-            params: {
-              txn_id: data?.paymentResponse?.txn_id,
-              amount: data?.paymentResponse?.amount,
-              order_id: data?.orderId,
-            },
-          });
+          handlePaymentFailure(data);
+          // Alert.alert(
+          //   "Payment Failed",
+          //   data.message || "Payment could not be completed"
+          // );
+          // router.push({
+          //   pathname: "/(tabs)/home/PaymentFailure",
+          //   params: {
+          //     txn_id: data?.paymentResponse?.txn_id,
+          //     amount: data?.paymentResponse?.amount,
+          //     order_id: data?.orderId,
+          //   },
+          // });
         }
 
         // Call the Transaction API with paymentId set accordingly (only once)
@@ -274,7 +416,6 @@ const PaymentProcessScreen = () => {
       throw error;
     }
   };
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -308,11 +449,22 @@ const PaymentProcessScreen = () => {
         {isLoading ? (
           <ActivityIndicator size="large" color={theme.colors.primary} />
         ) : (
-          <TouchableOpacity style={styles.payButton} onPress={testPayment}>
+          <TouchableOpacity style={styles.payButton} onPress={paymentInit}>
             <Text style={styles.payButtonText}>Pay Now</Text>
           </TouchableOpacity>
         )}
       </View>
+      <CustomAlert
+        visible={alertState.visible}
+        title={alertState.title}
+        message={alertState.message}
+        type={alertState.type}
+        buttons={alertState.buttons}
+        onClose={() => setAlertState((prev) => ({ ...prev, visible: false }))}
+        txn_id={alertState.txn_id}
+        order_id={alertState.order_id}
+        amount={alertState.amount}
+      />
     </SafeAreaView>
   );
 };

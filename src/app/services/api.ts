@@ -5,7 +5,9 @@ import axios, { AxiosRequestConfig, AxiosResponse, AxiosError, InternalAxiosRequ
 import { router } from 'expo-router';
 import * as SecureStore from "expo-secure-store";
 import NetInfo from '@react-native-community/netinfo';
+import { showToast } from './notification';
 import { Alert } from 'react-native';
+import Toast from 'react-native-root-toast';
 
 // Network state check
 const checkNetworkState = async () => {
@@ -26,10 +28,10 @@ const checkTokenValidity = async () => {
   }
 };
 
-// Create an Axios instance with a base URL and default config
+// Create an Axios instance
 const api = axios.create({
   baseURL: theme.baseUrl,
-  timeout: 15000, // Increased timeout to 15 seconds
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -46,24 +48,12 @@ const handleLogout = async () => {
   }
 };
 
-// Schemes API
-export const schemes = {
-  getSchemes: () => api.get('/schemes'),
-  getSchemeById: (id: string) => api.get(`/schemes/${id}`),
-};
-
-// Rates API
-export const rates = {
-  getLiveRates: () => api.get('/rates/current'),
-};
-
 // Request interceptor
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
-      // Check network state before making request
       await checkNetworkState();
-      
+
       const token = await checkTokenValidity();
       if (token) {
         config.headers = config.headers || new axios.AxiosHeaders();
@@ -72,22 +62,7 @@ api.interceptors.request.use(
       return config;
     } catch (error: any) {
       if (error.message === 'NO_INTERNET') {
-        Alert.alert(
-          'No Internet Connection',
-          'Please check your internet connection and try again.',
-          [
-            {
-              text: 'Retry',
-              onPress: async () => {
-                const netState = await NetInfo.fetch();
-                if (netState.isConnected) {
-                  // Retry the request
-                  return config;
-                }
-              }
-            }
-          ]
-        );
+        showToast('No internet connection. Please check your network.', 'error');
       }
       return Promise.reject(error);
     }
@@ -100,49 +75,78 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response: AxiosResponse) => {
+    // Show success toast for non-GET requests
+    if (response.config.method?.toUpperCase() !== 'GET') {
+      const message = response.data?.message || 'Operation completed successfully';
+      showToast(message, 'success', Toast.durations.SHORT);
+    }
     return response;
   },
   async (error: AxiosError) => {
+    // Handle different error cases
     if (error.code === 'ECONNABORTED') {
-      Alert.alert(
-        'Request Timeout',
-        'The request took too long to complete. Please try again.',
-        [{ text: 'OK' }]
-      );
+      showToast('Request timeout. Please try again.', 'error');
     } else if (!error.response) {
-      Alert.alert(
-        'Network Error',
-        'Unable to connect to the server. Please check your internet connection.',
-        [{ text: 'OK' }]
-      );
-    } else if (error.response.status === 401) {
-      Alert.alert(
-        'Session Expired',
-        'Your session has expired. Please login again.',
-        [{ 
-          text: 'OK',
-          onPress: () => handleLogout()
-        }]
-      );
-    } else if (error.response.status === 500) {
-      Alert.alert(
-        'Server Error',
-        'Something went wrong on our end. Please try again later.',
-        [{ text: 'OK' }]
-      );
+      showToast('Network error. Please check your connection.', 'error');
     } else {
-      const errorMessage = error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data
-        ? (error.response.data as { message: string }).message
-        : 'An unexpected error occurred.';
-      
-      Alert.alert(
-        'Error',
-        errorMessage,
-        [{ text: 'OK' }]
-      );
+      const status = error.response?.status;
+      const errorData = error.response?.data;
+
+      let message = 'An unexpected error occurred';
+      if (typeof errorData === 'object' && errorData !== null) {
+        message = (errorData as any).message ||
+          (errorData as any).error ||
+          JSON.stringify(errorData);
+      } else if (typeof errorData === 'string') {
+        message = errorData;
+      }
+
+      switch (status) {
+        case 401:
+          showToast('Session expired. Please login again.', 'error');
+          Alert.alert(
+            'Session Expired',
+            'Your session has expired. Please login again.',
+            [{
+              text: 'OK',
+              onPress: () => handleLogout()
+            }]
+          );
+          break;
+        case 403:
+          showToast('You are not authorized for this action.', 'error');
+          break;
+        case 404:
+          showToast('Resource not found.', 'warning');
+          break;
+        case 422: // Validation errors
+          if (errorData && typeof errorData === 'object' && 'errors' in errorData) {
+            const errors = (errorData as { errors: Record<string, string[]> }).errors;
+            message = Object.values(errors).flat().join('\n');
+          }
+          showToast(message, 'warning');
+          break;
+        case 500:
+          showToast('Server error. Please try again later.', 'error');
+          break;
+        default:
+          showToast(message, 'error');
+          break;
+      }
     }
+
     return Promise.reject(error);
   }
 );
+
+// API endpoints
+export const schemes = {
+  getSchemes: () => api.get('/schemes'),
+  getSchemeById: (id: string) => api.get(`/schemes/${id}`),
+};
+
+export const rates = {
+  getLiveRates: () => api.get('/rates/current'),
+};
 
 export default api;

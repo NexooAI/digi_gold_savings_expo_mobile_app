@@ -25,6 +25,7 @@ import { initiatePayment, initializeSocket } from "../../../util/paymentUtils";
 import { moderateScale } from "react-native-size-matters";
 import SupportContactCard from "@/app/components/SupportContactCard";
 import CustomAlert from "@/app/components/Alert";
+import Icon from "react-native-vector-icons/AntDesign";
 
 type Transaction = {
   paymentId: number;
@@ -54,14 +55,14 @@ type SchemeParams = {
   noOfIns: string;
 };
 
-const DetailRow = ({ label, value }) => (
-  <View style={styles.detailRow}>
-    <Text style={styles.detailLabel}>{label}:</Text>
-    <Text style={styles.detailValue} numberOfLines={2} ellipsizeMode="tail">
-      {value}
-    </Text>
-  </View>
-);
+// const DetailRow = ({ label, value }) => (
+//   <View style={styles.detailRow}>
+//     <Text style={styles.detailLabel}>{label}:</Text>
+//     <Text style={styles.detailValue} numberOfLines={2} ellipsizeMode="tail">
+//       {value}
+//     </Text>
+//   </View>
+// );
 
 const HEADER_HEIGHT = Platform.OS === "ios" ? 44 : 56;
 
@@ -194,7 +195,30 @@ const SavingsDetail = () => {
     };
     fetchTransactions();
   }, [params.id]);
-
+  const DetailRow = ({
+    label,
+    value,
+    labelColor = "#595959",
+    valueColor = "#262626",
+    icon,
+  }) => (
+    <View
+      style={{ flexDirection: "row", alignItems: "center", paddingVertical: 4 }}
+    >
+      {icon && (
+        <Icon
+          name={icon}
+          size={16}
+          color="#bfbfbf"
+          style={{ marginRight: 8 }}
+        />
+      )}
+      <Text style={{ flex: 1, color: labelColor, fontSize: 14 }}>{label}</Text>
+      <Text style={{ color: valueColor, fontSize: 14, fontWeight: "500" }}>
+        {value}
+      </Text>
+    </View>
+  );
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f3f4f6" }}>
       {/* Fixed Header */}
@@ -234,43 +258,166 @@ const SavingsDetail = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Summary Card */}
-        <View style={styles.summaryCard}>
-          <View style={styles.summaryRow}>
-            <View>
-              <Text style={styles.summaryLabel}>
+        <View
+          style={[
+            styles.summaryCard,
+            {
+              backgroundColor: "#f8f9fa",
+              borderRadius: 12,
+              padding: 16,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              elevation: 3,
+            },
+          ]}
+        >
+          {/* Top Row with Invested and Gold */}
+          <View
+            style={[
+              styles.summaryRow,
+              {
+                backgroundColor: "#ffffff",
+                borderRadius: 8,
+                padding: 12,
+                flexDirection: "row",
+                justifyContent: "space-between",
+              },
+            ]}
+          >
+            <View
+              style={{
+                padding: 8,
+                backgroundColor: "#e6f7ff",
+                borderRadius: 6,
+                flex: 1,
+                marginRight: 8,
+              }}
+            >
+              <Text
+                style={[
+                  styles.summaryLabel,
+                  { color: "#1890ff", fontSize: 14, fontWeight: "500" },
+                ]}
+              >
                 {translations.totalInvested}
               </Text>
-              <Text style={styles.summaryValue}>
+              <Text
+                style={[
+                  styles.summaryValue,
+                  {
+                    color: "#0050b3",
+                    fontSize: 20,
+                    fontWeight: "bold",
+                    marginTop: 4,
+                  },
+                ]}
+              >
                 ₹{Number(params.totalPaid).toLocaleString()}
               </Text>
             </View>
-            <View style={styles.summaryColumn}>
-              <Text style={styles.summaryLabel}>
+            <View
+              style={{
+                padding: 8,
+                backgroundColor: "#fff7e6",
+                borderRadius: 6,
+                flex: 1,
+                marginLeft: 8,
+              }}
+            >
+              <Text
+                style={[
+                  styles.summaryLabel,
+                  { color: "#fa8c16", fontSize: 14, fontWeight: "500" },
+                ]}
+              >
                 {translations.goldAccumulated}
               </Text>
-              <Text style={styles.summaryValue}>{params.goldWeight}g</Text>
+              <Text
+                style={[
+                  styles.summaryValue,
+                  {
+                    color: "#ad4e00",
+                    fontSize: 20,
+                    fontWeight: "bold",
+                    marginTop: 4,
+                  },
+                ]}
+              >
+                {params.goldWeight}g
+              </Text>
             </View>
           </View>
-          <View style={{ marginTop: 8 }}>
+
+          {/* Details Section */}
+          <View style={{ marginTop: 16 }}>
             <DetailRow
               label={translations.accountHolder}
               value={params.accountHolder || "N/A"}
+              labelColor="#595959"
+              valueColor="#262626"
+              icon="user"
             />
+            <View
+              style={{
+                height: 1,
+                backgroundColor: "#f0f0f0",
+                marginVertical: 8,
+              }}
+            />
+
             <DetailRow
               label={translations.schemeCode}
               value={params.schemeCode || "N/A"}
+              labelColor="#595959"
+              valueColor="#262626"
+              icon="credit-card"
             />
+            <View
+              style={{
+                height: 1,
+                backgroundColor: "#f0f0f0",
+                marginVertical: 8,
+              }}
+            />
+
             <DetailRow
               label={translations.monthlyEMI}
               value={`₹${Number(params.emiAmount).toLocaleString()}`}
+              labelColor="#595959"
+              valueColor="#389e0d"
+              icon="calendar"
             />
+            <View
+              style={{
+                height: 1,
+                backgroundColor: "#f0f0f0",
+                marginVertical: 8,
+              }}
+            />
+
             <DetailRow
               label={translations.maturityDate}
               value={params.maturityDate}
+              labelColor="#595959"
+              valueColor="#262626"
+              icon="clock-circle"
             />
+            <View
+              style={{
+                height: 1,
+                backgroundColor: "#f0f0f0",
+                marginVertical: 8,
+              }}
+            />
+
             <DetailRow
               label={translations.paymentProgress}
               value={`${params.monthsPaid}/${params.noOfIns} ${translations.months}`}
+              labelColor="#595959"
+              valueColor="#d46b08"
+              icon="check-circle"
             />
           </View>
         </View>
@@ -397,6 +544,7 @@ const SavingsDetail = () => {
                                 year: "numeric",
                                 timeZone: "UTC",
                               })}
+                              icon={undefined}
                             />
 
                             <DetailRow
@@ -404,11 +552,13 @@ const SavingsDetail = () => {
                               value={`₹${Number(
                                 selectedTransaction?.amountPaid
                               ).toLocaleString()}`}
+                              icon={undefined}
                             />
 
                             <DetailRow
                               label="Transaction ID"
                               value={selectedTransaction?.transactionId}
+                              icon={undefined}
                             />
 
                             <DetailRow
@@ -416,6 +566,7 @@ const SavingsDetail = () => {
                               value={(
                                 selectedTransaction?.paymentMode || "NB"
                               ).toUpperCase()}
+                              icon={undefined}
                             />
                           </View>
 

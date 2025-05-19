@@ -107,9 +107,9 @@ const PaymentWebView = () => {
       <WebView
         source={{ uri: Array.isArray(paymentUrl) ? paymentUrl[0] : paymentUrl }}
         style={styles.webview}
-        onLoadStart={() => setIsLoading(true)}
-        onLoad={() => setIsLoading(false)}
-        onLoadEnd={() => setIsLoading(false)}
+        // onLoadStart={() => setIsLoading(true)}
+        // onLoad={() => setIsLoading(false)}
+        // onLoadEnd={() => setIsLoading(false)}
         onNavigationStateChange={handleNavigationStateChange}
         onError={(syntheticEvent) => {
           const { nativeEvent } = syntheticEvent;

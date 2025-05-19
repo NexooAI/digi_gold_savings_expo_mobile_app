@@ -2,10 +2,16 @@ import { Drawer } from "expo-router/drawer";
 import { Stack, useRouter, useNavigation } from "expo-router";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useFirstLaunch } from "@/common/hooks/useFirstLaunch";
-import { ActivityIndicator, View, StyleSheet, Alert, BackHandler } from "react-native";
+import {
+  ActivityIndicator,
+  View,
+  StyleSheet,
+  Alert,
+  BackHandler,
+} from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "../global.css";
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { initializeAppLocale } from "@/i18n";
 import { LanguageProvider1 } from "@/contexts/LanguageContext";
 import useGlobalStore from "@/store/global.store";
@@ -13,8 +19,9 @@ import * as SecureStore from "expo-secure-store";
 import LoadingService from "./services/loadingServices";
 import setupAppStateListener from "@/store/appState";
 import { theme } from "@/constants/theme";
-import NotificationService from '@/services/NotificationService';
-import * as Notifications from 'expo-notifications';
+import NotificationService from "@/services/NotificationService";
+import * as Notifications from "expo-notifications";
+import { RootSiblingParent } from "react-native-root-siblings";
 
 export default function RootLayout() {
   const { isFirstLaunch } = useFirstLaunch();
@@ -48,33 +55,36 @@ export default function RootLayout() {
 
   // Handle back button press
   useEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (isLoggedIn) {
-        setBackPressCount(prev => {
-          const newCount = prev + 1;
-          
-          // Clear previous timeout
-          if (backPressTimeout.current) {
-            clearTimeout(backPressTimeout.current);
-          }
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        if (isLoggedIn) {
+          setBackPressCount((prev) => {
+            const newCount = prev + 1;
 
-          // Reset count after 2 seconds
-          backPressTimeout.current = setTimeout(() => {
-            setBackPressCount(0);
-          }, 2000);
+            // Clear previous timeout
+            if (backPressTimeout.current) {
+              clearTimeout(backPressTimeout.current);
+            }
 
-          // Close app after 2 presses
-          if (newCount >= 2) {
-            BackHandler.exitApp();
-            return 0;
-          }
+            // Reset count after 2 seconds
+            backPressTimeout.current = setTimeout(() => {
+              setBackPressCount(0);
+            }, 2000);
 
-          return newCount;
-        });
-        return true;
+            // Close app after 2 presses
+            if (newCount >= 2) {
+              BackHandler.exitApp();
+              return 0;
+            }
+
+            return newCount;
+          });
+          return true;
+        }
+        return false;
       }
-      return false;
-    });
+    );
 
     return () => {
       backHandler.remove();
@@ -93,18 +103,24 @@ export default function RootLayout() {
     NotificationService.registerForPushNotificationsAsync();
 
     // Listen for incoming notifications while the app is foregrounded
-    notificationListener.current = NotificationService.addNotificationReceivedListener(notification => {
-      console.log('Notification received:', notification);
-    });
+    notificationListener.current =
+      NotificationService.addNotificationReceivedListener((notification) => {
+        console.log("Notification received:", notification);
+      });
 
     // Listen for user interactions with notifications
-    responseListener.current = NotificationService.addNotificationResponseReceivedListener(response => {
-      console.log('Notification response:', response);
-    });
+    responseListener.current =
+      NotificationService.addNotificationResponseReceivedListener(
+        (response) => {
+          console.log("Notification response:", response);
+        }
+      );
 
     return () => {
       if (notificationListener.current) {
-        Notifications.removeNotificationSubscription(notificationListener.current);
+        Notifications.removeNotificationSubscription(
+          notificationListener.current
+        );
       }
       if (responseListener.current) {
         Notifications.removeNotificationSubscription(responseListener.current);
@@ -151,31 +167,33 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <LanguageProvider1>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="intro" options={{ gestureEnabled: false }} />
-            <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
-            <Stack.Screen name="(auth)" options={{ gestureEnabled: false }} />
-            <Stack.Screen name="login" options={{ gestureEnabled: false }} />
-            <Stack.Screen 
-              name="[...missing]" 
-              options={{ 
-                gestureEnabled: false,
-                animation: 'fade',
-              }} 
-            />
-          </Stack>
+    <RootSiblingParent>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <AuthProvider>
+          <LanguageProvider1>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="intro" options={{ gestureEnabled: false }} />
+              <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
+              <Stack.Screen name="(auth)" options={{ gestureEnabled: false }} />
+              <Stack.Screen name="login" options={{ gestureEnabled: false }} />
+              <Stack.Screen 
+                name="[...missing]" 
+                options={{ 
+                  gestureEnabled: false,
+                  animation: 'fade',
+                }} 
+              />
+            </Stack>
 
-          {overallLoading && (
-            <View style={styles.loadingOverlay}>
-              <ActivityIndicator size="large" color="#fff" />
-            </View>
-          )}
-        </LanguageProvider1>
-      </AuthProvider>
-    </GestureHandlerRootView>
+            {overallLoading && (
+              <View style={styles.loadingOverlay}>
+                <ActivityIndicator size="large" color="#fff" />
+              </View>
+            )}
+          </LanguageProvider1>
+        </AuthProvider>
+      </GestureHandlerRootView>
+    </RootSiblingParent>
   );
 }
 

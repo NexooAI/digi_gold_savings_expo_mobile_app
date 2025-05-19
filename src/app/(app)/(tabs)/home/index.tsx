@@ -7,6 +7,7 @@ import {
   Alert,
   Dimensions,
   RefreshControl,
+  TouchableOpacity,
 } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from "expo-router";
@@ -65,6 +66,7 @@ export default function Home() {
       saveasgold: t("saveasgold"),
       saveasmoney: t("saveasmoney"),
       futureplus: t("futureplus"),
+      goldSchemes: "Gold Schemes",
     }),
     [language]
   );
@@ -216,6 +218,21 @@ export default function Home() {
 
             <ProductsList schemes={schemeData} />
 
+            {/* Gold Schemes Button */}
+            <TouchableOpacity
+              style={styles.goldSchemesButton}
+              onPress={() => router.push("/(app)/(tabs)/home/schemes")}
+            >
+              <LinearGradient
+                colors={['#D4AF37', '#FFD700']}
+                style={styles.goldSchemesGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Text style={styles.goldSchemesText}>{translations.goldSchemes}</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            
             <YouTubeVideo />
 
             <SupportContactCard />
@@ -301,5 +318,28 @@ const styles = ScaledSheet.create({
     bottom: 30,
     right: 20,
     zIndex: 999,
+  },
+  goldSchemesButton: {
+    width: '90%',
+    marginVertical: moderateScale(16),
+    borderRadius: moderateScale(8),
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  goldSchemesGradient: {
+    paddingVertical: moderateScale(16),
+    paddingHorizontal: moderateScale(24),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  goldSchemesText: {
+    color: '#000000',
+    fontSize: moderateScale(16),
+    fontWeight: '600',
+    textTransform: 'uppercase',
   },
 });
