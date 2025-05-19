@@ -13,6 +13,7 @@ import {
   ScrollView,
   ImageBackground,
   Image,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -32,20 +33,33 @@ interface Scheme {
   SCHEMENAME: string;
   DESCRIPTION: string;
   BENEFITS?: string[];
-  TYPE?: "Daily" | "Weekly" | "Monthly" | "Flexi";
-  SCHEMETYPE?: string;
+  SCHEMETYPE: string;
   SLOGAN?: string;
   IMAGE?: string;
   ICON?: string;
-  chit?: Array<{
-    CHITID: number;
-    AMOUNT: number | string;
-  }>;
-  chits?: Array<{
+  DURATION_MONTHS?: number;
+  FIXED?: string;
+  ACTIVE: string;
+  chits: Array<{
     CHITID: number;
     AMOUNT: string;
     NOINS?: number;
+    TOTALMEMBERS?: number;
+    PAYMENT_FREQUENCY?: string;
     ACTIVE?: string;
+    REGNO?: string;
+  }>;
+  branch?: Array<{
+    branchId: number;
+    branchName: string;
+    branchAddress: string;
+    branchCity: string;
+    branchState: string;
+    branchPhone: string;
+  }>;
+  relevantChits?: Array<{
+    CHITID: number;
+    AMOUNT: number;
   }>;
 }
 
@@ -105,56 +119,82 @@ export default function SchemeList() {
   const fetchSchemes = async () => {
     setLoading(true);
     try {
-      // Use the activeTab in the API request
-      const response = await api.get(`/schemes?type=${activeTab}`);
-      
-      // Process the data to ensure it has the required properties
-      const processedData = (response.data?.data || []).map((scheme: Scheme) => {
-        // Use chits property if available, otherwise use chit or create empty array
-        const chitItems = scheme.chits || scheme.chit || [];
-        
-        // Set default TYPE if missing
-        if (!scheme.TYPE) {
-          scheme.TYPE = DEFAULT_SCHEME_TYPE;
-        }
-        
-        // Set default BENEFITS if missing
-        if (!scheme.BENEFITS) {
-          scheme.BENEFITS = [
-            "Quality assurance",
-            "Flexible payment options",
-            "Zero making charges",
-            "Secure investment"
-          ];
-        }
-        
-        return {
-          ...scheme,
-          chit: chitItems.map((item: any) => ({
-            CHITID: item.CHITID,
-            AMOUNT: typeof item.AMOUNT === 'string' ? parseFloat(item.AMOUNT) : item.AMOUNT
-          }))
-        };
+      const response = await api.get(`/schemes`);
+      console.log(response.data.data);
+
+      // Create buckets for each frequency
+      const buckets: { [key: string]: any[] } = {
+        daily: [],
+        weekly: [],
+        monthly: [],
+        flexi: []
+      };
+
+      // Process all schemes and their chits
+      (response.data?.data || []).forEach((scheme: Scheme) => {
+        // Skip inactive schemes
+        if (scheme.ACTIVE !== 'Y') return;
+
+        // Process each chit in the scheme
+        scheme.chits.forEach(chit => {
+          const frequency = (chit.PAYMENT_FREQUENCY || '').toLowerCase();
+          
+          // Only process if it's one of our target frequencies
+          if (frequency in buckets) {
+            // Add the chit to the appropriate bucket
+            buckets[frequency].push({
+              SCHEMEID: scheme.SCHEMEID,
+              SCHEMENAME: scheme.SCHEMENAME,
+              CHITID: chit.CHITID,
+              AMOUNT: chit.AMOUNT,
+              NOINS: chit.NOINS,
+              TOTALMEMBERS: chit.TOTALMEMBERS,
+              REGNO: chit.REGNO,
+              PAYMENT_FREQUENCY: chit.PAYMENT_FREQUENCY
+            });
+          }
+        });
       });
-      
-      setSchemes(processedData);
+
+      // Get schemes for the active tab
+      const activeTabLower = activeTab.toLowerCase();
+      const filteredSchemes = buckets[activeTabLower].map(item => ({
+        SCHEMEID: item.SCHEMEID,
+        SCHEMENAME: item.SCHEMENAME,
+        DESCRIPTION: "Save gold with our flexible plan.",
+        BENEFITS: [
+          "Competitive rates",
+          "Flexible payments",
+          "Zero making charges",
+          "Free locker facility"
+        ],
+        SCHEMETYPE: activeTabLower === 'flexi' ? 'Flexi' : 'Fixed',
+        ACTIVE: 'Y',
+        chits: [{
+          CHITID: item.CHITID,
+          AMOUNT: item.AMOUNT,
+          NOINS: item.NOINS,
+          TOTALMEMBERS: item.TOTALMEMBERS,
+          REGNO: item.REGNO,
+          PAYMENT_FREQUENCY: item.PAYMENT_FREQUENCY
+        }],
+        relevantChits: [{
+          CHITID: item.CHITID,
+          AMOUNT: parseFloat(item.AMOUNT)
+        }]
+      }));
+
+      console.log(filteredSchemes);
+      setSchemes(filteredSchemes);
     } catch (error) {
       console.error("Error fetching schemes:", error);
-      // Use mock data as fallback
-      setSchemes(mockSchemes.filter(scheme => scheme.TYPE === activeTab));
+      Alert.alert("Error", "Failed to fetch schemes. Please try again later.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleJoinScheme = (item: Scheme) => {
-    // Extract chit data from either chit or chits property
-    const chitData = item.chit || (item.chits ? item.chits.map(c => ({ 
-      CHITID: c.CHITID, 
-      AMOUNT: typeof c.AMOUNT === 'string' ? parseFloat(c.AMOUNT) : c.AMOUNT 
-    })) : []);
-    
-    // Updated navigation function
     router.push({
       pathname: "/home/join_savings",
       params: {
@@ -162,8 +202,9 @@ export default function SchemeList() {
         schemeData: JSON.stringify({
           name: item.SCHEMENAME,
           description: item.DESCRIPTION,
-          type: item.TYPE || DEFAULT_SCHEME_TYPE,
-          chit: chitData,
+          type: item.SCHEMETYPE,
+          chits: item.relevantChits || [],
+          schemeType: item.SCHEMETYPE.toLowerCase() === 'flexi' ? 'flexi' : 'fixed'
         }),
       },
     });
@@ -221,10 +262,10 @@ export default function SchemeList() {
     if (item.IMAGE && item.IMAGE.startsWith('/uploads/')) {
       // This could be a relative path that needs to be prepended with base URL
       // For now, we'll fallback to our local images
-      return getDefaultImageByType(item.TYPE || DEFAULT_SCHEME_TYPE);
+      return getDefaultImageByType(item.SCHEMETYPE || DEFAULT_SCHEME_TYPE);
     }
     
-    return getDefaultImageByType(item.TYPE || DEFAULT_SCHEME_TYPE);
+    return getDefaultImageByType(item.SCHEMETYPE || DEFAULT_SCHEME_TYPE);
   };
   
   const getDefaultImageByType = (type: string) => {
@@ -291,82 +332,27 @@ export default function SchemeList() {
 
   const renderSchemeItem = ({ item }: { item: Scheme }) => {
     const scaleValue = new Animated.Value(1);
-    const rotateValue = new Animated.Value(0);
-    const schemeType = item.TYPE || DEFAULT_SCHEME_TYPE;
-    const tabColor = getTabColor(schemeType);
-    const gradientColors = getCardGradient(schemeType);
+    const tabColor = getTabColor(item.SCHEMETYPE);
+    const gradientColors = getCardGradient(item.SCHEMETYPE);
     
-    const onPressIn = () => {
-      Animated.parallel([
-        Animated.spring(scaleValue, {
-          toValue: 0.98,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rotateValue, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        })
-      ]).start();
-    };
-    
-    const onPressOut = () => {
-      Animated.parallel([
-        Animated.spring(scaleValue, {
-          toValue: 1,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rotateValue, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        })
-      ]).start();
-    };
-  
-    const rotate = rotateValue.interpolate({
-      inputRange: [0, 1],
-      outputRange: ['0deg', '1deg']
-    });
-  
-    // Ensure benefits is an array before mapping
-    const benefits = item.BENEFITS || [];
-    
-    // Use either chit or chits property and ensure it's properly formatted
-    const chitItems = item.chit || 
-      (item.chits ? item.chits.map(c => ({ 
-        CHITID: c.CHITID, 
-        AMOUNT: typeof c.AMOUNT === 'string' ? parseFloat(c.AMOUNT) : c.AMOUNT 
-      })) : []);
-  
-    // Get the appropriate image for this scheme
-    const schemeImage = getCardImage(item);
-
     return (
       <Animated.View
         style={[
           styles.schemeCard,
           { 
             transform: [
-              { scale: scaleValue },
-              { rotate: rotate }
+              { scale: scaleValue }
             ],
           }
         ]}
       >
-        <TouchableOpacity
-          onPressIn={onPressIn}
-          onPressOut={onPressOut}
-          activeOpacity={0.9}
-          onPress={() => handleJoinScheme(item)}
-          style={styles.cardTouchable}
-        >
+        <View style={styles.cardTouchable}>
           <ImageBackground
-            source={schemeImage}
+            source={getCardImage(item)}
             style={styles.cardBackground}
             imageStyle={styles.backgroundImage}
           >
-            {/* <LinearGradient
+            <LinearGradient
               colors={gradientColors}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -380,12 +366,12 @@ export default function SchemeList() {
                   )}
                   <View style={styles.typePill}>
                     <Text style={styles.typeText}>
-                      {item.SCHEMETYPE || schemeType}
+                      {item.SCHEMETYPE}
                     </Text>
                   </View>
                 </View>
               </View>
-            </LinearGradient> */}
+            </LinearGradient>
           </ImageBackground>
 
           <View style={styles.cardContent}>
@@ -395,7 +381,7 @@ export default function SchemeList() {
             
             <Text style={styles.benefitsTitle}>Key Benefits</Text>
             <View style={styles.benefitsContainer}>
-              {benefits.map((benefit, index) => (
+              {item.BENEFITS?.map((benefit, index) => (
                 <View style={styles.benefitItem} key={`benefit-${item.SCHEMEID}-${index}`}>
                   <View style={[styles.checkmarkCircle, { backgroundColor: tabColor }]}>
                     <Ionicons name="checkmark" size={12} color="#fff" />
@@ -408,13 +394,13 @@ export default function SchemeList() {
             <View style={styles.amountContainer}>
               <Text style={styles.amountLabel}>Available Plans:</Text>
               <View style={styles.amountChipsContainer}>
-                {chitItems.map((chitItem) => (
+                {item.relevantChits?.map((chitItem) => (
                   <View 
                     key={`chit-${chitItem.CHITID}`} 
                     style={[styles.amountChip, { backgroundColor: tabColor + '15' }]}
                   >
                     <Text style={[styles.amountChipText, { color: tabColor }]}>
-                      ₹{typeof chitItem.AMOUNT === 'string' ? chitItem.AMOUNT : chitItem.AMOUNT.toFixed(2)}
+                      ₹{chitItem.AMOUNT.toFixed(2)}
                     </Text>
                   </View>
                 ))}
@@ -423,6 +409,7 @@ export default function SchemeList() {
             
             <TouchableOpacity
               onPress={() => handleJoinScheme(item)}
+              activeOpacity={0.7}
             >
               <LinearGradient
                 colors={[tabColor, tabColor]}
@@ -435,7 +422,7 @@ export default function SchemeList() {
               </LinearGradient>
             </TouchableOpacity>
           </View>
-        </TouchableOpacity>
+        </View>
       </Animated.View>
     );
   };
@@ -513,87 +500,91 @@ export default function SchemeList() {
 
 // Mock data for testing
 const mockSchemes: Scheme[] = [
-    {
-      SCHEMEID: 1,
-      SCHEMENAME: "Daily Gold Saver",
-      DESCRIPTION: "Save a small amount daily to accumulate gold over time with guaranteed returns.",
-      BENEFITS: [
-        "Low daily commitment",
-        "Regular savings habit",
-        "No lock-in period",
-        "Zero making charges"
-      ],
-      TYPE: "Daily",
-      chit: [
-        { CHITID: 101, AMOUNT: 500 },
-        { CHITID: 102, AMOUNT: 1000 }
-      ]
-    },
-    {
-      SCHEMEID: 2,
-      SCHEMENAME: "Weekly Gold Builder",
-      DESCRIPTION: "Weekly contribution plan for systematic gold investment with bonus at maturity.",
-      BENEFITS: [
-        "Higher weekly returns",
-        "Flexible withdrawal options",
-        "24K purity guaranteed",
-        "Free gold certification"
-      ],
-      TYPE: "Weekly",
-      chit: [
-        { CHITID: 201, AMOUNT: 2000 },
-        { CHITID: 202, AMOUNT: 3000 }
-      ]
-    },
-    {
-      SCHEMEID: 3,
-      SCHEMENAME: "Gold Plus Monthly",
-      DESCRIPTION: "Premium monthly gold savings with additional benefits and higher returns.",
-      BENEFITS: [
-        "Premium returns",
-        "Lower making charges",
-        "Free gold certificate",
-        "Priority customer service"
-      ],
-      TYPE: "Monthly",
-      chit: [
-        { CHITID: 301, AMOUNT: 5000 },
-        { CHITID: 302, AMOUNT: 10000 }
-      ]
-    },
-    {
-      SCHEMEID: 4,
-      SCHEMENAME: "Flexi Gold Saver",
-      DESCRIPTION: "Save gold whenever you want with our flexible plan with zero penalties.",
-      BENEFITS: [
-        "No fixed schedule",
-        "Save as per convenience",
-        "Competitive rates",
-        "Free locker facility"
-      ],
-      TYPE: "Flexi",
-      chit: [
-        { CHITID: 401, AMOUNT: 1500 },
-        { CHITID: 402, AMOUNT: 3500 }
-      ]
-    },
-    {
-      SCHEMEID: 5,
-      SCHEMENAME: "Daily Gold Multiplier",
-      DESCRIPTION: "Multiply your gold investment with daily compounding benefits and special offers.",
-      BENEFITS: [
-        "Daily interest calculation",
-        "Auto-reinvestment option",
-        "Gold price protection",
-        "Free insurance coverage"
-      ],
-      TYPE: "Daily",
-      chit: [
-        { CHITID: 501, AMOUNT: 750 },
-        { CHITID: 502, AMOUNT: 1250 }
-      ]
-    }
-  ];
+  {
+    SCHEMEID: 1,
+    SCHEMENAME: "Daily Gold Saver",
+    DESCRIPTION: "Save a small amount daily to accumulate gold over time with guaranteed returns.",
+    BENEFITS: [
+      "Low daily commitment",
+      "Regular savings habit",
+      "No lock-in period",
+      "Zero making charges"
+    ],
+    SCHEMETYPE: "Fixed",
+    ACTIVE: "Y",
+    chits: [
+      { CHITID: 101, AMOUNT: "500.00", PAYMENT_FREQUENCY: "Daily" },
+      { CHITID: 102, AMOUNT: "1000.00", PAYMENT_FREQUENCY: "Daily" }
+    ],
+    relevantChits: [
+      { CHITID: 101, AMOUNT: 500.00 },
+      { CHITID: 102, AMOUNT: 1000.00 }
+    ]
+  },
+  {
+    SCHEMEID: 2,
+    SCHEMENAME: "Weekly Gold Builder",
+    DESCRIPTION: "Weekly contribution plan for systematic gold investment with bonus at maturity.",
+    BENEFITS: [
+      "Higher weekly returns",
+      "Flexible withdrawal options",
+      "24K purity guaranteed",
+      "Free gold certification"
+    ],
+    SCHEMETYPE: "Fixed",
+    ACTIVE: "Y",
+    chits: [
+      { CHITID: 201, AMOUNT: "2000.00", PAYMENT_FREQUENCY: "Weekly" },
+      { CHITID: 202, AMOUNT: "3000.00", PAYMENT_FREQUENCY: "Weekly" }
+    ],
+    relevantChits: [
+      { CHITID: 201, AMOUNT: 2000.00 },
+      { CHITID: 202, AMOUNT: 3000.00 }
+    ]
+  },
+  {
+    SCHEMEID: 3,
+    SCHEMENAME: "Gold Plus Monthly",
+    DESCRIPTION: "Premium monthly gold savings with additional benefits and higher returns.",
+    BENEFITS: [
+      "Premium returns",
+      "Lower making charges",
+      "Free gold certificate",
+      "Priority customer service"
+    ],
+    SCHEMETYPE: "Fixed",
+    ACTIVE: "Y",
+    chits: [
+      { CHITID: 301, AMOUNT: "5000.00", PAYMENT_FREQUENCY: "Monthly" },
+      { CHITID: 302, AMOUNT: "10000.00", PAYMENT_FREQUENCY: "Monthly" }
+    ],
+    relevantChits: [
+      { CHITID: 301, AMOUNT: 5000.00 },
+      { CHITID: 302, AMOUNT: 10000.00 }
+    ]
+  },
+  {
+    SCHEMEID: 4,
+    SCHEMENAME: "Flexi Gold Saver",
+    DESCRIPTION: "Save gold whenever you want with our flexible plan with zero penalties.",
+    BENEFITS: [
+      "No fixed schedule",
+      "Save as per convenience",
+      "Competitive rates",
+      "Free locker facility"
+    ],
+    SCHEMETYPE: "Flexi",
+    ACTIVE: "Y",
+    chits: [
+      { CHITID: 401, AMOUNT: "1500.00", PAYMENT_FREQUENCY: "Flexi" },
+      { CHITID: 402, AMOUNT: "3500.00", PAYMENT_FREQUENCY: "Flexi" }
+    ],
+    relevantChits: [
+      { CHITID: 401, AMOUNT: 1500.00 },
+      { CHITID: 402, AMOUNT: 3500.00 }
+    ]
+  }
+];
 
 const styles = StyleSheet.create({
   container: {

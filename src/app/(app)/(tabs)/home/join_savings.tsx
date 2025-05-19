@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import {
   Platform,
   Dimensions,
   ActivityIndicator,
+  PanResponder,
+  Animated,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,24 +24,19 @@ import { useFocusEffect } from "@react-navigation/native";
 import api from "../../../services/api";
 import { theme } from "@/constants/theme";
 import RNPickerSelect from "react-native-picker-select";
-import Slider from '@react-native-community/slider';
 
 const { width } = Dimensions.get("window");
 
 export default function JoinSavings() {
   const { schemeId, schemeData } = useLocalSearchParams();
+  const router = useRouter();
+  const { language, user } = useGlobalStore();
+
   // Parse schemeData from query params
   const parsedData = useMemo(() => {
     if (typeof schemeData === "string") {
       try {
         const parsed = JSON.parse(schemeData);
-        if (parsed.data) {
-          return (
-            parsed.data.find(
-              (scheme) => scheme.SCHEMEID === Number(schemeId)
-            ) || null
-          );
-        }
         return parsed;
       } catch (error) {
         console.error("Error parsing schemeData:", error);
@@ -48,74 +45,16 @@ export default function JoinSavings() {
     }
     return null;
   }, [schemeData, schemeId]);
-  useEffect(() => {
-    const fetchBranche = async () => {
-      try {
-        const branches = await api.get(`/branches`);
-        console.log("branches", branches.data.data);
-        setBranch(branches.data.data);
-        // formData.associated_branch = branches.data.data[0].branch_name;
-      } catch (error) {
-        console.error("Error fetching branches:", error);
-      }
-    };
-    fetchBranche();
-  }, []);
-  const chits = parsedData?.chit || [];
-  const router = useRouter();
-  const { language, user } = useGlobalStore();
 
-  // KYC state: status and details
+  // State declarations
+  const [step, setStep] = useState(1);
+  const [schemeType, setSchemeType] = useState(parsedData?.schemeType || null);
+  const [paymentFrequency, setPaymentFrequency] = useState(null);
+  const [amount, setAmount] = useState(100);
   const [kycStatus, setKycStatus] = useState(null);
   const [kycDetails, setKycDetails] = useState(null);
   const [isKycLoading, setIsKycLoading] = useState(true);
   const [branch, setBranch] = useState([]);
-
-  useFocusEffect(
-    React.useCallback(() => {
-      const fetchKycStatus = async () => {
-        try {
-          setIsKycLoading(true);
-
-          const response = await api.get(`/kyc/status/${user?.id}`);
-
-          if (response.data) {
-            // Set KYC status
-            setKycStatus(response.data.kyc_status || "Not Completed");
-
-            // Check if data is available
-            if (response.data.data) {
-              setKycDetails(response.data.data);
-            } else {
-              // Handle case when data is null (Not Completed)
-              setKycDetails(null);
-              Alert.alert(
-                "KYC Status",
-                "Your KYC is not completed. Please submit the details."
-              );
-            }
-          } else {
-            console.warn("No KYC data found");
-            setKycStatus("Not Completed");
-            setKycDetails(null);
-          }
-        } catch (error) {
-          console.error("Error fetching KYC status:", error);
-          Alert.alert("Error", "Failed to fetch KYC status. Please try again.");
-        } finally {
-          setIsKycLoading(false);
-        }
-      };
-
-      fetchKycStatus();
-    }, [])
-  );
-
-  // Get initial amount from parsedData if available.
-  const initialAmount = "";
-
-  const [step, setStep] = useState(1);
-  const [schemeType, setSchemeType] = useState(null); // 'fixed' or 'flexi'
   const [formData, setFormData] = useState({
     amount: "",
     accountname: "",
@@ -139,6 +78,318 @@ export default function JoinSavings() {
     pan: "",
     nominee: "",
   });
+  const [isTyping, setIsTyping] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+
+  // Slider animation value
+  const sliderValue = useRef(new Animated.Value(0)).current;
+  const sliderWidth = useRef(0);
+
+  // Update amount when payment frequency changes
+  useEffect(() => {
+    const minAmount = paymentFrequency === 'monthly' ? 500 : 100;
+    setAmount(minAmount);
+    setInputValue(String(minAmount));
+    handleChange('amount', String(minAmount));
+    sliderValue.setValue(0);
+  }, [paymentFrequency]);
+
+  const getMinAmount = () => {
+    switch (paymentFrequency) {
+      case 'monthly':
+        return 500;
+      case 'weekly':
+      case 'daily':
+        return 100;
+      default:
+        return 100;
+    }
+  };
+
+  const getMaxAmount = () => 100000;
+
+  const getStepAmount = () => {
+    switch (paymentFrequency) {
+      case 'monthly':
+        return 500;
+      case 'weekly':
+      case 'daily':
+        return 100;
+      default:
+        return 100;
+    }
+  };
+
+  const formatAmount = (amount) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const handleSliderChange = (value) => {
+    const minAmount = getMinAmount();
+    const maxAmount = getMaxAmount();
+    const step = getStepAmount();
+    
+    // Calculate the amount based on slider position
+    const newAmount = Math.round((minAmount + (maxAmount - minAmount) * value) / step) * step;
+    setAmount(newAmount);
+    handleChange('amount', String(newAmount));
+  };
+
+  // Fetch branches
+  useEffect(() => {
+    const fetchBranche = async () => {
+      try {
+        const branches = await api.get(`/branches`);
+        console.log("branches", branches.data.data);
+        setBranch(branches.data.data);
+      } catch (error) {
+        console.error("Error fetching branches:", error);
+      }
+    };
+    fetchBranche();
+  }, []);
+
+  // Fetch KYC status
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchKycStatus = async () => {
+        try {
+          setIsKycLoading(true);
+          const response = await api.get(`/kyc/status/${user?.id}`);
+          if (response.data) {
+            setKycStatus(response.data.kyc_status || "Not Completed");
+            if (response.data.data) {
+              setKycDetails(response.data.data);
+            } else {
+              setKycDetails(null);
+              Alert.alert(
+                "KYC Status",
+                "Your KYC is not completed. Please submit the details."
+              );
+            }
+          } else {
+            console.warn("No KYC data found");
+            setKycStatus("Not Completed");
+            setKycDetails(null);
+          }
+        } catch (error) {
+          console.error("Error fetching KYC status:", error);
+          Alert.alert("Error", "Failed to fetch KYC status. Please try again.");
+        } finally {
+          setIsKycLoading(false);
+        }
+      };
+
+      fetchKycStatus();
+    }, [])
+  );
+
+  const handleAmountInput = (text) => {
+    // Allow only numbers
+    const numericValue = text.replace(/[^0-9]/g, '');
+    setInputValue(numericValue);
+
+    if (numericValue === '') {
+      setAmount(0);
+      handleChange('amount', '');
+      return;
+    }
+
+    const newAmount = parseInt(numericValue, 10);
+    const minAmount = getMinAmount();
+    const maxAmount = getMaxAmount();
+
+    // Only validate min/max, don't round to step while typing
+    const validAmount = Math.max(minAmount, Math.min(maxAmount, newAmount));
+    
+    setAmount(validAmount);
+    handleChange('amount', String(validAmount));
+
+    // Update slider position
+    const sliderPosition = (validAmount - minAmount) / (maxAmount - minAmount);
+    sliderValue.setValue(sliderPosition);
+  };
+
+  const handleAmountSubmit = () => {
+    const minAmount = getMinAmount();
+    const maxAmount = getMaxAmount();
+    const step = getStepAmount();
+
+    // Round to nearest step when done typing
+    const roundedAmount = Math.round(amount / step) * step;
+    const finalAmount = Math.max(minAmount, Math.min(maxAmount, roundedAmount));
+    
+    setAmount(finalAmount);
+    setInputValue(String(finalAmount));
+    handleChange('amount', String(finalAmount));
+
+    // Update slider position
+    const sliderPosition = (finalAmount - minAmount) / (maxAmount - minAmount);
+    sliderValue.setValue(sliderPosition);
+  };
+
+  const renderStep2 = () => {
+    const minAmount = getMinAmount();
+    const maxAmount = getMaxAmount();
+    const quickAmounts = paymentFrequency === 'monthly' 
+      ? [500, 1000, 2000, 5000, 10000, 20000, 50000, 100000]
+      : [100, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000];
+
+    return (
+      <View style={styles.stepContainer}>
+        <Text style={styles.label}>{translations.amountPlaceholder}</Text>
+
+        <View style={styles.flexiAmountContainer}>
+          <View style={styles.amountDisplayContainer}>
+            {isTyping ? (
+              <View style={styles.amountInputContainer}>
+                <Text style={styles.currencySymbol}>₹</Text>
+                <TextInput
+                  style={styles.amountInput}
+                  value={inputValue}
+                  onChangeText={handleAmountInput}
+                  keyboardType="numeric"
+                  onFocus={() => setIsTyping(true)}
+                  onBlur={() => {
+                    setIsTyping(false);
+                    handleAmountSubmit();
+                  }}
+                  autoFocus
+                  maxLength={8}
+                />
+              </View>
+            ) : (
+              <TouchableOpacity 
+                onPress={() => {
+                  setIsTyping(true);
+                  setInputValue(String(amount));
+                }}
+                style={styles.amountValueContainer}
+              >
+                <Text style={styles.amountValue}>
+                  {formatAmount(amount)}
+                </Text>
+                <Ionicons name="pencil" size={16} color={theme.colors.primary} style={styles.editIcon} />
+              </TouchableOpacity>
+            )}
+            <Text style={styles.amountLabel}>
+              {paymentFrequency === 'monthly' ? 'Monthly Amount' : 
+               paymentFrequency === 'weekly' ? 'Weekly Amount' : 'Daily Amount'}
+            </Text>
+          </View>
+
+          <View 
+            style={styles.sliderContainer}
+            onLayout={(e) => {
+              sliderWidth.current = e.nativeEvent.layout.width;
+            }}
+          >
+            <TouchableOpacity
+              activeOpacity={1}
+              onPress={(e) => {
+                const { locationX } = e.nativeEvent;
+                const newValue = Math.max(0, Math.min(1, locationX / sliderWidth.current));
+                sliderValue.setValue(newValue);
+                handleSliderChange(newValue);
+              }}
+              style={styles.sliderTrack}
+            >
+              <Animated.View 
+                style={[
+                  styles.sliderFill,
+                  {
+                    width: sliderValue.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0%', '100%'],
+                    }),
+                  },
+                ]}
+              />
+              <Animated.View
+                style={[
+                  styles.sliderThumb,
+                  {
+                    left: sliderValue.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, sliderWidth.current - 24],
+                    }),
+                  },
+                ]}
+              />
+            </TouchableOpacity>
+            <View style={styles.sliderLabels}>
+              <Text style={styles.sliderLabel}>{formatAmount(minAmount)}</Text>
+              <Text style={styles.sliderLabel}>{formatAmount(maxAmount)}</Text>
+            </View>
+          </View>
+
+          <View style={styles.quickAmountContainer}>
+            <Text style={styles.quickAmountLabel}>Quick Select:</Text>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.quickAmountScroll}
+            >
+              {quickAmounts.map((quickAmount) => (
+                <TouchableOpacity
+                  key={quickAmount}
+                  style={[
+                    styles.quickAmountButton,
+                    amount === quickAmount && styles.selectedQuickAmountButton
+                  ]}
+                  onPress={() => {
+                    const newValue = (quickAmount - minAmount) / (maxAmount - minAmount);
+                    sliderValue.setValue(newValue);
+                    setAmount(quickAmount);
+                    handleChange('amount', String(quickAmount));
+                  }}
+                >
+                  <Text style={[
+                    styles.quickAmountText,
+                    amount === quickAmount && styles.selectedQuickAmountText
+                  ]}>
+                    ₹{quickAmount.toLocaleString('en-IN')}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+          
+          <View style={styles.amountInfoContainer}>
+            <View style={styles.amountInfoItem}>
+              <Ionicons name="information-circle-outline" size={20} color={theme.colors.primary} />
+              <Text style={styles.amountInfoText}>
+                {paymentFrequency === 'monthly' ? 
+                  'Monthly amount starts from ₹500' : 
+                  'Amount starts from ₹100'}
+              </Text>
+            </View>
+            <View style={styles.amountInfoItem}>
+              <Ionicons name="information-circle-outline" size={20} color={theme.colors.primary} />
+              <Text style={styles.amountInfoText}>
+                {paymentFrequency === 'monthly' ? 
+                  'Increment by ₹500' : 
+                  'Increment by ₹100'}
+              </Text>
+            </View>
+            <View style={styles.amountInfoItem}>
+              <Ionicons name="information-circle-outline" size={20} color={theme.colors.primary} />
+              <Text style={styles.amountInfoText}>
+                Maximum amount: {formatAmount(maxAmount)}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {errors.amount && <Text style={styles.errorText}>{errors.amount}</Text>}
+      </View>
+    );
+  };
 
   const translations = useMemo(
     () => ({
@@ -198,10 +449,14 @@ export default function JoinSavings() {
 
     switch (field) {
       case "amount":
+        const minAmount = 100;
+        const maxAmount = 100000;
         newErrors.amount = !value
           ? "Amount is required"
-          : value < 500
-          ? "Minimum amount should be ₹500"
+          : value < minAmount
+          ? `Minimum amount should be ₹${minAmount}`
+          : value > maxAmount
+          ? `Maximum amount should be ₹${maxAmount}`
           : "";
         break;
       case "name":
@@ -268,14 +523,13 @@ export default function JoinSavings() {
 
   const renderStep1 = () => (
     <View style={styles.stepContainer}>
-      <Text style={styles.sectionTitle}>Select Scheme Type</Text>
+      <Text style={styles.sectionTitle}>Scheme Type</Text>
       <View style={styles.schemeTypeContainer}>
-        <TouchableOpacity
+        <View
           style={[
             styles.schemeTypeCard,
             schemeType === 'fixed' && styles.selectedSchemeTypeCard,
           ]}
-          onPress={() => setSchemeType('fixed')}
         >
           <Ionicons 
             name="calendar" 
@@ -290,14 +544,13 @@ export default function JoinSavings() {
             styles.schemeTypeDescription,
             schemeType === 'fixed' && styles.selectedSchemeTypeDescription
           ]}>Choose from predefined monthly amounts</Text>
-        </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity
+        <View
           style={[
             styles.schemeTypeCard,
             schemeType === 'flexi' && styles.selectedSchemeTypeCard,
           ]}
-          onPress={() => setSchemeType('flexi')}
         >
           <Ionicons 
             name="options" 
@@ -312,102 +565,81 @@ export default function JoinSavings() {
             styles.schemeTypeDescription,
             schemeType === 'flexi' && styles.selectedSchemeTypeDescription
           ]}>Choose your own monthly amount</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
-  const renderStep2 = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.label}>{translations.amountPlaceholder}</Text>
-
-      {schemeType === 'fixed' ? (
-        <AmountPicker
-          chits={chits}
-          formData={formData}
-          handleChange={handleChange}
-        />
-      ) : (
-        <View style={styles.flexiAmountContainer}>
-          <View style={styles.amountDisplayContainer}>
-            <Text style={styles.amountValue}>₹{formData.amount || '0'}</Text>
-            <Text style={styles.amountLabel}>Monthly Amount</Text>
-          </View>
-          <View style={styles.sliderContainer}>
-            <Slider
-              style={styles.slider}
-              minimumValue={500}
-              maximumValue={100000}
-              step={500}
-              value={parseFloat(formData.amount) || 500}
-              onValueChange={(value) => handleChange('amount', String(value))}
-              minimumTrackTintColor={theme.colors.primary}
-              maximumTrackTintColor="#D3D3D3"
-              thumbTintColor={theme.colors.primary}
-            />
-            <View style={styles.sliderLabels}>
-              <Text style={styles.sliderLabel}>₹500</Text>
-              <Text style={styles.sliderLabel}>₹1,00,000</Text>
-            </View>
-          </View>
-          <View style={styles.amountInfoContainer}>
-            <View style={styles.amountInfoItem}>
-              <Ionicons name="information-circle-outline" size={20} color={theme.colors.primary} />
-              <Text style={styles.amountInfoText}>Minimum amount: ₹500</Text>
-            </View>
-            <View style={styles.amountInfoItem}>
-              <Ionicons name="information-circle-outline" size={20} color={theme.colors.primary} />
-              <Text style={styles.amountInfoText}>Maximum amount: ₹1,00,000</Text>
-            </View>
-            <View style={styles.amountInfoItem}>
-              <Ionicons name="information-circle-outline" size={20} color={theme.colors.primary} />
-              <Text style={styles.amountInfoText}>Increment: ₹500</Text>
-            </View>
-          </View>
         </View>
-      )}
-
-      {errors.amount && <Text style={styles.errorText}>{errors.amount}</Text>}
-      {chits.length === 0 && schemeType === 'fixed' && (
-        <Text style={styles.errorText}>
-          No chit amounts available. Please check the data.
-        </Text>
-      )}
+      </View>
     </View>
   );
 
   const AmountPicker = ({ chits, formData, handleChange }) => {
+    const getMinAmount = () => {
+      switch (paymentFrequency) {
+        case 'monthly':
+          return 500;
+        case 'weekly':
+        case 'daily':
+          return 100;
+        default:
+          return 100;
+      }
+    };
+
+    const getMaxAmount = () => 100000;
+
+    const getStepAmount = () => {
+      switch (paymentFrequency) {
+        case 'monthly':
+          return 500;
+        case 'weekly':
+        case 'daily':
+          return 100;
+        default:
+          return 100;
+      }
+    };
+
+    const generateAmounts = () => {
+      const min = getMinAmount();
+      const max = getMaxAmount();
+      const step = getStepAmount();
+      const amounts = [];
+      
+      for (let amount = min; amount <= max; amount += step) {
+        amounts.push({
+          CHITID: amount,
+          AMOUNT: amount.toString()
+        });
+      }
+      
+      return amounts;
+    };
+
+    const availableAmounts = generateAmounts();
+
     return (
       <View style={styles.amountPickerContainer}>
-        {chits && chits.length > 0 ? (
-          chits.map((chit) => {
-            const isSelected = formData.amount === String(chit.AMOUNT);
-            return (
-              <TouchableOpacity
-                key={chit.CHITID}
-                onPress={() => handleChange("amount", String(chit.AMOUNT))}
-                style={[
-                  styles.amountCard,
-                  isSelected && styles.selectedAmountCard,
-                ]}
-              >
-                {isSelected && (
-                  <View style={styles.checkboxContainer}>
-                    <Ionicons name="checkmark-circle" size={22} color="#fff" />
-                  </View>
-                )}
-                <Text style={styles.amountText}>₹{chit.AMOUNT}</Text>
-              </TouchableOpacity>
-            );
-          })
-        ) : (
-          <Text style={styles.noAmountText}>No amounts available</Text>
-        )}
+        {availableAmounts.map((amount) => {
+          const isSelected = formData.amount === amount.AMOUNT;
+          return (
+            <TouchableOpacity
+              key={amount.CHITID}
+              onPress={() => handleChange("amount", amount.AMOUNT)}
+              style={[
+                styles.amountCard,
+                isSelected && styles.selectedAmountCard,
+              ]}
+            >
+              {isSelected && (
+                <View style={styles.checkboxContainer}>
+                  <Ionicons name="checkmark-circle" size={22} color="#fff" />
+                </View>
+              )}
+              <Text style={styles.amountText}>₹{amount.AMOUNT}</Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     );
   };
-
-  const [paymentFrequency, setPaymentFrequency] = useState(null); // 'monthly', 'weekly', 'daily'
 
   const renderStep3 = () => (
     <View style={styles.stepContainer}>
@@ -606,10 +838,7 @@ export default function JoinSavings() {
   const handleNext = () => {
     // Step 1: Scheme Type selection
     if (step === 1) {
-      if (!schemeType) {
-        Alert.alert("Error", "Please select a scheme type");
-        return;
-      }
+      // Skip validation since scheme type is pre-selected
       setStep(2);
       return;
     }
@@ -675,7 +904,7 @@ export default function JoinSavings() {
 
     // Step 5: Final submission
     if (step === 5) {
-      const selectedChit = chits.find(
+      const selectedChit = parsedData?.chit.find(
         (chit) => String(chit.AMOUNT) === formData.amount
       );
 
@@ -1064,23 +1293,37 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
-  sliderContainer: {
-    marginBottom: 24,
-  },
-  slider: {
-    width: '100%',
-    height: 50,
-  },
-  sliderLabels: {
+  amountGridContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginTop: 12,
-    paddingHorizontal: 4,
+    padding: 8,
+    marginBottom: 16,
   },
-  sliderLabel: {
+  amountGridItem: {
+    width: '31%',
+    aspectRatio: 2,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    marginBottom: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e5e5',
+    padding: 8,
+  },
+  selectedAmountGridItem: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  amountGridText: {
     fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
+    fontWeight: '600',
+    color: theme.colors.primary,
+    textAlign: 'center',
+  },
+  selectedAmountGridText: {
+    color: '#fff',
   },
   amountInfoContainer: {
     marginTop: 16,
@@ -1138,4 +1381,110 @@ const styles = StyleSheet.create({
   selectedFrequencyDescription: {
     color: '#fff',
   },
+  quickAmountContainer: {
+    marginBottom: 24,
+  },
+  quickAmountLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+    paddingHorizontal: 8,
+  },
+  quickAmountScroll: {
+    paddingHorizontal: 8,
+    gap: 8,
+  },
+  quickAmountButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    marginRight: 8,
+  },
+  selectedQuickAmountButton: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  quickAmountText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.primary,
+  },
+  selectedQuickAmountText: {
+    color: '#fff',
+  },
+  sliderContainer: {
+    marginBottom: 24,
+    paddingHorizontal: 8,
+  },
+  sliderTrack: {
+    height: 40, // Increased height for better touch area
+    backgroundColor: '#E5E7EB',
+    borderRadius: 2,
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  sliderFill: {
+    height: 4,
+    backgroundColor: theme.colors.primary,
+    borderRadius: 2,
+    position: 'absolute',
+    left: 0,
+  },
+  sliderThumb: {
+    width: 24,
+    height: 24,
+    backgroundColor: theme.colors.primary,
+    borderRadius: 12,
+    position: 'absolute',
+    top: 8,
+    marginLeft: -12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  sliderLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 12,
+  },
+  sliderLabel: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+  },
+  amountValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  amountInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  currencySymbol: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: theme.colors.primary,
+  },
+  amountInput: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: theme.colors.primary,
+    textAlign: 'center',
+    padding: 0,
+    minWidth: 200,
+  },
+  editIcon: {
+    marginLeft: 8,
+  },
 });
+
