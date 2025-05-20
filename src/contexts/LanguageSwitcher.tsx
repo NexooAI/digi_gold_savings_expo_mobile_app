@@ -1,34 +1,49 @@
 // components/LanguageSwitcher.tsx
 import useGlobalStore from "@/store/global.store";
 import { useLanguage } from "../contexts/LanguageContext";
-import { Image, TouchableOpacity, StyleSheet, Button } from "react-native";
+import { Image, TouchableOpacity, StyleSheet, Text, View } from "react-native";
 import { AppLocale } from "@/i18n";
 import { theme } from "@/constants/theme";
 const LanguageSwitcher = () => {
   const { setLanguage, language } = useGlobalStore();
   const { locale, setLocale } = useLanguage();
-  const handleLanguageChange = async (newLocale: AppLocale) => {
+  
+  // Function to cycle through languages (en -> mal -> en)
+  const handleLanguageChange = async (currentLang: AppLocale) => {
+    let newLocale: AppLocale;
+    
+    if (currentLang === "en") {
+      newLocale = "mal";
+    } else {
+      newLocale = "en";
+    }
+    
     await setLanguage(newLocale);
     await setLocale(newLocale);
   };
 
+  // Display language label based on current language
+  const getNextLanguageLabel = () => {
+    if (language === "en") {
+      return "മലയാളം"; // Malayalam in Malayalam script
+    } else {
+      return "English";
+    }
+  };
+
   return (
     <TouchableOpacity
-      onPress={() => handleLanguageChange(language === "en" ? "ta" : "en")}
+      onPress={() => handleLanguageChange(language as AppLocale)}
       style={styles.languageButton}
-      activeOpacity={0.7} // 👈 Add this line
-      hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }} // 👈 And this line
+      activeOpacity={0.7}
+      hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
     >
       <Image
-        source={locale === "en" ? theme.image.translate : theme.image.translate}
+        source={theme.image.translate}
         style={styles.languageImage}
         resizeMode="contain"
       />
-
-      {/* <Button
-        title={language === "en" ? "தமிழ்" : "English"}
-        onPress={() => handleLanguageChange(language === "en" ? "ta" : "en")}
-      /> */}
+      <Text style={styles.languageText}>{getNextLanguageLabel()}</Text>
     </TouchableOpacity>
   );
 };
@@ -36,16 +51,33 @@ const LanguageSwitcher = () => {
 const styles = StyleSheet.create({
   languageButton: {
     position: "absolute",
-    bottom: 80, // Adjust based on your status bar height
+    bottom: 80,
     right: 10,
     zIndex: 1,
-    padding: 8,
-    backgroundColor: "#f00",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
     borderRadius: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ffffff50",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 4,
   },
   languageImage: {
-    width: 36, // Adjust based on your image size
-    height: 36,
+    width: 20,
+    height: 20,
+    marginRight: 8,
+    tintColor: "#ffffff",
+  },
+  languageText: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "bold",
   },
 });
 

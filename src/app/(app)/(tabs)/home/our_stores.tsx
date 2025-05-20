@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, RefObject } from "react";
 import {
   StyleSheet,
   View,
@@ -19,7 +19,15 @@ import { useRouter } from "expo-router";
 import AppHeader from "@/app/components/AppHeader";
 import { theme } from "@/constants/theme";
 
-const stores = [
+interface Store {
+  id: number;
+  name: string;
+  latitude: number;
+  longitude: number;
+  address: string;
+}
+
+const stores: Store[] = [
   {
     id: 1,
     name: "DC Jewellers ",
@@ -32,21 +40,23 @@ const stores = [
 
 const StoreLocator = () => {
   const router = useRouter();
-  const mapRef = useRef(null);
-  const [selectedStore, setSelectedStore] = useState(null);
+  const mapRef = useRef<MapView | null>(null);
+  const [selectedStore, setSelectedStore] = useState<any>(null);
   const [isFocus, setIsFocus] = useState(false);
   const insets = useSafeAreaInsets();
 
-  const focusOnStore = (store) => {
-    mapRef.current.animateToRegion(
-      {
-        latitude: store.latitude,
-        longitude: store.longitude,
-        latitudeDelta: 0.005,
-        longitudeDelta: 0.005,
-      },
-      800
-    );
+  const focusOnStore = (store: Store) => {
+    if (mapRef.current) {
+      mapRef.current.animateToRegion(
+        {
+          latitude: store.latitude,
+          longitude: store.longitude,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005,
+        },
+        800
+      );
+    }
   };
 
   const dropdownData = stores.map((store) => ({

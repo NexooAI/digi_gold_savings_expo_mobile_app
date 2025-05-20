@@ -26,18 +26,27 @@ import NetInfo from "@react-native-community/netinfo";
 import { ScaledSheet, moderateScale } from "react-native-size-matters";
 import { theme } from "@/constants/theme";
 
+// Define interfaces for API response data
+interface RatesData {
+  data: {
+    gold_rate: string;
+    silver_rate: string;
+    updated_at: string;
+  };
+}
+
 export default function Home() {
   const { language, user } = useGlobalStore();
   const router = useRouter();
   const [schemeData, setSchemeData] = useState(null);
-  const [ratesData, setRatesData] = useState(null);
+  const [ratesData, setRatesData] = useState<RatesData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const { width } = Dimensions.get("window");
 
   // Date formatting utility
-  const formatDateToIndian = (isoString) => {
+  const formatDateToIndian = (isoString: string | null | undefined) => {
     if (!isoString) return "N/A";
     const date = new Date(isoString);
     return date.toLocaleString("en-IN", {
@@ -206,7 +215,7 @@ export default function Home() {
             <ImageSlider images={dummyData.sliderImages} />
 
             <FlashOffer
-              messages={[
+              fallbackMessages={[
                 translations.discountOffer20,
                 translations.newFeaturesAvailable,
                 translations.limitedTimeOffer,

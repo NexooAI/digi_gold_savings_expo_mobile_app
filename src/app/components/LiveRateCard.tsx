@@ -7,11 +7,43 @@ import {
   Animated,
   Dimensions,
   Easing,
+  ImageSourcePropType,
+  TouchableOpacity,
 } from "react-native";
+import { useRouter } from "expo-router";
 
 const { width } = Dimensions.get("window");
 
-const LiveRateCard = ({ type, rate, lastupdated, image }) => {
+interface LiveRateCardProps {
+  type: string;
+  rate: string | number;
+  lastupdated: string;
+  image: ImageSourcePropType;
+  onPress?: () => void;
+}
+
+const LiveRateCard = ({ type, rate, lastupdated, image, onPress }: LiveRateCardProps) => {
+  const router = useRouter();
+  
+  const handlePress = () => {
+    try {
+      if (onPress) {
+        onPress();
+      } else {
+        // Ensure type is properly formatted to avoid route errors
+        const formattedType = type?.toString().trim() || "Gold";
+        // Use href pattern for more reliable navigation
+        router.push({
+          pathname: "/(app)/(tabs)/home/live-rates",
+          params: { type: formattedType }
+        });
+      }
+    } catch (error) {
+      console.error("Navigation error:", error);
+      // Fallback direct navigation if something goes wrong
+      router.push("/(app)/(tabs)/home/live-rates");
+    }
+  };
   const isGold = type.toLowerCase() === "gold";
   const glowAnim = useRef(new Animated.Value(0)).current;
   const rateAnim = useRef(new Animated.Value(0)).current;
@@ -79,13 +111,17 @@ const LiveRateCard = ({ type, rate, lastupdated, image }) => {
   };
 
   return (
-    <Animated.View
-      style={[
-        styles.cardContainer,
-        isGold ? styles.goldGlow : styles.silverGlow,
-        glowStyle,
-      ]}
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={handlePress}
     >
+      <Animated.View
+        style={[
+          styles.cardContainer,
+          isGold ? styles.goldGlow : styles.silverGlow,
+          glowStyle,
+        ]}
+      >
       <View style={styles.imageContainer}>
         <Image source={image} style={styles.image} resizeMode="contain" />
       </View>
@@ -137,6 +173,7 @@ const LiveRateCard = ({ type, rate, lastupdated, image }) => {
         <Text style={styles.lastUpdated}>{lastupdated}</Text>
       </View>
     </Animated.View>
+    </TouchableOpacity>
   );
 };
 

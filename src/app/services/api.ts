@@ -149,4 +149,22 @@ export const rates = {
   getLiveRates: () => api.get('/rates/current'),
 };
 
+export const users = {
+  updateFcmToken: (token: string, userId: string, deviceInfo: { os: string, osVersion: string, deviceName: string }) => {
+    return api.post('/save-fcm-token', { 
+      token,
+      userId,
+      deviceInfo
+    });
+  },
+};
+
+export const news = {
+  getActiveFlashNews: () => api.get('/flash-news-active'),
+};
+
+export const posts = {
+  getActivePosts: () => api.get('/posts-active'),
+};
+
 export default api;

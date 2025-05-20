@@ -36,7 +36,7 @@ export const showToast = (
 
     currentToast = Toast.show(message, {
         duration,
-        position: Toast.positions.BOTTOM,
+        position: Toast.positions.TOP,
         shadow: true,
         animation: true,
         hideOnPress: true,
@@ -48,7 +48,7 @@ export const showToast = (
             paddingHorizontal: 16,
             paddingVertical: 12,
             marginHorizontal: 16,
-            marginBottom: 16,
+            marginTop: 16,
         },
         textStyle: {
             fontSize: 14,

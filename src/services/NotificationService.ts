@@ -2,6 +2,9 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+import { users } from '@/app/services/api';
+import useGlobalStore from '@/store/global.store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Configure how notifications appear when the app is in foreground
 Notifications.setNotificationHandler({
@@ -51,8 +54,38 @@ class NotificationService {
         token = (await Notifications.getExpoPushTokenAsync({
           projectId,
         })).data;
-        // alert(`Push token: ${token}`);
+        
         console.log('Push token:', token);
+        
+        // Get user ID and device info
+        try {
+          // Get user data from store or storage
+          let userId = '';
+          const userDataStr = await AsyncStorage.getItem('userData');
+          if (userDataStr) {
+            const userData = JSON.parse(userDataStr);
+            userId = userData.id || '';
+          } else {
+            // Try to get from global store if available
+            const user = useGlobalStore.getState().user;
+            if (user) {
+              userId = user.id || '';
+            }
+          }
+
+          // Get device information
+          const deviceInfo = {
+            os: Platform.OS,
+            osVersion: Platform.Version.toString(),
+            deviceName: Device.modelName || Device.deviceName || 'Unknown Device'
+          };
+          
+          // Send FCM token to API with user ID and device info
+          await users.updateFcmToken(token, userId, deviceInfo);
+          console.log('FCM token sent to API successfully with user ID and device info');
+        } catch (apiError) {
+          console.error('Error sending FCM token to API:', apiError);
+        }
       } catch (error) {
         console.error('Error getting push token:', error);
       }

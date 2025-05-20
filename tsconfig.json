@@ -6,14 +6,26 @@
     },
     "esModuleInterop": true,
     "jsx": "react-native",
-    "types": ["react-native-reanimated", "node", "react-native"]
+    "types": ["react-native-reanimated", "node", "react-native"],
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "lib": ["es2017"],
+    "moduleResolution": "node",
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "esnext"
   },
-  "extends": "expo/tsconfig.base",
   "include": [
     "global.d.ts",
     "**/*.ts",
     "**/*.tsx",
     "nativewind-env.d.ts",
     "src/constants/theme.js"
-  ]
+  ],
+  "exclude": ["node_modules", "babel.config.js", "metro.config.js"]
 }

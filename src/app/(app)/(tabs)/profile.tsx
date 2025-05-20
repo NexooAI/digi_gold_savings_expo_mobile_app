@@ -159,7 +159,7 @@ export default function ProfileScreen() {
                 <View className="flex-row justify-between items-center mb-4">
                   <Text className="text-lg font-bold">{t("personal_info")}</Text>
                 </View>
-                <InfoRow label={t("user_id")} value={user?.idProof || "N/A"} />
+                <InfoRow label={t("user_id")} value={user?.id || "N/A"} />
                 <View className="border-b border-gray-200 my-3" />
                 <View className="flex-row items-center justify-between">
                   <Text className="text-gray-600 flex-1">

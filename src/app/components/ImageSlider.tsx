@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Animated,
   StyleSheet,
+  FlatList,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -13,34 +14,48 @@ import { MaterialIcons } from '@expo/vector-icons';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const ITEM_HEIGHT = 200;
 
-const ImageSlider = ({ images = [] }) => {
+// Define interface for component props
+interface ImageSliderProps {
+  images: Array<string | number | { uri: string }>;
+}
+
+// Define the component with proper return type (React.ReactElement)
+const ImageSlider = ({ images = [] }: ImageSliderProps): React.ReactElement => {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
-  const flatListRef = useRef(null);
-  const timerRef = useRef(null);
+  const flatListRef = useRef<any>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const currentIndexRef = useRef(0); // Track current index with a ref
 
   useEffect(() => {
     startAutoPlay();
-    return () => clearInterval(timerRef.current);
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
   }, [images]); // Restart autoplay when images change
 
   const startAutoPlay = () => {
-    clearInterval(timerRef.current); // Clear existing interval
+    if (timerRef.current) {
+      clearInterval(timerRef.current); // Clear existing interval
+    }
     if (images.length <= 1) return; // No autoplay if 0 or 1 image
 
     timerRef.current = setInterval(() => {
       const nextIndex = (currentIndexRef.current + 1) % images.length;
       currentIndexRef.current = nextIndex;
       setActiveIndex(nextIndex);
-      flatListRef.current?.scrollToIndex({
-        index: nextIndex,
-        animated: true,
-      });
+      if (flatListRef.current) {
+        flatListRef.current.scrollToIndex({
+          index: nextIndex,
+          animated: true,
+        });
+      }
     }, 5000);
   };
 
-  const renderItem = ({ item, index }) => {
+  const renderItem = ({ item, index }: { item: any; index: number }) => {
     const inputRange = [
       (index - 1) * SCREEN_WIDTH,
       index * SCREEN_WIDTH,
@@ -55,9 +70,9 @@ const ImageSlider = ({ images = [] }) => {
 
     return (
       <Animated.View style={[styles.itemContainer, { transform: [{ scale }] }]}>
-        <Image 
-          source={typeof item === 'string' ? { uri: item } : item} 
-          style={styles.image} 
+        <Image
+          source={typeof item === 'string' ? { uri: item } : item}
+          style={styles.image}
         />
       </Animated.View>
     );
@@ -68,7 +83,9 @@ const ImageSlider = ({ images = [] }) => {
     const newIndex = (currentIndexRef.current - 1 + images.length) % images.length;
     currentIndexRef.current = newIndex;
     setActiveIndex(newIndex);
-    flatListRef.current?.scrollToIndex({ index: newIndex, animated: true });
+    if (flatListRef.current) {
+      flatListRef.current.scrollToIndex({ index: newIndex, animated: true });
+    }
     startAutoPlay(); // Reset autoplay timer
   };
 
@@ -77,7 +94,9 @@ const ImageSlider = ({ images = [] }) => {
     const newIndex = (currentIndexRef.current + 1) % images.length;
     currentIndexRef.current = newIndex;
     setActiveIndex(newIndex);
-    flatListRef.current?.scrollToIndex({ index: newIndex, animated: true });
+    if (flatListRef.current) {
+      flatListRef.current.scrollToIndex({ index: newIndex, animated: true });
+    }
     startAutoPlay(); // Reset autoplay timer
   };
 
@@ -140,22 +159,27 @@ const ImageSlider = ({ images = [] }) => {
   );
 };
 
-// Styles remain unchanged
-
 const styles = StyleSheet.create({
   container: {
     height: ITEM_HEIGHT,
     backgroundColor: '#000',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginVertical: 10,
+    width: '95%',
+    alignSelf: 'center',
   },
   itemContainer: {
     width: SCREEN_WIDTH,
     height: ITEM_HEIGHT,
     overflow: 'hidden',
+    borderRadius: 12,
   },
   image: {
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
+    borderRadius: 12,
   },
   gradient: {
     ...StyleSheet.absoluteFillObject,

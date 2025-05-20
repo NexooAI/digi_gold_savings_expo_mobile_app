@@ -1,35 +1,106 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Dimensions, Animated } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { news } from "@/app/services/api";
 
 const { width } = Dimensions.get("window");
 
-const FlashOffer = ({
-  messages = ["🎉 Special Offer: Get 20% off on all investments today!"],
+interface FlashNews {
+  id: number;
+  f_news: string;
+  start_date: string;
+  end_date: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface FlashOfferProps {
+  fallbackMessages?: string[];
+  textColor?: string;
+  duration?: number;
+}
+
+const FlashOffer: React.FC<FlashOfferProps> = ({
+  fallbackMessages = ["🎉 Welcome to Digital Gold Savings!"],
   textColor = "#fff",
   duration = 10000,
 }) => {
   const translateX = new Animated.Value(width);
   const spacing = 30; // Gap between messages
+  const [activeNewsMessages, setActiveNewsMessages] = useState<string[]>(fallbackMessages);
+  const [loading, setLoading] = useState(true);
+  const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
 
+  // Fetch flash news from API
   useEffect(() => {
-    const totalWidth = messages.reduce(
-      (acc, msg) => acc + msg.length * 5 + spacing,
-      0
-    );
+    const fetchFlashNews = async () => {
+      try {
+        setLoading(true);
+        const response = await news.getActiveFlashNews();
+        const newsItems: FlashNews[] = response.data.data;
+        
+        // Filter news items by checking if current date is between start and end dates
+        const now = new Date();
+        const activeNews = newsItems.filter(item => {
+          const startDate = new Date(item.start_date);
+          const endDate = new Date(item.end_date);
+          return item.status === 'active' && now >= startDate && now <= endDate;
+        });
+        
+        if (activeNews.length > 0) {
+          // Extract news messages
+          const messages = activeNews.map(item => item.f_news);
+          setActiveNewsMessages(messages);
+        }
+      } catch (error) {
+        console.error('Error fetching flash news:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFlashNews();
+  }, []);
+
+  // Rotate through news items every 10 seconds if there are multiple items
+  useEffect(() => {
+    if (activeNewsMessages.length <= 1) return;
+    
+    const interval = setInterval(() => {
+      setCurrentNewsIndex(prevIndex => (prevIndex + 1) % activeNewsMessages.length);
+    }, 10000);
+    
+    return () => clearInterval(interval);
+  }, [activeNewsMessages]);
+
+  // Animation for text scrolling
+  useEffect(() => {
+    if (loading || activeNewsMessages.length === 0) return;
+    
+    // Reset animation when news changes
+    translateX.setValue(width);
+    
+    const currentMessage = activeNewsMessages[currentNewsIndex];
+    const messageWidth = currentMessage.length * 5 + spacing;
 
     const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(translateX, {
-          toValue: -totalWidth,
-          duration: duration * (totalWidth / width),
+          toValue: -messageWidth,
+          duration: duration * (messageWidth / width),
           useNativeDriver: true,
         }),
       ])
     );
     animation.start();
     return () => animation.stop();
-  }, [messages]);
+  }, [currentNewsIndex, activeNewsMessages, loading]);
+
+  // Don't show anything if there are no active news items
+  if (!loading && activeNewsMessages.length === 0) {
+    return null;
+  }
 
   return (
     <View style={styles.container}>
@@ -42,14 +113,13 @@ const FlashOffer = ({
         <Animated.View
           style={[styles.textContainer, { transform: [{ translateX }] }]}
         >
-          {messages.map((msg, index) => (
+          {activeNewsMessages.length > 0 && (
             <Text
-              key={index}
               style={[styles.text, { color: textColor, marginRight: spacing }]}
             >
-              {msg}
+              {activeNewsMessages[currentNewsIndex]}
             </Text>
-          ))}
+          )}
         </Animated.View>
       </LinearGradient>
     </View>
