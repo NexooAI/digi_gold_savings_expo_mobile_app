@@ -1,5 +1,5 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import {
   View,
   ScrollView,
@@ -8,6 +8,12 @@ import {
   Dimensions,
   RefreshControl,
   TouchableOpacity,
+  ImageBackground,
+  StyleSheet,
+  Animated,
+  PanResponder,
+  FlatList,
+  Image,
 } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from "expo-router";
@@ -35,6 +41,12 @@ interface RatesData {
   };
 }
 
+interface Banner {
+  id: number;
+  image: any;
+  schemeUrl: string;
+}
+
 export default function Home() {
   const { language, user } = useGlobalStore();
   const router = useRouter();
@@ -42,8 +54,10 @@ export default function Home() {
   const [ratesData, setRatesData] = useState<RatesData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
-  const { width } = Dimensions.get("window");
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const sliderRef = useRef<FlatList<Banner>>(null);
+  const { width: screenWidth } = Dimensions.get("window");
 
   // Date formatting utility
   const formatDateToIndian = (isoString: string | null | undefined) => {
@@ -155,6 +169,38 @@ export default function Home() {
     sliderImages: theme.image.sliderImages,
   };
 
+  const banners: Banner[] = [
+    {
+      id: 1,
+      image: require('../../../../../assets/images/banner.png'),
+      schemeUrl: '/(app)/(tabs)/home/schemes',
+    },
+    {
+      id: 2,
+      image: require('../../../../../assets/images/banner2.png'),
+      schemeUrl: '/(app)/(tabs)/home/schemes',
+    },
+    {
+      id: 3,
+      image: require('../../../../../assets/images/banner3.png'),
+      schemeUrl: '/(app)/(tabs)/home/schemes',
+    },
+  ];
+
+  const renderBanner = ({ item }: { item: Banner }) => (
+    <TouchableOpacity
+      style={styles.bannerItem}
+      onPress={() => router.push(item.schemeUrl)}
+      activeOpacity={0.9}
+    >
+      <Image
+        source={item.image}
+        style={styles.bannerImage}
+        resizeMode="cover"
+      />
+    </TouchableOpacity>
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <LinearGradient
@@ -225,27 +271,22 @@ export default function Home() {
               duration={8000}
             />
 
-            <ProductsList schemes={schemeData} />
+            {/* <ProductsList schemes={schemeData} /> */}
 
-            {/* Gold Schemes Button */}
-            <TouchableOpacity
-              style={styles.goldSchemesButton}
-              onPress={() => router.push("/(app)/(tabs)/home/schemes")}
-            >
-              <LinearGradient
-                colors={['#D4AF37', '#FFD700']}
-                style={styles.goldSchemesGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <Text style={styles.goldSchemesText}>{translations.goldSchemes}</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-            
+            {/* Banner List */}
+            <View style={styles.bannerContainer}>
+              <FlatList
+                data={banners}
+                renderItem={renderBanner}
+                keyExtractor={(item) => item.id.toString()}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.bannerListContent}
+              />
+            </View>
+
             <YouTubeVideo />
-
             <SupportContactCard />
-
             <View style={styles.spacer} />
           </View>
         </ScrollView>
@@ -259,7 +300,7 @@ export default function Home() {
 }
 
 // Styles
-const styles = ScaledSheet.create({
+const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#5a000b",
@@ -329,26 +370,40 @@ const styles = ScaledSheet.create({
     zIndex: 999,
   },
   goldSchemesButton: {
-    width: '90%',
-    marginVertical: moderateScale(16),
-    borderRadius: moderateScale(8),
+    width: '100%',
+    height: 120,
+    marginVertical: 10,
     overflow: 'hidden',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
   },
   goldSchemesGradient: {
-    paddingVertical: moderateScale(16),
-    paddingHorizontal: moderateScale(24),
-    alignItems: 'center',
+    width: '100%',
+    height: '100%',
     justifyContent: 'center',
+    alignItems: 'center',
   },
   goldSchemesText: {
-    color: '#000000',
-    fontSize: moderateScale(16),
-    fontWeight: '600',
-    textTransform: 'uppercase',
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+  },
+  bannerContainer: {
+    width: '100%',
+    marginVertical: 10,
+  },
+  bannerListContent: {
+    paddingHorizontal: 10,
+  },
+  bannerItem: {
+    marginHorizontal: 5,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  bannerImage: {
+    width: Dimensions.get('window').width - 40,
+    height: 200,
+    borderRadius: 8,
   },
 });

@@ -5,12 +5,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Import translations
 import en from './locales/en.json';
-import ta from './locales/ta.json';
+// import ta from './locales/ta.json';
 import mal from './locales/mal.json';
 import useGlobalStore from './store/global.store';
 
-export type AppLocale = 'en' | 'ta' | 'mal';
-const translations = { en, ta, mal } as const;
+export type AppLocale = 'en' | 'mal';
+const translations = { en, mal } as const;
 
 const i18n = new I18n(translations);
 i18n.enableFallback = true;

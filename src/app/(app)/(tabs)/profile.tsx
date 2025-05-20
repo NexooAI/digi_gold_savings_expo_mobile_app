@@ -97,7 +97,7 @@ export default function ProfileScreen() {
   };
 
   const toggleLanguage = async () => {
-    const newLang = language === "en" ? "ta" : "en";
+    const newLang = language === "en" ? "mal" : "en";
     await setLanguage(newLang);
   };
 
@@ -229,7 +229,7 @@ export default function ProfileScreen() {
                 >
                   <Text className="text-gray-600">{t("language")}</Text>
                   <Text className="text-primary">
-                    {language === "en" ? "English" : "தமிழ்"}
+                    {language === "en" ? "English" : "മലയാളം"}
                   </Text>
                 </TouchableOpacity>
                 <View className="border-b border-gray-200 my-3" />

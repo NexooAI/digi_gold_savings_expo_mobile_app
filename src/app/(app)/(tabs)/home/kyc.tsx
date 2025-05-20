@@ -363,15 +363,19 @@ export default function KycForm() {
         </View>
 
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.keyboardAvoid}
           keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
         >
           <ScrollView
             style={styles.scrollView}
-            contentContainerStyle={styles.scrollViewContent}
+            contentContainerStyle={[
+              styles.scrollViewContent,
+              { paddingBottom: keyboardVisible ? 200 : 100 }
+            ]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
+            automaticallyAdjustKeyboardInsets={true}
           >
             {/* Door Number */}
             <View style={styles.formGroup}>
@@ -675,6 +679,8 @@ export default function KycForm() {
           styles.buttonContainer,
           {
             paddingBottom: insets.bottom > 0 ? insets.bottom : 16,
+            position: keyboardVisible ? 'relative' : 'absolute',
+            bottom: keyboardVisible ? 0 : 45,
           },
         ]}
       >
@@ -747,7 +753,6 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     padding: 16,
-    paddingBottom: 100, // Add extra padding for the fixed button
   },
   formGroup: {
     marginBottom: 16,
@@ -793,10 +798,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderTopWidth: 1,
     borderTopColor: "#EEEEEE",
-    position: "absolute",
-    bottom: 45,
     left: 0,
     right: 0,
+    zIndex: 1000,
   },
   submitButton: {
     backgroundColor: theme.colors.primary,

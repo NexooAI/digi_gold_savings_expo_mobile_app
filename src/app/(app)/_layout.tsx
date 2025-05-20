@@ -11,7 +11,10 @@ import { Drawer } from 'expo-router/drawer';
 export default function AppLayout() {
   return (
     <Drawer
-      screenOptions={{ headerShown: false }}
+      screenOptions={{ 
+        headerShown: false,
+        swipeEnabled: false // Disable swipe gesture
+      }}
       drawerContent={CustomDrawerContent}
     >
       <Drawer.Screen name="(tabs)" />
