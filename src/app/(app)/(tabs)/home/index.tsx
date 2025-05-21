@@ -31,6 +31,8 @@ import { schemes, rates } from "@/app/services/api";
 import NetInfo from "@react-native-community/netinfo";
 import { ScaledSheet, moderateScale } from "react-native-size-matters";
 import { theme } from "@/constants/theme";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import FlashBanner from '@/app/components/FlashBanner';
 
 // Define interfaces for API response data
 interface RatesData {
@@ -58,6 +60,7 @@ export default function Home() {
   const scrollX = useRef(new Animated.Value(0)).current;
   const sliderRef = useRef<FlatList<Banner>>(null);
   const { width: screenWidth } = Dimensions.get("window");
+  const [showFlashBanner, setShowFlashBanner] = useState(false);
 
   // Date formatting utility
   const formatDateToIndian = (isoString: string | null | undefined) => {
@@ -172,17 +175,17 @@ export default function Home() {
   const banners: Banner[] = [
     {
       id: 1,
-      image: require('../../../../../assets/images/banner.png'),
+      image: require('../../../../../assets/images/banner1.jpg'),
       schemeUrl: '/(app)/(tabs)/home/schemes',
     },
     {
       id: 2,
-      image: require('../../../../../assets/images/banner2.png'),
+      image: require('../../../../../assets/images/banner.png'),
       schemeUrl: '/(app)/(tabs)/home/schemes',
     },
     {
       id: 3,
-      image: require('../../../../../assets/images/banner3.png'),
+      image: require('../../../../../assets/images/banner2.png'),
       schemeUrl: '/(app)/(tabs)/home/schemes',
     },
   ];
@@ -201,8 +204,27 @@ export default function Home() {
     </TouchableOpacity>
   );
 
+  useEffect(() => {
+    const checkBanner = async () => {
+      const seen = await AsyncStorage.getItem('flashBannerSeen');
+      if (!seen) setShowFlashBanner(true);
+    };
+    checkBanner();
+  }, []);
+
+  const handleCloseBanner = async () => {
+    setShowFlashBanner(false);
+    await AsyncStorage.setItem('flashBannerSeen', 'true');
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
+      {showFlashBanner && (
+        <FlashBanner
+          imageSource={require('../../../../../assets/images/flashbanner.png')}
+          onClose={handleCloseBanner}
+        />
+      )}
       <LinearGradient
         colors={['#5a000b', '#2e0406']}
         style={styles.background}
@@ -303,12 +325,13 @@ export default function Home() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#5a000b",
+    backgroundColor: "#C0C0C0",
   },
   background: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#C0C0C0",
   },
   headerWrapper: {
     width: "100%",
