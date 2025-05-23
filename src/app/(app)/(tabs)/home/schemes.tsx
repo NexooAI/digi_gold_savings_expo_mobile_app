@@ -410,19 +410,9 @@ export default function SchemeList() {
             <View style={styles.amountContainer}>
               <Text style={styles.amountLabel}>Available Plans:</Text>
               <View style={styles.amountChipsContainer}>
-                <Text style={[styles.amountChipText, { color: tabColor }]}>
-                  (e.g., "₹100 to ₹10,000")
+                <Text style={[styles.amountChipText, { color: '#850111' }]}>
+                  ₹100 to ₹10,000
                 </Text>
-                {/* {item.relevantChits?.map((chitItem) => (
-                  <View 
-                    key={`chit-${chitItem.CHITID}`} 
-                    style={[styles.amountChip, { backgroundColor: tabColor + '15' }]}
-                  >
-                    <Text style={[styles.amountChipText, { color: tabColor }]}>
-                      (e.g., "₹100 to ₹10,000")
-                    </Text>
-                  </View>
-                ))} */}
               </View>
             </View>
 
@@ -431,7 +421,7 @@ export default function SchemeList() {
               activeOpacity={0.7}
             >
               <LinearGradient
-                colors={[tabColor, tabColor]}
+                colors={['#850111', '#850111']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.joinButton}
@@ -787,7 +777,7 @@ const styles = StyleSheet.create({
   typeText: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#FFC857",
+    color: "#850111",
     textTransform: 'capitalize',
   },
   flexiTypeText: {
@@ -814,7 +804,7 @@ const styles = StyleSheet.create({
   benefitsTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#FFC857",
+    color: "#850111",
   },
   benefitsContainer: {
     marginBottom: 16,
@@ -844,7 +834,7 @@ const styles = StyleSheet.create({
   amountLabel: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#FFC857",
+    color: "#850111",
     marginBottom: 10,
   },
   amountChipsContainer: {
@@ -863,7 +853,7 @@ const styles = StyleSheet.create({
   amountChipText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#FFC857",
+    color: "#850111",
   },
   joinButton: {
     padding: 16,

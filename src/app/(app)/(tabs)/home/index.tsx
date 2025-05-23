@@ -34,6 +34,7 @@ import { theme } from "@/constants/theme";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import FlashBanner from '@/app/components/FlashBanner';
 import { Ionicons } from '@expo/vector-icons';
+import StatusView from '@/app/components/StatusView';
 
 // Define interfaces for API response data
 interface RatesData {
@@ -93,6 +94,8 @@ export default function Home() {
   const { width: screenWidth } = Dimensions.get("window");
   const [showFlashBanner, setShowFlashBanner] = useState(true);
   const [activeSchemesCount, setActiveSchemesCount] = useState(0);
+  const [selectedStatusIndex, setSelectedStatusIndex] = useState<number | null>(null);
+  const [showStatus, setShowStatus] = useState(false);
 
   // Date formatting utility
   const formatDateToIndian = (isoString: string | null | undefined) => {
@@ -227,6 +230,26 @@ export default function Home() {
     },
   ];
 
+  const statusImages = [
+    require('../../../../../assets/images/status1.jpg'),
+    require('../../../../../assets/images/status2.jpg'),
+    require('../../../../../assets/images/status3.jpg'),
+    require('../../../../../assets/images/status4.jpg'),
+    require('../../../../../assets/images/status5.jpg'),
+    require('../../../../../assets/images/status6.jpg'),
+    require('../../../../../assets/images/status7.jpg'),
+    require('../../../../../assets/images/status8.jpg'),
+    require('../../../../../assets/images/status9.jpg'),
+    require('../../../../../assets/images/status10.jpg'),
+    require('../../../../../assets/images/status11.jpg'),
+    require('../../../../../assets/images/status12.jpg'),
+    require('../../../../../assets/images/status13.jpg'),
+    require('../../../../../assets/images/status14.jpg'),
+    require('../../../../../assets/images/status15.jpg'),
+    require('../../../../../assets/images/status16.jpg'),
+    require('../../../../../assets/images/status17.jpg'),
+  ];
+
   const renderBanner = ({ item }: { item: Banner }) => (
     <TouchableOpacity
       style={styles.bannerItem}
@@ -236,6 +259,22 @@ export default function Home() {
       <Image
         source={item.image}
         style={styles.bannerImage}
+        resizeMode="cover"
+      />
+    </TouchableOpacity>
+  );
+
+  const renderStatusItem = ({ item, index }: { item: any, index: number }) => (
+    <TouchableOpacity
+      style={styles.statusItem}
+      onPress={() => {
+        setSelectedStatusIndex(index);
+        setShowStatus(true);
+      }}
+    >
+      <Image
+        source={item}
+        style={styles.statusImage}
         resizeMode="cover"
       />
     </TouchableOpacity>
@@ -328,6 +367,18 @@ export default function Home() {
             )}
           </View>
 
+          {/* Add this after the rates container */}
+          <View style={styles.statusContainer}>
+            <FlatList
+              data={statusImages}
+              renderItem={renderStatusItem}
+              keyExtractor={(_, idx) => idx.toString()}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.statusListContent}
+            />
+          </View>
+
           {/* Main Content */}
           <View style={styles.mainContent}>
             <ImageSlider images={dummyData.sliderImages} />
@@ -374,6 +425,13 @@ export default function Home() {
           <LanguageSwitcher />
         </View>
       </View>
+
+      <StatusView
+        images={statusImages}
+        isVisible={showStatus}
+        initialIndex={selectedStatusIndex ?? 0}
+        onClose={() => setShowStatus(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -535,5 +593,24 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(20),
     fontWeight: 'bold',
     color: '#5a000b',
+  },
+  statusContainer: {
+    width: '100%',
+    marginVertical: 10,
+  },
+  statusListContent: {
+    paddingHorizontal: 10,
+  },
+  statusItem: {
+    marginHorizontal: 5,
+    borderRadius: 20,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#850111',
+  },
+  statusImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 18,
   },
 });
