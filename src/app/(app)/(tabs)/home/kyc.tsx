@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -23,6 +23,7 @@ import useGlobalStore from "@/store/global.store";
 import RNPickerSelect from "react-native-picker-select";
 import api from "../../../services/api";
 import { theme } from "@/constants/theme";
+
 const indianStates = [
   "Andhra Pradesh",
   "Arunachal Pradesh",
@@ -53,11 +54,13 @@ const indianStates = [
   "Uttarakhand",
   "West Bengal",
 ];
+
 const idTypes = [
   { name: "Aadhar", value: "aadhar" },
   { name: "PAN", value: "pan" },
   { name: "Voter ID", value: "voterid" },
 ];
+
 const nomineeRelationship = [
   // { name: "Aadhar", value: "aadhar" },
   { name: "Father", value: "father" },
@@ -73,11 +76,36 @@ const nomineeRelationship = [
   // { name: "PAN", value: "pan" },
   // { name: "Voter ID", value: "voterid" },
 ];
+
+// Add interfaces at the top of the file
+interface FormData {
+  doorno: string;
+  street: string;
+  area: string;
+  city: string;
+  district: string;
+  state: string;
+  country: string;
+  pincode: string;
+  dob: string;
+  addressprooftype: string;
+  idNumber: string;
+  nominee_name: string;
+  nominee_relationship: string;
+}
+
+interface FormDatePickerProps {
+  label: string;
+  value: string;
+  onDateChange: (date: string) => void;
+  error?: string;
+}
+
 export default function KycForm() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { language, user } = useGlobalStore();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     doorno: "",
     street: "",
     area: "",
@@ -95,6 +123,9 @@ export default function KycForm() {
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [kycId, setKycId] = useState<string | null>(null);
+
+  const navBarHeight = 56; // Typical bottom nav bar height
 
   // Keyboard listeners
   React.useEffect(() => {
@@ -117,13 +148,44 @@ export default function KycForm() {
     };
   }, []);
 
-  const FormDatePicker = ({ label, value, onDateChange, error }) => {
+  // Fetch KYC details on mount
+  useEffect(() => {
+    const fetchKyc = async () => {
+      try {
+        const res = await api.get(`/kyc/status/${user?.id}`);
+        if (res.data && res.data.data) {
+          setKycId(res.data.data.id?.toString() || null);
+          setFormData({
+            doorno: res.data.data.doorno || "",
+            street: res.data.data.street || "",
+            area: res.data.data.area || "",
+            city: res.data.data.city || "",
+            district: res.data.data.district || "",
+            state: res.data.data.state || "",
+            country: res.data.data.country || "India",
+            pincode: res.data.data.pincode || "",
+            dob: res.data.data.dob ? new Date(res.data.data.dob).toLocaleDateString("en-GB") : "",
+            addressprooftype: res.data.data.addressproof || "",
+            idNumber: res.data.data.enternumber || "",
+            nominee_name: res.data.data.nominee_name || "",
+            nominee_relationship: res.data.data.nominee_relationship || "",
+          });
+        }
+      } catch (e) {
+        console.error("Error fetching KYC:", e);
+      }
+    };
+    fetchKyc();
+  }, [user?.id]);
+
+  // Update the FormDatePicker component with proper types
+  const FormDatePicker: React.FC<FormDatePickerProps> = ({ label, value, onDateChange, error }) => {
     const [showPicker, setShowPicker] = useState(false);
     const [selectedDate, setSelectedDate] = useState(
       value ? new Date(value.split("/").reverse().join("-")) : new Date()
     );
 
-    const handleDateChange = (event, date) => {
+    const handleDateChange = (event: any, date?: Date) => {
       if (date) {
         setSelectedDate(date);
         if (Platform.OS === "android") {
@@ -138,7 +200,7 @@ export default function KycForm() {
       onDateChange(formatDate(selectedDate));
     };
 
-    const formatDate = (date) => {
+    const formatDate = (date: Date): string => {
       return date.toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "2-digit",
@@ -226,12 +288,14 @@ export default function KycForm() {
     }
   };
 
+  // Update the validateForm function to handle type safety
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
 
     // Check for empty fields first
     Object.keys(formData).forEach((field) => {
-      if (typeof formData[field] === "string" && !formData[field].trim()) {
+      const value = formData[field as keyof FormData];
+      if (typeof value === "string" && !value.trim()) {
         newErrors[field] = "This field is required";
       }
     });
@@ -268,8 +332,10 @@ export default function KycForm() {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  const getPlaceholderText = (idType) => {
-    const placeholders = {
+
+  // Update the getPlaceholderText function with proper typing
+  const getPlaceholderText = (idType: string): string => {
+    const placeholders: { [key: string]: string } = {
       aadhar: "Enter your 12-digit Aadhar number",
       pan: "Enter your PAN number (e.g., ABCDE1234F)",
       voterid: "Enter your Voter ID number",
@@ -277,65 +343,73 @@ export default function KycForm() {
     return placeholders[idType] || "Enter your ID number";
   };
 
-  const formatIdNumber = (text, idType) => {
+  // Update the formatIdNumber function with proper typing
+  const formatIdNumber = (text: string, idType: string): string => {
     return idType === "pan" ? text.toUpperCase() : text;
   };
 
-  const getMaxLength = (idType) => {
-    const maxLengths = {
+  // Update the getMaxLength function with proper typing
+  const getMaxLength = (idType: string): number => {
+    const maxLengths: { [key: string]: number } = {
       aadhar: 12,
       pan: 10,
       voterid: 10,
     };
-    return maxLengths[idType] || 20; // Default max length if no type is matched
+    return maxLengths[idType] || 20;
   };
 
   const handleSubmit = async () => {
     if (validateForm()) {
-      // Convert DOB format from DD/MM/YYYY to YYYY-MM-DD
-      const parts = formData.dob.split("/");
-      const convertedDob = `${parts[2]}-${parts[1]}-${parts[0]}`;
-
-      // Prepare request body
-      const requestBody = {
-        user_id: user?.id || 2,
-        doorno: formData.doorno,
-        street: formData.street,
-        area: formData.area,
-        city: formData.city,
-        district: formData.district,
-        state: formData.state,
-        country: formData.country,
-        pincode: formData.pincode,
-        dob: convertedDob,
-        addressproof: formData.addressprooftype,
-        enternumber: formData.idNumber,
-        nominee_name: formData.nominee_name,
-        nominee_relationship: formData.nominee_relationship,
-      };
-
       try {
-        // Send API request
-        let response = await api.post("/kyc", requestBody);
+        // Convert DOB format from DD/MM/YYYY to YYYY-MM-DD
+        const parts = formData.dob.split("/");
+        const convertedDob = `${parts[2]}-${parts[1]}-${parts[0]}`;
+
+        // Prepare request body
+        const requestBody = {
+          user_id: user?.id || 2,
+          doorno: formData.doorno,
+          street: formData.street,
+          area: formData.area,
+          city: formData.city,
+          district: formData.district,
+          state: formData.state,
+          country: formData.country,
+          pincode: formData.pincode,
+          dob: convertedDob,
+          addressproof: formData.addressprooftype,
+          enternumber: formData.idNumber,
+          nominee_name: formData.nominee_name,
+          nominee_relationship: formData.nominee_relationship,
+        };
+
+        let response;
+        if (kycId) {
+          // Update existing KYC
+          response = await api.put(`/kyc/${kycId}`, requestBody);
+        } else {
+          // Create new KYC
+          response = await api.post("/kyc", requestBody);
+        }
+
         // Check API response for success
-        if (response.data?.data?.affectedRows > 0) {
+        if (response.data?.data?.affectedRows > 0 || response.data?.data?.id) {
           Alert.alert(
-            "KYC Submitted",
+            kycId ? "KYC Updated" : "KYC Submitted",
             response.data?.message ||
-              "Your KYC details have been submitted successfully."
+              (kycId
+                ? "Your KYC details have been updated successfully."
+                : "Your KYC details have been submitted successfully.")
           );
           router.back(); // Navigate back on success
         } else {
           Alert.alert("Error", "KYC submission failed. Please try again.");
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("KYC Submission Error:", error);
-
-        // Handle API error response
-        let errorMessage =
+        const errorMessage =
           error.response?.data?.message ||
           "An error occurred. Please try again.";
-
         Alert.alert("Error", errorMessage);
       }
     } else {
@@ -346,18 +420,14 @@ export default function KycForm() {
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        {/* Header */}
+        {/* Header - always visible */}
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => router.back()}
             style={styles.backButton}
             activeOpacity={0.7}
           >
-            <Ionicons
-              name="arrow-back"
-              size={24}
-              color={theme.colors.primary}
-            />
+            <Ionicons name="arrow-back" size={24} color="#FFC857" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Know Your Customer</Text>
         </View>
@@ -371,327 +441,252 @@ export default function KycForm() {
             style={styles.scrollView}
             contentContainerStyle={[
               styles.scrollViewContent,
-              { paddingBottom: keyboardVisible ? 200 : 100 }
+              { paddingBottom: (navBarHeight + 72 + (insets.bottom || 0)) }
             ]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
-            automaticallyAdjustKeyboardInsets={true}
           >
-            {/* Door Number */}
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Door No.</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your door number"
-                value={formData.doorno}
-                placeholderTextColor="gray"
-                onChangeText={(text) => handleChange("doorno", text)}
-              />
-              {errors.doorno && (
-                <Text style={styles.errorText}>{errors.doorno}</Text>
-              )}
+            {/* Address Section */}
+            <View style={[styles.groupCard, styles.groupAddress]}>
+              <Text style={[styles.groupTitle, { color: '#1976d2' }]}>Address Details</Text>
+              {/* Door Number */}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Door No.</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your door number"
+                  value={formData.doorno}
+                  placeholderTextColor="gray"
+                  onChangeText={(text) => handleChange("doorno", text)}
+                />
+                {errors.doorno && (
+                  <Text style={styles.errorText}>{errors.doorno}</Text>
+                )}
+              </View>
+              {/* Street */}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Street</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your street name"
+                  placeholderTextColor="gray"
+                  value={formData.street}
+                  onChangeText={(text) => handleChange("street", text)}
+                />
+                {errors.street && (
+                  <Text style={styles.errorText}>{errors.street}</Text>
+                )}
+              </View>
+              {/* Area */}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Area</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your area/locality"
+                  placeholderTextColor="gray"
+                  value={formData.area}
+                  onChangeText={(text) => handleChange("area", text)}
+                />
+                {errors.area && (
+                  <Text style={styles.errorText}>{errors.area}</Text>
+                )}
+              </View>
+              {/* City */}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>City</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your city"
+                  placeholderTextColor="gray"
+                  value={formData.city}
+                  onChangeText={(text) => handleChange("city", text)}
+                />
+                {errors.city && (
+                  <Text style={styles.errorText}>{errors.city}</Text>
+                )}
+              </View>
+              {/* District */}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>District</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your district"
+                  placeholderTextColor="gray"
+                  value={formData.district}
+                  onChangeText={(text) => handleChange("district", text)}
+                />
+                {errors.district && (
+                  <Text style={styles.errorText}>{errors.district}</Text>
+                )}
+              </View>
+              {/* State (Dropdown) */}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>State</Text>
+                <View style={styles.pickerContainer}>
+                  <RNPickerSelect
+                    onValueChange={(value) => handleChange("state", value)}
+                    onDonePress={() => {}}
+                    placeholder={{ label: "Select your state", value: "" }}
+                    value={formData.state}
+                    items={indianStates.map((state) => ({
+                      label: state,
+                      value: state,
+                    }))}
+                    style={pickerSelectStyles}
+                    useNativeAndroidPickerStyle={false}
+                  />
+                </View>
+                {errors.state && (
+                  <Text style={styles.errorText}>{errors.state}</Text>
+                )}
+              </View>
+              {/* Country (Default to India) */}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Country</Text>
+                <TextInput
+                  style={[styles.input, styles.disabledInput]}
+                  placeholder="Country"
+                  value={formData.country}
+                  editable={false}
+                />
+                {errors.country && (
+                  <Text style={styles.errorText}>{errors.country}</Text>
+                )}
+              </View>
+              {/* Pincode */}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Pincode</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your 6-digit pincode"
+                  placeholderTextColor="gray"
+                  keyboardType="number-pad"
+                  value={formData.pincode}
+                  onChangeText={(text) => handleChange("pincode", text)}
+                  maxLength={6}
+                />
+                {errors.pincode && (
+                  <Text style={styles.errorText}>{errors.pincode}</Text>
+                )}
+              </View>
             </View>
 
-            {/* Street */}
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Street</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your street name"
-                placeholderTextColor="gray"
-                value={formData.street}
-                onChangeText={(text) => handleChange("street", text)}
-              />
-              {errors.street && (
-                <Text style={styles.errorText}>{errors.street}</Text>
-              )}
-            </View>
-
-            {/* Area */}
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Area</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your area/locality"
-                placeholderTextColor="gray"
-                value={formData.area}
-                onChangeText={(text) => handleChange("area", text)}
-              />
-              {errors.area && (
-                <Text style={styles.errorText}>{errors.area}</Text>
-              )}
-            </View>
-
-            {/* City */}
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>City</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your city"
-                placeholderTextColor="gray"
-                value={formData.city}
-                onChangeText={(text) => handleChange("city", text)}
-              />
-              {errors.city && (
-                <Text style={styles.errorText}>{errors.city}</Text>
-              )}
-            </View>
-
-            {/* District */}
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>District</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your district"
-                placeholderTextColor="gray"
-                value={formData.district}
-                onChangeText={(text) => handleChange("district", text)}
-              />
-              {errors.district && (
-                <Text style={styles.errorText}>{errors.district}</Text>
-              )}
-            </View>
-
-            {/* State (Dropdown) */}
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>State</Text>
-              <View style={styles.pickerContainer}>
-                {/* <Picker
-                  selectedValue={formData.state}
-                  onValueChange={(itemValue) =>
-                    handleChange("state", itemValue)
-                  }
-                  style={styles.picker}
-                  itemStyle={styles.pickerItem}
-                >
-                  <Picker.Item label="Select your state" value="" />
-                  {indianStates.map((state, index) => (
-                    <Picker.Item key={index} label={state} value={state} />
-                  ))}
-                </Picker> */}
-                <RNPickerSelect
-                  onValueChange={(value) => handleChange("state", value)}
-                  onDonePress={() => {}}
-                  placeholder={{ label: "Select your state", value: "" }}
-                  value={formData.state}
-                  items={indianStates.map((state) => ({
-                    label: state,
-                    value: state,
-                  }))}
-                  style={pickerSelectStyles}
-                  useNativeAndroidPickerStyle={false}
+            {/* ID Proof Section */}
+            <View style={[styles.groupCard, styles.groupIdProof]}>
+              <Text style={[styles.groupTitle, { color: '#bfa14a' }]}>ID Proof</Text>
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Date of Birth</Text>
+                <FormDatePicker
+                  label="Date of Birth"
+                  value={formData.dob}
+                  onDateChange={(date) => handleChange("dob", date)}
+                  error={errors.dob}
                 />
               </View>
-              {errors.state && (
-                <Text style={styles.errorText}>{errors.state}</Text>
-              )}
-            </View>
-
-            {/* Country (Default to India) */}
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Country</Text>
-              <TextInput
-                style={[styles.input, styles.disabledInput]}
-                placeholder="Country"
-                value={formData.country}
-                editable={false}
-              />
-              {errors.country && (
-                <Text style={styles.errorText}>{errors.country}</Text>
-              )}
-            </View>
-
-            {/* Pincode */}
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Pincode</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your 6-digit pincode"
-                placeholderTextColor="gray"
-                keyboardType="number-pad"
-                value={formData.pincode}
-                onChangeText={(text) => handleChange("pincode", text)}
-                maxLength={6}
-              />
-              {errors.pincode && (
-                <Text style={styles.errorText}>{errors.pincode}</Text>
-              )}
-            </View>
-
-            {/* Date of Birth */}
-            <View style={styles.formGroup}>
-              <FormDatePicker
-                label="Date of Birth"
-                value={formData.dob}
-                onDateChange={(date) => handleChange("dob", date)}
-                error={errors.dob}
-              />
-            </View>
-
-            {/* Address Proof Type (Dropdown) */}
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Address Proof Type</Text>
-              <View style={styles.pickerContainer}>
-                <RNPickerSelect
-                  onValueChange={(value) =>
-                    handleChange("addressprooftype", value)
-                  }
-                  onDonePress={() => {}}
-                  placeholder={{ label: "Select your ID proof", value: "" }}
-                  value={formData.addressprooftype} // Corrected: use addressprooftype here
-                  items={idTypes.map((id) => ({
-                    label: id.name,
-                    value: id.value,
-                  }))}
-                  style={pickerSelectStyles}
-                  useNativeAndroidPickerStyle={false}
-                />
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Address Proof Type</Text>
+                <View style={styles.pickerContainer}>
+                  <RNPickerSelect
+                    onValueChange={(value) => handleChange("addressprooftype", value)}
+                    onDonePress={() => {}}
+                    placeholder={{ label: "Select your ID proof", value: "" }}
+                    value={formData.addressprooftype}
+                    items={idTypes.map((id) => ({
+                      label: id.name,
+                      value: id.value,
+                    }))}
+                    style={pickerSelectStyles}
+                    useNativeAndroidPickerStyle={false}
+                  />
+                </View>
+                {errors.addressprooftype && (
+                  <Text style={styles.errorText}>{errors.addressprooftype}</Text>
+                )}
               </View>
-              {errors.addressprooftype && (
-                <Text style={styles.errorText}>{errors.addressprooftype}</Text>
-              )}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>ID Number</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholderTextColor="gray"
+                  placeholder={getPlaceholderText(formData.addressprooftype)}
+                  value={formData.idNumber}
+                  onChangeText={(text) =>
+                    handleChange(
+                      "idNumber",
+                      formatIdNumber(text, formData.addressprooftype)
+                    )
+                  }
+                  autoCapitalize={
+                    formData.addressprooftype === "pan" ? "characters" : "none"
+                  }
+                  keyboardType={
+                    formData.addressprooftype === "pan" ? "default" : "number-pad"
+                  }
+                  maxLength={getMaxLength(formData.addressprooftype)}
+                />
+                {errors.idNumber && (
+                  <Text style={styles.errorText}>{errors.idNumber}</Text>
+                )}
+              </View>
             </View>
 
-            {/* ID Number (to be sent as enternumber) */}
-            {/* <View style={styles.formGroup}>
-              <Text style={styles.label}>ID Number</Text>
-              <TextInput
-                style={styles.input}
-                placeholderTextColor="gray"
-                placeholder={
-                  formData.addressprooftype === "aadhar"
-                    ? "Enter your 12-digit Aadhar number"
-                    : formData.addressprooftype === "pan"
-                    ? "Enter your PAN number (e.g., ABCDE1234F)"
-                    : formData.addressprooftype === "voterid"
-                    ? "Enter your Voter ID number"
-                    : "Enter your ID number"
-                }
-                value={formData.idNumber}
-                onChangeText={(text) =>
-                  handleChange(
-                    "idNumber",
-                    formData.addressprooftype === "pan"
-                      ? text.toUpperCase()
-                      : text
-                  )
-                }
-                autoCapitalize={
-                  formData.addressprooftype === "pan" ? "characters" : "none"
-                }
-                keyboardType={
-                  formData.addressprooftype === "pan" ? "default" : "number-pad"
-                }
-              />
-              {errors.idNumber && (
-                <Text style={styles.errorText}>{errors.idNumber}</Text>
-              )}
-            </View> */}
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>ID Number</Text>
-              <TextInput
-                style={styles.input}
-                placeholderTextColor="gray"
-                placeholder={getPlaceholderText(formData.addressprooftype)}
-                value={formData.idNumber}
-                onChangeText={(text) =>
-                  handleChange(
-                    "idNumber",
-                    formatIdNumber(text, formData.addressprooftype)
-                  )
-                }
-                autoCapitalize={
-                  formData.addressprooftype === "pan" ? "characters" : "none"
-                }
-                keyboardType={
-                  formData.addressprooftype === "pan" ? "default" : "number-pad"
-                }
-                maxLength={getMaxLength(formData.addressprooftype)}
-              />
-              {errors.idNumber && (
-                <Text style={styles.errorText}>{errors.idNumber}</Text>
-              )}
-            </View>
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Nominee Relationship</Text>
-              <View style={styles.pickerContainer}>
-                <RNPickerSelect
-                  onValueChange={(value) =>
-                    handleChange("nominee_relationship", value)
-                  }
-                  onDonePress={() => {}}
-                  placeholder={{ label: "Select Branch", value: "" }}
-                  value={formData.nominee_relationship} // Corrected: use addressprooftype here
-                  items={nomineeRelationship.map((id) => ({
-                    label: id.name,
-                    value: id.value,
-                  }))}
-                  style={pickerSelectStyles}
-                  useNativeAndroidPickerStyle={false}
+            {/* Nominee Section */}
+            <View style={[styles.groupCard, styles.groupNominee]}>
+              <Text style={[styles.groupTitle, { color: '#388e3c' }]}>Nominee Details</Text>
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Nominee Name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your nominee's full name"
+                  placeholderTextColor="gray"
+                  value={formData.nominee_name}
+                  onChangeText={(text) => handleChange("nominee_name", text)}
                 />
+                {errors.nominee_name && (
+                  <Text style={styles.errorText}>{errors.nominee_name}</Text>
+                )}
               </View>
-              {errors.addressprooftype && (
-                <Text style={styles.errorText}>{errors.addressprooftype}</Text>
-              )}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Nominee Relationship</Text>
+                <View style={styles.pickerContainer}>
+                  <RNPickerSelect
+                    onValueChange={(value) =>
+                      handleChange("nominee_relationship", value)
+                    }
+                    onDonePress={() => {}}
+                    placeholder={{ label: "Select relationship", value: "" }}
+                    value={formData.nominee_relationship}
+                    items={nomineeRelationship.map((id) => ({
+                      label: id.name,
+                      value: id.value,
+                    }))}
+                    style={pickerSelectStyles}
+                    useNativeAndroidPickerStyle={false}
+                  />
+                </View>
+                {errors.nominee_relationship && (
+                  <Text style={styles.errorText}>{errors.nominee_relationship}</Text>
+                )}
+              </View>
             </View>
-            {/* Nominee Name */}
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Nominee Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your nominee's full name"
-                placeholderTextColor="gray"
-                value={formData.nominee_name}
-                onChangeText={(text) => handleChange("nominee_name", text)}
-              />
-              {errors.nominee_name && (
-                <Text style={styles.errorText}>{errors.nominee_name}</Text>
-              )}
-            </View>
-            {/* Nominee Relationship */}
-            {/* <View style={styles.formGroup}>
-              <Text style={styles.label}>Nominee Relationship</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your relationship with the nominee"
-                placeholderTextColor="gray"
-                value={formData.nominee_relationship}
-                onChangeText={(text) =>
-                  handleChange("nominee_relationship", text)
-                }
-              />
-              {errors.nominee_relationship && (
-                <Text style={styles.errorText}>
-                  {errors.nominee_relationship}
-                </Text>
-              )}
-            </View> */}
 
             {/* Extra space at the bottom */}
             <View style={styles.bottomSpace} />
           </ScrollView>
+          {/* Submit Button - now at the end, not absolutely positioned */}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              onPress={handleSubmit}
+              style={styles.submitButton}
+              activeOpacity={0.9}
+            >
+              <Text style={styles.submitButtonText}>
+                {kycId ? "Update KYC" : "Submit KYC"}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
-
-      {/* Submit Button - Fixed at bottom */}
-      <View
-        style={[
-          styles.buttonContainer,
-          {
-            paddingBottom: insets.bottom > 0 ? insets.bottom : 16,
-            position: keyboardVisible ? 'relative' : 'absolute',
-            bottom: keyboardVisible ? 0 : 45,
-          },
-        ]}
-      >
-        <TouchableOpacity
-          onPress={handleSubmit}
-          style={styles.submitButton}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.submitButtonText}>Submit KYC</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
@@ -738,6 +733,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#EEEEEE",
+    backgroundColor: theme.colors.primary,
   },
   backButton: {
     padding: 8,
@@ -745,7 +741,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: theme.colors.primary,
+    color: "#FFC857",
     marginLeft: 12,
   },
   scrollView: {
@@ -755,7 +751,16 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   formGroup: {
-    marginBottom: 16,
+    marginBottom: 20,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    marginHorizontal: 16,
   },
   label: {
     fontSize: 16,
@@ -794,24 +799,36 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   buttonContainer: {
-    padding: 16,
-    backgroundColor: "#FFFFFF",
-    borderTopWidth: 1,
-    borderTopColor: "#EEEEEE",
-    left: 0,
-    right: 0,
+    paddingHorizontal: 26,
+    paddingBottom: 100,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 10,
     zIndex: 1000,
+    alignItems: 'center',
   },
   submitButton: {
     backgroundColor: theme.colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
+    borderRadius: 20,
+    paddingVertical: 22,
     alignItems: "center",
+    width: '100%',
+    shadowColor: theme.colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 4,
   },
   submitButtonText: {
-    color: "#FFFFFF",
+    color: "#FFC857",
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: "bold",
+    letterSpacing: 1,
   },
   bottomSpace: {
     height: 100,
@@ -878,5 +895,44 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "500",
     fontSize: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: theme.colors.primary,
+    marginBottom: 16,
+    marginTop: 24,
+    paddingHorizontal: 16,
+  },
+  groupCard: {
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  groupTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    marginLeft: 2,
+  },
+  groupAddress: {
+    backgroundColor: '#e3f2fd', // Light blue
+    borderColor: '#90caf9',
+    borderWidth: 1,
+  },
+  groupIdProof: {
+    backgroundColor: '#fffde7', // Light yellow
+    borderColor: '#ffe082',
+    borderWidth: 1,
+  },
+  groupNominee: {
+    backgroundColor: '#e8f5e9', // Light green
+    borderColor: '#a5d6a7',
+    borderWidth: 1,
   },
 });

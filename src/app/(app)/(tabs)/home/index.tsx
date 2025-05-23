@@ -33,6 +33,7 @@ import { ScaledSheet, moderateScale } from "react-native-size-matters";
 import { theme } from "@/constants/theme";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import FlashBanner from '@/app/components/FlashBanner';
+import { Ionicons } from '@expo/vector-icons';
 
 // Define interfaces for API response data
 interface RatesData {
@@ -49,6 +50,36 @@ interface Banner {
   schemeUrl: string;
 }
 
+// Add UserInfoCard props interface
+interface UserInfoCardProps {
+  userName: string | undefined;
+  activeSchemesCount: number;
+  onPress: () => void;
+}
+
+// Add UserInfoCard component with proper types
+const UserInfoCard: React.FC<UserInfoCardProps> = ({ userName, activeSchemesCount, onPress }) => (
+  <TouchableOpacity 
+    style={styles.userInfoCard}
+    onPress={onPress}
+    activeOpacity={0.8}
+  >
+    <View style={styles.userInfoContent}>
+      <View style={styles.userInfoLeft}>
+        <Ionicons name="person-circle-outline" size={40} color="#5a000b" />
+        <Text style={styles.userName}>{userName || 'Guest User'}</Text>
+      </View>
+      <View style={styles.userInfoRight}>
+        <Text style={styles.activeSchemesLabel}>Active Schemes</Text>
+        <View style={styles.activeSchemesCount}>
+          <Text style={styles.countText}>{activeSchemesCount || 0}</Text>
+          <Ionicons name="chevron-forward" size={24} color="#5a000b" />
+        </View>
+      </View>
+    </View>
+  </TouchableOpacity>
+);
+
 export default function Home() {
   const { language, user } = useGlobalStore();
   const router = useRouter();
@@ -60,7 +91,8 @@ export default function Home() {
   const scrollX = useRef(new Animated.Value(0)).current;
   const sliderRef = useRef<FlatList<Banner>>(null);
   const { width: screenWidth } = Dimensions.get("window");
-  const [showFlashBanner, setShowFlashBanner] = useState(false);
+  const [showFlashBanner, setShowFlashBanner] = useState(true);
+  const [activeSchemesCount, setActiveSchemesCount] = useState(0);
 
   // Date formatting utility
   const formatDateToIndian = (isoString: string | null | undefined) => {
@@ -109,6 +141,11 @@ export default function Home() {
 
       setSchemeData(schemesResponse.data);
       setRatesData(liveRatesResponse.data);
+
+      // Store gold rate in AsyncStorage
+      if (liveRatesResponse.data?.data?.gold_rate) {
+        await AsyncStorage.setItem('gold_rate', liveRatesResponse.data.data.gold_rate);
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
       Alert.alert("Error", "Failed to fetch updated data");
@@ -173,11 +210,11 @@ export default function Home() {
   };
 
   const banners: Banner[] = [
-    {
-      id: 1,
-      image: require('../../../../../assets/images/banner1.jpg'),
-      schemeUrl: '/(app)/(tabs)/home/schemes',
-    },
+    // {
+    //   id: 1,
+    //   image: require('../../../../../assets/images/banner1.jpg'),
+    //   schemeUrl: '/(app)/(tabs)/home/schemes',
+    // },
     {
       id: 2,
       image: require('../../../../../assets/images/banner.png'),
@@ -217,6 +254,24 @@ export default function Home() {
     await AsyncStorage.setItem('flashBannerSeen', 'true');
   };
 
+  // Update the fetchActiveSchemesCount function to use a mock count for now
+  const fetchActiveSchemesCount = async () => {
+    try {
+      // TODO: Replace with actual API call when available
+      // For now, using a mock count
+      setActiveSchemesCount(2); // Mock count
+    } catch (error) {
+      console.error("Error fetching active schemes count:", error);
+    }
+  };
+
+  // Add useEffect to fetch active schemes count
+  useEffect(() => {
+    if (user) {
+      fetchActiveSchemesCount();
+    }
+  }, [user]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       {showFlashBanner && (
@@ -225,12 +280,7 @@ export default function Home() {
           onClose={handleCloseBanner}
         />
       )}
-      <LinearGradient
-        colors={['#5a000b', '#2e0406']}
-        style={styles.background}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
+      <View style={{ flex: 1, backgroundColor: '#fff' }}>
         {/* Fixed Header */}
         <View style={styles.headerWrapper}>
           <AppHeader showBackButton={false} backRoute="index" />
@@ -293,6 +343,13 @@ export default function Home() {
               duration={8000}
             />
 
+            {/* User Info Card */}
+            <UserInfoCard 
+              userName={user?.name}
+              activeSchemesCount={activeSchemesCount}
+              onPress={() => router.push('/(app)/(tabs)/savings/index')}
+            />
+
             {/* <ProductsList schemes={schemeData} /> */}
 
             {/* Banner List */}
@@ -316,7 +373,7 @@ export default function Home() {
         <View style={styles.languageSwitcherContainer}>
           <LanguageSwitcher />
         </View>
-      </LinearGradient>
+      </View>
     </SafeAreaView>
   );
 }
@@ -428,5 +485,55 @@ const styles = StyleSheet.create({
     width: Dimensions.get('window').width - 40,
     height: 200,
     borderRadius: 8,
+  },
+  userInfoCard: {
+    width: '90%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+  },
+  userInfoContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  userInfoLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  userInfoRight: {
+    alignItems: 'flex-end',
+  },
+  userName: {
+    fontSize: moderateScale(16),
+    fontWeight: '600',
+    color: '#333',
+  },
+  activeSchemesLabel: {
+    fontSize: moderateScale(12),
+    color: '#666',
+    marginBottom: 4,
+  },
+  activeSchemesCount: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  countText: {
+    fontSize: moderateScale(20),
+    fontWeight: 'bold',
+    color: '#5a000b',
   },
 });
