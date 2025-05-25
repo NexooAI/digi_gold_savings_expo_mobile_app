@@ -1,47 +1,63 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
-  Image,
+  Modal,
   StyleSheet,
   Dimensions,
   TouchableOpacity,
-  Modal,
-  StatusBar,
-  PanResponder,
+  Image,
+  FlatList,
   Text,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface StatusViewProps {
-  images: any[];
+  images: string[];
   isVisible: boolean;
   initialIndex: number;
   onClose: () => void;
+  collectionName?: string;
 }
 
 const { width, height } = Dimensions.get('window');
 
-const StatusView: React.FC<StatusViewProps> = ({ images, isVisible, initialIndex, onClose }) => {
+const StatusView: React.FC<StatusViewProps> = ({
+  images,
+  isVisible,
+  initialIndex,
+  onClose,
+  collectionName,
+}) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const flatListRef = useRef<FlatList>(null);
 
-  useEffect(() => {
-    setCurrentIndex(initialIndex);
-  }, [initialIndex, isVisible]);
-
-  const goNext = () => {
-    if (currentIndex < images.length - 1) setCurrentIndex(currentIndex + 1);
+  const handleNext = () => {
+    if (currentIndex < images.length - 1) {
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
+      flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
+    } else {
+      onClose();
+    }
   };
-  const goPrev = () => {
-    if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
+
+  const handlePrevious = () => {
+    if (currentIndex > 0) {
+      const prevIndex = currentIndex - 1;
+      setCurrentIndex(prevIndex);
+      flatListRef.current?.scrollToIndex({ index: prevIndex, animated: true });
+    }
   };
 
-  const panResponder = PanResponder.create({
-    onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 20,
-    onPanResponderRelease: (_, gestureState) => {
-      if (gestureState.dx < -50) goNext();
-      else if (gestureState.dx > 50) goPrev();
-    },
-  });
+  const renderItem = ({ item }: { item: string }) => (
+    <View style={styles.imageContainer}>
+      <Image
+        source={{ uri: item }}
+        style={styles.image}
+        resizeMode="contain"
+      />
+    </View>
+  );
 
   return (
     <Modal
@@ -50,28 +66,67 @@ const StatusView: React.FC<StatusViewProps> = ({ images, isVisible, initialIndex
       animationType="fade"
       onRequestClose={onClose}
     >
-      <StatusBar backgroundColor="#000" barStyle="light-content" />
-      <View style={styles.container} {...panResponder.panHandlers}>
+      <View style={styles.container}>
         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <Ionicons name="close" size={28} color="#fff" />
+          <Ionicons name="close" size={30} color="#fff" />
         </TouchableOpacity>
-        {currentIndex > 0 && (
-          <TouchableOpacity style={styles.leftNav} onPress={goPrev}>
-            <Ionicons name="chevron-back" size={36} color="#fff" />
-          </TouchableOpacity>
+
+        {collectionName && (
+          <View style={styles.titleContainer}>
+            <Text style={styles.title}>{collectionName}</Text>
+          </View>
         )}
-        <Image
-          source={images[currentIndex]}
-          style={styles.image}
-          resizeMode="contain"
+
+        <FlatList
+          ref={flatListRef}
+          data={images}
+          renderItem={renderItem}
+          keyExtractor={(_, index) => index.toString()}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={(event) => {
+            const newIndex = Math.round(
+              event.nativeEvent.contentOffset.x / width
+            );
+            setCurrentIndex(newIndex);
+          }}
+          initialScrollIndex={initialIndex}
+          getItemLayout={(_, index) => ({
+            length: width,
+            offset: width * index,
+            index,
+          })}
         />
-        {currentIndex < images.length - 1 && (
-          <TouchableOpacity style={styles.rightNav} onPress={goNext}>
-            <Ionicons name="chevron-forward" size={36} color="#fff" />
+
+        <View style={styles.navigationContainer}>
+          <TouchableOpacity
+            style={[styles.navButton, currentIndex === 0 && styles.disabledButton]}
+            onPress={handlePrevious}
+            disabled={currentIndex === 0}
+          >
+            <Ionicons name="chevron-back" size={30} color="#fff" />
           </TouchableOpacity>
-        )}
-        <View style={styles.counter}>
-          <Text style={styles.counterText}>{currentIndex + 1} / {images.length}</Text>
+
+          <TouchableOpacity
+            style={[styles.navButton, currentIndex === images.length - 1 && styles.disabledButton]}
+            onPress={handleNext}
+            disabled={currentIndex === images.length - 1}
+          >
+            <Ionicons name="chevron-forward" size={30} color="#fff" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.paginationContainer}>
+          {images.map((_, index) => (
+            <View
+              key={index}
+              style={[
+                styles.paginationDot,
+                index === currentIndex && styles.activeDot,
+              ]}
+            />
+          ))}
         </View>
       </View>
     </Modal>
@@ -81,47 +136,83 @@ const StatusView: React.FC<StatusViewProps> = ({ images, isVisible, initialIndex
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+  },
+  imageContainer: {
+    width,
+    height: height * 0.8,
     justifyContent: 'center',
     alignItems: 'center',
   },
   image: {
-    width: width,
-    height: height,
+    width: '100%',
+    height: '100%',
   },
   closeButton: {
     position: 'absolute',
     top: 40,
     right: 20,
     zIndex: 1,
-    padding: 8,
-  },
-  leftNav: {
-    position: 'absolute',
-    left: 10,
-    top: height / 2 - 30,
-    zIndex: 2,
     padding: 10,
   },
-  rightNav: {
+  navigationContainer: {
     position: 'absolute',
-    right: 10,
-    top: height / 2 - 30,
-    zIndex: 2,
-    padding: 10,
+    bottom: 100,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
   },
-  counter: {
+  navButton: {
+    padding: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 25,
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  paginationContainer: {
     position: 'absolute',
     bottom: 40,
-    alignSelf: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 4,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  counterText: {
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    marginHorizontal: 4,
+  },
+  activeDot: {
+    backgroundColor: '#fff',
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  titleContainer: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+    right: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  title: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
 });
 

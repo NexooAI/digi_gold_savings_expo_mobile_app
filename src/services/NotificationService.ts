@@ -18,6 +18,91 @@ Notifications.setNotificationHandler({
 });
 
 class NotificationService {
+  private async storeFcmToken(token: string) {
+    try {
+      await AsyncStorage.setItem('fcmToken', token);
+      console.log('FCM token stored locally');
+    } catch (error) {
+      console.error('Error storing FCM token:', error);
+    }
+  }
+
+  private async getStoredFcmToken(): Promise<string | null> {
+    try {
+      return await AsyncStorage.getItem('fcmToken');
+    } catch (error) {
+      console.error('Error getting stored FCM token:', error);
+      return null;
+    }
+  }
+
+  private async getLastSentToken(): Promise<string | null> {
+    try {
+      return await AsyncStorage.getItem('lastSentFcmToken');
+    } catch (error) {
+      console.error('Error getting last sent FCM token:', error);
+      return null;
+    }
+  }
+
+  private async storeLastSentToken(token: string) {
+    try {
+      await AsyncStorage.setItem('lastSentFcmToken', token);
+    } catch (error) {
+      console.error('Error storing last sent FCM token:', error);
+    }
+  }
+
+  // New method to send token to API when user info is available
+  async sendTokenToApi() {
+    try {
+      const token = await this.getStoredFcmToken();
+      if (!token) {
+        console.log('No FCM token available to send');
+        return;
+      }
+
+      // Check if this token was already sent
+      const lastSentToken = await this.getLastSentToken();
+      if (lastSentToken === token) {
+        console.log('Token already sent to API, skipping...');
+        return;
+      }
+
+      // Get user data from store or storage
+      let userId = 0;
+      const userDataStr = await AsyncStorage.getItem('userData');
+      if (userDataStr) {
+        const userData = JSON.parse(userDataStr);
+        console.log('User data:------------------', userData);
+        userId = Number(userData.user_id) || 0;
+      } else {
+        // Try to get from global store if available
+        const user = useGlobalStore.getState().user;
+        if (user) {
+          // Handle both possible user object structures
+          userId = Number((user as any).user_id || user.id) || 0;
+        }
+      }
+
+      if (userId > 0) {
+        console.log('Sending FCM token to API - User ID:', userId);
+        const response = await users.updateFcmToken(token, userId, Platform.OS === 'ios' ? 'ios' : 'android');
+        console.log('FCM token sent to API successfully', response.data);
+        // Store the token as last sent
+        await this.storeLastSentToken(token);
+      } else {
+        console.log('Skipping FCM token update - No valid user ID found');
+      }
+    } catch (error: any) {
+      console.error('Error sending FCM token to API:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+    }
+  }
+
   // Register for push notifications
   async registerForPushNotificationsAsync() {
     let token;
@@ -55,37 +140,13 @@ class NotificationService {
           projectId,
         })).data;
         
-        console.log('Push token:', token);
+        // Extract just the token part without ExponentPushToken[] wrapper
+        const cleanToken = token.replace('ExponentPushToken[', '').replace(']', '');
+        console.log('Push token generated:', cleanToken);
         
-        // Get user ID and device info
-        try {
-          // Get user data from store or storage
-          let userId = '';
-          const userDataStr = await AsyncStorage.getItem('userData');
-          if (userDataStr) {
-            const userData = JSON.parse(userDataStr);
-            userId = userData.id || '';
-          } else {
-            // Try to get from global store if available
-            const user = useGlobalStore.getState().user;
-            if (user) {
-              userId = user.id || '';
-            }
-          }
-
-          // Get device information
-          const deviceInfo = {
-            os: Platform.OS,
-            osVersion: Platform.Version.toString(),
-            deviceName: Device.modelName || Device.deviceName || 'Unknown Device'
-          };
-          
-          // Send FCM token to API with user ID and device info
-          await users.updateFcmToken(token, userId, deviceInfo);
-          console.log('FCM token sent to API successfully with user ID and device info');
-        } catch (apiError) {
-          console.error('Error sending FCM token to API:', apiError);
-        }
+        // Store the clean token locally
+        await this.storeFcmToken(cleanToken);
+        
       } catch (error) {
         console.error('Error getting push token:', error);
       }

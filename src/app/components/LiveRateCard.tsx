@@ -20,9 +20,10 @@ interface LiveRateCardProps {
   lastupdated: string;
   image: ImageSourcePropType;
   onPress?: () => void;
+  isSingle?: boolean;
 }
 
-const LiveRateCard = ({ type, rate, lastupdated, image, onPress }: LiveRateCardProps) => {
+const LiveRateCard = ({ type, rate, lastupdated, image, onPress, isSingle }: LiveRateCardProps) => {
   const router = useRouter();
   
   const handlePress = () => {
@@ -30,9 +31,7 @@ const LiveRateCard = ({ type, rate, lastupdated, image, onPress }: LiveRateCardP
       if (onPress) {
         onPress();
       } else {
-        // Ensure type is properly formatted to avoid route errors
         const formattedType = type?.toString().trim() || "Gold";
-        // Use href pattern for more reliable navigation
         router.push({
           pathname: "/(app)/(tabs)/home/live-rates",
           params: { type: formattedType }
@@ -40,10 +39,10 @@ const LiveRateCard = ({ type, rate, lastupdated, image, onPress }: LiveRateCardP
       }
     } catch (error) {
       console.error("Navigation error:", error);
-      // Fallback direct navigation if something goes wrong
       router.push("/(app)/(tabs)/home/live-rates");
     }
   };
+
   const isGold = type.toLowerCase() === "gold";
   const glowAnim = useRef(new Animated.Value(0)).current;
   const rateAnim = useRef(new Animated.Value(0)).current;
@@ -120,59 +119,61 @@ const LiveRateCard = ({ type, rate, lastupdated, image, onPress }: LiveRateCardP
           styles.cardContainer,
           isGold ? styles.goldGlow : styles.silverGlow,
           glowStyle,
+          isSingle && styles.singleCardContainer,
         ]}
       >
-      <View style={styles.imageContainer}>
-        <Image source={image} style={styles.image} resizeMode="contain" />
-      </View>
-
-      <View style={styles.cardContent}>
-        <View style={styles.typeContainer}>
-          <Text style={styles.type}>{type}</Text>
-          <View style={styles.liveIndicator}>
-            <Animated.View
-              style={[
-                styles.liveDot,
-                {
-                  opacity: liveDotAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.4, 1],
-                  }),
-                  transform: [
-                    {
-                      scale: liveDotAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0.8, 1.2],
-                      }),
-                    },
-                  ],
-                },
-              ]}
-            />
-            <Text style={styles.liveText}>LIVE</Text>
-          </View>
+        <View style={[styles.imageContainer, isSingle && styles.singleImageContainer]}>
+          <Image source={image} style={[styles.image, isSingle && styles.singleImage]} resizeMode="contain" />
         </View>
-        <Animated.Text 
-          style={[
-            styles.rate,
-            {
-              transform: [
-                { scale: rateAnim },
-                { translateY: rateAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [20, 0],
-                  })
-                }
-              ],
-              opacity: rateAnim
-            }
-          ]}
-        >
-          ₹{rate}
-        </Animated.Text>
-        <Text style={styles.lastUpdated}>{lastupdated}</Text>
-      </View>
-    </Animated.View>
+
+        <View style={[styles.cardContent, isSingle && styles.singleCardContent]}>
+          <View style={styles.typeContainer}>
+            <Text style={[styles.type, isSingle && styles.singleType]}>{type}</Text>
+            <View style={styles.liveIndicator}>
+              <Animated.View
+                style={[
+                  styles.liveDot,
+                  {
+                    opacity: liveDotAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.4, 1],
+                    }),
+                    transform: [
+                      {
+                        scale: liveDotAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0.8, 1.2],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              />
+              <Text style={styles.liveText}>LIVE</Text>
+            </View>
+          </View>
+          <Animated.Text 
+            style={[
+              styles.rate,
+              isSingle && styles.singleRate,
+              {
+                transform: [
+                  { scale: rateAnim },
+                  { translateY: rateAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [20, 0],
+                    })
+                  }
+                ],
+                opacity: rateAnim
+              }
+            ]}
+          >
+            ₹{rate}
+          </Animated.Text>
+          <Text style={[styles.lastUpdated, isSingle && styles.singleLastUpdated]}>{lastupdated}</Text>
+        </View>
+      </Animated.View>
     </TouchableOpacity>
   );
 };
@@ -193,6 +194,12 @@ const styles = StyleSheet.create({
     elevation: 5,
     overflow: "visible",
   },
+  singleCardContainer: {
+    width: width * 0.8,
+    maxWidth: 300,
+    paddingTop: 40,
+    paddingBottom: 20,
+  },
   goldGlow: {
     shadowColor: "#FFD700",
     borderWidth: 2,
@@ -210,14 +217,24 @@ const styles = StyleSheet.create({
     transform: [{ translateX: -50 }],
     zIndex: 10,
   },
+  singleImageContainer: {
+    top: "-100%",
+  },
   image: {
     width: 80,
     height: 95,
     borderRadius: 10,
   },
+  singleImage: {
+    width: 100,
+    height: 120,
+  },
   cardContent: {
     alignItems: "center",
     justifyContent: "center",
+  },
+  singleCardContent: {
+    paddingTop: 20,
   },
   typeContainer: {
     flexDirection: 'row',
@@ -245,15 +262,27 @@ const styles = StyleSheet.create({
     color: "#555",
     fontWeight: "bold",
   },
+  singleType: {
+    fontSize: 18,
+  },
   rate: {
     fontSize: 22,
     fontWeight: "bold",
     color: "#ff6f00",
   },
+  singleRate: {
+    fontSize: 32,
+    marginTop: 10,
+  },
   lastUpdated: {
     fontSize: 10,
     color: "#777",
   },
+  singleLastUpdated: {
+    fontSize: 12,
+    marginTop: 5,
+  },
 });
+
 export default LiveRateCard;
 

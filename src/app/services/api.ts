@@ -151,11 +151,11 @@ export const rates = {
 };
 
 export const users = {
-  updateFcmToken: (token: string, userId: string, deviceInfo: { os: string, osVersion: string, deviceName: string }) => {
-    return api.post('/save-fcm-token', { 
-      token,
+  updateFcmToken: (token: string, userId: number, device_type: 'ios' | 'android') => {
+    return api.post('/notifications/token', { 
       userId,
-      deviceInfo
+      token,
+      device_type
     });
   },
 };
@@ -166,6 +166,10 @@ export const news = {
 
 export const posts = {
   getActivePosts: () => api.get('/posts-active'),
+};
+
+export const collections = {
+  getCollections: () => api.get('/collections'),
 };
 
 export default api;

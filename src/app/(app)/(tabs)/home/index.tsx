@@ -14,6 +14,7 @@ import {
   PanResponder,
   FlatList,
   Image,
+  StatusBar,
 } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from "expo-router";
@@ -27,7 +28,7 @@ import FlashOffer from "@/app/components/FlashOffer";
 import YouTubeVideo from "@/app/components/YouTubeVideo";
 import SupportContactCard from "@/app/components/SupportContactCard";
 import useGlobalStore from "@/store/global.store";
-import { schemes, rates } from "@/app/services/api";
+import { schemes, rates, collections } from "@/app/services/api";
 import NetInfo from "@react-native-community/netinfo";
 import { ScaledSheet, moderateScale } from "react-native-size-matters";
 import { theme } from "@/constants/theme";
@@ -35,6 +36,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import FlashBanner from '@/app/components/FlashBanner';
 import { Ionicons } from '@expo/vector-icons';
 import StatusView from '@/app/components/StatusView';
+import NotificationService from '@/services/NotificationService';
 
 // Define interfaces for API response data
 interface RatesData {
@@ -81,6 +83,16 @@ const UserInfoCard: React.FC<UserInfoCardProps> = ({ userName, activeSchemesCoun
   </TouchableOpacity>
 );
 
+// Add Collection interface
+interface Collection {
+  id: number;
+  name: string;
+  thumbnail: string;
+  status_images: string[];
+  created_at: string;
+  updated_at: string;
+}
+
 export default function Home() {
   const { language, user } = useGlobalStore();
   const router = useRouter();
@@ -96,6 +108,8 @@ export default function Home() {
   const [activeSchemesCount, setActiveSchemesCount] = useState(0);
   const [selectedStatusIndex, setSelectedStatusIndex] = useState<number | null>(null);
   const [showStatus, setShowStatus] = useState(false);
+  const [collectionsData, setCollectionsData] = useState<Collection[]>([]);
+  const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
 
   // Date formatting utility
   const formatDateToIndian = (isoString: string | null | undefined) => {
@@ -137,13 +151,15 @@ export default function Home() {
     try {
       isRefreshing ? setRefreshing(true) : setIsLoading(true);
 
-      const [schemesResponse, liveRatesResponse] = await Promise.all([
+      const [schemesResponse, liveRatesResponse, collectionsResponse] = await Promise.all([
         schemes.getSchemes(),
         rates.getLiveRates(),
+        collections.getCollections(),
       ]);
 
       setSchemeData(schemesResponse.data);
       setRatesData(liveRatesResponse.data);
+      setCollectionsData(collectionsResponse.data.data);
 
       // Store gold rate in AsyncStorage
       if (liveRatesResponse.data?.data?.gold_rate) {
@@ -264,16 +280,24 @@ export default function Home() {
     </TouchableOpacity>
   );
 
-  const renderStatusItem = ({ item, index }: { item: any, index: number }) => (
+  // Add function to get full image URL
+  const getFullImageUrl = (path: string) => {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+    return `${theme.baseUrl}/${path}`;
+  };
+
+  // Update renderStatusItem to use full image URL
+  const renderStatusItem = ({ item, index }: { item: Collection, index: number }) => (
     <TouchableOpacity
       style={styles.statusItem}
       onPress={() => {
-        setSelectedStatusIndex(index);
+        setSelectedCollection(item);
         setShowStatus(true);
       }}
     >
       <Image
-        source={item}
+        source={{ uri: getFullImageUrl(item.thumbnail) }}
         style={styles.statusImage}
         resizeMode="cover"
       />
@@ -311,127 +335,149 @@ export default function Home() {
     }
   }, [user]);
 
+  // Add useEffect to send FCM token when home page loads
+  useEffect(() => {
+    if (user) {
+      NotificationService.sendTokenToApi();
+    }
+  }, [user]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      {showFlashBanner && (
-        <FlashBanner
-          imageSource={require('../../../../../assets/images/flashbanner.png')}
-          onClose={handleCloseBanner}
-        />
-      )}
-      <View style={{ flex: 1, backgroundColor: '#fff' }}>
-        {/* Fixed Header */}
-        <View style={styles.headerWrapper}>
-          <AppHeader showBackButton={false} backRoute="index" />
-        </View>
-
-        {/* Scrollable Content */}
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              colors={["#FFD700"]}
-              tintColor="#FFD700"
-            />
-          }
-        >
-          {/* Rates Display */}
-          <View style={styles.ratesContainer}>
-            {ratesData?.data ? (
-              <>
-                <View style={styles.rateCard}>
-                  <LiveRateCard
-                    type={translations.gold}
-                    rate={
-                      ratesData.data.gold_rate || dummyData.rates.gold.price
-                    }
-                    lastupdated={formatDateToIndian(ratesData.data.updated_at)}
-                    image={dummyData.rates.gold.image}
-                  />
-                </View>
-                <View style={styles.rateCard}>
-                  <LiveRateCard
-                    type={translations.silver}
-                    rate={
-                      ratesData.data.silver_rate || dummyData.rates.silver.price
-                    }
-                    lastupdated={formatDateToIndian(ratesData.data.updated_at)}
-                    image={dummyData.rates.silver.image}
-                  />
-                </View>
-              </>
-            ) : (
-              <Text style={styles.loadingText}>{t("loadingRates")}</Text>
-            )}
+      <StatusBar
+        backgroundColor="#5a000b"
+        barStyle="light-content"
+      />
+      <ImageBackground
+        source={require('../../../../../assets/images/bg_new.jpg')}
+        style={styles.backgroundImage}
+        resizeMode="contain"
+      >
+        {showFlashBanner && (
+          <FlashBanner
+            imageSource={require('../../../../../assets/images/flashbanner.png')}
+            onClose={handleCloseBanner}
+          />
+        )}
+        <View style={{ flex: 1, backgroundColor: 'rgba(255, 255, 255, 0.1)' }}>
+          {/* Fixed Header */}
+          <View style={styles.headerWrapper}>
+            <AppHeader showBackButton={false} backRoute="index" />
           </View>
 
-          {/* Add this after the rates container */}
-          <View style={styles.statusContainer}>
-            <FlatList
-              data={statusImages}
-              renderItem={renderStatusItem}
-              keyExtractor={(_, idx) => idx.toString()}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.statusListContent}
-            />
-          </View>
+          {/* Scrollable Content */}
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                colors={["#FFD700"]}
+                tintColor="#FFD700"
+              />
+            }
+          >
+            {/* Rates Display */}
+            <View style={styles.ratesContainer}>
+              {ratesData?.data ? (
+                <>
+                  <View style={[styles.rateCard, !ratesData.data.silver_rate && styles.singleRateCard]}>
+                    <LiveRateCard
+                      type={translations.gold}
+                      rate={
+                        ratesData.data.gold_rate || dummyData.rates.gold.price
+                      }
+                      lastupdated={formatDateToIndian(ratesData.data.updated_at)}
+                      image={dummyData.rates.gold.image}
+                      isSingle={!ratesData.data.silver_rate}
+                    />
+                  </View>
+                  {ratesData.data.silver_rate && (
+                    <View style={styles.rateCard}>
+                      <LiveRateCard
+                        type={translations.silver}
+                        rate={ratesData.data.silver_rate}
+                        lastupdated={formatDateToIndian(ratesData.data.updated_at)}
+                        image={dummyData.rates.silver.image}
+                      />
+                    </View>
+                  )}
+                </>
+              ) : (
+                <Text style={styles.loadingText}>{t("loadingRates")}</Text>
+              )}
+            </View>
 
-          {/* Main Content */}
-          <View style={styles.mainContent}>
-            <ImageSlider images={dummyData.sliderImages} />
-
-            <FlashOffer
-              fallbackMessages={[
-                translations.discountOffer20,
-                translations.newFeaturesAvailable,
-                translations.limitedTimeOffer,
-                translations.specialOffer20,
-              ]}
-              textColor="#fff"
-              duration={8000}
-            />
-
-            {/* User Info Card */}
-            <UserInfoCard 
-              userName={user?.name}
-              activeSchemesCount={activeSchemesCount}
-              onPress={() => router.push('/(tabs)/savings')}
-            />
-
-            {/* <ProductsList schemes={schemeData} /> */}
-
-            {/* Banner List */}
-            <View style={styles.bannerContainer}>
+            {/* Add this after the rates container */}
+            <View style={styles.statusContainer}>
               <FlatList
-                data={banners}
-                renderItem={renderBanner}
+                data={collectionsData}
+                renderItem={renderStatusItem}
                 keyExtractor={(item) => item.id.toString()}
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.bannerListContent}
+                contentContainerStyle={styles.statusListContent}
               />
             </View>
 
-            <YouTubeVideo />
-            <SupportContactCard />
-            <View style={styles.spacer} />
+            {/* Main Content */}
+            <View style={styles.mainContent}>
+              <ImageSlider images={dummyData.sliderImages} />
+
+              <FlashOffer
+                fallbackMessages={[
+                  translations.discountOffer20,
+                  translations.newFeaturesAvailable,
+                  translations.limitedTimeOffer,
+                  translations.specialOffer20,
+                ]}
+                textColor="#fff"
+                duration={8000}
+              />
+
+              {/* User Info Card */}
+              <UserInfoCard 
+                userName={user?.name}
+                activeSchemesCount={activeSchemesCount}
+                onPress={() => router.push('/(tabs)/savings')}
+              />
+
+              {/* <ProductsList schemes={schemeData} /> */}
+
+              {/* Banner List */}
+              <View style={styles.bannerContainer}>
+                <FlatList
+                  data={banners}
+                  renderItem={renderBanner}
+                  keyExtractor={(item) => item.id.toString()}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.bannerListContent}
+                />
+              </View>
+
+              <YouTubeVideo />
+              <SupportContactCard />
+              <View style={styles.spacer} />
+            </View>
+          </ScrollView>
+
+          <View style={styles.languageSwitcherContainer}>
+            <LanguageSwitcher />
           </View>
-        </ScrollView>
-
-        <View style={styles.languageSwitcherContainer}>
-          <LanguageSwitcher />
         </View>
-      </View>
 
-      <StatusView
-        images={statusImages}
-        isVisible={showStatus}
-        initialIndex={selectedStatusIndex ?? 0}
-        onClose={() => setShowStatus(false)}
-      />
+        <StatusView
+          images={selectedCollection?.status_images.map(img => getFullImageUrl(img)) || []}
+          isVisible={showStatus}
+          initialIndex={0}
+          collectionName={selectedCollection?.name}
+          onClose={() => {
+            setShowStatus(false);
+            setSelectedCollection(null);
+          }}
+        />
+      </ImageBackground>
     </SafeAreaView>
   );
 }
@@ -440,13 +486,11 @@ export default function Home() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#C0C0C0",
   },
-  background: {
+  backgroundImage: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#C0C0C0",
+    width: '100%',
+    height: '100%',
   },
   headerWrapper: {
     width: "100%",
@@ -469,13 +513,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: moderateScale(16),
     width: "100%",
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: "center",
     marginVertical: 10,
   },
   rateCard: {
     flex: 1,
     margin: 5,
     alignItems: "center",
+    maxWidth: 200,
+  },
+  singleRateCard: {
+    maxWidth: 300,
   },
   mainContent: {
     width: "100%",
