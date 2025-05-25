@@ -293,14 +293,14 @@ export default function Home() {
     await AsyncStorage.setItem('flashBannerSeen', 'true');
   };
 
-  // Update the fetchActiveSchemesCount function to use a mock count for now
+  // Update the fetchActiveSchemesCount function to use the actual API endpoint
   const fetchActiveSchemesCount = async () => {
     try {
-      // TODO: Replace with actual API call when available
-      // For now, using a mock count
-      setActiveSchemesCount(2); // Mock count
+      const response = await schemes.getActiveSchemesCount();
+      setActiveSchemesCount(response.data.count || 0);
     } catch (error) {
       console.error("Error fetching active schemes count:", error);
+      setActiveSchemesCount(0);
     }
   };
 
@@ -398,7 +398,7 @@ export default function Home() {
             <UserInfoCard 
               userName={user?.name}
               activeSchemesCount={activeSchemesCount}
-              onPress={() => router.push('/(app)/(tabs)/savings/index')}
+              onPress={() => router.push('/(tabs)/savings')}
             />
 
             {/* <ProductsList schemes={schemeData} /> */}

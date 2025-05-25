@@ -143,6 +143,7 @@ api.interceptors.response.use(
 export const schemes = {
   getSchemes: () => api.get('/schemes'),
   getSchemeById: (id: string) => api.get(`/schemes/${id}`),
+  getActiveSchemesCount: () => api.get('/schemes/active/count'),
 };
 
 export const rates = {
