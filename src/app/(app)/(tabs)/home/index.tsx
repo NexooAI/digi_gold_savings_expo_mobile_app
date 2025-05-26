@@ -28,7 +28,7 @@ import FlashOffer from "@/app/components/FlashOffer";
 import YouTubeVideo from "@/app/components/YouTubeVideo";
 import SupportContactCard from "@/app/components/SupportContactCard";
 import useGlobalStore from "@/store/global.store";
-import { schemes, rates, collections } from "@/app/services/api";
+import api, { schemes, rates, collections } from "@/app/services/api";
 import NetInfo from "@react-native-community/netinfo";
 import { ScaledSheet, moderateScale } from "react-native-size-matters";
 import { theme } from "@/constants/theme";
@@ -58,28 +58,58 @@ interface UserInfoCardProps {
   userName: string | undefined;
   activeSchemesCount: number;
   onPress: () => void;
+  totalGoldSavings?: number;
 }
 
 // Add UserInfoCard component with proper types
-const UserInfoCard: React.FC<UserInfoCardProps> = ({ userName, activeSchemesCount, onPress }) => (
+const UserInfoCard: React.FC<UserInfoCardProps> = ({ userName, activeSchemesCount, onPress, totalGoldSavings = 0 }) => (
   <TouchableOpacity 
     style={styles.userInfoCard}
     onPress={onPress}
     activeOpacity={0.8}
   >
-    <View style={styles.userInfoContent}>
-      <View style={styles.userInfoLeft}>
-        <Ionicons name="person-circle-outline" size={40} color="#5a000b" />
-        <Text style={styles.userName}>{userName || 'Guest User'}</Text>
-      </View>
-      <View style={styles.userInfoRight}>
-        <Text style={styles.activeSchemesLabel}>Active Schemes</Text>
-        <View style={styles.activeSchemesCount}>
-          <Text style={styles.countText}>{activeSchemesCount || 0}</Text>
-          <Ionicons name="chevron-forward" size={24} color="#5a000b" />
+    <LinearGradient
+      colors={['#850111', '#5a000b']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.userInfoGradient}
+    >
+      {/* First Row - Welcome and User Info */}
+      <View style={styles.userInfoTopRow}>
+        <View style={styles.welcomeContainer}>
+          <Text style={styles.welcomeText}>Welcome back,</Text>
+          <Text style={styles.userName}>{userName || 'Guest User'}</Text>
+        </View>
+        <View style={styles.userAvatarContainer}>
+          <Ionicons name="person-circle" size={45} color="#FFD700" />
         </View>
       </View>
-    </View>
+
+      {/* Second Row - Stats */}
+      <View style={styles.statsRow}>
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Text style={styles.statLabel}>Active Schemes</Text>
+            <View style={styles.statValue}>
+              <Text style={styles.countText}>{activeSchemesCount || 0}</Text>
+              <Ionicons name="trending-up" size={16} color="#FFD700" />
+            </View>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statLabel}>Total Gold</Text>
+            <View style={styles.statValue}>
+              <Text style={styles.countText}>{totalGoldSavings.toFixed(3)}</Text>
+              <Text style={styles.unitText}>g</Text>
+            </View>
+          </View>
+        </View>
+        <View style={styles.viewMoreContainer}>
+          <Text style={styles.viewMoreText}>View Details</Text>
+          <Ionicons name="chevron-forward" size={20} color="#FFD700" />
+        </View>
+      </View>
+    </LinearGradient>
   </TouchableOpacity>
 );
 
@@ -110,6 +140,7 @@ export default function Home() {
   const [showStatus, setShowStatus] = useState(false);
   const [collectionsData, setCollectionsData] = useState<Collection[]>([]);
   const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
+  const [totalGoldSavings, setTotalGoldSavings] = useState(0);
 
   // Date formatting utility
   const formatDateToIndian = (isoString: string | null | undefined) => {
@@ -317,14 +348,33 @@ export default function Home() {
     await AsyncStorage.setItem('flashBannerSeen', 'true');
   };
 
-  // Update the fetchActiveSchemesCount function to use the actual API endpoint
+  // Update the fetchActiveSchemesCount function to include total gold savings
   const fetchActiveSchemesCount = async () => {
     try {
-      const response = await schemes.getActiveSchemesCount();
-      setActiveSchemesCount(response.data.count || 0);
+      if (!user?.id) {
+        setActiveSchemesCount(0);
+        setTotalGoldSavings(0);
+        return;
+      }
+      const response = await api.get(`user_investments/${user.id}`);
+      console.log('User investments response:', response.data);
+      const investments = response.data.investments || [];
+      setActiveSchemesCount(investments.length || 0);
+      
+      // Calculate total gold savings
+      const totalGold = investments.reduce((sum: number, investment: any) => {
+        // Check if totalgoldweight exists and is a valid number
+        const goldWeight = investment.totalgoldweight ? parseFloat(investment.totalgoldweight) : 0;
+        console.log('Investment gold weight:', goldWeight, 'for investment:', investment);
+        return sum + goldWeight;
+      }, 0);
+      
+      console.log('Total gold weight calculated:', totalGold);
+      setTotalGoldSavings(totalGold);
     } catch (error) {
       console.error("Error fetching active schemes count:", error);
       setActiveSchemesCount(0);
+      setTotalGoldSavings(0);
     }
   };
 
@@ -439,6 +489,7 @@ export default function Home() {
               <UserInfoCard 
                 userName={user?.name}
                 activeSchemesCount={activeSchemesCount}
+                totalGoldSavings={totalGoldSavings}
                 onPress={() => router.push('/(tabs)/savings')}
               />
 
@@ -594,53 +645,102 @@ const styles = StyleSheet.create({
   },
   userInfoCard: {
     width: '90%',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 16,
     marginVertical: 10,
+    overflow: 'hidden',
+    elevation: 5,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
-  userInfoContent: {
+  userInfoGradient: {
+    padding: 16,
+  },
+  userInfoTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 16,
   },
-  userInfoLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+  welcomeContainer: {
+    flex: 1,
   },
-  userInfoRight: {
-    alignItems: 'flex-end',
-  },
-  userName: {
-    fontSize: moderateScale(16),
-    fontWeight: '600',
-    color: '#333',
-  },
-  activeSchemesLabel: {
-    fontSize: moderateScale(12),
-    color: '#666',
+  welcomeText: {
+    fontSize: moderateScale(14),
+    color: 'rgba(255, 255, 255, 0.7)',
     marginBottom: 4,
   },
-  activeSchemesCount: {
+  userName: {
+    fontSize: moderateScale(22),
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  userAvatarContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 12,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    borderRadius: 12,
+    padding: 12,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    flex: 1,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statLabel: {
+    fontSize: moderateScale(12),
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginBottom: 4,
+  },
+  statValue: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
   countText: {
-    fontSize: moderateScale(20),
+    fontSize: moderateScale(18),
     fontWeight: 'bold',
-    color: '#5a000b',
+    color: '#FFFFFF',
+  },
+  unitText: {
+    fontSize: moderateScale(14),
+    color: '#FFD700',
+    fontWeight: '600',
+  },
+  statDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  viewMoreContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginLeft: 12,
+  },
+  viewMoreText: {
+    fontSize: moderateScale(12),
+    color: '#FFD700',
+    fontWeight: '600',
   },
   statusContainer: {
     width: '100%',

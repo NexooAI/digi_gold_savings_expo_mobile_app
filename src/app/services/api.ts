@@ -144,6 +144,7 @@ export const schemes = {
   getSchemes: () => api.get('/schemes'),
   getSchemeById: (id: string) => api.get(`/schemes/${id}`),
   getActiveSchemesCount: () => api.get('/schemes/active/count'),
+  getUserActiveSchemesCount: (userId: string) => api.get(`/schemes/user/${userId}/active/count`),
 };
 
 export const rates = {
