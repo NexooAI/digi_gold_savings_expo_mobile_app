@@ -85,8 +85,8 @@ export default function SavingsScreen() {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.get(`user_investments/${user.id}`);
-      const investments = response.data.investments || [];
+      const response = await api.get(`investments/user_investments/${user.id}`);
+      const investments = response.data.data || [];
       // Transform each investment into your Scheme structure
       const transformedSavings: Scheme[] = investments.map((item: any) => {
         const schemeObj = item.scheme || {};

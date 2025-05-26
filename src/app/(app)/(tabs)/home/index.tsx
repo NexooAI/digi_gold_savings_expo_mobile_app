@@ -356,9 +356,9 @@ export default function Home() {
         setTotalGoldSavings(0);
         return;
       }
-      const response = await api.get(`user_investments/${user.id}`);
+      const response = await api.get(`investments/user_investments/${user.id}`);
       console.log('User investments response:', response.data);
-      const investments = response.data.investments || [];
+      const investments = response.data.data || [];
       setActiveSchemesCount(investments.length || 0);
       
       // Calculate total gold savings
