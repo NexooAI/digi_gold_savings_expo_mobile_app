@@ -16,7 +16,7 @@ import { initializeAppLocale } from "@/i18n";
 import { LanguageProvider1 } from "@/contexts/LanguageContext";
 import useGlobalStore from "@/store/global.store";
 import * as SecureStore from "expo-secure-store";
-import LoadingService from "./services/loadingServices";
+import LoadingService from "@/services/loadingServices";
 import setupAppStateListener from "@/store/appState";
 import { theme } from "@/constants/theme";
 import NotificationService from "@/services/NotificationService";
@@ -36,7 +36,13 @@ export default function RootLayout() {
 
   // Initialize locale
   useEffect(() => {
-    initializeAppLocale();
+    const initLocale = async () => {
+      const locale = await initializeAppLocale();
+      // Sync the locale with the global store
+      const { setLanguage } = useGlobalStore.getState();
+      await setLanguage(locale);
+    };
+    initLocale();
   }, []);
 
   // Register global loading callback
@@ -140,7 +146,7 @@ export default function RootLayout() {
 
       // If user is already logged in, redirect to home
       if (isLoggedIn) {
-        router.replace("/(tabs)/home");
+        router.replace("/(app)/(tabs)/home");
         return;
       }
 
@@ -149,7 +155,7 @@ export default function RootLayout() {
       if (token) {
         router.replace("/(auth)/mpin_verify");
       } else {
-        router.replace("/login");
+        router.replace("/(auth)/login");
       }
     };
 
@@ -173,7 +179,7 @@ export default function RootLayout() {
           <LanguageProvider1>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="intro" options={{ gestureEnabled: false }} />
-              <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
+              <Stack.Screen name="(app)" options={{ gestureEnabled: false }} />
               <Stack.Screen name="(auth)" options={{ gestureEnabled: false }} />
               <Stack.Screen name="login" options={{ gestureEnabled: false }} />
               <Stack.Screen 

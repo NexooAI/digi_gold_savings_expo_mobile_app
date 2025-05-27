@@ -21,7 +21,7 @@ import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import useGlobalStore from "@/store/global.store";
 import RNPickerSelect from "react-native-picker-select";
-import api from "../../../services/api";
+import api from "@/services/api";
 import { theme } from "@/constants/theme";
 
 const indianStates = [

@@ -6,7 +6,7 @@ import {
   Text,
 } from "react-native";
 import YoutubePlayer from "react-native-youtube-iframe";
-import api from "../services/api";
+import api from "@/services/api";
 import { theme } from "@/constants/theme";
 
 const YouTubeVideo: React.FC = () => {
@@ -34,7 +34,7 @@ const YouTubeVideo: React.FC = () => {
       const fallbackUrl = theme.youtubeUrl; // Fallback URL
       try {
         const response = await api.get("videos/active");
-        let videoUrl = response.data.data?.video_url;
+        let videoUrl = response.data.data[0].video_url;
         if (!videoUrl) {
           console.error(
             "API response does not contain a valid video URL:",

@@ -2,7 +2,7 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
-import { users } from '@/app/services/api';
+import { users } from '@/services/api';
 import useGlobalStore from '@/store/global.store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 

@@ -16,7 +16,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import NetInfo from "@react-native-community/netinfo";
 import PhoneInput from "../components/PhoneInputs";
 import useGlobalStore from "@/store/global.store";
-import api from "../services/api";
+import api from "@/services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import SmsRetriever from "react-native-sms-retriever";

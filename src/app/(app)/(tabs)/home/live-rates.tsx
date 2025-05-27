@@ -7,7 +7,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { moderateScale } from 'react-native-size-matters';
 import { theme } from '@/constants/theme';
-import { rates } from '@/app/services/api';
+import { rates } from '@/services/api';
 
 const { width } = Dimensions.get('window');
 

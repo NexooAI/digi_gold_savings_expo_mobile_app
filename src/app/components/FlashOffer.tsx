@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Dimensions, Animated } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { news } from "@/app/services/api";
+import { news } from "@/services/api";
 
 const { width } = Dimensions.get("window");
 

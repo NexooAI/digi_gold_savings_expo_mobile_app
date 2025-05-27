@@ -4,7 +4,7 @@ import { WebView } from "react-native-webview";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import io from "socket.io-client";
-import api from "@/app/services/api";
+import api from "@/services/api";
 import { theme } from "@/constants/theme";
 
 const PaymentWebView = () => {

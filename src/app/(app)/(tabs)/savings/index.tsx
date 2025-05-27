@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback, useEffect } from "react";
+import React, { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
   Image,
   StyleSheet,
   useWindowDimensions,
+  Platform,
+  Animated,
 } from "react-native";
 import {
   SafeAreaView,
@@ -21,7 +23,7 @@ import { LinearGradient } from "expo-linear-gradient"; // For gradient backgroun
 import AppHeader from "@/app/components/AppHeader";
 import { t } from "@/i18n";
 import useGlobalStore from "@/store/global.store";
-import api from "../../../services/api";
+import api from "@/services/api";
 import { moderateScale } from "react-native-size-matters";
 import { theme } from "@/constants/theme";
 
@@ -170,13 +172,32 @@ export default function SavingsScreen() {
 
   // Enhanced Scheme Card Component
   const EnhancedSchemeCard = ({ item }: { item: Scheme }) => {
-    // Use metalType from scheme to determine background
-    const bgColor = ["#5e4c14 ", "#863339"]; // Default black gradient
-    const bgColors =
-      item.metalType === "gold"
-        ? ["#e1c875", "#d6b240"]
-        : ["#f0ebeb", "#cccccc"]; // silver gradient if not gold
-    const handleNavigation = (item) => {
+    const bgColors = item.metalType === "gold" 
+      ? ["#e1c875", "#d6b240"]
+      : ["#f0ebeb", "#cccccc"];
+
+    const [isExpanded, setIsExpanded] = useState(false);
+    const animatedHeight = useRef(new Animated.Value(0)).current;
+    const [isActive, setIsActive] = useState(false);
+
+    const progressPercentage = useMemo(() => {
+      const monthsPaid = Number(item.monthsPaid) || 0;
+      const totalMonths = Number(item.noOfIns) || 1;
+      return Math.round((monthsPaid / totalMonths) * 100);
+    }, [item.monthsPaid, item.noOfIns]);
+
+    const toggleExpand = () => {
+      setIsExpanded(!isExpanded);
+      setIsActive(!isActive);
+      Animated.spring(animatedHeight, {
+        toValue: isExpanded ? 0 : 1,
+        useNativeDriver: false,
+        friction: 8,
+        tension: 40,
+      }).start();
+    };
+
+    const handleNavigation = (item: Scheme) => {
       if (!item) return;
       router.push({
         pathname: "/savings/SavingsDetail",
@@ -200,178 +221,221 @@ export default function SavingsScreen() {
     };
 
     return (
-      <LinearGradient
-        colors={[bgColors[0], bgColors[1]]}
-        style={styles.cardContainer}
+      <TouchableOpacity 
+        activeOpacity={0.9}
+        onPress={toggleExpand}
+        style={[
+          styles.cardWrapper,
+          isActive && styles.cardWrapperActive
+        ]}
       >
-        {/* Top Row: Scheme Name & Status */}
-        <View style={styles.topRow}>
-          <LinearGradient
-            colors={[bgColor[1], bgColors[1]]}
-            style={styles.titleGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
-            <Text style={styles.schemeTitle}>{item.schemeName}</Text>
-          </LinearGradient>
-        </View>
-
-        {/* Rest of the content */}
-        <View style={styles.infoRow}>
-          <View style={styles.infoColumn}>
-            <Text style={[styles.label, { color: bgColor[0] }]}>
-              Account Holder
-            </Text>
-            <Text style={[styles.value, { color: bgColor[1] }]}>
-              {item.accountHolder}
-            </Text>
-          </View>
-          <View style={styles.infoColumn}>
-            <Text style={[styles.label, { color: bgColor[0] }]}>A/C No</Text>
-            <Text style={[styles.value, { color: bgColor[1] }]}>
-              {item.accNo}
-            </Text>
-          </View>
-          <View style={styles.infoColumn}>
-            <Text style={[styles.label, { color: bgColor[0] }]}>
-              Metal Type
-            </Text>
-            <Text style={[styles.value, { color: bgColor[1] }]}>
-              {item.metalType.toUpperCase()}
-            </Text>
-          </View>
-        </View>
-
-        {/* Update all other rows similarly */}
-        <View style={styles.infoRow}>
-          <View style={styles.infoColumn}>
-            <Text style={[styles.label, { color: bgColor[0] }]}>
-              Amount Paid
-            </Text>
-            <Text style={[styles.value, { color: bgColor[1] }]}>
-              ₹{item.totalPaid.toLocaleString()}
-            </Text>
-          </View>
-          <View style={styles.infoColumn}>
-            <Text style={[styles.label, { color: bgColor[0] }]}>
-              Months Paid
-            </Text>
-            <Text style={[styles.value, { color: bgColor[1] }]}>
-              {item.monthsPaid} / {item.noOfIns}
-            </Text>
-          </View>
-          <View style={styles.infoColumn}>
-            <Text style={[styles.label, { color: bgColor[0] }]}>
-              Installment
-            </Text>
-            <Text style={[styles.value, { color: bgColor[1] }]}>
-              ₹{item.emiAmount}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.infoRow}>
-          <View style={styles.infoColumn}>
-            <Text style={[styles.label, { color: bgColor[0] }]}>DOJ</Text>
-            <Text style={[styles.value, { color: bgColor[1] }]}>
-              {item.joiningDate}
-            </Text>
-          </View>
-          <View style={styles.infoColumn}>
-            <Text style={[styles.label, { color: bgColor[0] }]}>Maturity</Text>
-            <Text style={[styles.value, { color: bgColor[1] }]}>
-              {item.maturityDate}
-            </Text>
-          </View>
-          <View style={styles.infoColumn}>
-            <Text style={[styles.label, { color: bgColor[0] }]}>
-              Total Weight
-            </Text>
-            <Text style={[styles.value, { color: bgColor[1] }]}>
-              {item.goldWeight.toFixed(2)} / g
-            </Text>
-          </View>
-        </View>
-        <View style={styles.infoRow}>
-          <View style={styles.infoColumn}>
-            <Text style={[styles.label, { color: bgColor[0] }]}>
-              Saving Type
-            </Text>
-            <Text style={[styles.value, { color: bgColor[1] }]}>
-              {item.savingType === "weight" ? "Weight" : "Amount"}
-            </Text>
-          </View>
-          <View style={styles.infoColumn}>
-            <Text style={[styles.label, { color: bgColor[0] }]}>
-              Scheme Code
-            </Text>
-            <Text style={[styles.value, { color: bgColor[1] }]}>
-              {item.schemeCode}
-            </Text>
-          </View>
-          <View style={styles.infoColumn}>
-            <Text style={[styles.label, { color: bgColor[0] }]}>Branch</Text>
-            <Text style={[styles.value, { color: bgColor[1] }]}>--</Text>
-          </View>
-        </View>
-        {/* <TouchableOpacity
-          style={styles.payButton}
-          onPress={() =>
-            router.push({
-              pathname: "/savings/SavingsDetail",
-              params: {
-                // allInsversData: JSON.stringify(item),
-                schemeName: item.schemeName || "",
-                totalPaid: item.totalPaid?.toString() || "0",
-                monthsPaid: item.monthsPaid?.toString() || "0",
-                emiAmount: item.emiAmount?.toString() || "0",
-                maturityDate: item.maturityDate || "",
-                goldWeight: item.goldWeight?.toString() || "0.00",
-                accountHolder: item.accountHolder || "N/A",
-                accNo: item.accNo || "N/A",
-                schemeCode: item.schemeCode || "",
-                id: item.id || "",
-                noOfIns: item.noOfIns,
-                chitId: item?.chitData?.chitId,
-                schemesData: item.schemesData || {},
-                transactions: JSON.stringify(item.transactions || []),
-              },
-            })
-          }
+        <LinearGradient
+          colors={[bgColors[0], bgColors[1]]}
+          style={styles.cardContainer}
         >
-          <Text style={styles.payButtonText}>More Details</Text>
-        </TouchableOpacity> */}
-        <TouchableOpacity
-          style={styles.payButton}
-          onPress={() => handleNavigation(item)}
-        >
-          <Text style={styles.payButtonText}>More Details</Text>
-        </TouchableOpacity>
-      </LinearGradient>
+          <View style={styles.cardHeader}>
+            <View style={styles.schemeInfo}>
+              <View style={styles.schemeIconContainer}>
+                <Ionicons 
+                  name={item.metalType === "gold" ? "diamond-outline" : "cube-outline"} 
+                  size={24} 
+                  color={item.metalType === "gold" ? "#d6b240" : "#666"} 
+                />
+              </View>
+              <View style={styles.schemeTitleContainer}>
+                <Text style={styles.schemeTitle}>{item.schemeName}</Text>
+                <Text style={styles.schemeSubtitle}>
+                  {item.metalType.toUpperCase()} • {item.savingType === "weight" ? "Weight" : "Amount"}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.headerRight}>
+              <View style={styles.statusBadge}>
+                <Text style={styles.statusText}>{item.status || "ACTIVE"}</Text>
+              </View>
+              <Animated.View style={[
+                styles.expandIcon,
+                { transform: [{ rotate: animatedHeight.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['0deg', '180deg']
+                })}] }
+              ]}>
+                <Ionicons name="chevron-down" size={20} color="#666" />
+              </Animated.View>
+            </View>
+          </View>
+
+          <View style={styles.accountInfo}>
+            <View style={styles.accountItem}>
+              <Ionicons name="person-outline" size={16} color="#666" />
+              <Text style={styles.accountLabel}>Account Holder:</Text>
+              <Text style={styles.accountValue}>{item.accountHolder}</Text>
+            </View>
+            <View style={styles.accountItem}>
+              <Ionicons name="card-outline" size={16} color="#666" />
+              <Text style={styles.accountLabel}>A/C No:</Text>
+              <Text style={styles.accountValue}>{item.accNo}</Text>
+            </View>
+          </View>
+
+          <Animated.View style={[
+            styles.cardContent,
+            { maxHeight: animatedHeight.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, 500]
+            })}
+          ]}>
+            <View style={styles.infoGrid}>
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>Amount Paid</Text>
+                <Text style={styles.infoValue}>₹{item.totalPaid.toLocaleString()}</Text>
+              </View>
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>Months Paid</Text>
+                <Text style={styles.infoValue}>{item.monthsPaid} / {item.noOfIns}</Text>
+              </View>
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>Installment</Text>
+                <Text style={styles.infoValue}>₹{item.emiAmount}</Text>
+              </View>
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>Total Weight</Text>
+                <Text style={styles.infoValue}>{item.goldWeight.toFixed(2)} g</Text>
+              </View>
+            </View>
+
+            <View style={styles.dateContainer}>
+              <View style={styles.dateSection}>
+                <View style={styles.dateIconContainer}>
+                  <Ionicons name="calendar-outline" size={20} color={theme.colors.primary} />
+                </View>
+                <View style={styles.dateInfo}>
+                  <Text style={styles.dateLabel}>Date of Joining</Text>
+                  <Text style={styles.dateValue}>{item.joiningDate}</Text>
+                </View>
+              </View>
+              <View style={styles.dateDivider} />
+              <View style={styles.dateSection}>
+                <View style={styles.dateIconContainer}>
+                  <Ionicons name="time-outline" size={20} color={theme.colors.primary} />
+                </View>
+                <View style={styles.dateInfo}>
+                  <Text style={styles.dateLabel}>Maturity Date</Text>
+                  <Text style={styles.dateValue}>{item.maturityDate}</Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.progressContainer}>
+              <View style={styles.progressHeader}>
+                <Text style={styles.progressLabel}>Installment Progress</Text>
+                <View style={styles.progressStats}>
+                  <Text style={styles.progressValue}>{progressPercentage}%</Text>
+                  <Text style={styles.progressMonths}>
+                    {item.monthsPaid}/{item.noOfIns} months
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.progressBar}>
+                <Animated.View 
+                  style={[
+                    styles.progressFill,
+                    { width: animatedHeight.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0%', `${progressPercentage}%`]
+                    })}
+                  ]} 
+                />
+              </View>
+              <View style={styles.monthsInfo}>
+                <View style={styles.monthItem}>
+                  <View style={[styles.monthDot, { backgroundColor: theme.colors.primary }]} />
+                  <Text style={styles.monthLabel}>Paid</Text>
+                  <Text style={styles.monthValue}>{item.monthsPaid}</Text>
+                </View>
+                <View style={styles.monthItem}>
+                  <View style={[styles.monthDot, { backgroundColor: '#666' }]} />
+                  <Text style={styles.monthLabel}>Pending</Text>
+                  <Text style={styles.monthValue}>{Number(item.noOfIns) - Number(item.monthsPaid)}</Text>
+                </View>
+                <View style={styles.monthItem}>
+                  <View style={[styles.monthDot, { backgroundColor: '#333' }]} />
+                  <Text style={styles.monthLabel}>Total</Text>
+                  <Text style={styles.monthValue}>{item.noOfIns}</Text>
+                </View>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.detailsButton}
+              onPress={() => handleNavigation(item)}
+            >
+              <Text style={styles.detailsButtonText}>View Details</Text>
+              <Ionicons name="chevron-forward" size={20} color="#fff" />
+            </TouchableOpacity>
+          </Animated.View>
+        </LinearGradient>
+      </TouchableOpacity>
     );
   };
 
   const ListHeader = () => (
-    <View className="pb-4">
-      <View className="bg-white/90 p-4 rounded-xl mb-4">
-        <Text className="text-xl font-bold text-[#7b0006]">
-          {translations.yourGoldPortfolio}
-        </Text>
-        <View className="flex-row justify-between mt-3">
-          <View className="flex-row items-center">
-            <Ionicons name="cash-outline" size={20} color="#7b0006" />
-            <Text className="ml-2 text-gray-600">
-              {translations.totalInvested}: ₹{totalInvested.toLocaleString()}
+    <View style={styles.headerContainer}>
+      <LinearGradient
+        colors={['#2c3e50', '#3498db']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.portfolioCard}
+      >
+        <View style={styles.portfolioHeader}>
+          <View style={styles.portfolioTitleContainer}>
+            <Text style={styles.portfolioTitle}>
+              {translations.yourGoldPortfolio}
             </Text>
+            <View style={styles.portfolioBadge}>
+              <Ionicons name="star" size={12} color="#fff" />
+              <Text style={styles.portfolioBadgeText}>Premium</Text>
+            </View>
           </View>
-          <View className="flex-row items-center">
-            <Ionicons name="cube-outline" size={20} color="#7b0006" />
-            <Text className="ml-2 text-gray-600">
-              {totalGold.toFixed(2)} {translations.gold}
-            </Text>
+          <View style={styles.portfolioIconContainer}>
+            <Ionicons name="medal" size={32} color="#fff" />
           </View>
         </View>
-      </View>
-      <Text className="text-lg text-center font-bold text-white mb-4">
+
+        <View style={styles.portfolioStats}>
+          <View style={styles.statItem}>
+            <View style={styles.statIconContainer}>
+              <Ionicons name="wallet-outline" size={24} color="#fff" />
+            </View>
+            <View style={styles.statInfo}>
+              <Text style={styles.statLabel}>{translations.totalInvested}</Text>
+              <Text style={styles.statValue}>₹{totalInvested.toLocaleString()}</Text>
+            </View>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <View style={styles.statIconContainer}>
+              <Ionicons name="diamond-outline" size={24} color="#fff" />
+            </View>
+            <View style={styles.statInfo}>
+              <Text style={styles.statLabel}>{translations.gold}</Text>
+              <Text style={styles.statValue}>{totalGold.toFixed(2)} g</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.portfolioFooter}>
+          <View style={styles.footerItem}>
+            <Ionicons name="trending-up" size={16} color="#fff" />
+            <Text style={styles.footerText}>Growing Portfolio</Text>
+          </View>
+          <View style={styles.footerItem}>
+            <Ionicons name="shield-checkmark" size={16} color="#fff" />
+            <Text style={styles.footerText}>Secure Investment</Text>
+          </View>
+        </View>
+      </LinearGradient>
+      <Text style={styles.sectionTitle}>
         {translations.activeSavingsPlans}
       </Text>
     </View>
@@ -443,90 +507,396 @@ export default function SavingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  spacer: {
-    height: moderateScale(80),
+  headerContainer: {
+    paddingBottom: 24,
   },
-  cardContainer: {
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 12,
-    backgroundColor: "#fff", // White background for a debit card look
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
+  portfolioCard: {
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
   },
-  topRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
+  portfolioHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
-  statusContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  statusDot: {
-    color: "#bbb",
-    marginRight: 4,
-  },
-  activeDot: {
-    color: "#00cc44",
-  },
-  statusText: {
-    fontSize: 8,
-    color: "#000", // Black text
-  },
-  name: {
-    fontSize: 20,
-    color: "#000", // Black text
-    marginBottom: 2,
-  },
-  accountNo: {
-    fontSize: 20,
-    color: "#000", // Black text
-    marginBottom: 8,
-  },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  infoColumn: {
+  portfolioTitleContainer: {
     flex: 1,
   },
-  payButton: {
-    backgroundColor: "#7b0006",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    alignSelf: "flex-end",
-    borderRadius: 6,
-    marginTop: 8,
+  portfolioTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#fff',
+    marginBottom: 6,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+    letterSpacing: 0.5,
   },
-  payButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: "500",
-    marginBottom: 4,
-  },
-  value: {
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  titleGradient: {
-    borderRadius: 6,
-    paddingHorizontal: 12,
+  portfolioBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 10,
     paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  portfolioBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 4,
+    letterSpacing: 0.5,
+  },
+  portfolioIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  portfolioStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+  },
+  statItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  statInfo: {
+    flex: 1,
+  },
+  statLabel: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.9)',
+    marginBottom: 4,
+    fontWeight: '500',
+    letterSpacing: 0.3,
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
+    letterSpacing: 0.5,
+  },
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    marginHorizontal: 16,
+  },
+  portfolioFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.2)',
+    paddingTop: 16,
+  },
+  footerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  footerText: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 13,
+    fontWeight: '600',
+    marginLeft: 6,
+    letterSpacing: 0.3,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  cardWrapper: {
+    marginBottom: 16,
+    borderRadius: 24,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  cardWrapperActive: {
+    ...Platform.select({
+      ios: {
+        shadowColor: theme.colors.primary,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.2,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  cardContainer: {
+    borderRadius: 24,
+    padding: 20,
+    overflow: 'hidden',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  schemeInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  schemeIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  schemeTitleContainer: {
+    flex: 1,
   },
   schemeTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 4,
+  },
+  schemeSubtitle: {
+    fontSize: 12,
+    color: '#666',
+  },
+  statusBadge: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#333',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  expandIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardContent: {
+    overflow: 'hidden',
+  },
+  infoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+    marginBottom: 20,
+  },
+  infoItem: {
+    flex: 1,
+    minWidth: '45%',
+  },
+  infoLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
+  },
+  infoValue: {
     fontSize: 16,
-    fontWeight: "800",
-    color: "#fff",
-    textShadowColor: "rgba(232, 91, 91, 0.2)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+    fontWeight: '600',
+    color: '#333',
+  },
+  dateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  dateSection: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dateIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(133,1,17,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  dateInfo: {
+    flex: 1,
+  },
+  dateLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  dateValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#333',
+  },
+  dateDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    marginHorizontal: 16,
+  },
+  detailsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+  },
+  detailsButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+    marginRight: 8,
+  },
+  progressContainer: {
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  progressLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+  },
+  progressStats: {
+    alignItems: 'flex-end',
+  },
+  progressValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.colors.primary,
+  },
+  progressMonths: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 12,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: theme.colors.primary,
+    borderRadius: 4,
+  },
+  monthsInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  monthItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  monthDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  monthLabel: {
+    fontSize: 12,
+    color: '#666',
+  },
+  monthValue: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#333',
+    marginLeft: 4,
+  },
+  accountInfo: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+  },
+  accountItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  accountLabel: {
+    fontSize: 13,
+    color: '#666',
+    marginLeft: 8,
+    marginRight: 4,
+  },
+  accountValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    flex: 1,
   },
 });

@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import api from "../services/api";
+import api from "@/services/api";
 import * as SecureStore from "expo-secure-store";
 import * as Crypto from "expo-crypto";
 import { theme } from "@/constants/theme";

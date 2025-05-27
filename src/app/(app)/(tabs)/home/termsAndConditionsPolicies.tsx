@@ -19,7 +19,7 @@ import { useRouter } from "expo-router";
 import AppHeader from "@/app/components/AppHeader";
 import { t } from "@/i18n";
 import useGlobalStore from "@/store/global.store";
-import api from "../../../services/api";
+import api from "@/services/api";
 import { theme } from "@/constants/theme";
 
 const { width } = Dimensions.get("window");

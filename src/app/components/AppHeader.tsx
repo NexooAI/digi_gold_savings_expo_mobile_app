@@ -11,11 +11,14 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
 import theme from "src/constants/theme";
+import useGlobalStore from "@/store/global.store";
+import { AppLocale } from "@/i18n";
 
 const { width } = Dimensions.get("window");
 
-const AppHeader = ({ showBackButton = false, backRoute }) => {
+const AppHeader = ({ showBackButton = false, backRoute, showLanguageSwitcher = false }) => {
   const navigation = useNavigation();
+  const { setLanguage, language } = useGlobalStore();
 
   const handleBackPress = () => {
     if (backRoute) {
@@ -24,6 +27,26 @@ const AppHeader = ({ showBackButton = false, backRoute }) => {
     } else {
       // Default behavior: go back to the previous screen
       navigation.goBack();
+    }
+  };
+
+  const handleLanguageChange = async (currentLang: AppLocale) => {
+    let newLocale: AppLocale;
+    
+    if (currentLang === "en") {
+      newLocale = "mal";
+    } else {
+      newLocale = "en";
+    }
+    
+    await setLanguage(newLocale);
+  };
+
+  const getLanguageIcon = () => {
+    if (language === "en") {
+      return "🇮🇳"; // Indian flag for Malayalam
+    } else {
+      return "🇺🇸"; // US flag for English
     }
   };
 
@@ -47,12 +70,23 @@ const AppHeader = ({ showBackButton = false, backRoute }) => {
             resizeMode="contain"
           />
         </View>
-        <TouchableOpacity
-          onPress={() => (navigation as any).openDrawer()}
-          style={styles.drawerToggle}
-        >
-          <Ionicons name="reorder-three-outline" size={28} color="#ffffff" />
-        </TouchableOpacity>
+        <View style={styles.rightContainer}>
+          {showLanguageSwitcher && (
+            <TouchableOpacity
+              onPress={() => handleLanguageChange(language as AppLocale)}
+              style={styles.languageButton}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.languageIcon}>{getLanguageIcon()}</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            onPress={() => (navigation as any).openDrawer()}
+            style={styles.drawerToggle}
+          >
+            <Ionicons name="reorder-three-outline" size={28} color="#ffffff" />
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -81,6 +115,21 @@ const styles = StyleSheet.create({
   logo: {
     width: "100%",
     height: "100%",
+  },
+  rightContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  languageButton: {
+    padding: 8,
+    marginRight: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  languageIcon: {
+    fontSize: 18,
   },
   drawerToggle: {
     padding: 10,

@@ -24,7 +24,7 @@ import { t } from "@/i18n";
 import useGlobalStore from "@/store/global.store";
 import { Picker } from "@react-native-picker/picker";
 import { useFocusEffect } from "@react-navigation/native";
-import api from "../../../services/api";
+import api from "@/services/api";
 import { theme } from "@/constants/theme";
 import RNPickerSelect from "react-native-picker-select";
 import AsyncStorage from '@react-native-async-storage/async-storage';

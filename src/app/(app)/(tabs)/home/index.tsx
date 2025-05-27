@@ -1,5 +1,5 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import {
   View,
   ScrollView,
@@ -11,7 +11,6 @@ import {
   ImageBackground,
   StyleSheet,
   Animated,
-  PanResponder,
   FlatList,
   Image,
   StatusBar,
@@ -28,7 +27,7 @@ import FlashOffer from "@/app/components/FlashOffer";
 import YouTubeVideo from "@/app/components/YouTubeVideo";
 import SupportContactCard from "@/app/components/SupportContactCard";
 import useGlobalStore from "@/store/global.store";
-import api, { schemes, rates, collections } from "@/app/services/api";
+import api, { schemes, rates, collections } from "@/services/api";
 import NetInfo from "@react-native-community/netinfo";
 import { ScaledSheet, moderateScale } from "react-native-size-matters";
 import { theme } from "@/constants/theme";
@@ -37,8 +36,49 @@ import FlashBanner from '@/app/components/FlashBanner';
 import { Ionicons } from '@expo/vector-icons';
 import StatusView from '@/app/components/StatusView';
 import NotificationService from '@/services/NotificationService';
+import { AppLocale } from "@/i18n";
 
-// Define interfaces for API response data
+// Constants
+const { width: screenWidth } = Dimensions.get("window");
+const STATUS_IMAGE_SIZE = 70;
+const STATUS_BORDER_RADIUS = 35;
+const REFRESH_INTERVAL = 15000; // 15 seconds
+
+// Fallback data
+const dummyData = {
+  rates: {
+    gold: {
+      price: "7,315",
+      purity: "24K",
+      image: require('../../../../../assets/images/gold.png'),
+    },
+    silver: {
+      price: "101.00",
+      purity: "999",
+      image: require('../../../../../assets/images/silver.png'),
+    },
+  },
+  sliderImages: [
+    require('../../../../../assets/images/slider1.png'),
+    require('../../../../../assets/images/slider2.png'),
+    require('../../../../../assets/images/slider3.png'),
+  ],
+};
+
+const banners: Banner[] = [
+  {
+    id: 2,
+    image: require('../../../../../assets/images/banner.png'),
+    schemeUrl: '/(app)/(tabs)/home/schemes',
+  },
+  {
+    id: 3,
+    image: require('../../../../../assets/images/banner2.png'),
+    schemeUrl: '/(app)/(tabs)/home/schemes',
+  },
+];
+
+// Interfaces
 interface RatesData {
   data: {
     gold_rate: string;
@@ -53,7 +93,15 @@ interface Banner {
   schemeUrl: string;
 }
 
-// Add UserInfoCard props interface
+interface Collection {
+  id: number;
+  name: string;
+  thumbnail: string;
+  status_images: string[];
+  created_at: string;
+  updated_at: string;
+}
+
 interface UserInfoCardProps {
   userName: string | undefined;
   activeSchemesCount: number;
@@ -61,8 +109,13 @@ interface UserInfoCardProps {
   totalGoldSavings?: number;
 }
 
-// Add UserInfoCard component with proper types
-const UserInfoCard: React.FC<UserInfoCardProps> = ({ userName, activeSchemesCount, onPress, totalGoldSavings = 0 }) => (
+// Components
+const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(({ 
+  userName, 
+  activeSchemesCount, 
+  onPress, 
+  totalGoldSavings = 0 
+}) => (
   <TouchableOpacity 
     style={styles.userInfoCard}
     onPress={onPress}
@@ -74,7 +127,6 @@ const UserInfoCard: React.FC<UserInfoCardProps> = ({ userName, activeSchemesCoun
       end={{ x: 1, y: 1 }}
       style={styles.userInfoGradient}
     >
-      {/* First Row - Welcome and User Info */}
       <View style={styles.userInfoTopRow}>
         <View style={styles.welcomeContainer}>
           <Text style={styles.welcomeText}>Welcome back,</Text>
@@ -85,7 +137,6 @@ const UserInfoCard: React.FC<UserInfoCardProps> = ({ userName, activeSchemesCoun
         </View>
       </View>
 
-      {/* Second Row - Stats */}
       <View style={styles.statsRow}>
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
@@ -111,51 +162,26 @@ const UserInfoCard: React.FC<UserInfoCardProps> = ({ userName, activeSchemesCoun
       </View>
     </LinearGradient>
   </TouchableOpacity>
-);
-
-// Add Collection interface
-interface Collection {
-  id: number;
-  name: string;
-  thumbnail: string;
-  status_images: string[];
-  created_at: string;
-  updated_at: string;
-}
+));
 
 export default function Home() {
+  // State
   const { language, user } = useGlobalStore();
   const router = useRouter();
   const [schemeData, setSchemeData] = useState(null);
   const [ratesData, setRatesData] = useState<RatesData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const scrollX = useRef(new Animated.Value(0)).current;
-  const sliderRef = useRef<FlatList<Banner>>(null);
-  const { width: screenWidth } = Dimensions.get("window");
   const [showFlashBanner, setShowFlashBanner] = useState(true);
   const [activeSchemesCount, setActiveSchemesCount] = useState(0);
-  const [selectedStatusIndex, setSelectedStatusIndex] = useState<number | null>(null);
+  const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
   const [showStatus, setShowStatus] = useState(false);
   const [collectionsData, setCollectionsData] = useState<Collection[]>([]);
-  const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
   const [totalGoldSavings, setTotalGoldSavings] = useState(0);
 
-  // Date formatting utility
-  const formatDateToIndian = (isoString: string | null | undefined) => {
-    if (!isoString) return "N/A";
-    const date = new Date(isoString);
-    return date.toLocaleString("en-IN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true,
-    });
-  };
+  // Refs
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const sliderRef = useRef<FlatList<Banner>>(null);
 
   // Memoized translations
   const translations = useMemo(
@@ -177,8 +203,29 @@ export default function Home() {
     [language]
   );
 
-  // Data fetching function
-  const fetchData = async (isRefreshing = false) => {
+  // Utility functions
+  const formatDateToIndian = useCallback((isoString: string | null | undefined) => {
+    if (!isoString) return "N/A";
+    const date = new Date(isoString);
+    return date.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
+  }, []);
+
+  const getFullImageUrl = useCallback((path: string) => {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+    return `${theme.baseUrl}/${path}`;
+  }, []);
+
+  // Data fetching
+  const fetchData = useCallback(async (isRefreshing = false) => {
     try {
       isRefreshing ? setRefreshing(true) : setIsLoading(true);
 
@@ -192,7 +239,6 @@ export default function Home() {
       setRatesData(liveRatesResponse.data);
       setCollectionsData(collectionsResponse.data.data);
 
-      // Store gold rate in AsyncStorage
       if (liveRatesResponse.data?.data?.gold_rate) {
         await AsyncStorage.setItem('gold_rate', liveRatesResponse.data.data.gold_rate);
       }
@@ -202,17 +248,57 @@ export default function Home() {
     } finally {
       isRefreshing ? setRefreshing(false) : setIsLoading(false);
     }
-  };
-
-  // Initial data load
-  useEffect(() => {
-    fetchData();
   }, []);
 
-  // Refresh handler
-  const handleRefresh = () => fetchData(true);
+  const fetchActiveSchemesCount = useCallback(async () => {
+    try {
+      if (!user?.id) {
+        setActiveSchemesCount(0);
+        setTotalGoldSavings(0);
+        return;
+      }
+      const response = await api.get(`investments/user_investments/${user.id}`);
+      const investments = response.data.data || [];
+      setActiveSchemesCount(investments.length || 0);
+      
+      const totalGold = investments.reduce((sum: number, investment: any) => {
+        const goldWeight = investment.totalgoldweight ? parseFloat(investment.totalgoldweight) : 0;
+        return sum + goldWeight;
+      }, 0);
+      
+      setTotalGoldSavings(totalGold);
+    } catch (error) {
+      console.error("Error fetching active schemes count:", error);
+      setActiveSchemesCount(0);
+      setTotalGoldSavings(0);
+    }
+  }, [user?.id]);
 
-  // Network connectivity monitor
+  // Effects
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    if (user) {
+      fetchActiveSchemesCount();
+    }
+  }, [user, fetchActiveSchemesCount]);
+
+  useEffect(() => {
+    if (user) {
+      NotificationService.sendTokenToApi();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const checkBanner = async () => {
+      const seen = await AsyncStorage.getItem('flashBannerSeen');
+      if (!seen) setShowFlashBanner(true);
+    };
+    checkBanner();
+  }, []);
+
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
       if (!state.isConnected) {
@@ -242,62 +328,16 @@ export default function Home() {
     return () => unsubscribe();
   }, []);
 
-  // Fallback data
-  const dummyData = {
-    rates: {
-      gold: {
-        price: "7,315",
-        purity: translations.goldPurity,
-        image: theme.image.gold_image,
-      },
-      silver: {
-        price: "101.00",
-        purity: translations.silverPurity,
-        image: theme.image.silver_image,
-      },
-    },
-    sliderImages: theme.image.sliderImages,
-  };
+  // Event handlers
+  const handleRefresh = useCallback(() => fetchData(true), [fetchData]);
 
-  const banners: Banner[] = [
-    // {
-    //   id: 1,
-    //   image: require('../../../../../assets/images/banner1.jpg'),
-    //   schemeUrl: '/(app)/(tabs)/home/schemes',
-    // },
-    {
-      id: 2,
-      image: require('../../../../../assets/images/banner.png'),
-      schemeUrl: '/(app)/(tabs)/home/schemes',
-    },
-    {
-      id: 3,
-      image: require('../../../../../assets/images/banner2.png'),
-      schemeUrl: '/(app)/(tabs)/home/schemes',
-    },
-  ];
+  const handleCloseBanner = useCallback(async () => {
+    setShowFlashBanner(false);
+    await AsyncStorage.setItem('flashBannerSeen', 'true');
+  }, []);
 
-  const statusImages = [
-    require('../../../../../assets/images/status1.jpg'),
-    require('../../../../../assets/images/status2.jpg'),
-    require('../../../../../assets/images/status3.jpg'),
-    require('../../../../../assets/images/status4.jpg'),
-    require('../../../../../assets/images/status5.jpg'),
-    require('../../../../../assets/images/status6.jpg'),
-    require('../../../../../assets/images/status7.jpg'),
-    require('../../../../../assets/images/status8.jpg'),
-    require('../../../../../assets/images/status9.jpg'),
-    require('../../../../../assets/images/status10.jpg'),
-    require('../../../../../assets/images/status11.jpg'),
-    require('../../../../../assets/images/status12.jpg'),
-    require('../../../../../assets/images/status13.jpg'),
-    require('../../../../../assets/images/status14.jpg'),
-    require('../../../../../assets/images/status15.jpg'),
-    require('../../../../../assets/images/status16.jpg'),
-    require('../../../../../assets/images/status17.jpg'),
-  ];
-
-  const renderBanner = ({ item }: { item: Banner }) => (
+  // Render functions
+  const renderBanner = useCallback(({ item }: { item: Banner }) => (
     <TouchableOpacity
       style={styles.bannerItem}
       onPress={() => router.push(item.schemeUrl)}
@@ -309,17 +349,9 @@ export default function Home() {
         resizeMode="cover"
       />
     </TouchableOpacity>
-  );
+  ), [router]);
 
-  // Add function to get full image URL
-  const getFullImageUrl = (path: string) => {
-    if (!path) return '';
-    if (path.startsWith('http')) return path;
-    return `${theme.baseUrl}/${path}`;
-  };
-
-  // Update renderStatusItem to use full image URL
-  const renderStatusItem = ({ item, index }: { item: Collection, index: number }) => (
+  const renderStatusItem = useCallback(({ item }: { item: Collection }) => (
     <TouchableOpacity
       style={styles.statusItem}
       onPress={() => {
@@ -327,70 +359,20 @@ export default function Home() {
         setShowStatus(true);
       }}
     >
-      <Image
-        source={{ uri: getFullImageUrl(item.thumbnail) }}
-        style={styles.statusImage}
-        resizeMode="cover"
-      />
+      <View style={styles.statusItemWrapper}>
+        <View style={styles.statusImageContainer}>
+          <Image
+            source={{ uri: getFullImageUrl(item.thumbnail) }}
+            style={styles.statusImage}
+            resizeMode="cover"
+          />
+        </View>
+        <Text style={styles.statusItemName} numberOfLines={1}>
+          {item.name}
+        </Text>
+      </View>
     </TouchableOpacity>
-  );
-
-  useEffect(() => {
-    const checkBanner = async () => {
-      const seen = await AsyncStorage.getItem('flashBannerSeen');
-      if (!seen) setShowFlashBanner(true);
-    };
-    checkBanner();
-  }, []);
-
-  const handleCloseBanner = async () => {
-    setShowFlashBanner(false);
-    await AsyncStorage.setItem('flashBannerSeen', 'true');
-  };
-
-  // Update the fetchActiveSchemesCount function to include total gold savings
-  const fetchActiveSchemesCount = async () => {
-    try {
-      if (!user?.id) {
-        setActiveSchemesCount(0);
-        setTotalGoldSavings(0);
-        return;
-      }
-      const response = await api.get(`investments/user_investments/${user.id}`);
-      console.log('User investments response:', response.data);
-      const investments = response.data.data || [];
-      setActiveSchemesCount(investments.length || 0);
-      
-      // Calculate total gold savings
-      const totalGold = investments.reduce((sum: number, investment: any) => {
-        // Check if totalgoldweight exists and is a valid number
-        const goldWeight = investment.totalgoldweight ? parseFloat(investment.totalgoldweight) : 0;
-        console.log('Investment gold weight:', goldWeight, 'for investment:', investment);
-        return sum + goldWeight;
-      }, 0);
-      
-      console.log('Total gold weight calculated:', totalGold);
-      setTotalGoldSavings(totalGold);
-    } catch (error) {
-      console.error("Error fetching active schemes count:", error);
-      setActiveSchemesCount(0);
-      setTotalGoldSavings(0);
-    }
-  };
-
-  // Add useEffect to fetch active schemes count
-  useEffect(() => {
-    if (user) {
-      fetchActiveSchemesCount();
-    }
-  }, [user]);
-
-  // Add useEffect to send FCM token when home page loads
-  useEffect(() => {
-    if (user) {
-      NotificationService.sendTokenToApi();
-    }
-  }, [user]);
+  ), [getFullImageUrl]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -409,13 +391,11 @@ export default function Home() {
             onClose={handleCloseBanner}
           />
         )}
-        <View style={{ flex: 1, backgroundColor: 'rgba(255, 255, 255, 0.1)' }}>
-          {/* Fixed Header */}
+        <View style={styles.mainContainer}>
           <View style={styles.headerWrapper}>
-            <AppHeader showBackButton={false} backRoute="index" />
+            <AppHeader showBackButton={false} backRoute="index" showLanguageSwitcher={true} />
           </View>
 
-          {/* Scrollable Content */}
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             refreshControl={
@@ -427,16 +407,13 @@ export default function Home() {
               />
             }
           >
-            {/* Rates Display */}
             <View style={styles.ratesContainer}>
               {ratesData?.data ? (
                 <>
                   <View style={[styles.rateCard, !ratesData.data.silver_rate && styles.singleRateCard]}>
                     <LiveRateCard
                       type={translations.gold}
-                      rate={
-                        ratesData.data.gold_rate || dummyData.rates.gold.price
-                      }
+                      rate={ratesData.data.gold_rate || dummyData.rates.gold.price}
                       lastupdated={formatDateToIndian(ratesData.data.updated_at)}
                       image={dummyData.rates.gold.image}
                       isSingle={!ratesData.data.silver_rate}
@@ -458,7 +435,6 @@ export default function Home() {
               )}
             </View>
 
-            {/* Add this after the rates container */}
             <View style={styles.statusContainer}>
               <FlatList
                 data={collectionsData}
@@ -470,7 +446,6 @@ export default function Home() {
               />
             </View>
 
-            {/* Main Content */}
             <View style={styles.mainContent}>
               <ImageSlider images={dummyData.sliderImages} />
 
@@ -485,7 +460,6 @@ export default function Home() {
                 duration={8000}
               />
 
-              {/* User Info Card */}
               <UserInfoCard 
                 userName={user?.name}
                 activeSchemesCount={activeSchemesCount}
@@ -493,9 +467,6 @@ export default function Home() {
                 onPress={() => router.push('/(tabs)/savings')}
               />
 
-              {/* <ProductsList schemes={schemeData} /> */}
-
-              {/* Banner List */}
               <View style={styles.bannerContainer}>
                 <FlatList
                   data={banners}
@@ -513,26 +484,21 @@ export default function Home() {
             </View>
           </ScrollView>
 
-          <View style={styles.languageSwitcherContainer}>
-            <LanguageSwitcher />
-          </View>
+          <StatusView
+            collections={collectionsData}
+            isVisible={showStatus}
+            initialCollectionIndex={selectedCollection ? collectionsData.findIndex(c => c.id === selectedCollection.id) : 0}
+            onClose={() => {
+              setShowStatus(false);
+              setSelectedCollection(null);
+            }}
+          />
         </View>
-
-        <StatusView
-          collections={collectionsData}
-          isVisible={showStatus}
-          initialCollectionIndex={selectedCollection ? collectionsData.findIndex(c => c.id === selectedCollection.id) : 0}
-          onClose={() => {
-            setShowStatus(false);
-            setSelectedCollection(null);
-          }}
-        />
       </ImageBackground>
     </SafeAreaView>
   );
 }
 
-// Styles
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -542,15 +508,16 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  mainContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
   headerWrapper: {
     width: "100%",
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     padding: 10,
-    // Optionally, add a border for debugging:
-    // borderWidth: 1,
-    // borderColor: 'red',
   },
   scrollContent: {
     flexGrow: 1,
@@ -587,43 +554,11 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(14),
     paddingVertical: moderateScale(20),
   },
-  flashOffer: {
-    backgroundColor: "#B71C1C",
-    paddingVertical: moderateScale(12),
-  },
   spacer: {
     height: moderateScale(80),
-    // backgroundColor: "#FFFFFF",
   },
-  supportCard: {
-    marginHorizontal: moderateScale(16),
-    marginTop: moderateScale(16),
-  },
-  languageSwitcherContainer: {
-    position: 'absolute',
-    bottom: 30,
-    right: 20,
-    zIndex: 999,
-  },
-  goldSchemesButton: {
-    width: '100%',
-    height: 120,
-    marginVertical: 10,
-    overflow: 'hidden',
-  },
-  goldSchemesGradient: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  goldSchemesText: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: 'bold',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
+  languageSwitcherHeader: {
+    marginLeft: 10,
   },
   bannerContainer: {
     width: '100%',
@@ -638,7 +573,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   bannerImage: {
-    width: Dimensions.get('window').width - 40,
+    width: screenWidth - 40,
     height: 200,
     borderRadius: 8,
   },
@@ -750,14 +685,60 @@ const styles = StyleSheet.create({
   },
   statusItem: {
     marginHorizontal: 5,
-    borderRadius: 20,
-    overflow: 'hidden',
+    alignItems: 'center',
+  },
+  statusItemWrapper: {
+    alignItems: 'center',
+  },
+  statusImageContainer: {
+    width: STATUS_IMAGE_SIZE,
+    height: STATUS_IMAGE_SIZE,
+    borderRadius: STATUS_BORDER_RADIUS,
     borderWidth: 2,
     borderColor: '#850111',
+    padding: 2,
+    backgroundColor: '#fff',
+    marginBottom: 6,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   statusImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 18,
+    width: '100%',
+    height: '100%',
+    borderRadius: STATUS_BORDER_RADIUS - 2,
+  },
+  statusItemName: {
+    fontSize: 12,
+    color: '#850111',
+    textAlign: 'center',
+    width: STATUS_IMAGE_SIZE,
+    fontWeight: '600',
+    textShadowColor: 'rgba(255, 255, 255, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 1,
+  },
+  headerLanguageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  languageIcon: {
+    fontSize: 16,
+    marginRight: 4,
+  },
+  headerLanguageText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
   },
 });

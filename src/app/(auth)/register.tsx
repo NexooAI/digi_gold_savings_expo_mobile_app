@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import PhoneInput from "../components/PhoneInputs";
-import api from "../services/api";
+import api from "@/services/api";
 import { theme } from "@/constants/theme";
 
 const { width } = Dimensions.get("window");

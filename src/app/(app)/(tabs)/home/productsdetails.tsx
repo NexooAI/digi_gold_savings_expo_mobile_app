@@ -21,7 +21,7 @@ import { t } from "@/i18n";
 import useGlobalStore from "@/store/global.store";
 import { useLocalSearchParams as useSearchParams } from "expo-router";
 import { theme } from "@/constants/theme";
-import api from "@/app/services/api";
+import api from "@/services/api";
 
 const { width } = Dimensions.get("window");
 const HEADER_HEIGHT = 0; // Adjust if needed

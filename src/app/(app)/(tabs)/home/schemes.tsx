@@ -21,7 +21,7 @@ import { useRouter } from "expo-router";
 import { t } from "@/i18n";
 import useGlobalStore from "@/store/global.store";
 import { theme } from "@/constants/theme";
-import api from "@/app/services/api";
+import api from "@/services/api";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import { rgbaColor } from "react-native-reanimated/lib/typescript/Colors";
@@ -93,10 +93,17 @@ export default function SchemeList() {
       setLoading(true);
       try {
         const response = await api.get(`/schemes`);
-        setAllSchemes(response.data?.data || []);
+        if (response.data?.data) {
+          console.log('Fetched schemes:', response.data.data);
+          setAllSchemes(response.data.data);
+        } else {
+          console.warn('No schemes data in response');
+          setAllSchemes([]);
+        }
       } catch (error) {
         console.error("Error fetching schemes:", error);
         Alert.alert("Error", "Failed to fetch schemes. Please try again later.");
+        setAllSchemes([]);
       } finally {
         setLoading(false);
       }
@@ -106,65 +113,61 @@ export default function SchemeList() {
 
   // Filter schemes locally when activeTab or allSchemes changes
   useEffect(() => {
-    if (!allSchemes.length) return;
+    if (!allSchemes.length) {
+      setSchemes([]);
+      return;
+    }
+
     setLoading(true);
-    // Create buckets for each frequency
-    const buckets: { [key: string]: any[] } = {
-      daily: [],
-      weekly: [],
-      monthly: [],
-      flexi: []
-    };
-    // Process all schemes and their chits
-    allSchemes.forEach((scheme: Scheme) => {
-      console.log(scheme);
-      if (scheme.ACTIVE !== 'Y') return;
-      scheme?.chits.forEach(chit => {
-        console.log(chit);
-        const frequency = (chit.PAYMENT_FREQUENCY || '').toLowerCase();
-        if (frequency in buckets) {
-          buckets[frequency].push({
+    try {
+      // Create buckets for each frequency
+      const buckets: { [key: string]: any[] } = {
+        daily: [],
+        weekly: [],
+        monthly: [],
+        flexi: []
+      };
+
+      // Process all schemes and their chits
+      allSchemes.forEach((scheme: Scheme) => {
+        if (scheme.ACTIVE !== 'Y') return;
+
+        // Get the relevant chits for the current frequency
+        const relevantChits = scheme.chits?.filter(chit => 
+          (chit.PAYMENT_FREQUENCY || '').toLowerCase() === activeTab.toLowerCase()
+        ) || [];
+
+        if (relevantChits.length > 0) {
+          buckets[activeTab.toLowerCase()].push({
             SCHEMEID: scheme.SCHEMEID,
             SCHEMENAME: scheme.SCHEMENAME,
-            CHITID: chit.CHITID,
-            AMOUNT: chit.AMOUNT,
-            NOINS: chit.NOINS,
-            TOTALMEMBERS: chit.TOTALMEMBERS,
-            REGNO: chit.REGNO,
-            PAYMENT_FREQUENCY: chit.PAYMENT_FREQUENCY,
-            PAYMENT_FREQUENCY_ID: chit.PAYMENT_FREQUENCY_ID
+            DESCRIPTION: scheme.DESCRIPTION || "Save gold with our flexible plan.",
+            BENEFITS: scheme.BENEFITS || [
+              "Competitive rates",
+              "Flexible payments",
+              "Zero making charges",
+              "Free locker facility"
+            ],
+            SCHEMETYPE: scheme.SCHEMETYPE || (activeTab.toLowerCase() === 'flexi' ? 'Flexi' : 'Fixed'),
+            ACTIVE: scheme.ACTIVE,
+            chits: relevantChits,
+            relevantChits: relevantChits.map(chit => ({
+              CHITID: chit.CHITID,
+              AMOUNT: parseFloat(chit.AMOUNT)
+            }))
           });
         }
       });
-    });
-    const activeTabLower = activeTab.toLowerCase();
-    const filteredSchemes = buckets[activeTabLower].map(item => ({
-      SCHEMEID: item.SCHEMEID,
-      SCHEMENAME: item.SCHEMENAME,
-      DESCRIPTION: "Save gold with our flexible plan.",
-      BENEFITS: [
-        "Competitive rates",
-        "Flexible payments",
-        "Zero making charges",
-        "Free locker facility"
-      ],
-      SCHEMETYPE: activeTabLower === 'flexi' ? 'Flexi' : 'Fixed',
-      ACTIVE: 'Y',
-      chits: [{
-        CHITID: item.CHITID,
-        AMOUNT: item.AMOUNT,
-        NOINS: item.NOINS,
-        TOTALMEMBERS: item.TOTALMEMBERS,
-        REGNO: item.REGNO,
-        PAYMENT_FREQUENCY: item.PAYMENT_FREQUENCY
-      }],
-      relevantChits: [{
-        CHITID: item.CHITID,
-        AMOUNT: parseFloat(item.AMOUNT)
-      }]
-    }));
-    setSchemes(filteredSchemes);
-    setLoading(false);
+
+      const filteredSchemes = buckets[activeTab.toLowerCase()];
+      console.log(`Filtered ${activeTab} schemes:`, filteredSchemes);
+      setSchemes(filteredSchemes);
+    } catch (error) {
+      console.error("Error filtering schemes:", error);
+      setSchemes([]);
+    } finally {
+      setLoading(false);
+    }
   }, [activeTab, allSchemes]);
 
   useEffect(() => {
@@ -483,12 +486,15 @@ export default function SchemeList() {
               data={schemes}
               renderItem={renderSchemeItem}
               keyExtractor={item => item.SCHEMEID.toString()}
-              contentContainerStyle={styles.listContainer}
+              contentContainerStyle={[
+                styles.listContainer,
+                schemes.length === 0 && styles.emptyListContainer
+              ]}
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
                 <View style={styles.emptyContainer}>
                   <Ionicons name="sad-outline" size={40} color="#777" />
-                  <Text style={styles.emptyMessage}>No schemes available for this category</Text>
+                  <Text style={styles.emptyMessage}>No schemes available for {activeTab} category</Text>
                 </View>
               }
             />
@@ -868,17 +874,25 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 16,
   },
+  emptyListContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   emptyContainer: {
     alignItems: "center",
     justifyContent: "center",
     padding: 40,
     gap: 16,
+    flex: 1,
+    minHeight: 300,
   },
   emptyMessage: {
     textAlign: "center",
     color: theme.colors.textSecondary,
     fontSize: 16,
     lineHeight: 24,
+    fontWeight: '500',
   },
   tabSliderContainer: {
     marginLeft: 'auto',

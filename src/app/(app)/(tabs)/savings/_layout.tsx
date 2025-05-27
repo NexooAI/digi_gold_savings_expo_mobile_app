@@ -4,14 +4,17 @@ export default function SavingsLayout() {
   return (
     <Stack>
       <Stack.Screen 
-        name="index" 
-        options={{ headerShown: false }} 
+        name="index"
+        options={{
+          headerShown: false
+        }}
       />
       <Stack.Screen 
-        name="SavingsDetail" 
-        options={{ title: 'Savings Details', headerShown: false }} 
+        name="SavingsDetail"
+        options={{
+          headerShown: false
+        }}
       />
-      
     </Stack>
   );
 }

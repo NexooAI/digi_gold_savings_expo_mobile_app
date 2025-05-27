@@ -1,30 +1,47 @@
 import { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Video, ResizeMode } from 'expo-av';
+import { View, StyleSheet, Text, TouchableOpacity, Linking } from 'react-native';
 import { ActivityIndicator } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-const VideoPlayer = ({ videoUrl }) => {
-  const [isLoading, setIsLoading] = useState(true);
+interface VideoPlayerProps {
+  videoUrl: string;
+}
+
+const VideoPlayer = ({ videoUrl }: VideoPlayerProps) => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleOpenVideo = async () => {
+    try {
+      setIsLoading(true);
+      const supported = await Linking.canOpenURL(videoUrl);
+      if (supported) {
+        await Linking.openURL(videoUrl);
+      } else {
+        console.error("Don't know how to open URI: " + videoUrl);
+      }
+    } catch (error) {
+      console.error('Error opening video:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
-      {isLoading && (
-        <ActivityIndicator 
-          size="large" 
-          color="#0000ff" 
-          style={styles.loader} 
-        />
-      )}
-      <Video
-        source={{ uri: videoUrl }}
-        style={styles.video}
-        useNativeControls
-        resizeMode={ResizeMode.CONTAIN}
-        isLooping={false}
-        onLoadStart={() => setIsLoading(true)}
-        onLoad={() => setIsLoading(false)}
-        onError={(error) => console.error('Video loading error:', error)}
-      />
+      <TouchableOpacity 
+        style={styles.playButton} 
+        onPress={handleOpenVideo}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#fff" />
+        ) : (
+          <>
+            <Ionicons name="play-circle" size={64} color="#fff" />
+            <Text style={styles.playText}>Play Video</Text>
+          </>
+        )}
+      </TouchableOpacity>
     </View>
   );
 };
@@ -35,14 +52,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#000',
+    minHeight: 300,
   },
-  video: {
-    width: '100%',
-    height: 300,
+  playButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
   },
-  loader: {
-    position: 'absolute',
-    zIndex: 1,
+  playText: {
+    color: '#fff',
+    fontSize: 16,
+    marginTop: 10,
+    fontWeight: '600',
   },
 });
 

@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import i18n, { AppLocale, } from '@/i18n'; // Add i18n import
+import { AppLocale, changeLocale } from '@/i18n'; // Import changeLocale function instead of i18n
 import * as SecureStore from 'expo-secure-store';
 
 interface GlobalStore {
@@ -36,12 +36,11 @@ const useGlobalStore = create<GlobalStore>()(
         set({ isLoggedIn: false, token: null, user: null })
       },
       setLanguage: async (lang) => {
-        // Update both store and i18n
-        await AsyncStorage.setItem('user-locale', lang);
-        i18n.locale = lang;
+        // Update both store and i18n using the changeLocale function
+        await changeLocale(lang);
         set({ language: lang });
       },
-      updateUser: (user: any) => void set((state) => ({ user: { ...state.user, ...user } }))
+      updateUser: (user: any) => set((state) => ({ user: { ...state.user, ...user } }))
     }),
     {
       name: 'global-storage',
