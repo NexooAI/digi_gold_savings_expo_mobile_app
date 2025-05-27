@@ -33,7 +33,7 @@ const YouTubeVideo: React.FC = () => {
     const fetchVideoUrl = async () => {
       const fallbackUrl = theme.youtubeUrl; // Fallback URL
       try {
-        const response = await api.get("video/1");
+        const response = await api.get("videos/active");
         let videoUrl = response.data.data?.video_url;
         if (!videoUrl) {
           console.error(

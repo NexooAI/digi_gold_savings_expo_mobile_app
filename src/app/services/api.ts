@@ -148,7 +148,7 @@ export const schemes = {
 };
 
 export const rates = {
-  getLiveRates: () => api.get('/rates/current'),
+  getLiveRates: async () => await api.get('/rates/current'),
 };
 
 export const users = {
@@ -162,7 +162,7 @@ export const users = {
 };
 
 export const news = {
-  getActiveFlashNews: () => api.get('/flash-news-active'),
+  getActiveFlashNews: () => api.get('/flash-news/active'),
 };
 
 export const posts = {

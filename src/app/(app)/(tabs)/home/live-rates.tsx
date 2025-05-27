@@ -101,6 +101,7 @@ export default function LiveRates() {
       
       // Fetch current live rates
       const response = await rates.getLiveRates();
+      console.log('Live rates response:', response.data);
       if (response.data?.data) {
         setCurrentRate(metalType === 'Gold' ? 
           parseFloat(response.data.data.gold_rate) : 
