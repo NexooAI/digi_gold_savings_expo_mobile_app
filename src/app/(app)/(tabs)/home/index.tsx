@@ -519,10 +519,9 @@ export default function Home() {
         </View>
 
         <StatusView
-          images={selectedCollection?.status_images.map(img => getFullImageUrl(img)) || []}
+          collections={collectionsData}
           isVisible={showStatus}
-          initialIndex={0}
-          collectionName={selectedCollection?.name}
+          initialCollectionIndex={selectedCollection ? collectionsData.findIndex(c => c.id === selectedCollection.id) : 0}
           onClose={() => {
             setShowStatus(false);
             setSelectedCollection(null);
