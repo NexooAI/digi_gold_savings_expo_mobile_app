@@ -19,6 +19,7 @@ import api from "@/services/api";
 import * as SecureStore from "expo-secure-store";
 import * as Crypto from "expo-crypto";
 import { theme } from "@/constants/theme";
+import { LinearGradient } from "expo-linear-gradient";
 
 const { width } = Dimensions.get("window");
 const logoWidth = width * 0.3;
@@ -141,68 +142,91 @@ export default function MpinSetup() {
       source={theme.image.bg_image}
       style={styles.backgroundImage}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
-        style={styles.container}
+      <LinearGradient
+        colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.7)']}
+        style={styles.gradient}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContainer}
-          keyboardShouldPersistTaps="handled"
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
+          style={styles.container}
         >
-          <View style={styles.contentContainer}>
-            <Image
-              source={theme.image.transparentLogo}
-              style={[styles.logo, { width: logoWidth, aspectRatio: 1 }]}
-              resizeMode="contain"
-            />
-            <Text style={styles.title}>Set MPIN</Text>
-
-            <Text style={styles.label}>Enter MPIN</Text>
-            <MpinInput
-              length={4}
-              onComplete={setMpin}
-              secureTextEntry={!showPin}
-            />
-
-            <Text style={styles.label}>Confirm MPIN</Text>
-            <MpinInput
-              length={4}
-              onComplete={setConfirmMpin}
-              secureTextEntry={!showPin}
-            />
-
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-            <TouchableOpacity
-              style={styles.eyeToggle}
-              onPress={() => setShowPin(!showPin)}
-            >
-              <Ionicons
-                name={showPin ? "eye-off" : "eye"}
-                size={24}
-                color="#ffc90c"
+          <ScrollView
+            contentContainerStyle={styles.scrollContainer}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.contentContainer}>
+              <Image
+                source={theme.image.transparentLogo}
+                style={[styles.logo, { width: logoWidth, aspectRatio: 1 }]}
+                resizeMode="contain"
               />
-              <Text style={styles.eyeText}>
-                {showPin ? "Hide MPIN" : "Show MPIN"}
-              </Text>
-            </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[
-                styles.button,
-                (error || loading) && styles.disabledButton,
-              ]}
-              onPress={handleSubmit}
-              disabled={!!error || loading}
-            >
-              <Text style={styles.buttonText}>
-                {loading ? "Processing..." : "Set MPIN"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+              <View style={styles.cardContainer}>
+                <Text style={styles.title}>Set MPIN</Text>
+                <Text style={styles.subtitle}>Create a secure MPIN for your account</Text>
+
+                <View style={styles.inputSection}>
+                  <Text style={styles.label}>Enter MPIN</Text>
+                  <MpinInput
+                    length={4}
+                    onComplete={setMpin}
+                    secureTextEntry={!showPin}
+                  />
+                </View>
+
+                <View style={styles.inputSection}>
+                  <Text style={styles.label}>Confirm MPIN</Text>
+                  <MpinInput
+                    length={4}
+                    onComplete={setConfirmMpin}
+                    secureTextEntry={!showPin}
+                  />
+                </View>
+
+                {error ? (
+                  <View style={styles.errorContainer}>
+                    <Ionicons name="alert-circle" size={20} color="#ff4444" />
+                    <Text style={styles.errorText}>{error}</Text>
+                  </View>
+                ) : null}
+
+                <TouchableOpacity
+                  style={styles.eyeToggle}
+                  onPress={() => setShowPin(!showPin)}
+                >
+                  <Ionicons
+                    name={showPin ? "eye-off" : "eye"}
+                    size={24}
+                    color={theme.colors.secondary}
+                  />
+                  <Text style={styles.eyeText}>
+                    {showPin ? "Hide MPIN" : "Show MPIN"}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.button,
+                    (error || loading) && styles.disabledButton,
+                  ]}
+                  onPress={handleSubmit}
+                  disabled={!!error || loading}
+                >
+                  <LinearGradient
+                    colors={['#ffc90c', '#ffd700']}
+                    style={styles.gradientButton}
+                  >
+                    <Text style={styles.buttonText}>
+                      {loading ? "Processing..." : "Set MPIN"}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </LinearGradient>
     </ImageBackground>
   );
 }
@@ -211,6 +235,9 @@ const styles = StyleSheet.create({
   backgroundImage: {
     flex: 1,
     resizeMode: "cover",
+  },
+  gradient: {
+    flex: 1,
   },
   container: {
     flex: 1,
@@ -223,18 +250,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     alignItems: "center",
   },
+  cardContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 20,
+    padding: 20,
+    width: '100%',
+    backdropFilter: 'blur(10px)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
   logo: {
     aspectRatio: 1,
     marginTop: 90,
+    marginBottom: 20,
   },
   title: {
-    color: "#fff",
-    fontSize: 24,
+    color: theme.colors.textLight,
+    fontSize: 28,
     fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  subtitle: {
+    color: theme.colors.textLight,
+    fontSize: 16,
     marginBottom: 30,
+    textAlign: "center",
+    opacity: 0.8,
+  },
+  inputSection: {
+    marginBottom: 25,
   },
   label: {
-    color: "#fff",
+    color: theme.colors.textLight,
     fontSize: 16,
     marginBottom: 15,
     alignSelf: "stretch",
@@ -243,46 +291,60 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     width: "70%",
-    marginBottom: 25,
+    alignSelf: "center",
   },
   mpinInput: {
     width: 50,
     height: 50,
     borderWidth: 1,
-    borderColor: "#fff",
-    borderRadius: 10,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    color: "#fff",
+    borderColor: theme.colors.white,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    color: theme.colors.white,
     fontSize: 24,
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 68, 68, 0.1)',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  errorText: {
+    color: "#ff4444",
+    fontSize: 14,
+    marginLeft: 8,
   },
   eyeToggle: {
     flexDirection: "row",
     alignItems: "center",
     marginVertical: 20,
+    alignSelf: 'center',
   },
   eyeText: {
-    color: "#ffc90c",
+    color: theme.colors.secondary,
     marginLeft: 10,
     fontSize: 16,
   },
   button: {
-    backgroundColor: "#ffc90c",
-    paddingVertical: 15,
-    borderRadius: 25,
     width: "100%",
-    alignItems: "center",
+    height: 50,
+    borderRadius: 25,
+    overflow: 'hidden',
+    marginTop: 20,
+  },
+  gradientButton: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   disabledButton: {
     opacity: 0.6,
   },
   buttonText: {
-    color: "#2e0406",
+    color: theme.colors.textDark,
     fontSize: 18,
     fontWeight: "bold",
-  },
-  errorText: {
-    color: "#ff4444",
-    fontSize: 14,
-    marginTop: 10,
   },
 });

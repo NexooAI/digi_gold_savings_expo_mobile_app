@@ -169,5 +169,13 @@
   "immideate_bonese": "Immediate Bonus Details",
   "copied": "Copied",
   "referral_code_copied": "Referral Code Copied",
-  "goldSchemes": "Gold Schemes"
+  "goldSchemes": "Gold Schemes",
+  "noInternetTitle": "No Internet Connection",
+  "noInternetMessage": "Please check your internet connection and try again.",
+  "retry": "Retry",
+  "paymentSuccess": "Payment Success",
+  "paymentFailed": "Payment Failed",
+  "paymentStatus": "Payment Status",
+  "transactions": "Transactions"
+
 }

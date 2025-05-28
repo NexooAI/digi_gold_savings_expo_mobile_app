@@ -11,6 +11,7 @@ import {
   Platform,
   Dimensions,
   Alert,
+  Animated,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import NetInfo from "@react-native-community/netinfo";
@@ -20,11 +21,69 @@ import api from "@/services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import SmsRetriever from "react-native-sms-retriever";
-import { Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import { theme } from "@/constants/theme";
+import { LinearGradient } from "expo-linear-gradient";
 
 const { width } = Dimensions.get("window");
 const logoWidth = width * 0.3;
+
+const ErrorAlert = ({ message, onClose }) => {
+  const translateY = useRef(new Animated.Value(-100)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    const timer = setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(translateY, {
+          toValue: -100,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start(() => onClose());
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <Animated.View
+      style={[
+        styles.errorAlert,
+        {
+          transform: [{ translateY }],
+          opacity,
+        },
+      ]}
+    >
+      <View style={styles.errorContent}>
+        <Ionicons name="alert-circle" size={24} color="#fff" />
+        <Text style={styles.errorMessage}>{message}</Text>
+      </View>
+      <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+        <Ionicons name="close" size={20} color="#fff" />
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
 
 export default function Login() {
   const [mobile, setMobile] = useState("");
@@ -40,6 +99,8 @@ export default function Login() {
   const [isAndroid, setIsAndroid] = useState(Platform.OS === "android");
   const [isIOS, setIsIOS] = useState(Platform.OS === "ios");
   const [showOtp, setShowOtp] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [showError, setShowError] = useState(false);
 
   useEffect(() => {
     if (isAndroid) {
@@ -140,6 +201,15 @@ export default function Login() {
     return otpMatch ? otpMatch[0] : null;
   };
 
+  const showErrorAlert = (message) => {
+    setErrorMessage(message);
+    setShowError(true);
+  };
+
+  const hideErrorAlert = () => {
+    setShowError(false);
+  };
+
   const verifyOtp = (otp) => {
     setLoading(true);
     api
@@ -163,7 +233,7 @@ export default function Login() {
         }
       })
       .catch((error) => {
-        Alert.alert("Error", error.response?.data?.error || "Invalid OTP");
+        showErrorAlert(error.response?.data?.error || "Invalid OTP");
       })
       .finally(() => setLoading(false));
   };
@@ -171,7 +241,7 @@ export default function Login() {
   const loginAxio = () => {
     const indianMobilePattern = /^[6-9]\d{9}$/;
     if (!mobile || !indianMobilePattern.test(mobile)) {
-      Alert.alert("Error", "Please enter a valid 10-digit mobile number.");
+      showErrorAlert("Please enter a valid 10-digit mobile number.");
       return;
     }
     setLoading(true);
@@ -182,24 +252,14 @@ export default function Login() {
         setTimer(120);
       })
       .catch((error) => {
-        Alert.alert(
-          "Error",
-          error.response?.data?.error || "You are not registered.",
-          [
-            { text: "Cancel" },
-            {
-              text: "Register",
-              onPress: () => router.push("/register"),
-            },
-          ]
-        );
+        showErrorAlert(error.response?.data?.error || "You are not registered.");
       })
       .finally(() => setLoading(false));
   };
 
   const resendOtp = () => {
     if (resendAttempts >= 3) {
-      Alert.alert("Limit Reached", "Max resend attempts exceeded.");
+      showErrorAlert("Max resend attempts exceeded.");
       return;
     }
     api
@@ -209,10 +269,7 @@ export default function Login() {
         setPins(["", "", "", ""]);
       })
       .catch((error) => {
-        Alert.alert(
-          "Error",
-          error.response?.data?.error || "Something went wrong."
-        );
+        showErrorAlert(error.response?.data?.error || "Something went wrong.");
       });
     setResendAttempts((prev) => prev + 1);
   };
@@ -224,146 +281,221 @@ export default function Login() {
       source={theme.image.bg_image}
       style={styles.backgroundImage}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.container}
+      <LinearGradient
+        colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.7)']}
+        style={styles.gradient}
       >
-        <View style={styles.formContainer}>
-          <Image
-            source={theme.image.transparentLogo}
-            style={[styles.logo, { width: logoWidth }]}
-            resizeMode="contain"
-          />
+        {showError && (
+          <ErrorAlert message={errorMessage} onClose={hideErrorAlert} />
+        )}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.container}
+        >
+          <View style={styles.formContainer}>
+            <Image
+              source={theme.image.transparentLogo}
+              style={[styles.logo, { width: logoWidth }]}
+              resizeMode="contain"
+            />
 
-          <Text style={styles.pageTitle}>Login</Text>
+            <View style={styles.cardContainer}>
+              <Text style={styles.pageTitle}>Welcome Back!</Text>
+              <Text style={styles.subtitle}>Sign in to continue</Text>
 
-          {!isShowOtp ? (
-            <>
-              <PhoneInput
-                value={mobile}
-                onChangeText={setMobile}
-                loading={loading}
-              />
-              <TouchableOpacity
-                style={[
-                  styles.loginButton,
-                  loading && styles.loginButtonDisabled,
-                ]}
-                onPress={loginAxio}
-                disabled={loading}
-              >
-                <Text style={styles.loginButtonText}>
-                  {loading ? "Processing..." : "Get OTP"}
-                </Text>
-              </TouchableOpacity>
-              <View style={styles.registerContainer}>
-                <Text style={styles.registerText}>Don't have an account? </Text>
-                <TouchableOpacity onPress={() => router.push("/register")}>
-                  <Text style={styles.registerLink}>Register</Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          ) : (
-            <View style={styles.otpContainer}>
-              <Text style={styles.otpTitle}>Enter OTP</Text>
-              <Text style={styles.otpSentText}>
-                OTP sent to{" "}
-                {mobile.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3")}
-              </Text>
-
-              {/* OTP inputs + Eye button wrapper */}
-              <View style={styles.otpInputsWrapper}>
-                <View style={styles.otpInputsContainer}>
-                  {pins.map((pin, index) => (
-                    <TextInput
-                      key={index}
-                      ref={inputRefs[index]}
-                      style={styles.otpInput}
-                      keyboardType="numeric"
-                      maxLength={1}
-                      value={pin}
-                      onChangeText={(text) => handlePinChange(text, index)}
-                      onKeyPress={(e) => handleKeyPress(e, index)}
-                      secureTextEntry={!showOtp}
-                      textContentType="oneTimeCode"
-                      autoComplete="sms-otp"
+              {!isShowOtp ? (
+                <>
+                  <View style={styles.inputContainer}>
+                    <PhoneInput
+                      value={mobile}
+                      onChangeText={setMobile}
+                      loading={loading}
                     />
-                  ))}
-                </View>
-                <TouchableOpacity
-                  onPress={() => setShowOtp((prev) => !prev)}
-                  style={styles.eyeButton}
-                >
-                  <Feather
-                    name={showOtp ? "eye-off" : "eye"}
-                    size={24}
-                    color={theme.colors.white}
-                  />
-                </TouchableOpacity>
-              </View>
+                  </View>
+                  <TouchableOpacity
+                    style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+                    onPress={loginAxio}
+                    disabled={loading}
+                  >
+                    <LinearGradient
+                      colors={['#ffc90c', '#ffd700']}
+                      style={styles.gradientButton}
+                    >
+                      <Text style={styles.loginButtonText}>
+                        {loading ? "Processing..." : "Get OTP"}
+                      </Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                  <View style={styles.registerContainer}>
+                    <Text style={styles.registerText}>Don't have an account? </Text>
+                    <TouchableOpacity onPress={() => router.push("/register")}>
+                      <Text style={styles.registerLink}>Register</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              ) : (
+                <View style={styles.otpContainer}>
+                  <Text style={styles.otpTitle}>Enter OTP</Text>
+                  <Text style={styles.otpSentText}>
+                    OTP sent to{" "}
+                    {mobile.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3")}
+                  </Text>
 
-              <Text style={styles.timerText}>Resend in {timer}s</Text>
-              {timer === 0 && resendAttempts < 3 && (
-                <TouchableOpacity onPress={resendOtp}>
-                  <Text style={styles.resendText}>Resend OTP</Text>
-                </TouchableOpacity>
+                  <View style={styles.otpInputsWrapper}>
+                    <View style={styles.otpInputsContainer}>
+                      {pins.map((pin, index) => (
+                        <TextInput
+                          key={index}
+                          ref={inputRefs[index]}
+                          style={styles.otpInput}
+                          keyboardType="numeric"
+                          maxLength={1}
+                          value={pin}
+                          onChangeText={(text) => handlePinChange(text, index)}
+                          onKeyPress={(e) => handleKeyPress(e, index)}
+                          secureTextEntry={!showOtp}
+                          textContentType="oneTimeCode"
+                          autoComplete="sms-otp"
+                        />
+                      ))}
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => setShowOtp((prev) => !prev)}
+                      style={styles.eyeButton}
+                    >
+                      <Feather
+                        name={showOtp ? "eye-off" : "eye"}
+                        size={24}
+                        color={theme.colors.white}
+                      />
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.timerContainer}>
+                    <Ionicons name="time-outline" size={20} color={theme.colors.white} />
+                    <Text style={styles.timerText}>Resend in {timer}s</Text>
+                  </View>
+                  
+                  {timer === 0 && resendAttempts < 3 && (
+                    <TouchableOpacity onPress={resendOtp} style={styles.resendButton}>
+                      <Text style={styles.resendText}>Resend OTP</Text>
+                    </TouchableOpacity>
+                  )}
+                  
+                  <TouchableOpacity
+                    style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+                    onPress={() => verifyOtp(pins.join(""))}
+                    disabled={loading || pins.includes("")}
+                  >
+                    <LinearGradient
+                      colors={['#ffc90c', '#ffd700']}
+                      style={styles.gradientButton}
+                    >
+                      <Text style={styles.loginButtonText}>Submit</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
               )}
+
               <TouchableOpacity
-                style={[
-                  styles.loginButton,
-                  loading && styles.loginButtonDisabled,
-                ]}
-                onPress={() => verifyOtp(pins.join(""))}
-                disabled={loading || pins.includes("")}
+                style={styles.backButton}
+                onPress={() => router.back()}
               >
-                <Text style={styles.loginButtonText}>Submit</Text>
+                <Ionicons name="arrow-back" size={20} color={theme.colors.white} />
+                <Text style={styles.backButtonText}>Back</Text>
               </TouchableOpacity>
             </View>
-          )}
-
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.backButtonText}>Back</Text>
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
+          </View>
+        </KeyboardAvoidingView>
+      </LinearGradient>
     </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  backgroundImage: { flex: 1, resizeMode: "cover" },
-  container: { flex: 1, justifyContent: "center" },
-  formContainer: { paddingHorizontal: 20, alignItems: "center" },
-  logo: { aspectRatio: 1, marginTop: 90 },
+  backgroundImage: { 
+    flex: 1, 
+    resizeMode: "cover" 
+  },
+  gradient: {
+    flex: 1,
+  },
+  container: { 
+    flex: 1, 
+    justifyContent: "center" 
+  },
+  formContainer: { 
+    paddingHorizontal: 20, 
+    alignItems: "center" 
+  },
+  cardContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 20,
+    padding: 20,
+    width: '100%',
+    backdropFilter: 'blur(10px)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  logo: { 
+    aspectRatio: 1, 
+    marginTop: 90,
+    marginBottom: 20,
+  },
   pageTitle: {
     color: theme.colors.textLight,
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  subtitle: {
+    color: theme.colors.textLight,
+    fontSize: 16,
+    marginBottom: 30,
+    textAlign: "center",
+    opacity: 0.8,
+  },
+  inputContainer: {
+    width: '100%',
     marginBottom: 20,
-    textAlign: "left",
-    alignSelf: "flex-start",
   },
   loginButton: {
-    backgroundColor: theme.colors.secondary,
-    padding: 15,
-    borderRadius: 25,
     width: "100%",
-    alignItems: "center",
+    height: 50,
+    borderRadius: 25,
+    overflow: 'hidden',
     marginTop: 20,
   },
-  loginButtonDisabled: { backgroundColor: "#cccccc" },
+  gradientButton: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loginButtonDisabled: { 
+    opacity: 0.6 
+  },
   loginButtonText: {
     color: theme.colors.textDark,
     fontSize: 18,
     fontWeight: "bold",
   },
+  otpContainer: {
+    alignItems: "center",
+    marginVertical: 20,
+    width: "100%",
+  },
   otpTitle: {
     color: theme.colors.textLight,
-    fontSize: 18,
+    fontSize: 24,
+    fontWeight: 'bold',
     marginBottom: 10,
+  },
+  otpSentText: {
+    color: theme.colors.textLight,
+    fontSize: 16,
+    marginBottom: 20,
+    opacity: 0.8,
   },
   otpInputsWrapper: {
     position: "relative",
@@ -383,10 +515,10 @@ const styles = StyleSheet.create({
     height: 50,
     borderWidth: 1,
     borderColor: theme.colors.white,
-    borderRadius: 8,
+    borderRadius: 12,
     color: theme.colors.white,
     fontSize: 24,
-    backgroundColor: theme.colors.otpBackground,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     textAlign: "center",
   },
   eyeButton: {
@@ -394,34 +526,84 @@ const styles = StyleSheet.create({
     right: -40,
     top: 20,
   },
-  registerContainer: { flexDirection: "row", marginTop: 20 },
-  registerText: { color: theme.colors.white, fontSize: 16 },
+  timerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 15,
+  },
+  timerText: { 
+    color: theme.colors.white, 
+    marginLeft: 8,
+    fontSize: 16,
+  },
+  resendButton: {
+    marginTop: 10,
+    padding: 10,
+  },
+  resendText: {
+    color: theme.colors.secondary,
+    fontSize: 16,
+    fontWeight: "bold",
+    textDecorationLine: "underline",
+  },
+  registerContainer: { 
+    flexDirection: "row", 
+    marginTop: 20,
+    justifyContent: 'center',
+  },
+  registerText: { 
+    color: theme.colors.white, 
+    fontSize: 16 
+  },
   registerLink: {
     color: theme.colors.secondary,
     fontSize: 16,
     fontWeight: "bold",
     textDecorationLine: "underline",
   },
-  timerText: { color: theme.colors.white, marginTop: 10 },
-  resendText: {
-    color: theme.colors.secondary,
-    marginTop: 10,
-    fontWeight: "bold",
+  backButton: {
+    marginTop: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  backButton: { marginTop: 20 },
   backButtonText: {
     color: theme.colors.white,
     fontSize: 16,
-    textDecorationLine: "underline",
+    marginLeft: 5,
   },
-  otpSentText: {
-    color: theme.colors.white,
+  errorAlert: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 30,
+    left: 20,
+    right: 20,
+    backgroundColor: 'rgba(255, 68, 68, 0.95)',
+    borderRadius: 12,
+    padding: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    zIndex: 1000,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  errorContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  errorMessage: {
+    color: '#fff',
     fontSize: 16,
-    marginBottom: 20,
+    marginLeft: 10,
+    flex: 1,
   },
-  otpContainer: {
-    alignItems: "center",
-    marginVertical: 20,
-    width: "100%",
+  closeButton: {
+    padding: 5,
   },
 });

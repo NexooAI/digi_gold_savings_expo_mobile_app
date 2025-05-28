@@ -52,7 +52,7 @@ export const initiatePayment = ({
   const router = useRouter();
 
   return apiService
-    .post("/initiate", formBody.toString(), {
+    .post("/payments/initiate", formBody.toString(), {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
     })
     .then((response) => {
@@ -150,7 +150,12 @@ export const setupPaymentStatusListener = (socket, parsedUserDetails, router, pr
         );
 
         router.push({
-          pathname: "/(tabs)/home/PaymentSuccess",
+          pathname: "/(tabs)/home/payment-success",
+          params: {
+            amount: data?.paymentResponse?.amount,
+            txnId: data?.paymentResponse?.txn_id,
+            orderId: data?.paymentResponse?.order_id
+          }
         });
       } else if (data.status === "failure") {
         Alert.alert(

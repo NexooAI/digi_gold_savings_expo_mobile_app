@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { View, ActivityIndicator, StyleSheet, BackHandler } from "react-native";
 import { WebView } from "react-native-webview";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -10,8 +10,9 @@ import { theme } from "@/constants/theme";
 const PaymentWebView = () => {
   const { paymentUrl } = useLocalSearchParams();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [socket, setSocket] = useState<any>(null);
+  const loadingTimeout = useRef<NodeJS.Timeout>();
 
   // Handle WebView close event when component unmounts
   const handleWebViewClose = () => {
@@ -21,13 +22,20 @@ const PaymentWebView = () => {
         status: "webview_closed",
       });
     }
-    // Navigate back to home screen when WebView is closed
-    router.replace("/(tabs)/home");
+    // Navigate to failure screen instead of home
+    router.replace({
+      pathname: "/(tabs)/home/PaymentFailure",
+      params: { status: "cancelled" }
+    });
   };
 
   useEffect(() => {
     return () => {
       handleWebViewClose();
+      // Clear any pending loading timeout
+      if (loadingTimeout.current) {
+        clearTimeout(loadingTimeout.current);
+      }
     };
   }, []);
 
@@ -42,8 +50,11 @@ const PaymentWebView = () => {
             status: "user_cancelled",
           });
         }
-        // Navigate back to home screen when back is pressed
-        router.replace("/(tabs)/home");
+        // Navigate to failure screen instead of home
+        router.replace({
+          pathname: "/(tabs)/home/PaymentFailure",
+          params: { status: "cancelled" }
+        });
         return true; // Prevent default back behavior
       }
     );
@@ -76,9 +87,13 @@ const PaymentWebView = () => {
         });
       }
 
-      router.replace({
-        pathname: "/(tabs)/home/PaymentSuccess",
-        params: { paymentId, amount, transaction_no },
+      router.push({
+        pathname: "/(tabs)/home/payment-success",
+        params: {
+          amount: amount,
+          txnId: transaction_no,
+          orderId: paymentId
+        }
       });
     }
     // Check for failure keyword anywhere in the URL
@@ -96,6 +111,24 @@ const PaymentWebView = () => {
     }
   };
 
+  const handleLoadStart = () => {
+    setIsLoading(true);
+    // Set a timeout to force hide the loader after 10 seconds
+    if (loadingTimeout.current) {
+      clearTimeout(loadingTimeout.current);
+    }
+    loadingTimeout.current = setTimeout(() => {
+      setIsLoading(false);
+    }, 10000);
+  };
+
+  const handleLoadEnd = () => {
+    setIsLoading(false);
+    if (loadingTimeout.current) {
+      clearTimeout(loadingTimeout.current);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {isLoading && (
@@ -107,13 +140,15 @@ const PaymentWebView = () => {
       <WebView
         source={{ uri: Array.isArray(paymentUrl) ? paymentUrl[0] : paymentUrl }}
         style={styles.webview}
-        // onLoadStart={() => setIsLoading(true)}
-        // onLoad={() => setIsLoading(false)}
-        // onLoadEnd={() => setIsLoading(false)}
+        onLoadStart={handleLoadStart}
+        onLoadEnd={handleLoadEnd}
         onNavigationStateChange={handleNavigationStateChange}
         onError={(syntheticEvent) => {
           const { nativeEvent } = syntheticEvent;
           setIsLoading(false);
+          if (loadingTimeout.current) {
+            clearTimeout(loadingTimeout.current);
+          }
           if (socket) {
             socket.emit("payment_error", {
               error: nativeEvent.description,
@@ -129,6 +164,9 @@ const PaymentWebView = () => {
         }}
         onHttpError={() => {
           setIsLoading(false);
+          if (loadingTimeout.current) {
+            clearTimeout(loadingTimeout.current);
+          }
           // Navigate to failure screen on HTTP error
           router.replace({
             pathname: "/(tabs)/home/PaymentFailure",

@@ -8,6 +8,7 @@ import {
   Image,
   Text,
   Animated,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/constants/theme';
@@ -20,6 +21,7 @@ interface StatusViewProps {
 }
 
 const { width, height } = Dimensions.get('window');
+const STATUS_DURATION = 10000; // 10 seconds per status
 
 const StatusView: React.FC<StatusViewProps> = ({
   collections,
@@ -33,7 +35,10 @@ const StatusView: React.FC<StatusViewProps> = ({
   const [isPaused, setIsPaused] = useState(false);
   const progressAnim = useRef(new Animated.Value(0)).current;
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const touchStartX = useRef(0);
+  const touchStartTime = useRef(0);
 
+  // Reset and start animation when visibility changes
   useEffect(() => {
     if (isVisible) {
       setCurrentCollection(collections[initialCollectionIndex]);
@@ -47,35 +52,51 @@ const StatusView: React.FC<StatusViewProps> = ({
         clearTimeout(timerRef.current);
       }
     };
-  }, [isVisible, initialCollectionIndex]);
+  }, [isVisible]);
+
+  // Handle image progression
+  useEffect(() => {
+    if (isVisible && !isPaused) {
+      startProgressAnimation();
+    }
+  }, [currentImageIndex, currentCollectionIndex, isPaused]);
 
   const startProgressAnimation = () => {
+    // Clear any existing timer
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+
+    // Reset progress animation
     progressAnim.setValue(0);
+
     if (!isPaused) {
+      // Start progress animation
       Animated.timing(progressAnim, {
         toValue: 1,
-        duration: 15000, // 15 seconds
+        duration: STATUS_DURATION,
         useNativeDriver: false,
-      }).start(({ finished }) => {
-        if (finished) {
-          handleNext();
-        }
-      });
+      }).start();
+
+      // Set timer to move to next image/collection
+      timerRef.current = setTimeout(() => {
+        handleNext();
+      }, STATUS_DURATION);
     }
   };
 
   const handleNext = () => {
-    if (currentImageIndex < (currentCollection?.status_images?.length || 0) - 1) {
+    const currentImages = currentCollection?.status_images || [];
+    
+    if (currentImageIndex < currentImages.length - 1) {
       // Move to next image in current collection
       setCurrentImageIndex(prev => prev + 1);
-      startProgressAnimation();
     } else if (currentCollectionIndex < collections.length - 1) {
       // Move to next collection
       const nextCollectionIndex = currentCollectionIndex + 1;
       setCurrentCollectionIndex(nextCollectionIndex);
       setCurrentCollection(collections[nextCollectionIndex]);
       setCurrentImageIndex(0);
-      startProgressAnimation();
     } else {
       // If we're at the last image of the last collection, close the view
       onClose();
@@ -83,29 +104,51 @@ const StatusView: React.FC<StatusViewProps> = ({
   };
 
   const handlePrev = () => {
+    const currentImages = currentCollection?.status_images || [];
+    
     if (currentImageIndex > 0) {
       // Move to previous image in current collection
       setCurrentImageIndex(prev => prev - 1);
-      startProgressAnimation();
     } else if (currentCollectionIndex > 0) {
       // Move to previous collection
       const prevCollectionIndex = currentCollectionIndex - 1;
       setCurrentCollectionIndex(prevCollectionIndex);
       setCurrentCollection(collections[prevCollectionIndex]);
       setCurrentImageIndex(collections[prevCollectionIndex].status_images.length - 1);
-      startProgressAnimation();
     }
   };
 
-  const handlePress = () => {
-    setIsPaused(!isPaused);
-    if (!isPaused) {
-      progressAnim.stopAnimation();
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
+  const handleTouchStart = (event: any) => {
+    touchStartX.current = event.nativeEvent.locationX;
+    touchStartTime.current = Date.now();
+  };
+
+  const handleTouchEnd = (event: any) => {
+    const touchEndX = event.nativeEvent.locationX;
+    const touchEndTime = Date.now();
+    const swipeDistance = touchEndX - touchStartX.current;
+    const touchDuration = touchEndTime - touchStartTime.current;
+
+    // If touch duration is less than 200ms, it's a tap
+    if (touchDuration < 200) {
+      if (swipeDistance > 50) {
+        // Swipe right - go to previous
+        handlePrev();
+      } else if (swipeDistance < -50) {
+        // Swipe left - go to next
+        handleNext();
+      } else {
+        // Tap - toggle pause
+        setIsPaused(!isPaused);
+        if (!isPaused) {
+          progressAnim.stopAnimation();
+          if (timerRef.current) {
+            clearTimeout(timerRef.current);
+          }
+        } else {
+          startProgressAnimation();
+        }
       }
-    } else {
-      startProgressAnimation();
     }
   };
 
@@ -159,22 +202,23 @@ const StatusView: React.FC<StatusViewProps> = ({
           </View>
         </View>
 
-        <TouchableOpacity
-          style={styles.imageContainer}
-          onPress={handlePress}
-          activeOpacity={1}
+        <TouchableWithoutFeedback
+          onPressIn={handleTouchStart}
+          onPressOut={handleTouchEnd}
         >
-          <Image
-            source={{ uri: getFullImageUrl(currentCollection?.status_images?.[currentImageIndex]) }}
-            style={styles.statusImage}
-            resizeMode="contain"
-          />
-          {isPaused && (
-            <View style={styles.pauseOverlay}>
-              <Ionicons name="pause" size={40} color="#fff" />
-            </View>
-          )}
-        </TouchableOpacity>
+          <View style={styles.imageContainer}>
+            <Image
+              source={{ uri: getFullImageUrl(currentCollection?.status_images?.[currentImageIndex]) }}
+              style={styles.statusImage}
+              resizeMode="contain"
+            />
+            {isPaused && (
+              <View style={styles.pauseOverlay}>
+                <Ionicons name="pause" size={40} color="#fff" />
+              </View>
+            )}
+          </View>
+        </TouchableWithoutFeedback>
 
         <View style={styles.navigationContainer}>
           <TouchableOpacity

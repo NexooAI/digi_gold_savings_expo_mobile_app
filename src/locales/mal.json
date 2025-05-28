@@ -109,5 +109,12 @@
   "copied": "കോപി ചെയ്തു",
   "silverRate": "വെള്ളി നിരക്ക്",
   "goldSchemes": "സ്വർണ്ണ സ്കീമുകൾ",
-  "notifications": "അറിയിപ്പ്"
+  "notifications": "അറിയിപ്പ്",
+  "noInternetTitle": "ഇന്റർനെറ്റ് ബന്ധപ്പ് ഇല്ല",
+  "noInternetMessage": "ദയവാൾ ഇന്റർനെറ്റ് ബന്ധപ്പ് നൽകുക",
+  "retry": "മറുപടി ചെയ്യുക",
+  "paymentSuccess": "പേയ്മെന്റ് വിജയകരമായി",
+  "paymentFailed": "പേയ്മെന്റ് വിജയകരമായി",
+  "paymentStatus": "പേയ്മെന്റ് സ്ഥിതി",
+  "transactions": "ഇടപാടുകൾ"
 }

@@ -172,12 +172,13 @@ export default function Home() {
   const [ratesData, setRatesData] = useState<RatesData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [showFlashBanner, setShowFlashBanner] = useState(true);
+  const [showFlashBanner, setShowFlashBanner] = useState(false);
   const [activeSchemesCount, setActiveSchemesCount] = useState(0);
   const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
   const [showStatus, setShowStatus] = useState(false);
   const [collectionsData, setCollectionsData] = useState<Collection[]>([]);
   const [totalGoldSavings, setTotalGoldSavings] = useState(0);
+  const [flashNews, setFlashNews] = useState<any[]>([]);
 
   // Refs
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -250,6 +251,12 @@ export default function Home() {
     }
   }, []);
 
+  const FetchFlashNews = useCallback(async () => {
+    const response = await api.get("flash-news/active");
+    setFlashNews(response.data.data);
+    console.log(response.data.data);
+  }, []);
+
   const fetchActiveSchemesCount = useCallback(async () => {
     try {
       if (!user?.id) {
@@ -282,8 +289,9 @@ export default function Home() {
   useEffect(() => {
     if (user) {
       fetchActiveSchemesCount();
+      FetchFlashNews();
     }
-  }, [user, fetchActiveSchemesCount]);
+  }, [user, fetchActiveSchemesCount ,FetchFlashNews]);
 
   useEffect(() => {
     if (user) {
