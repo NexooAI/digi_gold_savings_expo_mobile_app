@@ -124,6 +124,22 @@ Please try again or contact support.
     router.replace('/(tabs)/profile');
   };
 
+  const handleRetryPayment = () => {
+    // Navigate back to payment page with the same parameters
+    router.replace({
+      pathname: '/(tabs)/home/payment',
+      params: {
+        amount: params.amount,
+        schemeId: params.schemeId,
+        chitId: params.chitId,
+        schemeName: params.schemeName,
+        installmentNumber: params.installmentNumber,
+        totalInstallments: params.totalInstallments,
+        goldWeight: params.goldWeight
+      }
+    });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor={theme.colors.primary} barStyle="light-content" />
@@ -220,6 +236,21 @@ Please try again or contact support.
                 <Text style={styles.transactionId}>{currentDate}</Text>
               </View>
             </View>
+
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={handleRetryPayment}
+            >
+              <LinearGradient
+                colors={['#ef4444', '#dc2626']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.retryButtonGradient}
+              >
+                <Ionicons name="refresh" size={20} color="#fff" />
+                <Text style={styles.retryButtonText}>Retry Payment</Text>
+              </LinearGradient>
+            </TouchableOpacity>
 
             <View style={styles.buttonContainer}>
               <TouchableOpacity
@@ -459,6 +490,37 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+    marginLeft: 8,
+  },
+  retryButton: {
+    width: '100%',
+    height: 50,
+    borderRadius: 25,
+    overflow: 'hidden',
+    marginBottom: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#ef4444',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  retryButtonGradient: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  retryButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
