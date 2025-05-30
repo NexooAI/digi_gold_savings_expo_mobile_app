@@ -13,7 +13,7 @@ import {
   useWindowDimensions,
   Animated,
   StyleSheet,
-  Easing,
+  Share,
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -28,239 +28,41 @@ import { theme } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 
-const ProfileCard = ({ children, style, onPress }) => {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const glowAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, {
-          toValue: 1,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(glowAnim, {
-          toValue: 0,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-  }, []);
-
-  const glowOpacity = glowAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.1, 0.3],
-  });
-
-  const handlePressIn = () => {
-    Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: 0.98,
-        useNativeDriver: true,
-      }),
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: 200,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-      }),
-      Animated.timing(rotateAnim, {
-        toValue: 0,
-        duration: 200,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const rotate = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '2deg'],
-  });
-
-  return (
-    <Animated.View
-      style={[
-        {
-          transform: [{ scale: scaleAnim }, { rotate }],
-        },
-        style,
-      ]}
-    >
-      <TouchableOpacity
-        activeOpacity={0.9}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        onPress={onPress}
-      >
-        <View style={styles.cardContainer}>
-          <Animated.View
-            style={[
-              styles.cardGlow,
-              {
-                opacity: glowOpacity,
-              },
-            ]}
-          />
-          <LinearGradient
-            colors={['#ffffff', '#f8f9fa']}
-            style={styles.cardGradient}
-          >
-            {children}
-          </LinearGradient>
-        </View>
-      </TouchableOpacity>
-    </Animated.View>
-  );
-};
-
-const AnimatedIcon = ({ name, color, size, style, onPress }) => {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-
-  const handlePress = () => {
-    Animated.sequence([
-      Animated.parallel([
-        Animated.spring(scaleAnim, {
-          toValue: 1.2,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rotateAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.parallel([
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rotateAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]),
-    ]).start();
-    onPress?.();
-  };
-
-  const rotate = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
-
-  return (
-    <TouchableOpacity onPress={handlePress}>
-      <Animated.View
-        style={{
-          transform: [{ scale: scaleAnim }, { rotate }],
-        }}
-      >
-        <Icon name={name} size={size} color={color} style={style} />
-      </Animated.View>
-    </TouchableOpacity>
-  );
-};
-
-const RewardBadge = ({ value }) => {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const glowAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, {
-          toValue: 1,
-          duration: 1500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(glowAnim, {
-          toValue: 0,
-          duration: 1500,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-  }, []);
-
-  const glowOpacity = glowAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.3, 0.7],
-  });
-
-  return (
-    <View style={styles.rewardBadgeContainer}>
-      <Animated.View
-        style={[
-          styles.rewardBadgeGlow,
-          {
-            opacity: glowOpacity,
-          },
-        ]}
-      />
-      <View style={styles.rewardBadge}>
-        <AnimatedIcon name="stars" size={24} color="#f59e0b" />
-        <Text style={styles.rewardText}>{value}</Text>
-      </View>
-    </View>
-  );
-};
-
-export default function ProfileScreen() {
+const ProfileScreen = () => {
   const { isLoggedIn, user, language, logout, setLanguage, updateUser } =
     useGlobalStore();
-  const [editingMobile, setEditingMobile] = useState(false);
-  const [newMobile, setNewMobile] = useState(user?.mobile?.toString() || "");
-  const [verificationCode, setVerificationCode] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [editData, setEditData] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+    mobile: user?.mobile?.toString() || "",
+    firstName: user?.firstName || "",
+    lastName: user?.lastName || "",
+    username: user?.username || "",
+  });
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const bottomPadding = height * 0.1;
   const profileImageScale = useRef(new Animated.Value(1)).current;
-  const floatAnim = useRef(new Animated.Value(0)).current;
+  const waveAnim = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    if (!user) {
-      router.replace("/(auth)/login");
-    }
-  }, [user, router]);
-
+  // Wave animation effect
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
-        Animated.timing(floatAnim, {
+        Animated.timing(waveAnim, {
           toValue: 1,
           duration: 2000,
-          easing: Easing.inOut(Easing.sine),
           useNativeDriver: true,
         }),
-        Animated.timing(floatAnim, {
+        Animated.timing(waveAnim, {
           toValue: 0,
           duration: 2000,
-          easing: Easing.inOut(Easing.sine),
           useNativeDriver: true,
         }),
       ])
     ).start();
   }, []);
-
-  const translateY = floatAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, -10],
-  });
 
   if (!user) {
     return (
@@ -272,12 +74,12 @@ export default function ProfileScreen() {
 
   const handleLogout = () => {
     Alert.alert(
-      "Confirm Logout",
-      "Are you sure you want to logout?",
+      t("logout_confirmation_title") || "Confirm Logout",
+      t("logout_confirmation_message") || "Are you sure you want to logout?",
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("cancel"), style: "cancel" },
         {
-          text: "Logout",
+          text: t("logout"),
           style: "destructive",
           onPress: async () => {
             try {
@@ -297,24 +99,48 @@ export default function ProfileScreen() {
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
-      Alert.alert(t("permission_required"), t("gallery_permission"));
+      Alert.alert("Permission Required", "Please allow access to photo library");
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false,
+      allowsEditing: true,
       aspect: [1, 1],
-      quality: 1,
+      quality: 0.8,
     });
     if (!result.canceled) {
       updateUser({ ...user, profileImage: result.assets[0].uri });
     }
   };
 
-  const handleMobileUpdate = async () => {
-    updateUser({ ...user, mobile: newMobile });
-    setEditingMobile(false);
-    Alert.alert(t("success"), t("mobile_updated"));
+  const handleSave = () => {
+    updateUser({
+      ...user,
+      name: editData.name,
+      email: editData.email,
+      mobile: editData.mobile,
+    });
+    setEditing(false);
+    Alert.alert(t("successTitle") || "Success", "Profile updated successfully");
+  };
+
+  const handleEditToggle = () => {
+    if (editing) {
+      // Cancel editing - reset to original values
+      setEditData({
+        name: user?.name || "",
+        email: user?.email || "",
+        mobile: user?.mobile?.toString() || "",
+        firstName: user?.firstName || "",
+        lastName: user?.lastName || "",
+        username: user?.username || "",
+      });
+    }
+    setEditing(!editing);
+  };
+
+  const updateEditField = (field: string, value: string) => {
+    setEditData({ ...editData, [field]: value });
   };
 
   const toggleLanguage = async () => {
@@ -327,458 +153,848 @@ export default function ProfileScreen() {
     Alert.alert(t("copied"), t("referral_code_copied"));
   };
 
+  const handleShareApp = async () => {
+    try {
+      const playStoreLink = "https://play.google.com/store/apps/details?id=com.nexooai.dcjewellery&hl=en-US";
+      const message = `Join me on DC Jewellers Gold and Diamonds! Download the app from: ${playStoreLink}`;
+      
+      const result = await Share.share({
+        message: message,
+        url: playStoreLink, // iOS
+        title: 'DC Jewellers Gold and Diamonds', // Android
+      });
+
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          // shared with activity type of result.activityType
+          console.log('Shared with activity type:', result.activityType);
+        } else {
+          // shared
+          console.log('Shared successfully');
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // dismissed
+        console.log('Share dismissed');
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+      Alert.alert('Error', 'Failed to share the app link');
+    }
+  };
+
+  const handleChangeKYC = () => {
+    router.push("/home/kyc");
+  };
+
+  const handleChangeMPIN = () => {
+    router.push("/reset_mpin");
+  };
+
+  // Interpolated wave animation
+  const waveInterpolation = waveAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "5deg"],
+  });
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <ImageBackground
-          source={theme.image.menu_bg}
-          resizeMode="stretch"
-          style={styles.backgroundImage}
+    <SafeAreaView style={{ flex: 1, paddingTop: 0 }}>
+      <View style={styles.backgroundImage}>
+        <LinearGradient
+          colors={[theme.colors.primary + 'E6', theme.colors.support_container[1] + 'E6', theme.colors.support_container[2] + 'E6']}
+          style={StyleSheet.absoluteFill}
+        />
+        
+        <View className="absolute top-0 left-0 right-0 z-10 px-4">
+          <AppHeader showBackButton={false} backRoute="index" />
+        </View>
+        
+        <Animated.View style={[styles.waveEffect, { transform: [{ rotate: waveInterpolation }] }]} />
+        
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingTop: 80,
+            paddingBottom: bottomPadding,
+            paddingHorizontal: 16,
+          }}
+          showsVerticalScrollIndicator={false}
         >
-          <LinearGradient
-            colors={['rgba(0,0,0,0.85)', 'rgba(0,0,0,0.75)']}
-            style={styles.backgroundGradient}
-          >
-            <View style={styles.headerContainer}>
-              <AppHeader showBackButton={false} backRoute="index" />
-            </View>
-            <ScrollView
-              contentContainerStyle={styles.scrollContent}
-              showsVerticalScrollIndicator={false}
-              bounces={false}
-            >
-              <View style={styles.contentContainer}>
-                {/* Profile Header */}
-                <View style={styles.profileHeader}>
-                  <TouchableOpacity onPress={handleImageUpload}>
-                    <Animated.View
-                      style={[
-                        styles.profileImageContainer,
-                        {
-                          transform: [
-                            { scale: profileImageScale },
-                            { translateY },
-                          ],
-                        },
-                      ]}
-                    >
-                      <LinearGradient
-                        colors={['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.2)']}
-                        style={styles.profileImageGradient}
-                      >
-                        {user?.profileImage ? (
-                          <Image
-                            source={{ uri: user.profileImage }}
-                            style={styles.profileImage}
-                          />
-                        ) : (
-                          <Icon name="person" size={60} color="#ffffff" />
-                        )}
-                        <View style={styles.editIconContainer}>
-                          <AnimatedIcon name="edit" size={20} color="white" />
-                        </View>
-                      </LinearGradient>
-                    </Animated.View>
+          {/* Floating Profile Section */}
+          {editing ? (
+            // Edit Profile Form
+            <View style={styles.editFormContainer}>
+              <View style={styles.editFormHeader}>
+                <Text style={styles.editFormTitle}>Edit Profile</Text>
+                <View style={styles.editFormActions}>
+                  <TouchableOpacity 
+                    style={styles.cancelButton} 
+                    onPress={handleEditToggle}
+                  >
+                    <Icon name="close" size={20} color="#666" />
                   </TouchableOpacity>
-                  <Text style={styles.profileName}>{user?.name}</Text>
-                  <Text style={styles.profileEmail}>{user?.email}</Text>
+                  <TouchableOpacity 
+                    style={styles.saveFormButton} 
+                    onPress={handleSave}
+                  >
+                    <Icon name="check" size={20} color="white" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Profile Image Edit */}
+              <View style={styles.editImageSection}>
+                <TouchableOpacity onPress={handleImageUpload} style={styles.editImageContainer}>
+                  {user?.profileImage ? (
+                    <Image
+                      source={{ uri: user.profileImage }}
+                      style={styles.editProfileImage}
+                    />
+                  ) : (
+                    <View style={styles.editImagePlaceholder}>
+                      <Icon name="person" size={40} color="#666" />
+                    </View>
+                  )}
+                  <View style={styles.editImageOverlay}>
+                    <Icon name="camera-alt" size={20} color="white" />
+                  </View>
+                </TouchableOpacity>
+                <Text style={styles.editImageText}>Tap to change photo</Text>
+              </View>
+
+              {/* Edit Form Fields */}
+              <View style={styles.editFormFields}>
+                {/* <View style={styles.formRow}>
+                  <View style={[styles.formFieldHalf, { marginRight: 10 }]}>
+                    <Text style={styles.formLabel}>First Name</Text>
+                    <TextInput
+                      style={styles.formInput}
+                      value={editData.firstName}
+                      onChangeText={(value) => updateEditField('firstName', value)}
+                      placeholder="Enter first name"
+                      placeholderTextColor="#999"
+                    />
+                  </View>
+                  <View style={styles.formFieldHalf}>
+                    <Text style={styles.formLabel}>Last Name</Text>
+                    <TextInput
+                      style={styles.formInput}
+                      value={editData.lastName}
+                      onChangeText={(value) => updateEditField('lastName', value)}
+                      placeholder="Enter last name"
+                      placeholderTextColor="#999"
+                    />
+                  </View>
+                </View> */}
+
+                <View style={styles.formField}>
+                  <Text style={styles.formLabel}>Full Name</Text>
+                  <TextInput
+                    style={styles.formInput}
+                    value={editData.name}
+                    onChangeText={(value) => updateEditField('name', value)}
+                    placeholder="Enter full name"
+                    placeholderTextColor="#999"
+                  />
                 </View>
 
-                {/* User Information Section */}
-                <ProfileCard style={styles.cardContainer}>
-                  <View style={styles.cardContent}>
-                    <View style={styles.sectionHeader}>
-                      <Text style={styles.sectionTitle}>{t("personal_info")}</Text>
-                      <AnimatedIcon name="person" size={24} color={theme.colors.primary} />
-                    </View>
-                    <InfoRow label={t("user_id")} value={user?.id || "N/A"} />
-                    <View style={styles.divider} />
-                    <View style={styles.mobileContainer}>
-                      <Text style={styles.labelText}>
-                        {t("mobile_number")}
-                      </Text>
-                      {editingMobile ? (
-                        <View style={styles.mobileInputContainer}>
-                          <TextInput
-                            value={newMobile}
-                            onChangeText={setNewMobile}
-                            keyboardType={
-                              Platform.OS === "ios" ? "number-pad" : "phone-pad"
-                            }
-                            style={styles.input}
-                            placeholder={t("enter_mobile")}
-                            placeholderTextColor="#666"
-                          />
-                          <TouchableOpacity
-                            style={styles.updateButton}
-                            onPress={handleMobileUpdate}
-                          >
-                            <Text style={styles.updateButtonText}>
-                              {t("verify_update")}
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
-                      ) : (
-                        <View style={styles.mobileDisplayContainer}>
-                          <Text style={styles.valueText}>{user?.mobile}</Text>
-                          <AnimatedIcon
-                            name="edit"
-                            size={20}
-                            color={theme.colors.primary}
-                            onPress={() => setEditingMobile(true)}
-                          />
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                </ProfileCard>
+                {/* <View style={styles.formField}>
+                  <Text style={styles.formLabel}>Username</Text>
+                  <TextInput
+                    style={styles.formInput}
+                    value={editData.username}
+                    onChangeText={(value) => updateEditField('username', value)}
+                    placeholder="Enter username"
+                    placeholderTextColor="#999"
+                  />
+                </View> */}
 
-                {/* Referral & Rewards Section */}
-                <ProfileCard style={styles.cardContainer}>
-                  <View style={styles.cardContent}>
-                    <View style={styles.sectionHeader}>
-                      <Text style={styles.sectionTitle}>
-                        {t("referral_rewards")}
-                      </Text>
-                      <AnimatedIcon name="card-giftcard" size={24} color={theme.colors.primary} />
-                    </View>
-                    <View style={styles.referralContainer}>
-                      <Text style={styles.labelText}>{t("your_referral_code")}</Text>
-                      <TouchableOpacity
-                        onPress={handleCopyReferralCode}
-                        style={styles.referralCodeContainer}
-                      >
-                        <Text style={styles.referralCode}>
-                          {user?.referralCode}
-                        </Text>
-                        <AnimatedIcon name="content-copy" size={20} color={theme.colors.primary} />
-                      </TouchableOpacity>
-                    </View>
-                    <View style={styles.rewardsContainer}>
-                      <Text style={styles.labelText}>{t("total_rewards")}</Text>
-                      <RewardBadge value={user?.rewards || 0} />
-                    </View>
-                  </View>
-                </ProfileCard>
+                <View style={styles.formField}>
+                  <Text style={styles.formLabel}>Email Address</Text>
+                  <TextInput
+                    style={styles.formInput}
+                    value={editData.email}
+                    onChangeText={(value) => updateEditField('email', value)}
+                    placeholder="Enter email address"
+                    placeholderTextColor="#999"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
 
-                {/* Language & Logout Section */}
-                <ProfileCard style={styles.cardContainer}>
-                  <View style={styles.cardContent}>
-                    <TouchableOpacity
-                      style={styles.languageContainer}
-                      onPress={toggleLanguage}
-                    >
-                      <View style={styles.languageContent}>
-                        <AnimatedIcon name="language" size={24} color={theme.colors.primary} />
-                        <Text style={styles.labelText}>{t("language")}</Text>
-                      </View>
-                      <Text style={styles.valueText}>
-                        {language === "en" ? "English" : "മലയാളം"}
-                      </Text>
-                    </TouchableOpacity>
-                    <View style={styles.divider} />
-                    <TouchableOpacity
-                      style={styles.logoutContainer}
-                      onPress={handleLogout}
-                    >
-                      <View style={styles.logoutContent}>
-                        <AnimatedIcon name="logout" size={24} color="#ef4444" />
-                        <Text style={styles.logoutText}>{t("logout")}</Text>
-                      </View>
-                      <Icon name="chevron-right" size={20} color="#ef4444" />
-                    </TouchableOpacity>
-                  </View>
-                </ProfileCard>
+                <View style={styles.formField}>
+                  <Text style={styles.formLabel}>Mobile Number</Text>
+                  <TextInput
+                    style={styles.formInput}
+                    value={editData.mobile}
+                    onChangeText={(value) => updateEditField('mobile', value)}
+                    placeholder="Enter mobile number"
+                    placeholderTextColor="#999"
+                    keyboardType="phone-pad"
+                  />
+                </View>
+
+                <View style={styles.formActions}>
+                  <TouchableOpacity 
+                    style={styles.cancelFormButton} 
+                    onPress={handleEditToggle}
+                  >
+                    <Text style={styles.cancelFormButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.saveMainButton} 
+                    onPress={handleSave}
+                  >
+                    <Text style={styles.saveMainButtonText}>Save</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </ScrollView>
-          </LinearGradient>
-        </ImageBackground>
+            </View>
+          ) : (
+            // Normal Profile View
+            <Animated.View 
+              style={[styles.profileHeader, { transform: [{ scale: profileImageScale }] }]}
+            >
+              <TouchableOpacity onPress={handleImageUpload} activeOpacity={0.8}>
+                <View style={styles.profileImageContainer}>
+                  {user?.profileImage ? (
+                    <Image
+                      source={{ uri: user.profileImage }}
+                      style={styles.profileImage}
+                    />
+                  ) : (
+                    <View style={styles.profileImagePlaceholder}>
+                      <Icon name="person" size={60} color="#ffffff" />
+                    </View>
+                  )}
+                  <View style={styles.editBadge}>
+                    <Icon name="edit" size={18} color={theme.colors.primary} />
+                  </View>
+                </View>
+              </TouchableOpacity>
+              
+              <Text style={styles.userName}>{user?.name}</Text>
+              <Text style={styles.userEmail}>{user?.email}</Text>
+              
+              {/* Edit Button */}
+              <TouchableOpacity 
+                style={styles.editProfileButton} 
+                onPress={handleEditToggle}
+              >
+                <Icon name="edit" size={18} color="white" style={{ marginRight: 8 }} />
+                <Text style={styles.editProfileButtonText}>Edit Profile</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          )}
+
+          {/* Main Content */}
+          <View style={styles.contentContainer}>
+            {/* Personal Info Card */}
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <Icon name="person-outline" size={24} color={theme.colors.primary} />
+                <Text style={styles.cardTitle}>{t("personal_info")}</Text>
+                <View style={styles.userIdBadge}>
+                  <Text style={styles.userIdText}>ID: {user?.id}</Text>
+                </View>
+              </View>
+              
+              <View style={styles.infoRow}>
+                <View style={styles.infoIcon}>
+                  <Icon name="phone" size={20} color={theme.colors.primary} />
+                </View>
+                <Text style={styles.infoLabel}>{t("mobile_number")}</Text>
+                <Text style={styles.infoValue}>{user?.mobile || "Not provided"}</Text>
+              </View>
+              
+              <View style={styles.divider} />
+              
+              <View style={styles.infoRow}>
+                <View style={styles.infoIcon}>
+                  <Icon name="star" size={20} color="#FFD700" />
+                </View>
+                <Text style={styles.infoLabel}>{"Member Since"}</Text>
+                <Text style={styles.infoValue}>Jan 2023</Text>
+              </View>
+            </View>
+            
+            {/* Referral Card */}
+            <View style={[styles.card, styles.referralCard]}>
+              <LinearGradient
+                colors={['rgba(255, 201, 12, 0.1)', 'rgba(255, 201, 12, 0.05)', 'rgba(255, 255, 255, 0.9)']}
+                style={styles.referralCardGradient}
+              >
+                <View style={styles.cardHeader}>
+                  <Icon name="card-giftcard" size={24} color={theme.colors.primary} />
+                  <Text style={styles.cardTitle}>{t("referral_rewards")}</Text>
+                </View>
+                
+                <View style={styles.referralContent}>
+                  <Text style={styles.referralText}>{t("your_referral_code")}</Text>
+                  <TouchableOpacity 
+                    style={styles.referralCodeContainer}
+                    onPress={handleCopyReferralCode}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.referralCodeLeft}>
+                      <Text style={styles.referralCodeLabel}>Your Code</Text>
+                      <Text style={styles.referralCode}>{user?.referralCode || "GOLD123"}</Text>
+                    </View>
+                    <View style={styles.copyIconContainer}>
+                      <Icon name="content-copy" size={20} color={theme.colors.primary} />
+                    </View>
+                  </TouchableOpacity>
+                  
+                  <View style={styles.rewardsContainer}>
+                    <View style={styles.rewardsLeft}>
+                      <Icon name="stars" size={28} color={theme.colors.secondary} />
+                      <View style={styles.rewardsTextContainer}>
+                        <Text style={styles.rewardsLabel}>{t("total_rewards")}</Text>
+                        <Text style={styles.rewardsValue}>{user?.rewards || 0} Points</Text>
+                      </View>
+                    </View>
+                    {/* <TouchableOpacity style={styles.rewardsButton}>
+                      <Text style={styles.rewardsButtonText}>View</Text>
+                    </TouchableOpacity> */}
+                  </View>
+                </View>
+                
+                <TouchableOpacity 
+                  style={styles.inviteButton} 
+                  activeOpacity={0.8}
+                  onPress={handleShareApp}
+                >
+                  <Icon name="person-add" size={20} color="white" style={{ marginRight: 8 }} />
+                  <Text style={styles.inviteButtonText}>{"Invite Friends & Earn"}</Text>
+                </TouchableOpacity>
+              </LinearGradient>
+            </View>
+            
+            {/* Settings Card */}
+            <View style={styles.card}>
+              <TouchableOpacity 
+                style={styles.settingItem}
+                onPress={handleChangeKYC}
+              >
+                <View style={[styles.settingIcon, { backgroundColor: '#E3F2FD' }]}>
+                  <Icon name="verified-user" size={24} color={theme.colors.primary} />
+                </View>
+                <Text style={styles.settingText}>Change KYC</Text>
+                <Icon name="chevron-right" size={24} color="#9E9E9E" />
+              </TouchableOpacity>
+              
+              <View style={styles.divider} />
+              
+              <TouchableOpacity 
+                style={styles.settingItem}
+                onPress={handleChangeMPIN}
+              >
+                <View style={[styles.settingIcon, { backgroundColor: '#E8F5E9' }]}>
+                  <Icon name="lock" size={24} color="#4CAF50" />
+                </View>
+                <Text style={styles.settingText}>Change MPIN</Text>
+                <Icon name="chevron-right" size={24} color="#9E9E9E" />
+              </TouchableOpacity>
+              
+              <View style={styles.divider} />
+              
+              <TouchableOpacity 
+                style={styles.settingItem}
+                onPress={toggleLanguage}
+              >
+                <View style={[styles.settingIcon, { backgroundColor: '#FFF3E0' }]}>
+                  <Icon name="language" size={24} color={theme.colors.primary} />
+                </View>
+                <Text style={styles.settingText}>{t("language")}</Text>
+                <Text style={styles.settingValue}>
+                  {language === "en" ? "English" : "മലയാളം"}
+                </Text>
+                <Icon name="chevron-right" size={24} color="#9E9E9E" />
+              </TouchableOpacity>
+              
+              <View style={styles.divider} />
+              
+              <TouchableOpacity 
+                style={styles.settingItem}
+                onPress={handleLogout}
+              >
+                <View style={[styles.settingIcon, { backgroundColor: '#FFEBEE' }]}>
+                  <Icon name="logout" size={24} color="#F44336" />
+                </View>
+                <Text style={[styles.settingText, { color: '#F44336' }]}>{t("logout")}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
-}
-
-const InfoRow = ({ label, value }: { label: string; value: string }) => (
-  <View className="flex-row items-center justify-between my-2">
-    <Text style={styles.labelText}>{label}</Text>
-    <Text style={styles.valueText}>{value}</Text>
-  </View>
-);
+};
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
   backgroundImage: {
     flex: 1,
-    width: '100%',
-    height: '100%',
+    resizeMode: 'cover',
   },
-  backgroundGradient: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-  },
-  headerContainer: {
+  waveEffect: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 0 : 20,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingTop: Platform.OS === 'ios' ? 60 : 80,
-    paddingBottom: 100,
-  },
-  contentContainer: {
-    paddingHorizontal: 16,
+    top: -100,
+    left: -50,
+    right: -50,
+    height: 200,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 100,
   },
   profileHeader: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 30,
+    paddingTop: 20,
   },
   profileImageContainer: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    overflow: 'hidden',
-    borderWidth: 4,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: 'rgba(255,255,255,0.3)',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    shadowRadius: 20,
+    elevation: 10,
+    marginBottom: 15,
   },
   profileImage: {
     width: '100%',
     height: '100%',
     borderRadius: 60,
   },
-  profileImageGradient: {
+  profileImagePlaceholder: {
     width: '100%',
     height: '100%',
+    borderRadius: 60,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
   },
-  editIconContainer: {
+  editBadge: {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: theme.colors.primary,
-    borderRadius: 20,
-    padding: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  profileName: {
-    color: '#ffffff',
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginTop: 16,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
-  profileEmail: {
-    color: '#ffffff',
-    fontSize: 16,
-    opacity: 0.9,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  cardContainer: {
-    borderRadius: 20,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 8,
-    backgroundColor: '#ffffff',
-    marginBottom: 16,
-    position: 'relative',
-  },
-  cardGlow: {
-    position: 'absolute',
-    top: -20,
-    left: -20,
-    right: -20,
-    bottom: -20,
-    backgroundColor: theme.colors.primary,
-    borderRadius: 40,
-    zIndex: -1,
-  },
-  cardGradient: {
-    padding: 16,
-    borderRadius: 20,
-  },
-  cardContent: {
-    padding: 16,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    backgroundColor: 'white',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  sectionTitle: {
+  userName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 4,
+  },
+  userEmail: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
+    marginBottom: 20,
+  },
+  userStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '80%',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statValue: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1a1a1a',
+    color: 'white',
   },
-  labelText: {
-    fontSize: 16,
-    color: '#4a4a4a',
+  statLabel: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 4,
+  },
+  contentContainer: {
+    paddingBottom: 30,
+  },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  referralCard: {
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.88)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 10,
+    color: '#333',
+  },
+  userIdBadge: {
+    marginLeft: 'auto',
+    backgroundColor: 'rgba(133, 1, 17, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  userIdText: {
+    fontSize: 12,
+    color: theme.colors.primary,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  infoIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(133, 1, 17, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  infoLabel: {
+    flex: 1,
+    fontSize: 14,
+    color: '#666',
+  },
+  infoValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  infoValue: {
+    fontSize: 14,
     fontWeight: '500',
+    color: '#333',
+    marginRight: 8,
   },
-  valueText: {
-    fontSize: 16,
-    color: '#1a1a1a',
-    fontWeight: '600',
+  editContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  editInput: {
+    flex: 1,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.primary,
+    paddingVertical: 4,
+    marginRight: 10,
+    color: '#333',
+  },
+  saveButton: {
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+  },
+  saveButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   divider: {
     height: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
-    marginVertical: 12,
+    backgroundColor: '#EEE',
+    marginVertical: 5,
   },
-  mobileContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  referralContent: {
+    marginVertical: 10,
   },
-  mobileInputContainer: {
-    flex: 2,
-  },
-  mobileDisplayContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 2,
-  },
-  input: {
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.primary,
-    paddingVertical: 8,
-    color: '#1a1a1a',
-    fontSize: 16,
-  },
-  updateButton: {
-    backgroundColor: theme.colors.primary,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    marginTop: 8,
-  },
-  updateButtonText: {
-    color: '#ffffff',
+  referralText: {
     fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  referralContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
+    color: '#666',
+    marginBottom: 8,
   },
   referralCodeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
+    justifyContent: 'space-between',
+    backgroundColor: 'white',
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 15,
     borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.2)',
+    borderColor: 'rgba(255, 201, 12, 0.4)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  referralCodeLeft: {
+    flex: 1,
+  },
+  referralCodeLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
   },
   referralCode: {
-    color: theme.colors.primary,
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginRight: 8,
+    color: theme.colors.primary,
+    letterSpacing: 2,
+  },
+  copyIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(133, 1, 17, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   rewardsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: 'white',
+    padding: 15,
+    borderRadius: 12,
   },
-  languageContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-  },
-  languageContent: {
+  rewardsLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  logoutContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
+  rewardsTextContainer: {
+    marginLeft: 10,
   },
-  logoutContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  logoutText: {
-    color: '#ef4444',
+  rewardsLabel: {
     fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 12,
+    color: '#666',
   },
-  rewardBadgeContainer: {
+  rewardsValue: {
+    fontWeight: 'bold',
+    color: theme.colors.secondary,
+  },
+  rewardsButton: {
+    backgroundColor: theme.colors.primary,
+    padding: 12,
+    borderRadius: 12,
+    marginLeft: 10,
+  },
+  rewardsButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  inviteButton: {
+    backgroundColor: theme.colors.primary,
+    padding: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 15,
+  },
+  inviteButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  settingIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(133, 1, 17, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  settingText: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+  },
+  settingValue: {
+    fontSize: 14,
+    color: '#9E9E9E',
+    marginRight: 8,
+  },
+  referralCardGradient: {
+    borderRadius: 20,
+    padding: 1,
+  },
+  editFormContainer: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 20,
+    margin: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  editFormHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  editFormTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  editFormActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cancelButton: {
+    padding: 10,
+  },
+  saveFormButton: {
+    padding: 10,
+    backgroundColor: theme.colors.primary,
+    borderRadius: 15,
+  },
+  editImageSection: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  editImageContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     position: 'relative',
-    padding: 8,
   },
-  rewardBadgeGlow: {
+  editImagePlaceholder: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  editImageOverlay: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: '#f59e0b',
-    borderRadius: 20,
-    transform: [{ scale: 1.2 }],
+    borderRadius: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  rewardBadge: {
+  editProfileImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 60,
+  },
+  editImageText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: '#666',
+  },
+  editFormFields: {
+    flex: 1,
+  },
+  formRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  formFieldHalf: {
+    flex: 1,
+  },
+  formField: {
+    marginBottom: 15,
+  },
+  formLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  formInput: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    backgroundColor: '#F9F9F9',
+    color: '#333',
+    fontSize: 16,
+  },
+  formActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 30,
+    paddingHorizontal: 20,
+  },
+  cancelFormButton: {
+    flex: 1,
+    marginRight: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelFormButtonText: {
+    color: '#666',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  saveMainButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: theme.colors.primary,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  saveMainButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  editProfileButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    marginTop: 15,
   },
-  rewardText: {
-    color: '#f59e0b',
-    fontSize: 18,
+  editProfileButtonText: {
+    color: 'white',
+    fontSize: 14,
     fontWeight: 'bold',
-    marginLeft: 8,
   },
 });
+
+export default ProfileScreen;

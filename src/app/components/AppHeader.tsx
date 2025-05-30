@@ -42,11 +42,11 @@ const AppHeader = ({ showBackButton = false, backRoute, showLanguageSwitcher = f
     await setLanguage(newLocale);
   };
 
-  const getLanguageIcon = () => {
+  const getLanguageImage = () => {
     if (language === "en") {
-      return "🇮🇳"; // Indian flag for Malayalam
+      return require('../../../assets/images/translate/mal.png'); // Show Malayalam flag to switch to Malayalam
     } else {
-      return "🇺🇸"; // US flag for English
+      return require('../../../assets/images/translate/eng.png'); // Show English flag to switch to English
     }
   };
 
@@ -77,7 +77,11 @@ const AppHeader = ({ showBackButton = false, backRoute, showLanguageSwitcher = f
               style={styles.languageButton}
               activeOpacity={0.7}
             >
-              <Text style={styles.languageIcon}>{getLanguageIcon()}</Text>
+              <Image 
+                source={getLanguageImage()}
+                style={styles.languageImage}
+                resizeMode="contain"
+              />
             </TouchableOpacity>
           )}
           <TouchableOpacity
@@ -121,15 +125,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   languageButton: {
-    padding: 8,
+    padding: 6,
     marginRight: 10,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.3)',
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  languageImage: {
+    width: 24,
+    height: 24,
   },
   languageIcon: {
-    fontSize: 18,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    textAlign: 'center',
   },
   drawerToggle: {
     padding: 10,

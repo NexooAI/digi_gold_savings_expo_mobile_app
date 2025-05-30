@@ -10,7 +10,7 @@ export default function SavingsLayout() {
         }}
       />
       <Stack.Screen 
-        name="SavingsDetail"
+        name="savingsDetail"
         options={{
           headerShown: false
         }}

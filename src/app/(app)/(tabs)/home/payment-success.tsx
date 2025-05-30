@@ -16,7 +16,7 @@ import {
   ScrollView
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/constants/theme';
@@ -31,7 +31,8 @@ const { width } = Dimensions.get('window');
 const PaymentSuccessScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth, height } = useWindowDimensions();
+  const { bottom } = useSafeAreaInsets();
   const [goldWeight, setGoldWeight] = useState(0);
   const [currentGoldRate, setCurrentGoldRate] = useState(0);
   const [currentDate, setCurrentDate] = useState('');
@@ -40,6 +41,9 @@ const PaymentSuccessScreen = () => {
   const slideAnim = useRef(new Animated.Value(50)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const checkmarkScale = useRef(new Animated.Value(0)).current;
+
+  // Calculate safe bottom padding
+  const bottomPadding = Math.max(bottom, 20) + 80;
 
   useEffect(() => {
     // Get current gold rate and calculate weight
@@ -145,7 +149,8 @@ Thank you for your payment!
   };
 
   const handleViewTransactions = () => {
-    router.replace('/(tabs)/transactions');
+    Alert.alert('Coming Soon', 'This feature is coming soon');
+    // router.replace('/(tabs)/transactions');
   };
 
   const handleViewProfile = () => {
@@ -170,10 +175,8 @@ Thank you for your payment!
           </TouchableOpacity>
         </View>
 
-        <ScrollView 
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
+        <View 
+          style={[styles.contentContainer, { paddingBottom: bottomPadding }]}
         >
           <Animated.View
             style={[
@@ -196,7 +199,7 @@ Thank you for your payment!
                   }
                 ]}
               >
-                <Ionicons name="checkmark-circle" size={80} color="#fff" />
+                <Ionicons name="checkmark-circle" size={60} color="#fff" />
               </Animated.View>
             </View>
 
@@ -227,100 +230,112 @@ Thank you for your payment!
               </View>
 
               <View style={styles.transactionInfo}>
-                <View style={styles.transactionHeader}>
-                  <Text style={styles.transactionLabel}>Transaction ID</Text>
-                  <TouchableOpacity 
-                    onPress={() => handleCopyText(params.txnId as string, 'Transaction ID')}
-                    style={styles.copyButton}
-                  >
-                    <Ionicons name="copy-outline" size={20} color={theme.colors.primary} />
-                  </TouchableOpacity>
+                <View style={styles.transactionRow}>
+                  <View style={styles.transactionItem}>
+                    <Text style={styles.transactionLabel}>Transaction ID</Text>
+                    <View style={styles.transactionValueContainer}>
+                      <Text style={styles.transactionId}>{params.txnId}</Text>
+                      <TouchableOpacity 
+                        onPress={() => handleCopyText(params.txnId as string, 'Transaction ID')}
+                        style={styles.copyButton}
+                      >
+                        <Ionicons name="copy-outline" size={16} color={theme.colors.primary} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
                 </View>
-                <Text style={styles.transactionId}>{params.txnId}</Text>
 
-                <View style={styles.transactionHeader}>
-                  <Text style={styles.transactionLabel}>Order ID</Text>
-                  <TouchableOpacity 
-                    onPress={() => handleCopyText(params.orderId as string, 'Order ID')}
-                    style={styles.copyButton}
-                  >
-                    <Ionicons name="copy-outline" size={20} color={theme.colors.primary} />
-                  </TouchableOpacity>
+                <View style={styles.transactionRow}>
+                  <View style={styles.transactionItem}>
+                    <Text style={styles.transactionLabel}>Order ID</Text>
+                    <View style={styles.transactionValueContainer}>
+                      <Text style={styles.transactionId}>{params.orderId}</Text>
+                      <TouchableOpacity 
+                        onPress={() => handleCopyText(params.orderId as string, 'Order ID')}
+                        style={styles.copyButton}
+                      >
+                        <Ionicons name="copy-outline" size={16} color={theme.colors.primary} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
                 </View>
-                <Text style={styles.transactionId}>{params.orderId}</Text>
 
-                <View style={styles.transactionHeader}>
-                  <Text style={styles.transactionLabel}>Date & Time</Text>
+                <View style={styles.transactionRow}>
+                  <View style={styles.transactionItem}>
+                    <Text style={styles.transactionLabel}>Date & Time</Text>
+                    <Text style={styles.transactionId}>{currentDate}</Text>
+                  </View>
                 </View>
-                <Text style={styles.transactionId}>{currentDate}</Text>
               </View>
             </View>
 
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={styles.navigationButton}
-                onPress={handleGoToHome}
-              >
-                <LinearGradient
-                  colors={['#4CAF50', '#2E7D32']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.buttonGradient}
+            <View style={styles.allButtonsContainer}>
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={styles.navigationButton}
+                  onPress={handleGoToHome}
                 >
-                  <Ionicons name="home-outline" size={20} color="#fff" />
-                  <Text style={styles.buttonText}>Go to Home</Text>
-                </LinearGradient>
-              </TouchableOpacity>
+                  <LinearGradient
+                    colors={['#4CAF50', '#2E7D32']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.buttonGradient}
+                  >
+                    <Ionicons name="home-outline" size={16} color="#fff" />
+                    <Text style={styles.buttonText}>Home</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.navigationButton}
-                onPress={handleGoToSchemes}
-              >
-                <LinearGradient
-                  colors={['#4CAF50', '#2E7D32']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.buttonGradient}
+                <TouchableOpacity
+                  style={styles.navigationButton}
+                  onPress={handleGoToSchemes}
                 >
-                  <Ionicons name="list-outline" size={20} color="#fff" />
-                  <Text style={styles.buttonText}>View Schemes</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
+                  <LinearGradient
+                    colors={['#4CAF50', '#2E7D32']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.buttonGradient}
+                  >
+                    <Ionicons name="list-outline" size={16} color="#fff" />
+                    <Text style={styles.buttonText}>Schemes</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
 
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={styles.navigationButton}
-                onPress={handleViewTransactions}
-              >
-                <LinearGradient
-                  colors={['#4CAF50', '#2E7D32']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.buttonGradient}
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={styles.navigationButton}
+                  onPress={handleViewTransactions}
                 >
-                  <Ionicons name="time-outline" size={20} color="#fff" />
-                  <Text style={styles.buttonText}>Transactions</Text>
-                </LinearGradient>
-              </TouchableOpacity>
+                  <LinearGradient
+                    colors={['#4CAF50', '#2E7D32']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.buttonGradient}
+                  >
+                    <Ionicons name="time-outline" size={16} color="#fff" />
+                    <Text style={styles.buttonText}>Transactions</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.navigationButton}
-                onPress={handleViewProfile}
-              >
-                <LinearGradient
-                  colors={['#4CAF50', '#2E7D32']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.buttonGradient}
+                <TouchableOpacity
+                  style={styles.navigationButton}
+                  onPress={handleViewProfile}
                 >
-                  <Ionicons name="person-outline" size={20} color="#fff" />
-                  <Text style={styles.buttonText}>Profile</Text>
-                </LinearGradient>
-              </TouchableOpacity>
+                  <LinearGradient
+                    colors={['#4CAF50', '#2E7D32']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.buttonGradient}
+                  >
+                    <Ionicons name="person-outline" size={16} color="#fff" />
+                    <Text style={styles.buttonText}>Profile</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
             </View>
           </Animated.View>
-        </ScrollView>
+        </View>
       </LinearGradient>
     </SafeAreaView>
   );
@@ -339,69 +354,69 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   headerPlaceholder: {
-    width: 40, // Same width as the share button for balance
+    width: 40,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: '#fff',
   },
   shareButton: {
-    padding: 8,
-    borderRadius: 20,
+    padding: 6,
+    borderRadius: 16,
     backgroundColor: 'rgba(255,255,255,0.2)',
   },
-  scrollView: {
+  contentContainer: {
     flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    padding: 20,
-    justifyContent: 'center',
+    padding: 16,
+    justifyContent: 'space-between',
   },
   successContainer: {
     width: '100%',
     alignItems: 'center',
+    flex: 1,
+    justifyContent: 'space-around',
   },
   iconContainer: {
-    width: 120,
-    height: 120,
-    marginBottom: 24,
+    width: 80,
+    height: 80,
+    marginBottom: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
   checkmarkContainer: {
-    width: 80,
-    height: 80,
+    width: 60,
+    height: 60,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 40,
+    borderRadius: 30,
   },
   successTitle: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: '700',
     color: '#fff',
-    marginBottom: 8,
+    marginBottom: 4,
     textAlign: 'center',
   },
   successSubtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: 'rgba(255,255,255,0.8)',
-    marginBottom: 32,
+    marginBottom: 16,
     textAlign: 'center',
+    paddingHorizontal: 20,
   },
   detailsCard: {
     width: '100%',
     backgroundColor: 'rgba(255,255,255,0.95)',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 24,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -417,73 +432,83 @@ const styles = StyleSheet.create({
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   detailItem: {
     flex: 1,
     alignItems: 'center',
   },
   detailLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#666',
     marginBottom: 4,
   },
   detailValue: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     color: '#4CAF50',
   },
   divider: {
     height: 1,
     backgroundColor: 'rgba(0,0,0,0.1)',
-    marginVertical: 16,
+    marginVertical: 12,
   },
   schemeInfo: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   schemeName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   installmentInfo: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#666',
   },
   transactionInfo: {
-    alignItems: 'center',
-    gap: 12,
+    gap: 8,
   },
-  transactionHeader: {
+  transactionRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  transactionItem: {
+    flex: 1,
     alignItems: 'center',
-    marginBottom: 4,
   },
   transactionLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#666',
     marginRight: 8,
+  },
+  transactionValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   copyButton: {
     padding: 4,
   },
   transactionId: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#999',
+    textAlign: 'center',
   },
-  buttonContainer: {
+  allButtonsContainer: {
     width: '100%',
+    gap: 8,
+  },
+  buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 12,
-    marginTop: 16,
+    gap: 8,
   },
   navigationButton: {
     flex: 1,
-    height: 50,
-    borderRadius: 25,
+    height: 40,
+    borderRadius: 20,
     overflow: 'hidden',
     ...Platform.select({
       ios: {
@@ -502,13 +527,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
   },
   buttonText: {
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: '600',
     color: '#fff',
-    marginLeft: 8,
+    marginLeft: 6,
   },
 });
 

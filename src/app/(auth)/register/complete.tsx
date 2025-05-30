@@ -17,65 +17,33 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import api from "@/services/api";
 import * as SecureStore from "expo-secure-store";
-import * as Crypto from "expo-crypto";
 
 const { width } = Dimensions.get("window");
-const salt = "someRandomSaltValue";
 
-const hashMPIN = async (mpin: string): Promise<void> => {
-  try {
-    const hashedMPIN = await Crypto.digestStringAsync(
-      Crypto.CryptoDigestAlgorithm.SHA256,
-      salt + mpin
-    );
-    await SecureStore.setItemAsync("user_mpin", hashedMPIN);
-  } catch (error) {
-    console.error("Error hashing MPIN:", error);
-    throw error;
-  }
-};
-
-interface PinInputProps {
-  value: string;
-  isActive: boolean;
-  onPress: () => void;
-  index: number;
-  secureTextEntry: boolean;
-  onChange: (val: string, idx: number) => void;
-  inputRef: React.RefObject<TextInput | null>;
-}
-
-const PinInput: React.FC<PinInputProps> = ({ value, isActive, onPress, index, secureTextEntry, onChange, inputRef }) => {
+const PinInput = ({ value, isActive, onPress, index }) => {
   return (
     <TouchableOpacity onPress={onPress} style={styles.pinBox}>
-      <TextInput
-        ref={inputRef}
-        style={[styles.pinBoxInner, isActive && styles.pinBoxActive, { textAlign: 'center', fontSize: 24, color: theme.colors.textLight }]}
-        keyboardType="number-pad"
-        maxLength={1}
-        secureTextEntry={secureTextEntry}
-        value={value}
-        onChangeText={text => onChange(text.replace(/[^0-9]/g, '').slice(-1), index)}
-        onFocus={onPress}
-      />
+      <View style={[styles.pinBoxInner, isActive && styles.pinBoxActive]}>
+        {value ? (
+          <View style={styles.pinDot} />
+        ) : (
+          <Text style={styles.pinPlaceholder}>{index + 1}</Text>
+        )}
+      </View>
     </TouchableOpacity>
   );
 };
 
-export default function SetMpinPage() {
+export default function CompleteRegistration() {
   const { mobile, name, email, referral_code } = useLocalSearchParams();
   const router = useRouter();
   const [mpin, setMpin] = useState(["", "", "", ""]);
-  const [confirmMpin, setConfirmMpin] = useState(["", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [showError, setShowError] = useState(false);
-  const [activeInput, setActiveInput] = useState<'mpin' | 'confirm'>('mpin');
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [showPin, setShowPin] = useState(false);
+  const [activeInput, setActiveInput] = useState(0);
 
-  const mpinRefs = Array.from({ length: 4 }, () => useRef<TextInput | null>(null));
-  const confirmRefs = Array.from({ length: 4 }, () => useRef<TextInput | null>(null));
+  const mpinRefs = Array.from({ length: 4 }, () => useRef(null));
 
   const showErrorAlert = (message: string) => {
     setErrorMessage(message);
@@ -83,50 +51,59 @@ export default function SetMpinPage() {
     setTimeout(() => setShowError(false), 3000);
   };
 
-  const mpinValue = mpin.join("");
-  const confirmValue = confirmMpin.join("");
-  const mpinValid = /^[0-9]{4}$/.test(mpinValue);
-  const confirmValid = /^[0-9]{4}$/.test(confirmValue);
-  const matchError = mpinValid && confirmValid && mpinValue !== confirmValue;
+  const handlePinChange = (value: string, index: number) => {
+    const newPins = [...mpin];
+    newPins[index] = value;
+    setMpin(newPins);
 
-  const handlePinChange = (val: string, idx: number, type: 'mpin' | 'confirm') => {
-    if (type === 'mpin') {
-      const newPins = [...mpin];
-      newPins[idx] = val;
-      setMpin(newPins);
-      if (val && idx < 3) mpinRefs[idx + 1].current?.focus();
-      if (!val && idx > 0) mpinRefs[idx - 1].current?.focus();
-    } else {
-      const newPins = [...confirmMpin];
-      newPins[idx] = val;
-      setConfirmMpin(newPins);
-      if (val && idx < 3) confirmRefs[idx + 1].current?.focus();
-      if (!val && idx > 0) confirmRefs[idx - 1].current?.focus();
+    // Move to next input if value is entered
+    if (value && index < 3) {
+      mpinRefs[index + 1].current?.focus();
+      setActiveInput(index + 1);
+    }
+  };
+
+  const handleKeyPress = (e: any, index: number) => {
+    // Handle backspace
+    if (e.nativeEvent.key === 'Backspace' && !mpin[index] && index > 0) {
+      mpinRefs[index - 1].current?.focus();
+      setActiveInput(index - 1);
     }
   };
 
   const handleSubmit = async () => {
-    if (!mpinValid || !confirmValid) {
-      showErrorAlert("Please enter 4-digit MPIN in both fields");
+    const mpinValue = mpin.join("");
+    
+    if (mpinValue.length !== 4) {
+      showErrorAlert("Please enter 4-digit MPIN");
       return;
     }
-    if (mpinValue !== confirmValue) {
-      showErrorAlert("MPIN and Confirm MPIN do not match");
+
+    if (!/^[0-9]{4}$/.test(mpinValue)) {
+      showErrorAlert("MPIN can only contain numbers");
       return;
     }
+
     setLoading(true);
     try {
-      await hashMPIN(mpinValue);
+      // Call registration completion API
       const response = await api.post("/register/complete", {
+        mobile,
         name,
         email,
-        mobile_number: mobile,
-        mpin: mpinValue,
-        password: mpinValue,
-        referral_code
+        referral_code,
+        mpin: mpinValue
       });
-      if (response.status === 200) {
-        router.replace({ pathname: "/(auth)/login", params: { mobile } });
+
+      if (response.data.success) {
+        // Store MPIN securely
+        await SecureStore.setItemAsync("user_mpin", mpinValue);
+        
+        // Navigate to login with mobile number
+        router.replace({
+          pathname: "/(auth)/login",
+          params: { mobile }
+        });
       } else {
         showErrorAlert(response.data.message || "Registration failed");
       }
@@ -157,70 +134,53 @@ export default function SetMpinPage() {
             </TouchableOpacity>
           </View>
         )}
+
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.container}
         >
           <View style={styles.formContainer}>
             <View style={styles.cardContainer}>
-              <Text style={styles.pageTitle}>Set MPIN</Text>
+              <Text style={styles.pageTitle}>Complete Registration</Text>
               <Text style={styles.subtitle}>Create a 4-digit MPIN to secure your account</Text>
+
               {/* MPIN Input Boxes */}
-              <Text style={styles.label}>Create MPIN</Text>
               <View style={styles.pinContainer}>
                 {mpin.map((digit, index) => (
                   <PinInput
                     key={index}
                     value={digit}
-                    isActive={activeInput === 'mpin' && activeIndex === index}
-                    onPress={() => { setActiveInput('mpin'); setActiveIndex(index); mpinRefs[index].current?.focus(); }}
+                    isActive={activeInput === index}
+                    onPress={() => {
+                      mpinRefs[index].current?.focus();
+                      setActiveInput(index);
+                    }}
                     index={index}
-                    secureTextEntry={!showPin}
-                    onChange={(val, idx) => handlePinChange(val, idx, 'mpin')}
-                    inputRef={mpinRefs[index]}
                   />
                 ))}
               </View>
-              <Text style={styles.label}>Confirm MPIN</Text>
-              <View style={styles.pinContainer}>
-                {confirmMpin.map((digit, index) => (
-                  <PinInput
-                    key={index}
-                    value={digit}
-                    isActive={activeInput === 'confirm' && activeIndex === index}
-                    onPress={() => { setActiveInput('confirm'); setActiveIndex(index); confirmRefs[index].current?.focus(); }}
-                    index={index}
-                    secureTextEntry={!showPin}
-                    onChange={(val, idx) => handlePinChange(val, idx, 'confirm')}
-                    inputRef={confirmRefs[index]}
-                  />
-                ))}
-              </View>
-              {/* Show/Hide Toggle */}
-              <TouchableOpacity
-                style={styles.eyeToggle}
-                onPress={() => setShowPin(!showPin)}
-              >
-                <Ionicons
-                  name={showPin ? "eye-off" : "eye"}
-                  size={24}
-                  color={theme.colors.secondary}
-                />
-                <Text style={styles.eyeText}>
-                  {showPin ? "Hide MPIN" : "Show MPIN"}
-                </Text>
-              </TouchableOpacity>
-              {matchError && (
-                <View style={styles.errorContainer}>
-                  <Ionicons name="alert-circle" size={20} color="#ff4444" />
-                  <Text style={styles.errorText}>MPIN and Confirm MPIN do not match</Text>
-                </View>
-              )}
+
+              {/* Hidden TextInput for actual input */}
+              <TextInput
+                style={styles.hiddenInput}
+                ref={mpinRefs[0]}
+                keyboardType="numeric"
+                maxLength={4}
+                value={mpin.join("")}
+                onChangeText={(value) => {
+                  const newPins = value.split("").slice(0, 4);
+                  while (newPins.length < 4) newPins.push("");
+                  setMpin(newPins);
+                  setActiveInput(newPins.findIndex(pin => pin === "") || 0);
+                }}
+                onKeyPress={(e) => handleKeyPress(e, activeInput)}
+              />
+
               {/* Submit Button */}
               <TouchableOpacity
-                style={[styles.submitButton, (loading || !mpinValid || !confirmValid || matchError) && styles.submitButtonDisabled]}
+                style={[styles.submitButton, loading && styles.submitButtonDisabled]}
                 onPress={handleSubmit}
-                disabled={loading || !mpinValid || !confirmValid || matchError}
+                disabled={loading}
               >
                 <LinearGradient
                   colors={['#ffc90c', '#ffd700']}
@@ -235,12 +195,13 @@ export default function SetMpinPage() {
                     ) : (
                       <>
                         <Ionicons name="checkmark-circle" size={20} color={theme.colors.textDark} />
-                        <Text style={styles.submitButtonText}>Set MPIN</Text>
+                        <Text style={styles.submitButtonText}>Complete Registration</Text>
                       </>
                     )}
                   </View>
                 </LinearGradient>
               </TouchableOpacity>
+
               {/* Back Button */}
               <TouchableOpacity
                 style={styles.backButton}
@@ -346,17 +307,6 @@ const styles = StyleSheet.create({
     opacity: 0,
     height: 0,
   },
-  eyeToggle: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 20,
-    alignSelf: 'center',
-  },
-  eyeText: {
-    color: theme.colors.secondary,
-    marginLeft: 10,
-    fontSize: 16,
-  },
   submitButton: {
     width: "100%",
     height: 50,
@@ -429,21 +379,4 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 5,
   },
-  label: {
-    color: theme.colors.textLight,
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  errorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 10,
-  },
-  errorText: {
-    color: '#ff4444',
-    fontSize: 16,
-    marginLeft: 10,
-  },
-});
+}); 

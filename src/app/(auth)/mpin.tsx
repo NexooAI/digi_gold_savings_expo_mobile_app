@@ -115,7 +115,7 @@ export default function MpinSetup() {
     try {
       hashMPIN(mpin);
 
-      const response = await api.post("/complete-registration", {
+      const response = await api.post("/register/complete", {
         name,
         email,
         mobile_number: mobile,

@@ -172,9 +172,9 @@ export default function SavingsScreen() {
 
   // Enhanced Scheme Card Component
   const EnhancedSchemeCard = ({ item }: { item: Scheme }) => {
-    const bgColors = item.metalType === "gold" 
-      ? ["#e1c875", "#d6b240"]
-      : ["#f0ebeb", "#cccccc"];
+    const bgColors: readonly [string, string, string] = item.metalType === "gold" 
+      ? ["rgba(221, 204, 113, 0.85)", "rgba(255, 201, 12, 0.85)", "rgba(119, 125, 13, 0.78)"] as const
+      : ["rgba(192, 192, 192, 0.85)", "rgba(168, 168, 168, 0.85)", "rgba(128, 128, 128, 0.85)"] as const;
 
     const [isExpanded, setIsExpanded] = useState(false);
     const animatedHeight = useRef(new Animated.Value(0)).current;
@@ -200,7 +200,7 @@ export default function SavingsScreen() {
     const handleNavigation = (item: Scheme) => {
       if (!item) return;
       router.push({
-        pathname: "/savings/SavingsDetail",
+        pathname: "/savings/savingsDetail",
         params: {
           schemeName: item.schemeName || "",
           totalPaid: item.totalPaid?.toString() || "0",
@@ -229,152 +229,162 @@ export default function SavingsScreen() {
           isActive && styles.cardWrapperActive
         ]}
       >
-        <LinearGradient
-          colors={[bgColors[0], bgColors[1]]}
-          style={styles.cardContainer}
+        <ImageBackground
+          source={item.metalType === "gold" 
+            ? require('../../../../../assets/images/gold.png')
+            : require('../../../../../assets/images/silver.png')
+          }
+          style={styles.cardBackgroundImage}
+          imageStyle={styles.cardBackgroundImageStyle}
+          resizeMode="cover"
         >
-          <View style={styles.cardHeader}>
-            <View style={styles.schemeInfo}>
-              <View style={styles.schemeIconContainer}>
-                <Ionicons 
-                  name={item.metalType === "gold" ? "diamond-outline" : "cube-outline"} 
-                  size={24} 
-                  color={item.metalType === "gold" ? "#d6b240" : "#666"} 
-                />
-              </View>
-              <View style={styles.schemeTitleContainer}>
-                <Text style={styles.schemeTitle}>{item.schemeName}</Text>
-                <Text style={styles.schemeSubtitle}>
-                  {item.metalType.toUpperCase()} • {item.savingType === "weight" ? "Weight" : "Amount"}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.headerRight}>
-              <View style={styles.statusBadge}>
-                <Text style={styles.statusText}>{item.status || "ACTIVE"}</Text>
-              </View>
-              <Animated.View style={[
-                styles.expandIcon,
-                { transform: [{ rotate: animatedHeight.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['0deg', '180deg']
-                })}] }
-              ]}>
-                <Ionicons name="chevron-down" size={20} color="#666" />
-              </Animated.View>
-            </View>
-          </View>
-
-          <View style={styles.accountInfo}>
-            <View style={styles.accountItem}>
-              <Ionicons name="person-outline" size={16} color="#666" />
-              <Text style={styles.accountLabel}>Account Holder:</Text>
-              <Text style={styles.accountValue}>{item.accountHolder}</Text>
-            </View>
-            <View style={styles.accountItem}>
-              <Ionicons name="card-outline" size={16} color="#666" />
-              <Text style={styles.accountLabel}>A/C No:</Text>
-              <Text style={styles.accountValue}>{item.accNo}</Text>
-            </View>
-          </View>
-
-          <Animated.View style={[
-            styles.cardContent,
-            { maxHeight: animatedHeight.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0, 500]
-            })}
-          ]}>
-            <View style={styles.infoGrid}>
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Amount Paid</Text>
-                <Text style={styles.infoValue}>₹{item.totalPaid.toLocaleString()}</Text>
-              </View>
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Months Paid</Text>
-                <Text style={styles.infoValue}>{item.monthsPaid} / {item.noOfIns}</Text>
-              </View>
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Installment</Text>
-                <Text style={styles.infoValue}>₹{item.emiAmount}</Text>
-              </View>
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Total Weight</Text>
-                <Text style={styles.infoValue}>{item.goldWeight.toFixed(2)} g</Text>
-              </View>
-            </View>
-
-            <View style={styles.dateContainer}>
-              <View style={styles.dateSection}>
-                <View style={styles.dateIconContainer}>
-                  <Ionicons name="calendar-outline" size={20} color={theme.colors.primary} />
+          <LinearGradient
+            colors={bgColors}
+            style={styles.cardContainer}
+          >
+            <View style={styles.cardHeader}>
+              <View style={styles.schemeInfo}>
+                <View style={styles.schemeIconContainer}>
+                  <Ionicons 
+                    name={item.metalType === "gold" ? "diamond-outline" : "cube-outline"} 
+                    size={24} 
+                    color={item.metalType === "gold" ? "#B8860B" : "#708090"} 
+                  />
                 </View>
-                <View style={styles.dateInfo}>
-                  <Text style={styles.dateLabel}>Date of Joining</Text>
-                  <Text style={styles.dateValue}>{item.joiningDate}</Text>
-                </View>
-              </View>
-              <View style={styles.dateDivider} />
-              <View style={styles.dateSection}>
-                <View style={styles.dateIconContainer}>
-                  <Ionicons name="time-outline" size={20} color={theme.colors.primary} />
-                </View>
-                <View style={styles.dateInfo}>
-                  <Text style={styles.dateLabel}>Maturity Date</Text>
-                  <Text style={styles.dateValue}>{item.maturityDate}</Text>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.progressContainer}>
-              <View style={styles.progressHeader}>
-                <Text style={styles.progressLabel}>Installment Progress</Text>
-                <View style={styles.progressStats}>
-                  <Text style={styles.progressValue}>{progressPercentage}%</Text>
-                  <Text style={styles.progressMonths}>
-                    {item.monthsPaid}/{item.noOfIns} months
+                <View style={styles.schemeTitleContainer}>
+                  <Text style={styles.schemeTitle}>{item.schemeName}</Text>
+                  <Text style={styles.schemeSubtitle}>
+                    {item.metalType.toUpperCase()} • {item.savingType === "weight" ? "Weight" : "Amount"}
                   </Text>
                 </View>
               </View>
-              <View style={styles.progressBar}>
-                <Animated.View 
-                  style={[
-                    styles.progressFill,
-                    { width: animatedHeight.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ['0%', `${progressPercentage}%`]
-                    })}
-                  ]} 
-                />
-              </View>
-              <View style={styles.monthsInfo}>
-                <View style={styles.monthItem}>
-                  <View style={[styles.monthDot, { backgroundColor: theme.colors.primary }]} />
-                  <Text style={styles.monthLabel}>Paid</Text>
-                  <Text style={styles.monthValue}>{item.monthsPaid}</Text>
+              <View style={styles.headerRight}>
+                <View style={styles.statusBadge}>
+                  <Text style={styles.statusText}>{item.status || "ACTIVE"}</Text>
                 </View>
-                <View style={styles.monthItem}>
-                  <View style={[styles.monthDot, { backgroundColor: '#666' }]} />
-                  <Text style={styles.monthLabel}>Pending</Text>
-                  <Text style={styles.monthValue}>{Number(item.noOfIns) - Number(item.monthsPaid)}</Text>
-                </View>
-                <View style={styles.monthItem}>
-                  <View style={[styles.monthDot, { backgroundColor: '#333' }]} />
-                  <Text style={styles.monthLabel}>Total</Text>
-                  <Text style={styles.monthValue}>{item.noOfIns}</Text>
-                </View>
+                <Animated.View style={[
+                  styles.expandIcon,
+                  { transform: [{ rotate: animatedHeight.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0deg', '180deg']
+                  })}] }
+                ]}>
+                  <Ionicons name="chevron-down" size={20} color="#B8860B" />
+                </Animated.View>
               </View>
             </View>
 
-            <TouchableOpacity
-              style={styles.detailsButton}
-              onPress={() => handleNavigation(item)}
-            >
-              <Text style={styles.detailsButtonText}>View Details</Text>
-              <Ionicons name="chevron-forward" size={20} color="#fff" />
-            </TouchableOpacity>
-          </Animated.View>
-        </LinearGradient>
+            <View style={styles.accountInfo}>
+              <View style={styles.accountItem}>
+                <Ionicons name="person-outline" size={16} color="#B8860B" />
+                <Text style={styles.accountLabel}>Account Holder:</Text>
+                <Text style={styles.accountValue}>{item.accountHolder}</Text>
+              </View>
+              <View style={styles.accountItem}>
+                <Ionicons name="card-outline" size={16} color="#B8860B" />
+                <Text style={styles.accountLabel}>A/C No:</Text>
+                <Text style={styles.accountValue}>{item.accNo}</Text>
+              </View>
+            </View>
+
+            <Animated.View style={[
+              styles.cardContent,
+              { maxHeight: animatedHeight.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 500]
+              })}
+            ]}>
+              <View style={styles.infoGrid}>
+                <View style={styles.infoItem}>
+                  <Text style={styles.infoLabel}>Amount Paid</Text>
+                  <Text style={styles.infoValue}>₹{item.totalPaid.toLocaleString()}</Text>
+                </View>
+                <View style={styles.infoItem}>
+                  <Text style={styles.infoLabel}>Months Paid</Text>
+                  <Text style={styles.infoValue}>{item.monthsPaid} / {item.noOfIns}</Text>
+                </View>
+                <View style={styles.infoItem}>
+                  <Text style={styles.infoLabel}>Installment</Text>
+                  <Text style={styles.infoValue}>₹{item.emiAmount}</Text>
+                </View>
+                <View style={styles.infoItem}>
+                  <Text style={styles.infoLabel}>Total Weight</Text>
+                  <Text style={styles.infoValue}>{item.goldWeight.toFixed(2)} g</Text>
+                </View>
+              </View>
+
+              <View style={styles.dateContainer}>
+                <View style={styles.dateSection}>
+                  <View style={styles.dateIconContainer}>
+                    <Ionicons name="calendar-outline" size={20} color="#850111" />
+                  </View>
+                  <View style={styles.dateInfo}>
+                    <Text style={styles.dateLabel}>Date of Joining</Text>
+                    <Text style={styles.dateValue}>{item.joiningDate}</Text>
+                  </View>
+                </View>
+                <View style={styles.dateDivider} />
+                <View style={styles.dateSection}>
+                  <View style={styles.dateIconContainer}>
+                    <Ionicons name="time-outline" size={20} color="#850111" />
+                  </View>
+                  <View style={styles.dateInfo}>
+                    <Text style={styles.dateLabel}>Maturity Date</Text>
+                    <Text style={styles.dateValue}>{item.maturityDate}</Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.progressContainer}>
+                <View style={styles.progressHeader}>
+                  <Text style={styles.progressLabel}>Installment Progress</Text>
+                  <View style={styles.progressStats}>
+                    <Text style={styles.progressValue}>{progressPercentage}%</Text>
+                    <Text style={styles.progressMonths}>
+                      {item.monthsPaid}/{item.noOfIns} months
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.progressBar}>
+                  <Animated.View 
+                    style={[
+                      styles.progressFill,
+                      { width: animatedHeight.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0%', `${progressPercentage}%`]
+                      })}
+                    ]} 
+                  />
+                </View>
+                <View style={styles.monthsInfo}>
+                  <View style={styles.monthItem}>
+                    <View style={[styles.monthDot, { backgroundColor: '#850111' }]} />
+                    <Text style={styles.monthLabel}>Paid</Text>
+                    <Text style={styles.monthValue}>{item.monthsPaid}</Text>
+                  </View>
+                  <View style={styles.monthItem}>
+                    <View style={[styles.monthDot, { backgroundColor: '#DAA520' }]} />
+                    <Text style={styles.monthLabel}>Pending</Text>
+                    <Text style={styles.monthValue}>{Number(item.noOfIns) - Number(item.monthsPaid)}</Text>
+                  </View>
+                  <View style={styles.monthItem}>
+                    <View style={[styles.monthDot, { backgroundColor: '#B8860B' }]} />
+                    <Text style={styles.monthLabel}>Total</Text>
+                    <Text style={styles.monthValue}>{item.noOfIns}</Text>
+                  </View>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={styles.detailsButton}
+                onPress={() => handleNavigation(item)}
+              >
+                <Text style={styles.detailsButtonText}>View Details</Text>
+                <Ionicons name="chevron-forward" size={20} color="#fff" />
+              </TouchableOpacity>
+            </Animated.View>
+          </LinearGradient>
+        </ImageBackground>
       </TouchableOpacity>
     );
   };
@@ -382,7 +392,7 @@ export default function SavingsScreen() {
   const ListHeader = () => (
     <View style={styles.headerContainer}>
       <LinearGradient
-        colors={['#2c3e50', '#3498db']}
+        colors={['#850111', '#5a000b', '#2e0406']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.portfolioCard}
@@ -393,19 +403,19 @@ export default function SavingsScreen() {
               {translations.yourGoldPortfolio}
             </Text>
             <View style={styles.portfolioBadge}>
-              <Ionicons name="star" size={12} color="#fff" />
+              <Ionicons name="star" size={10} color="#fff" />
               <Text style={styles.portfolioBadgeText}>Premium</Text>
             </View>
           </View>
           <View style={styles.portfolioIconContainer}>
-            <Ionicons name="medal" size={32} color="#fff" />
+            <Ionicons name="medal" size={24} color="#fff" />
           </View>
         </View>
 
         <View style={styles.portfolioStats}>
           <View style={styles.statItem}>
             <View style={styles.statIconContainer}>
-              <Ionicons name="wallet-outline" size={24} color="#fff" />
+              <Ionicons name="wallet-outline" size={18} color="#fff" />
             </View>
             <View style={styles.statInfo}>
               <Text style={styles.statLabel}>{translations.totalInvested}</Text>
@@ -415,7 +425,7 @@ export default function SavingsScreen() {
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <View style={styles.statIconContainer}>
-              <Ionicons name="diamond-outline" size={24} color="#fff" />
+              <Ionicons name="diamond-outline" size={18} color="#fff" />
             </View>
             <View style={styles.statInfo}>
               <Text style={styles.statLabel}>{translations.gold}</Text>
@@ -426,11 +436,11 @@ export default function SavingsScreen() {
 
         <View style={styles.portfolioFooter}>
           <View style={styles.footerItem}>
-            <Ionicons name="trending-up" size={16} color="#fff" />
+            <Ionicons name="trending-up" size={12} color="#fff" />
             <Text style={styles.footerText}>Growing Portfolio</Text>
           </View>
           <View style={styles.footerItem}>
-            <Ionicons name="shield-checkmark" size={16} color="#fff" />
+            <Ionicons name="shield-checkmark" size={12} color="#fff" />
             <Text style={styles.footerText}>Secure Investment</Text>
           </View>
         </View>
@@ -442,15 +452,33 @@ export default function SavingsScreen() {
   );
 
   const EmptyState = () => (
-    <View className="items-center justify-center p-8">
-      <Image
-        source={theme.image.no_data}
-        className="w-64 h-64 mb-4"
-        resizeMode="contain"
-      />
-      <Text className="text-white mt-4 text-center text-lg">
-        {translations.noActiveSchemes}
-      </Text>
+    <View style={styles.emptyStateContainer}>
+      <LinearGradient
+        colors={['rgba(133, 1, 17, 0.1)', 'rgba(90, 0, 11, 0.1)', 'rgba(46, 4, 6, 0.1)']}
+        style={styles.emptyStateCard}
+      >
+        <View style={styles.emptyStateIconContainer}>
+          <Ionicons name="trending-up" size={40} color="#850111" />
+        </View>
+        <Image
+          source={theme.image.no_data}
+          style={styles.emptyStateImage}
+          resizeMode="contain"
+        />
+        <Text style={styles.emptyStateTitle}>
+          {translations.noActiveSchemes}
+        </Text>
+        <Text style={styles.emptyStateSubtitle}>
+          Start your gold savings journey today and build your wealth
+        </Text>
+        <TouchableOpacity 
+          style={styles.emptyStateButton}
+          onPress={() => router.push('/(tabs)/home/schemes')}
+        >
+          <Ionicons name="add-circle-outline" size={20} color="#fff" />
+          <Text style={styles.emptyStateButtonText}>Start New Savings</Text>
+        </TouchableOpacity>
+      </LinearGradient>
     </View>
   );
 
@@ -473,15 +501,15 @@ export default function SavingsScreen() {
   return (
     <SafeAreaView className="flex-1">
       <ImageBackground
-        source={theme.image.savings_bg}
+        source={theme.image.bg_image}
         className="flex-1"
-        imageStyle={{
-          width: "100%",
-          height: "100%",
-          opacity: 0.95,
-        }}
-        blurRadius={1}
+        resizeMode="cover"
       >
+        <LinearGradient
+          colors={['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.8)']}
+          style={StyleSheet.absoluteFillObject}
+        />
+        
         <View className="absolute top-0 left-0 right-0 z-10 px-4">
           <AppHeader showBackButton={false} backRoute="index" />
         </View>
@@ -492,7 +520,7 @@ export default function SavingsScreen() {
             item.id && item.id !== "" ? item.id : index.toString()
           }
           renderItem={({ item }) => <EnhancedSchemeCard item={item} />}
-          ListHeaderComponent={<ListHeader />}
+          ListHeaderComponent={savings.length > 0 ? <ListHeader /> : null}
           ListEmptyComponent={<EmptyState />}
           contentContainerStyle={{
             paddingTop: 100,
@@ -508,21 +536,21 @@ export default function SavingsScreen() {
 
 const styles = StyleSheet.create({
   headerContainer: {
-    paddingBottom: 24,
+    paddingBottom: 16,
   },
   portfolioCard: {
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 20,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 14,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.12,
+        shadowRadius: 6,
       },
       android: {
-        elevation: 6,
+        elevation: 4,
       },
     }),
   },
@@ -530,16 +558,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   portfolioTitleContainer: {
     flex: 1,
   },
   portfolioTitle: {
-    fontSize: 22,
-    fontWeight: '800',
+    fontSize: 18,
+    fontWeight: '700',
     color: '#fff',
-    marginBottom: 6,
+    marginBottom: 4,
     textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
@@ -549,22 +577,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
     alignSelf: 'flex-start',
   },
   portfolioBadgeText: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '600',
-    marginLeft: 4,
+    marginLeft: 3,
     letterSpacing: 0.5,
   },
   portfolioIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: 'rgba(255,255,255,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -574,9 +602,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
   },
   statItem: {
     flex: 1,
@@ -584,42 +612,42 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: 'rgba(255,255,255,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 10,
   },
   statInfo: {
     flex: 1,
   },
   statLabel: {
-    fontSize: 13,
+    fontSize: 11,
     color: 'rgba(255,255,255,0.9)',
-    marginBottom: 4,
+    marginBottom: 3,
     fontWeight: '500',
     letterSpacing: 0.3,
   },
   statValue: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '700',
     color: '#fff',
     letterSpacing: 0.5,
   },
   statDivider: {
     width: 1,
-    height: 40,
+    height: 32,
     backgroundColor: 'rgba(255,255,255,0.2)',
-    marginHorizontal: 16,
+    marginHorizontal: 12,
   },
   portfolioFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.2)',
-    paddingTop: 16,
+    paddingTop: 10,
   },
   footerItem: {
     flexDirection: 'row',
@@ -627,21 +655,24 @@ const styles = StyleSheet.create({
   },
   footerText: {
     color: 'rgba(255,255,255,0.9)',
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '600',
-    marginLeft: 6,
+    marginLeft: 4,
     letterSpacing: 0.3,
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#fff',
+    fontWeight: '800',
+    color: '#FFD700',
     textAlign: 'center',
     marginBottom: 16,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   cardWrapper: {
-    marginBottom: 16,
-    borderRadius: 24,
+    marginBottom: 12,
+    borderRadius: 20,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -667,16 +698,26 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  cardContainer: {
-    borderRadius: 24,
-    padding: 20,
+  cardBackgroundImage: {
+    flex: 1,
+    borderRadius: 20,
     overflow: 'hidden',
+  },
+  cardBackgroundImageStyle: {
+    borderRadius: 20,
+    opacity: 0.6,
+  },
+  cardContainer: {
+    borderRadius: 20,
+    padding: 14,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 14,
   },
   schemeInfo: {
     flexDirection: 'row',
@@ -684,48 +725,52 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   schemeIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 215, 0, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(218, 165, 32, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 10,
   },
   schemeTitleContainer: {
     flex: 1,
   },
   schemeTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
-    color: '#333',
-    marginBottom: 4,
+    color: '#2C1810',
+    marginBottom: 3,
   },
   schemeSubtitle: {
-    fontSize: 12,
-    color: '#666',
+    fontSize: 11,
+    color: '#8B4513',
   },
   statusBadge: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
+    backgroundColor: 'rgba(25, 210, 16, 0.53)',
+    borderWidth: 1,
+    borderColor: '#DAA520',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
   },
   statusText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
-    color: '#333',
+    color: '#000000',
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   expandIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 215, 0, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -735,31 +780,34 @@ const styles = StyleSheet.create({
   infoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 16,
-    marginBottom: 20,
+    gap: 12,
+    marginBottom: 14,
   },
   infoItem: {
     flex: 1,
     minWidth: '45%',
   },
   infoLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 4,
+    fontSize: 11,
+    color: '#A0522D',
+    marginBottom: 3,
+    fontWeight: '500',
   },
   infoValue: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#2F1B14',
   },
   dateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 16,
-    padding: 16,
-    marginTop: 20,
-    marginBottom: 20,
+    backgroundColor: 'rgba(255, 215, 0, 0.15)',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 14,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(218, 165, 32, 0.3)',
   },
   dateSection: {
     flex: 1,
@@ -767,99 +815,109 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dateIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(133,1,17,0.1)',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(133, 1, 17, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 10,
   },
   dateInfo: {
     flex: 1,
   },
   dateLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 4,
+    fontSize: 10,
+    color: '#A0522D',
+    marginBottom: 3,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+    fontWeight: '600',
   },
   dateValue: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#333',
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#2F1B14',
   },
   dateDivider: {
     width: 1,
-    height: 40,
-    backgroundColor: 'rgba(0,0,0,0.1)',
-    marginHorizontal: 16,
+    height: 32,
+    backgroundColor: 'rgba(218, 165, 32, 0.4)',
+    marginHorizontal: 12,
   },
   detailsButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 16,
+    backgroundColor: '#850111',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 14,
+    elevation: 3,
+    shadowColor: '#850111',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   detailsButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
     color: '#fff',
-    marginRight: 8,
+    marginRight: 6,
   },
   progressContainer: {
-    marginTop: 20,
-    marginBottom: 20,
+    marginTop: 14,
+    marginBottom: 14,
+    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+    borderRadius: 10,
+    padding: 12,
   },
   progressHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   progressLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#2F1B14',
   },
   progressStats: {
     alignItems: 'flex-end',
   },
   progressValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: theme.colors.primary,
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#850111',
   },
   progressMonths: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
+    fontSize: 11,
+    color: '#A0522D',
+    marginTop: 1,
+    fontWeight: '500',
   },
   progressBar: {
     height: 8,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(218, 165, 32, 0.3)',
     borderRadius: 4,
     overflow: 'hidden',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: theme.colors.primary,
+    backgroundColor: '#850111',
     borderRadius: 4,
   },
   monthsInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 8,
+    marginTop: 6,
   },
   monthItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
   monthDot: {
     width: 8,
@@ -867,36 +925,116 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   monthLabel: {
-    fontSize: 12,
-    color: '#666',
+    fontSize: 10,
+    color: '#A0522D',
+    fontWeight: '500',
   },
   monthValue: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#333',
-    marginLeft: 4,
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#2F1B14',
+    marginLeft: 3,
   },
   accountInfo: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
+    backgroundColor: 'rgba(255, 215, 0, 0.15)',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(218, 165, 32, 0.3)',
   },
   accountItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   accountLabel: {
-    fontSize: 13,
-    color: '#666',
-    marginLeft: 8,
+    fontSize: 11,
+    color: '#A0522D',
+    marginLeft: 6,
     marginRight: 4,
+    fontWeight: '500',
   },
   accountValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#2F1B14',
     flex: 1,
+  },
+  emptyStateContainer: {
+    padding: 16,
+    marginTop: 20,
+  },
+  emptyStateCard: {
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(133, 1, 17, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    ...Platform.select({
+      ios: {
+        shadowColor: "#850111",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  emptyStateIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(133, 1, 17, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  emptyStateImage: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
+  },
+  emptyStateTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: 'white',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  emptyStateSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  emptyStateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#850111',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#850111",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  emptyStateButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
   },
 });

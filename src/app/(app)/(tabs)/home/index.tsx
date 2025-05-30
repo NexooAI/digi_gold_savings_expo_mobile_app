@@ -234,6 +234,7 @@ export default function Home() {
         schemes.getSchemes(),
         rates.getLiveRates(),
         collections.getCollections(),
+        
       ]);
 
       setSchemeData(schemesResponse.data);
@@ -485,7 +486,6 @@ export default function Home() {
                   contentContainerStyle={styles.bannerListContent}
                 />
               </View>
-
               <YouTubeVideo />
               <SupportContactCard />
               <View style={styles.spacer} />

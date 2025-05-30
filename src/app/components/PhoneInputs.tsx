@@ -8,10 +8,16 @@ import {
   Keyboard,
 } from "react-native";
 
-const PhoneInput = ({ value, onChangeText, loading }) => {
+interface PhoneInputProps {
+  value: string;
+  onChangeText: (text: string) => void;
+  loading: boolean;
+}
+
+const PhoneInput: React.FC<PhoneInputProps> = ({ value, onChangeText, loading }) => {
   const [error, setError] = useState("");
 
-  const validateMobile = (text) => {
+  const validateMobile = (text: string) => {
     const numericText = text.replace(/[^0-9]/g, "").slice(0, 10);
     onChangeText(numericText);
 
@@ -48,8 +54,8 @@ const PhoneInput = ({ value, onChangeText, loading }) => {
           <Text style={styles.countryCodeText}>+91</Text>
         </View>
         <TextInput
-          placeholder="Mobile No."
-          placeholderTextColor="#666"
+          placeholder="Enter mobile number"
+          placeholderTextColor="rgba(255, 255, 255, 0.5)"
           value={value}
           onChangeText={validateMobile}
           onBlur={handleBlur}
@@ -58,6 +64,12 @@ const PhoneInput = ({ value, onChangeText, loading }) => {
           editable={!loading}
           maxLength={10}
           style={[styles.input, error && styles.inputError]}
+          scrollEnabled={false}
+          multiline={false}
+          numberOfLines={1}
+          textContentType="telephoneNumber"
+          autoComplete="tel"
+          returnKeyType="done"
         />
       </View>
 
@@ -76,59 +88,89 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   label: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
-    color: "white",
-    marginBottom: 6,
-    paddingLeft: 8,
+    color: "rgba(255, 255, 255, 0.9)",
+    marginBottom: 8,
+    paddingLeft: 4,
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f6f6f6",
-    borderRadius: 24,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 12,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "transparent",
+    borderColor: "rgba(255, 255, 255, 0.3)",
+    height: 50,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
   errorContainer: {
-    backgroundColor: "#fff",
-    borderColor: "red",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: "#ff4444",
+    borderWidth: 2,
   },
   countryCodeBox: {
-    backgroundColor: "#e5e5e5",
-    paddingHorizontal: 10,
-    paddingVertical: 12,
+    backgroundColor: "rgba(255, 215, 0, 0.1)",
+    paddingHorizontal: 12,
+    paddingVertical: 0,
     borderRightWidth: 1,
-    borderRightColor: "#ccc",
+    borderRightColor: "rgba(255, 255, 255, 0.2)",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    minWidth: 50,
   },
   countryCodeText: {
-    color: "#444",
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
   input: {
     flex: 1,
-    padding: 15,
+    paddingHorizontal: 12,
+    paddingVertical: 0,
     fontSize: 16,
-    height: 45,
+    height: 50,
     backgroundColor: "transparent",
+    color: "#fff",
+    fontWeight: "500",
+    textAlignVertical: "center",
+    includeFontPadding: false,
+    paddingTop: 0,
+    paddingBottom: 0,
+    marginTop: 0,
+    marginBottom: 0,
   },
   inputError: {
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    color: "#fff",
   },
   counterText: {
     textAlign: "right",
-    paddingRight: 10,
-    color: "white",
+    paddingRight: 4,
+    color: "rgba(255, 255, 255, 0.7)",
     fontSize: 12,
-    marginTop: 0,
+    marginTop: 4,
+    fontWeight: "500",
   },
   errorText: {
-    color: "red",
-    backgroundColor: "white",
-    fontSize: 14,
-    paddingLeft: 8,
-    marginTop: 1,
-    width: "60%",
+    color: "#ff4444",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    fontSize: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginTop: 4,
+    borderRadius: 6,
+    alignSelf: "flex-start",
+    fontWeight: "500",
   },
 });
 

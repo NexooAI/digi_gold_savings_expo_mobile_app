@@ -25,6 +25,7 @@ import api from "@/services/api";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import { rgbaColor } from "react-native-reanimated/lib/typescript/Colors";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get("window");
 const TAB_WIDTH = width / 4;
@@ -199,21 +200,38 @@ export default function SchemeList() {
     })
   ).current;
 
-  const handleJoinScheme = (item: Scheme) => {
-    console.log(item);
-    router.push({
-      pathname: "/home/join_savings",
-      params: {
+  const handleJoinScheme = async (item: Scheme) => {
+    try {
+      console.log('Storing scheme data:', item);
+      
+      // Store the complete scheme data
+      const schemeDataToStore = {
         schemeId: item.SCHEMEID,
-        schemeData: JSON.stringify({
-          name: item.SCHEMENAME,
-          description: item.DESCRIPTION,
-          type: item.SCHEMETYPE,
-          chits: item.chits.filter(chit => chit.PAYMENT_FREQUENCY === activeTab) || [],
-          schemeType: item.SCHEMETYPE.toLowerCase() === 'flexi' ? 'flexi' : 'fixed'
-        }),
-      },
-    });
+        name: item.SCHEMENAME,
+        description: item.DESCRIPTION,
+        type: item.SCHEMETYPE,
+        chits: item.chits.filter(chit => chit.PAYMENT_FREQUENCY === activeTab) || [],
+        schemeType: item.SCHEMETYPE.toLowerCase() === 'flexi' ? 'flexi' : 'fixed',
+        activeTab: activeTab,
+        benefits: item.BENEFITS,
+        timestamp: new Date().toISOString(),
+      };
+
+      await AsyncStorage.setItem('@current_scheme_data', JSON.stringify(schemeDataToStore));
+      
+      console.log('Scheme data stored successfully');
+      
+      // Navigate with only the scheme ID
+      router.push({
+        pathname: "/home/join_savings",
+        params: {
+          schemeId: item.SCHEMEID.toString(),
+        },
+      });
+    } catch (error) {
+      console.error('Error storing scheme data:', error);
+      Alert.alert('Error', 'Failed to load scheme data. Please try again.');
+    }
   };
 
   const handleTabPress = (title: "Daily" | "Weekly" | "Monthly" | "Flexi") => {

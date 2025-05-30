@@ -1,8 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
-  Text,
-  TouchableOpacity,
+  ActivityIndicator,
   StyleSheet,
   ImageBackground,
   Image,
@@ -10,85 +9,118 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { theme } from "@/constants/theme";
+import useGlobalStore from "@/store/global.store";
+import * as SecureStore from "expo-secure-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LinearGradient } from "expo-linear-gradient";
+
 const { width } = Dimensions.get("window");
-const logoWidth = width * 0; // 30% of screen width
+const logoWidth = width * 0.4;
 
-export default function Page() {
+export default function AuthGuard() {
   const router = useRouter();
+  const { login, isLoggedIn } = useGlobalStore();
+  const [isChecking, setIsChecking] = useState(true);
 
-  return (
-    <ImageBackground
-      source={theme.image.bg_image}
-      style={styles.backgroundImage}
-    >
-      <View style={styles.container}>
-        <Image
-          source={theme.image.transparentLogo}
-          style={[styles.logo, { width: logoWidth, aspectRatio: 1 }]}
-          resizeMode="contain"
-        />
-        <TouchableOpacity
-          style={styles.loginButton}
-          onPress={() => router.push("/(auth)/login")}
+  useEffect(() => {
+    checkAuthenticationStatus();
+  }, []);
+
+  const checkAuthenticationStatus = async () => {
+    try {
+      // Check if user is already logged in from global state
+      if (isLoggedIn) {
+        router.replace("/(app)/(tabs)/home");
+        return;
+      }
+
+      // Check for stored authentication token
+      const token = await SecureStore.getItemAsync("authToken");
+      
+      if (token) {
+        // Token exists, check if user data is available
+        const userData = await AsyncStorage.getItem("userData");
+        
+        if (userData) {
+          const parsedUserData = JSON.parse(userData);
+          
+          // Check if MPIN is set up
+          const storedMPIN = await SecureStore.getItemAsync("user_mpin");
+          
+          if (storedMPIN) {
+            // User has token and MPIN set up → Go to MPIN verification
+            router.replace("/(auth)/mpin_verify");
+          } else {
+            // User has token but no MPIN → Go to MPIN setup
+            router.replace("/(auth)/reset_mpin");
+          }
+        } else {
+          // Token exists but no user data → Go to login
+          await SecureStore.deleteItemAsync("authToken");
+          router.replace("/(auth)/login");
+        }
+      } else {
+        // No token → Go to login
+        router.replace("/(auth)/login");
+      }
+    } catch (error) {
+      console.error("Authentication check error:", error);
+      // On error, go to login screen
+      router.replace("/(auth)/login");
+    } finally {
+      setIsChecking(false);
+    }
+  };
+
+  if (isChecking) {
+    return (
+      <ImageBackground
+        source={theme.image.bg_image}
+        style={styles.backgroundImage}
+      >
+        <LinearGradient
+          colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.7)']}
+          style={styles.gradient}
         >
-          <Text style={styles.loginButtonText}>Login</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.registerButton}
-          onPress={() => router.push("/(auth)/register")}
-        >
-          <Text style={styles.registerButtonText}>Register</Text>
-        </TouchableOpacity>
-      </View>
-    </ImageBackground>
-  );
+          <View style={styles.container}>
+            <Image
+              source={theme.image.transparentLogo}
+              style={[styles.logo, { width: logoWidth, aspectRatio: 1 }]}
+              resizeMode="contain"
+            />
+            <ActivityIndicator 
+              size="large" 
+              color="#ffc90c" 
+              style={styles.loader}
+            />
+          </View>
+        </LinearGradient>
+      </ImageBackground>
+    );
+  }
+
+  // This should not render as we're redirecting
+  return null;
 }
 
 const styles = StyleSheet.create({
   backgroundImage: {
     flex: 1,
     resizeMode: "cover",
-    justifyContent: "center",
+  },
+  gradient: {
+    flex: 1,
   },
   container: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+    paddingHorizontal: 20,
   },
-  logo: {},
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
+  logo: {
     marginBottom: 40,
   },
-  loginButton: {
-    backgroundColor: "#f6f6f6",
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    marginVertical: 10,
-    width: "80%",
-    alignItems: "center",
-  },
-  loginButtonText: {
-    color: "#2e0406",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  registerButton: {
-    backgroundColor: "#ffc90c",
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 25,
-    marginVertical: 10,
-    width: "80%",
-    alignItems: "center",
-  },
-  registerButtonText: {
-    color: "#2e0406",
-    fontSize: 18,
-    fontWeight: "bold",
+  loader: {
+    marginTop: 20,
   },
 });

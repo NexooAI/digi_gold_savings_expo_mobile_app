@@ -12,6 +12,8 @@ import {
   Dimensions,
   Alert,
   Animated,
+  NativeSyntheticEvent,
+  TextInputKeyPressEventData,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import NetInfo from "@react-native-community/netinfo";
@@ -24,11 +26,14 @@ import SmsRetriever from "react-native-sms-retriever";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { theme } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { t } from "@/i18n";
+import { useOtpAutoFetch } from "@/hooks/useOtpAutoFetch";
 
 const { width } = Dimensions.get("window");
 const logoWidth = width * 0.3;
 
-const ErrorAlert = ({ message, onClose }) => {
+const ErrorAlert = ({ message, onClose }: { message: string; onClose: () => void }) => {
   const translateY = useRef(new Animated.Value(-100)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
@@ -93,7 +98,7 @@ export default function Login() {
   const [timer, setTimer] = useState(120);
   const [resendAttempts, setResendAttempts] = useState(0);
   const [isShowOtp, setIsShowOtp] = useState(false);
-  const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
+  const inputRefs = [useRef<TextInput>(null), useRef<TextInput>(null), useRef<TextInput>(null), useRef<TextInput>(null)];
   const { login, isLoggedIn } = useGlobalStore();
   const [error, setError] = useState("");
   const [isAndroid, setIsAndroid] = useState(Platform.OS === "android");
@@ -101,10 +106,32 @@ export default function Login() {
   const [showOtp, setShowOtp] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [showError, setShowError] = useState(false);
+  const [mobileError, setMobileError] = useState("");
+
+  // Auto-fetch OTP functionality
+  const handleOtpAutoFill = (otp: string) => {
+    console.log('Auto-filling OTP:', otp);
+    const otpArray = otp.split('');
+    setPins(otpArray);
+    
+    // Auto-verify if we get a complete 4-digit OTP
+    if (otp.length === 4) {
+      setTimeout(() => {
+        verifyOtp(otp);
+      }, 500); // Small delay to show the filled OTP to user
+    }
+  };
+
+  const { startSmsListener, stopSmsListener } = useOtpAutoFetch({
+    onOtpReceived: handleOtpAutoFill,
+    isActive: isShowOtp, // Start listening when OTP screen is shown
+    senderName: 'Dc Jewellery', // Match your SMS sender
+  });
 
   useEffect(() => {
     if (isAndroid) {
-      // getOtpFromSms();
+      // Auto-fetch OTP is now handled by the useOtpAutoFetch hook
+      console.log('SMS auto-fetch initialized for Android');
     }
   }, [isAndroid]);
 
@@ -133,7 +160,7 @@ export default function Login() {
   );
 
   useEffect(() => {
-    let countdown;
+    let countdown: NodeJS.Timeout;
     if (isShowOtp && timer > 0) {
       countdown = setInterval(() => {
         setTimer((prev) => prev - 1);
@@ -163,21 +190,21 @@ export default function Login() {
     ]);
   };
 
-  const handlePinChange = (text, index) => {
+  const handlePinChange = (text: string, index: number) => {
     const newPins = [...pins];
     newPins[index] = text;
     setPins(newPins);
-    if (text.length === 1 && index < 3) {
-      inputRefs[index + 1].current.focus();
+    if (text.length === 1 && index < 3 && inputRefs[index + 1].current) {
+      inputRefs[index + 1].current?.focus();
     }
   };
 
-  const handleKeyPress = (e, index) => {
-    if (e.nativeEvent.key === "Backspace" && !pins[index] && index > 0) {
+  const handleKeyPress = (e: NativeSyntheticEvent<TextInputKeyPressEventData>, index: number) => {
+    if (e.nativeEvent.key === "Backspace" && !pins[index] && index > 0 && inputRefs[index - 1].current) {
       const newPins = [...pins];
       newPins[index - 1] = "";
       setPins(newPins);
-      inputRefs[index - 1].current.focus();
+      inputRefs[index - 1].current?.focus();
     }
   };
 
@@ -196,12 +223,12 @@ export default function Login() {
   //   }
   // };
 
-  const extractOtpFromMessage = (message) => {
+  const extractOtpFromMessage = (message: string) => {
     const otpMatch = message.match(/\d{4}/); // Assuming 4-digit OTP
     return otpMatch ? otpMatch[0] : null;
   };
 
-  const showErrorAlert = (message) => {
+  const showErrorAlert = (message: string) => {
     setErrorMessage(message);
     setShowError(true);
   };
@@ -210,7 +237,7 @@ export default function Login() {
     setShowError(false);
   };
 
-  const verifyOtp = (otp) => {
+  const verifyOtp = (otp: string) => {
     setLoading(true);
     api
       .post("/auth/verify-otp", { mobile_number: mobile, otp })
@@ -240,10 +267,15 @@ export default function Login() {
 
   const loginAxio = () => {
     const indianMobilePattern = /^[6-9]\d{9}$/;
-    if (!mobile || !indianMobilePattern.test(mobile)) {
-      showErrorAlert("Please enter a valid 10-digit mobile number.");
+    if (!mobile) {
+      setMobileError("Please enter mobile number");
       return;
     }
+    if (!indianMobilePattern.test(mobile)) {
+      setMobileError("Invalid mobile number");
+      return;
+    }
+    setMobileError("");
     setLoading(true);
     api
       .post("/auth/check-mobile", { mobile_number: mobile })
@@ -252,7 +284,32 @@ export default function Login() {
         setTimer(120);
       })
       .catch((error) => {
-        showErrorAlert(error.response?.data?.error || "You are not registered.");
+        const errorMessage = error.response?.data?.error || "You are not registered.";
+        if (errorMessage.toLowerCase().includes("invalid mobile number")) {
+          Alert.alert(
+            "Invalid Mobile Number",
+            "This mobile number is not registered. Would you like to create an account?",
+            [
+              {
+                text: "Cancel",
+                style: "cancel",
+                onPress: () => setLoading(false)
+              },
+              {
+                text: "OK",
+                onPress: () => {
+                  setLoading(false);
+                  router.push({
+                    pathname: "/register",
+                    params: { mobile: mobile }
+                  });
+                }
+              }
+            ]
+          );
+        } else {
+          showErrorAlert(errorMessage);
+        }
       })
       .finally(() => setLoading(false));
   };
@@ -274,6 +331,21 @@ export default function Login() {
     setResendAttempts((prev) => prev + 1);
   };
 
+  const handleBackButton = () => {
+    if (isShowOtp) {
+      // If OTP fields are showing, hide them and go back to mobile input
+      setIsShowOtp(false);
+      setPins(["", "", "", ""]);
+      setTimer(120);
+      setResendAttempts(0);
+      // Stop SMS listener when going back to mobile input
+      stopSmsListener();
+    } else {
+      // If mobile input is showing, navigate back to previous route
+      router.back();
+    }
+  };
+
   if (isLoggedIn) return null;
 
   return (
@@ -292,13 +364,15 @@ export default function Login() {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.container}
         >
-          <View style={styles.formContainer}>
+          <View style={styles.logoContainer}>
             <Image
               source={theme.image.transparentLogo}
               style={[styles.logo, { width: logoWidth }]}
               resizeMode="contain"
             />
+          </View>
 
+          <View style={styles.formContainer}>
             <View style={styles.cardContainer}>
               <Text style={styles.pageTitle}>Welcome Back!</Text>
               <Text style={styles.subtitle}>Sign in to continue</Text>
@@ -308,9 +382,15 @@ export default function Login() {
                   <View style={styles.inputContainer}>
                     <PhoneInput
                       value={mobile}
-                      onChangeText={setMobile}
+                      onChangeText={(text) => {
+                        setMobile(text);
+                        setMobileError("");
+                      }}
                       loading={loading}
                     />
+                    {mobileError ? (
+                      <Text style={styles.errorText}>{mobileError}</Text>
+                    ) : null}
                   </View>
                   <TouchableOpacity
                     style={[styles.loginButton, loading && styles.loginButtonDisabled]}
@@ -399,7 +479,7 @@ export default function Login() {
 
               <TouchableOpacity
                 style={styles.backButton}
-                onPress={() => router.back()}
+                onPress={handleBackButton}
               >
                 <Ionicons name="arrow-back" size={20} color={theme.colors.white} />
                 <Text style={styles.backButtonText}>Back</Text>
@@ -421,26 +501,43 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   container: { 
-    flex: 1, 
-    justifyContent: "center" 
+    flex: 1,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 20,
+  },
+  logoContainer: {
+    width: '100%',
+    alignItems: 'center',
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    marginBottom: 20,
+  },
+  logo: { 
+    aspectRatio: 1,
   },
   formContainer: { 
-    paddingHorizontal: 20, 
-    alignItems: "center" 
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 0,
   },
   cardContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 20,
     padding: 20,
     width: '100%',
-    backdropFilter: 'blur(10px)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  logo: { 
-    aspectRatio: 1, 
-    marginTop: 90,
-    marginBottom: 20,
+    marginBottom: Platform.OS === 'ios' ? 20 : 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   pageTitle: {
     color: theme.colors.textLight,
@@ -546,20 +643,22 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textDecorationLine: "underline",
   },
-  registerContainer: { 
-    flexDirection: "row", 
-    marginTop: 20,
+  registerContainer: {
+    flexDirection: 'row',
     justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
   },
-  registerText: { 
-    color: theme.colors.white, 
-    fontSize: 16 
+  registerText: {
+    color: theme.colors.white,
+    fontSize: 16,
   },
   registerLink: {
     color: theme.colors.secondary,
     fontSize: 16,
-    fontWeight: "bold",
-    textDecorationLine: "underline",
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+    marginLeft: 4,
   },
   backButton: {
     marginTop: 20,
@@ -605,5 +704,11 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: 5,
+  },
+  errorText: {
+    color: '#ff4444',
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
   },
 });

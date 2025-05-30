@@ -154,22 +154,27 @@ export default function KycForm() {
       try {
         const res = await api.get(`/kyc/status/${user?.id}`);
         if (res.data && res.data.data) {
-          setKycId(res.data.data.id?.toString() || null);
+          const kycData = res.data.data;
+          setKycId(kycData.id?.toString() || null);
+          
+          // Map the API response to form fields
           setFormData({
-            doorno: res.data.data.doorno || "",
-            street: res.data.data.street || "",
-            area: res.data.data.area || "",
-            city: res.data.data.city || "",
-            district: res.data.data.district || "",
-            state: res.data.data.state || "",
-            country: res.data.data.country || "India",
-            pincode: res.data.data.pincode || "",
-            dob: res.data.data.dob ? new Date(res.data.data.dob).toLocaleDateString("en-GB") : "",
-            addressprooftype: res.data.data.addressproof || "",
-            idNumber: res.data.data.enternumber || "",
-            nominee_name: res.data.data.nominee_name || "",
-            nominee_relationship: res.data.data.nominee_relationship || "",
+            doorno: kycData.doorno || "",
+            street: kycData.street || "",
+            area: kycData.area || "",
+            city: kycData.city || "",
+            district: kycData.district || "",
+            state: kycData.state || "",
+            country: kycData.country || "India",
+            pincode: kycData.pincode || "",
+            dob: kycData.dob ? new Date(kycData.dob).toLocaleDateString("en-GB") : "",
+            addressprooftype: kycData.addressproof || "",
+            idNumber: kycData.enternumber || "",
+            nominee_name: kycData.nominee_name || "",
+            nominee_relationship: kycData.nominee_relationship || "",
           });
+          
+          console.log("Loaded KYC data:", kycData); // Add this for debugging
         }
       } catch (e) {
         console.error("Error fetching KYC:", e);
@@ -275,12 +280,6 @@ export default function KycForm() {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
-
-      // Clear ID Number when Address Proof Type changes
-      ...(field === "addressprooftype" && { idNumber: "" }),
-
-      // Clear Nominee Name when Nominee Relationship changes
-      ...(field === "nominee_relationship" && { nominee_name: "" }),
     }));
     // Clear error for the field when the user starts typing/changing
     if (value) {

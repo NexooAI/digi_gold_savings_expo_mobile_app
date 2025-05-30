@@ -8,22 +8,35 @@ import {
   TextInput,
   Image,
   KeyboardAvoidingView,
-  ScrollView,
   Platform,
   Dimensions,
   Alert,
 } from "react-native";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useRouter, useLocalSearchParams } from "expo-router";
 import PhoneInput from "../components/PhoneInputs";
 import api from "@/services/api";
 import { theme } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, Feather } from "@expo/vector-icons";
+import { useOtpAutoFetch } from "@/hooks/useOtpAutoFetch";
 
 const { width } = Dimensions.get("window");
 const logoWidth = width * 0.3;
 const OTP_RESEND_LIMIT = 3;
 const INITIAL_TIMER = 120;
+
+// Error Alert Component (matching login)
+const ErrorAlert = ({ message, onClose }: { message: string; onClose: () => void }) => (
+  <View style={styles.errorAlert}>
+    <View style={styles.errorContent}>
+      <Ionicons name="alert-circle" size={24} color="#fff" />
+      <Text style={styles.errorMessage}>{message}</Text>
+    </View>
+    <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+      <Ionicons name="close" size={24} color="#fff" />
+    </TouchableOpacity>
+  </View>
+);
 
 export default function Register() {
   const [mobile, setMobile] = useState("");
@@ -32,9 +45,20 @@ export default function Register() {
   const [pins, setPins] = useState(["", "", "", ""]);
   const [timer, setTimer] = useState(INITIAL_TIMER);
   const [resendCount, setResendCount] = useState(OTP_RESEND_LIMIT);
-  const intervalRef = useRef(null);
+  const [showOtp, setShowOtp] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [showError, setShowError] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
-  const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
+  const params = useLocalSearchParams();
+  const inputRefs = [useRef<TextInput>(null), useRef<TextInput>(null), useRef<TextInput>(null), useRef<TextInput>(null)];
+
+  // Add useEffect to handle pre-filled mobile number
+  useEffect(() => {
+    if (params.mobile) {
+      setMobile(params.mobile as string);
+    }
+  }, [params]);
 
   const startTimer = () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -44,29 +68,27 @@ export default function Register() {
     }, 1000);
   };
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs
-      .toString()
-      .padStart(2, "0")}`;
+  const showErrorAlert = (message: string) => {
+    setErrorMessage(message);
+    setShowError(true);
+  };
+
+  const hideErrorAlert = () => {
+    setShowError(false);
   };
 
   const handleGetOtp = () => {
     const indianMobilePattern = /^[6-9]\d{9}$/;
 
     if (!mobile || !indianMobilePattern.test(mobile)) {
-      Alert.alert(
-        "Error",
-        "Please enter a valid 10-digit Indian mobile number."
-      );
+      showErrorAlert("Please enter a valid 10-digit Indian mobile number.");
       return;
     }
 
     setLoading(true);
     api
-      .post("/register-mobile", { mobile_number: mobile })
-      .then((res) => {
+      .post("/register/mobile", { mobile_number: mobile })
+      .then((res: any) => {
         if (res.status === 200) {
           setOtpSent(true);
           setResendCount(OTP_RESEND_LIMIT);
@@ -87,37 +109,35 @@ export default function Register() {
       .then(() => {
         setResendCount((prev) => prev - 1);
         startTimer();
+        setPins(["", "", "", ""]);
         Alert.alert("Success", "OTP resent successfully");
       })
       .catch(handleApiError)
       .finally(() => setLoading(false));
   };
 
-  const handleApiError = (error) => {
+  const handleApiError = (error: any) => {
     const message = error.response?.data?.error || "An error occurred";
     if (message === "Mobile number already registered") {
-      Alert.alert(
-        "Error",
-        "Mobile number already registered. Please goto login page."
-      );
+      showErrorAlert("Mobile number already registered. Please goto login page.");
       return;
     }
-    Alert.alert("Error", message);
+    showErrorAlert(message);
   };
 
-  const handlePinChange = (text, index) => {
+  const handlePinChange = (text: string, index: number) => {
     const newPins = [...pins];
     newPins[index] = text;
     setPins(newPins);
 
     if (text.length === 1 && index < 3) {
-      inputRefs[index + 1].current.focus();
+      inputRefs[index + 1].current?.focus();
     }
   };
 
-  const handleKeyPress = ({ nativeEvent }, index) => {
+  const handleKeyPress = ({ nativeEvent }: any, index: number) => {
     if (nativeEvent.key === "Backspace" && pins[index] === "" && index > 0) {
-      inputRefs[index - 1].current.focus();
+      inputRefs[index - 1].current?.focus();
       const newPins = [...pins];
       newPins[index - 1] = "";
       setPins(newPins);
@@ -127,24 +147,44 @@ export default function Register() {
   const handleVerifyOtp = () => {
     const otp = pins.join("");
     if (otp.length !== 4) {
-      Alert.alert("Error", "Please enter complete 4-digit OTP");
+      showErrorAlert("Please enter complete 4-digit OTP");
       return;
     }
     setLoading(true);
     const data = { mobile_number: mobile, otp };
     api
-      .post("/verify-otp", data)
-      .then((res) => {
+      .post("/register/verify-otp", data)
+      .then((res: any) => {
         if (res.status === 200) {
-          router.push({ pathname: "/(auth)/kyc", params: { mobile } });
+          router.push({ pathname: "/(auth)/userBasicDetails", params: { mobile } });
           setPins(["", "", "", ""]);
         }
       })
-      .catch((err) =>
-        Alert.alert("Error", err.response?.data?.message || "Invalid OTP")
+      .catch((err: any) =>
+        showErrorAlert(err.response?.data?.message || "Invalid OTP")
       )
       .finally(() => setLoading(false));
   };
+
+  // Auto-fetch OTP functionality
+  const handleOtpAutoFill = (otp: string) => {
+    console.log('Auto-filling OTP in register:', otp);
+    const otpArray = otp.split('');
+    setPins(otpArray);
+    
+    // Auto-verify if we get a complete 4-digit OTP
+    if (otp.length === 4) {
+      setTimeout(() => {
+        handleVerifyOtp();
+      }, 500); // Small delay to show the filled OTP to user
+    }
+  };
+
+  const { startSmsListener, stopSmsListener } = useOtpAutoFetch({
+    onOtpReceived: handleOtpAutoFill,
+    isActive: otpSent, // Start listening when OTP is sent
+    senderName: 'Dc Jewellery', // Match your SMS sender
+  });
 
   useFocusEffect(
     React.useCallback(() => {
@@ -160,10 +200,36 @@ export default function Register() {
   );
 
   useEffect(() => {
+    let countdown: NodeJS.Timeout;
+    if (otpSent && timer > 0) {
+      countdown = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(countdown);
+  }, [otpSent, timer]);
+
+  useEffect(() => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, []);
+
+  const handleBackButton = () => {
+    if (otpSent) {
+      // If OTP fields are showing, hide them and go back to mobile input
+      setOtpSent(false);
+      setPins(["", "", "", ""]);
+      setTimer(INITIAL_TIMER);
+      setResendCount(OTP_RESEND_LIMIT);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      // Stop SMS listener when going back to mobile input
+      stopSmsListener();
+    } else {
+      // If mobile input is showing, navigate back to previous route
+      router.back();
+    }
+  };
 
   return (
     <ImageBackground
@@ -174,41 +240,65 @@ export default function Register() {
         colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.7)']}
         style={styles.gradient}
       >
+        {showError && (
+          <ErrorAlert message={errorMessage} onClose={hideErrorAlert} />
+        )}
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
           style={styles.container}
         >
-          <ScrollView
-            contentContainerStyle={styles.scrollContainer}
-            keyboardShouldPersistTaps="handled"
-          >
-            <View style={styles.formContainer}>
-              <Image
-                source={theme.image.transparentLogo}
-                style={[styles.logo, { width: logoWidth, aspectRatio: 1 }]}
-                resizeMode="contain"
-              />
-              
-              <View style={styles.cardContainer}>
-                <Text style={styles.pageTitle}>Create Account</Text>
-                <Text style={styles.subtitle}>Join us to start your journey</Text>
+          <View style={styles.logoContainer}>
+            <Image
+              source={theme.image.transparentLogo}
+              style={[styles.logo, { width: logoWidth }]}
+              resizeMode="contain"
+            />
+          </View>
 
-                <View style={styles.inputContainer}>
-                  <PhoneInput
-                    value={mobile}
-                    onChangeText={setMobile}
-                    loading={loading}
-                  />
-                </View>
+          <View style={styles.formContainer}>
+            <View style={styles.cardContainer}>
+              <Text style={styles.pageTitle}>Create Account</Text>
+              <Text style={styles.subtitle}>Join us to start your journey</Text>
 
-                {otpSent && (
-                  <View style={styles.otpContainer}>
-                    <Text style={styles.otpTitle}>Enter OTP</Text>
-                    <Text style={styles.otpSentText}>
-                      OTP sent to {mobile.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3")}
-                    </Text>
-                    
+              {!otpSent ? (
+                <>
+                  <View style={styles.inputContainer}>
+                    <PhoneInput
+                      value={mobile}
+                      onChangeText={setMobile}
+                      loading={loading}
+                    />
+                  </View>
+                  <TouchableOpacity
+                    style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+                    onPress={handleGetOtp}
+                    disabled={loading}
+                  >
+                    <LinearGradient
+                      colors={['#ffc90c', '#ffd700']}
+                      style={styles.gradientButton}
+                    >
+                      <Text style={styles.loginButtonText}>
+                        {loading ? "Sending..." : "Get OTP"}
+                      </Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                  <View style={styles.registerContainer}>
+                    <Text style={styles.registerText}>Already have an account? </Text>
+                    <TouchableOpacity onPress={() => router.push("/login")}>
+                      <Text style={styles.registerLink}>Login</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              ) : (
+                <View style={styles.otpContainer}>
+                  <Text style={styles.otpTitle}>Enter OTP</Text>
+                  <Text style={styles.otpSentText}>
+                    OTP sent to{" "}
+                    {mobile.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3")}
+                  </Text>
+
+                  <View style={styles.otpInputsWrapper}>
                     <View style={styles.otpInputsContainer}>
                       {pins.map((pin, index) => (
                         <TextInput
@@ -220,93 +310,61 @@ export default function Register() {
                           value={pin}
                           onChangeText={(text) => handlePinChange(text, index)}
                           onKeyPress={(e) => handleKeyPress(e, index)}
-                          textAlign="center"
+                          secureTextEntry={!showOtp}
+                          textContentType="oneTimeCode"
+                          autoComplete="sms-otp"
                         />
                       ))}
                     </View>
-
                     <TouchableOpacity
-                      style={styles.linkButton}
-                      onPress={handleResendOtp}
-                      disabled={timer > 0 || resendCount <= 0}
+                      onPress={() => setShowOtp((prev) => !prev)}
+                      style={styles.eyeButton}
                     >
-                      <View style={styles.resendContainer}>
-                        <Ionicons 
-                          name="refresh-outline" 
-                          size={20} 
-                          color={timer > 0 || resendCount <= 0 ? 'rgba(255,255,255,0.5)' : theme.colors.secondary} 
-                        />
-                        <Text
-                          style={[
-                            styles.linkButtonText,
-                            (timer > 0 || resendCount <= 0) && styles.disabledText,
-                          ]}
-                        >
-                          {resendCount > 0
-                            ? `Resend OTP (${resendCount} left) ${
-                                timer > 0 ? `- Wait ${formatTime(timer)}` : ""
-                              }`
-                            : "No resends left"}
-                        </Text>
-                      </View>
+                      <Feather
+                        name={showOtp ? "eye-off" : "eye"}
+                        size={24}
+                        color={theme.colors.white}
+                      />
                     </TouchableOpacity>
                   </View>
-                )}
 
-                {!otpSent ? (
+                  <View style={styles.timerContainer}>
+                    <Ionicons name="time-outline" size={20} color={theme.colors.white} />
+                    <Text style={styles.timerText}>Resend in {timer}s</Text>
+                  </View>
+                  
+                  {timer === 0 && resendCount > 0 && (
+                    <TouchableOpacity onPress={handleResendOtp} style={styles.resendButton}>
+                      <Text style={styles.resendText}>Resend OTP ({resendCount} left)</Text>
+                    </TouchableOpacity>
+                  )}
+                  
                   <TouchableOpacity
-                    style={styles.button}
-                    onPress={handleGetOtp}
-                    disabled={loading}
-                  >
-                    <LinearGradient
-                      colors={['#ffc90c', '#ffd700']}
-                      style={styles.gradientButton}
-                    >
-                      <Text style={styles.buttonText}>
-                        {loading ? "Sending..." : "Get OTP"}
-                      </Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity
-                    style={[
-                      styles.button,
-                      pins.join("").length < 4 && styles.disabledButton,
-                    ]}
-                    disabled={pins.join("").length < 4 || loading}
+                    style={[styles.loginButton, loading && styles.loginButtonDisabled]}
                     onPress={handleVerifyOtp}
+                    disabled={loading || pins.includes("")}
                   >
                     <LinearGradient
                       colors={['#ffc90c', '#ffd700']}
                       style={styles.gradientButton}
                     >
-                      <Text style={styles.buttonText}>
+                      <Text style={styles.loginButtonText}>
                         {loading ? "Verifying..." : "Verify OTP"}
                       </Text>
                     </LinearGradient>
                   </TouchableOpacity>
-                )}
-
-                <View style={styles.loginPromptContainer}>
-                  <Text style={styles.loginPromptText}>
-                    Already have an account?{" "}
-                  </Text>
-                  <TouchableOpacity onPress={() => router.push("/login")}>
-                    <Text style={styles.loginLinkText}>Login</Text>
-                  </TouchableOpacity>
                 </View>
-              </View>
+              )}
 
               <TouchableOpacity
                 style={styles.backButton}
-                onPress={() => router.back()}
+                onPress={handleBackButton}
               >
                 <Ionicons name="arrow-back" size={20} color={theme.colors.white} />
                 <Text style={styles.backButtonText}>Back</Text>
               </TouchableOpacity>
             </View>
-          </ScrollView>
+          </View>
         </KeyboardAvoidingView>
       </LinearGradient>
     </ImageBackground>
@@ -314,37 +372,51 @@ export default function Register() {
 }
 
 const styles = StyleSheet.create({
-  backgroundImage: {
-    flex: 1,
-    resizeMode: "cover",
+  backgroundImage: { 
+    flex: 1, 
+    resizeMode: "cover" 
   },
   gradient: {
     flex: 1,
   },
-  container: {
+  container: { 
     flex: 1,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 20,
   },
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: "center",
+  logoContainer: {
+    width: '100%',
+    alignItems: 'center',
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    marginBottom: 20,
   },
-  formContainer: {
+  logo: { 
+    aspectRatio: 1,
+  },
+  formContainer: { 
+    flex: 1,
+    justifyContent: 'center',
     paddingHorizontal: 20,
-    alignItems: "center",
+    paddingBottom: Platform.OS === 'ios' ? 40 : 0,
   },
   cardContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 20,
     padding: 20,
     width: '100%',
-    backdropFilter: 'blur(10px)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  logo: {
-    aspectRatio: 1,
-    marginTop: 90,
-    marginBottom: 20,
+    marginBottom: Platform.OS === 'ios' ? 20 : 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   pageTitle: {
     color: theme.colors.textLight,
@@ -364,7 +436,7 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 20,
   },
-  button: {
+  loginButton: {
     width: "100%",
     height: 50,
     borderRadius: 25,
@@ -376,36 +448,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  buttonText: {
+  loginButtonDisabled: { 
+    opacity: 0.6 
+  },
+  loginButtonText: {
     color: theme.colors.textDark,
     fontSize: 18,
-    fontWeight: "bold",
-  },
-  linkButton: {
-    marginTop: 15,
-  },
-  resendContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  linkButtonText: {
-    color: theme.colors.secondary,
-    fontSize: 14,
-    marginLeft: 8,
-  },
-  loginPromptContainer: {
-    flexDirection: "row",
-    marginTop: 20,
-    justifyContent: 'center',
-  },
-  loginPromptText: {
-    color: theme.colors.textLight,
-    fontSize: 16,
-  },
-  loginLinkText: {
-    color: theme.colors.secondary,
-    fontSize: 16,
     fontWeight: "bold",
   },
   otpContainer: {
@@ -425,11 +473,18 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     opacity: 0.8,
   },
+  otpInputsWrapper: {
+    position: "relative",
+    width: "70%",
+    alignSelf: "center",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   otpInputsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: "70%",
-    marginBottom: 15,
+    width: "100%",
+    marginTop: 10,
   },
   otpInput: {
     width: 50,
@@ -440,12 +495,49 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     fontSize: 24,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    textAlign: "center",
   },
-  disabledText: {
-    opacity: 0.5,
+  eyeButton: {
+    position: "absolute",
+    right: -40,
+    top: 20,
   },
-  disabledButton: {
-    opacity: 0.6,
+  timerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 15,
+  },
+  timerText: { 
+    color: theme.colors.white, 
+    marginLeft: 8,
+    fontSize: 16,
+  },
+  resendButton: {
+    marginTop: 10,
+    padding: 10,
+  },
+  resendText: {
+    color: theme.colors.secondary,
+    fontSize: 16,
+    fontWeight: "bold",
+    textDecorationLine: "underline",
+  },
+  registerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  registerText: {
+    color: theme.colors.white,
+    fontSize: 16,
+  },
+  registerLink: {
+    color: theme.colors.secondary,
+    fontSize: 16,
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+    marginLeft: 4,
   },
   backButton: {
     marginTop: 20,
@@ -456,5 +548,40 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     fontSize: 16,
     marginLeft: 5,
+  },
+  errorAlert: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 30,
+    left: 20,
+    right: 20,
+    backgroundColor: 'rgba(255, 68, 68, 0.95)',
+    borderRadius: 12,
+    padding: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    zIndex: 1000,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  errorContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  errorMessage: {
+    color: '#fff',
+    fontSize: 16,
+    marginLeft: 10,
+    flex: 1,
+  },
+  closeButton: {
+    padding: 5,
   },
 });

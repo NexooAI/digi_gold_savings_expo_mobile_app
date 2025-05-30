@@ -8,6 +8,7 @@ import NetInfo from '@react-native-community/netinfo';
 import { showToast } from './notification';
 import { Alert } from 'react-native';
 import Toast from 'react-native-root-toast';
+import LoadingService from './loadingServices';
 
 // Network state check
 const checkNetworkState = async () => {
@@ -52,6 +53,9 @@ const handleLogout = async () => {
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
+      // Show loading for all API calls
+      LoadingService.show('Loading...');
+      
       await checkNetworkState();
 
       const token = await checkTokenValidity();
@@ -61,6 +65,9 @@ api.interceptors.request.use(
       }
       return config;
     } catch (error: any) {
+      // Hide loading on error
+      LoadingService.hide();
+      
       if (error.message === 'NO_INTERNET') {
         showToast('No internet connection. Please check your network.', 'error');
       }
@@ -68,6 +75,8 @@ api.interceptors.request.use(
     }
   },
   (error: AxiosError) => {
+    // Hide loading on request error
+    LoadingService.hide();
     return Promise.reject(error);
   }
 );
@@ -75,6 +84,9 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response: AxiosResponse) => {
+    // Hide loading on successful response
+    LoadingService.hide();
+    
     // Show success toast for non-GET requests
     if (response.config.method?.toUpperCase() !== 'GET') {
       const message = response.data?.message || 'Operation completed successfully';
@@ -83,6 +95,9 @@ api.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
+    // Hide loading on error response
+    LoadingService.hide();
+    
     // Handle different error cases
     if (error.code === 'ECONNABORTED') {
       showToast('Request timeout. Please try again.', 'error');

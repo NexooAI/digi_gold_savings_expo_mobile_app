@@ -22,147 +22,130 @@ import { theme } from "@/constants/theme";
 import NotificationService from "@/services/NotificationService";
 import * as Notifications from "expo-notifications";
 import { RootSiblingParent } from "react-native-root-siblings";
+import GlobalLoadingProvider from "@/app/components/GlobalLoadingProvider";
 
 export default function RootLayout() {
   const { isFirstLaunch } = useFirstLaunch();
-  const [apiLoading, setApiLoading] = useState<boolean>(false);
-  const [isNavigationReady, setIsNavigationReady] = useState(false);
   const router = useRouter();
-  const { isLoggedIn } = useGlobalStore();
-  const notificationListener = useRef<Notifications.Subscription | null>(null);
-  const responseListener = useRef<Notifications.Subscription | null>(null);
-  const [backPressCount, setBackPressCount] = useState(0);
-  const backPressTimeout = useRef<NodeJS.Timeout | null>(null);
-
-  // Initialize locale
-  useEffect(() => {
-    const initLocale = async () => {
-      const locale = await initializeAppLocale();
-      // Sync the locale with the global store
-      const { setLanguage } = useGlobalStore.getState();
-      await setLanguage(locale);
-    };
-    initLocale();
-  }, []);
-
-  // Register global loading callback
-  useEffect(() => {
-    LoadingService.register(setApiLoading);
-  }, []);
-
-  // Navigation readiness handler
   const navigation = useNavigation();
-  useEffect(() => {
-    const unsubscribe = navigation.addListener("state", () => {
-      setIsNavigationReady(true);
-    });
-    return unsubscribe;
-  }, [navigation]);
+  const [overallLoading, setOverallLoading] = useState<boolean>(false);
+  const { user, setUser, setLanguage } = useGlobalStore();
 
-  // Handle back button press
+  // Initialize language on app start
+  useEffect(() => {
+    const initLanguage = async () => {
+      try {
+        const locale = await initializeAppLocale();
+        setLanguage(locale as "en" | "ml");
+      } catch (error) {
+        console.error("Failed to initialize language:", error);
+        setLanguage("en"); // fallback
+      }
+    };
+
+    initLanguage();
+  }, [setLanguage]);
+
+  // Setup notification handler
+  useEffect(() => {
+    const setupNotifications = async () => {
+      await NotificationService.setupNotifications();
+    };
+
+    setupNotifications();
+
+    // Handle notification when app is opened
+    const subscription = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        // Handle notification tap
+        console.log("Notification tapped:", response);
+      }
+    );
+
+    return () => subscription.remove();
+  }, []);
+
+  // Auto-login functionality
+  useEffect(() => {
+    const checkStoredUser = async () => {
+      try {
+        const storedUser = await SecureStore.getItemAsync("user");
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+        }
+      } catch (error) {
+        console.error("Error retrieving stored user:", error);
+      }
+    };
+
+    checkStoredUser();
+  }, [setUser]);
+
+  // Register loading service
+  useEffect(() => {
+    LoadingService.register((isLoading: boolean) => {
+      setOverallLoading(isLoading);
+    });
+  }, []);
+
+  // Setup app state listener
+  useEffect(() => {
+    return setupAppStateListener();
+  }, []);
+
+  // Android back button handler
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
-        if (isLoggedIn) {
-          setBackPressCount((prev) => {
-            const newCount = prev + 1;
+        // Get current route
+        const state = navigation.getState?.();
+        const currentRoute = state?.routes?.[state.index];
 
-            // Clear previous timeout
-            if (backPressTimeout.current) {
-              clearTimeout(backPressTimeout.current);
-            }
+        // Allow back on certain screens
+        const allowedBackScreens = [
+          "home",
+          "savings",
+          "transactions",
+          "profile",
+          "login",
+        ];
 
-            // Reset count after 2 seconds
-            backPressTimeout.current = setTimeout(() => {
-              setBackPressCount(0);
-            }, 2000);
-
-            // Close app after 2 presses
-            if (newCount >= 2) {
-              BackHandler.exitApp();
-              return 0;
-            }
-
-            return newCount;
-          });
-          return true;
+        if (currentRoute && allowedBackScreens.includes(currentRoute.name)) {
+          return false; // Allow default behavior
         }
-        return false;
+
+        // On main tabs, show exit confirmation
+        if (
+          currentRoute?.name === "(tabs)" ||
+          currentRoute?.name === "index"
+        ) {
+          Alert.alert(
+            "Exit App",
+            "Are you sure you want to exit?",
+            [
+              {
+                text: "Cancel",
+                onPress: () => null,
+                style: "cancel",
+              },
+              {
+                text: "Exit",
+                onPress: () => BackHandler.exitApp(),
+              },
+            ],
+            { cancelable: false }
+          );
+          return true; // Prevent default behavior
+        }
+
+        return false; // Allow default behavior for other screens
       }
     );
 
-    return () => {
-      backHandler.remove();
-      if (backPressTimeout.current) {
-        clearTimeout(backPressTimeout.current);
-      }
-    };
-  }, [isLoggedIn]);
-
-  useEffect(() => {
-    setupAppStateListener();
-  }, []);
-
-  useEffect(() => {
-    // Register for push notifications
-    NotificationService.registerForPushNotificationsAsync();
-
-    // Listen for incoming notifications while the app is foregrounded
-    notificationListener.current =
-      NotificationService.addNotificationReceivedListener((notification) => {
-        console.log("Notification received:", notification);
-      });
-
-    // Listen for user interactions with notifications
-    responseListener.current =
-      NotificationService.addNotificationResponseReceivedListener(
-        (response) => {
-          console.log("Notification response:", response);
-        }
-      );
-
-    return () => {
-      if (notificationListener.current) {
-        Notifications.removeNotificationSubscription(
-          notificationListener.current
-        );
-      }
-      if (responseListener.current) {
-        Notifications.removeNotificationSubscription(responseListener.current);
-      }
-    };
-  }, []);
-
-  // Handle navigation based on first launch and auth state
-  useEffect(() => {
-    if (!isNavigationReady || isFirstLaunch === null) return;
-
-    const handleNavigation = async () => {
-      if (isFirstLaunch) {
-        router.replace("/intro");
-        return;
-      }
-
-      // If user is already logged in, redirect to home
-      if (isLoggedIn) {
-        router.replace("/(app)/(tabs)/home");
-        return;
-      }
-
-      // Check for existing auth token
-      const token = await SecureStore.getItemAsync("authToken");
-      if (token) {
-        router.replace("/(auth)/mpin_verify");
-      } else {
-        router.replace("/(auth)/login");
-      }
-    };
-
-    handleNavigation();
-  }, [isFirstLaunch, isLoggedIn, isNavigationReady]);
-
-  const overallLoading = apiLoading;
+    return () => backHandler.remove();
+  }, [navigation]);
 
   if (isFirstLaunch === null) {
     return (
@@ -177,25 +160,21 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <AuthProvider>
           <LanguageProvider1>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="intro" options={{ gestureEnabled: false }} />
-              <Stack.Screen name="(app)" options={{ gestureEnabled: false }} />
-              <Stack.Screen name="(auth)" options={{ gestureEnabled: false }} />
-              <Stack.Screen name="login" options={{ gestureEnabled: false }} />
-              <Stack.Screen 
-                name="[...missing]" 
-                options={{ 
-                  gestureEnabled: false,
-                  animation: 'fade',
-                }} 
-              />
-            </Stack>
-
-            {overallLoading && (
-              <View style={styles.loadingOverlay}>
-                <ActivityIndicator size="large" color="#fff" />
-              </View>
-            )}
+            <GlobalLoadingProvider>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="intro" options={{ gestureEnabled: false }} />
+                <Stack.Screen name="(app)" options={{ gestureEnabled: false }} />
+                <Stack.Screen name="(auth)" options={{ gestureEnabled: false }} />
+                <Stack.Screen name="login" options={{ gestureEnabled: false }} />
+                <Stack.Screen 
+                  name="[...missing]" 
+                  options={{ 
+                    gestureEnabled: false,
+                    animation: 'fade',
+                  }} 
+                />
+              </Stack>
+            </GlobalLoadingProvider>
           </LanguageProvider1>
         </AuthProvider>
       </GestureHandlerRootView>

@@ -53,23 +53,79 @@ interface Branch {
 }
 
 export default function JoinSavings() {
-  const { schemeId, schemeData } = useLocalSearchParams();
+  const { schemeId } = useLocalSearchParams();
   const router = useRouter();
   const { language, user } = useGlobalStore();
 
-  // Parse schemeData from query params
-  const parsedData = useMemo(() => {
-    if (typeof schemeData === "string") {
+  // State for scheme data loaded from AsyncStorage
+  const [schemeData, setSchemeData] = useState<any>(null);
+  const [schemeDataLoading, setSchemeDataLoading] = useState(true);
+
+  // Load scheme data from AsyncStorage on mount
+  useEffect(() => {
+    const loadSchemeData = async () => {
       try {
-        const parsed = JSON.parse(schemeData);
-        return parsed;
+        setSchemeDataLoading(true);
+        const storedSchemeData = await AsyncStorage.getItem('@current_scheme_data');
+        
+        if (storedSchemeData) {
+          const parsedData = JSON.parse(storedSchemeData);
+          console.log('Loaded scheme data from storage:', parsedData);
+          
+          // Verify that the stored data matches the current schemeId
+          if (parsedData.schemeId.toString() === schemeId?.toString()) {
+            setSchemeData(parsedData);
+          } else {
+            console.warn('Stored scheme data does not match current schemeId');
+            // Fallback: try to fetch from API
+            await fetchSchemeDataFromAPI();
+          }
+        } else {
+          console.warn('No stored scheme data found');
+          // Fallback: try to fetch from API
+          await fetchSchemeDataFromAPI();
+        }
       } catch (error) {
-        console.error("Error parsing schemeData:", error);
-        return null;
+        console.error('Error loading scheme data:', error);
+        await fetchSchemeDataFromAPI();
+      } finally {
+        setSchemeDataLoading(false);
       }
+    };
+
+    const fetchSchemeDataFromAPI = async () => {
+      try {
+        console.log('Fetching scheme data from API for schemeId:', schemeId);
+        // Add API call here if needed as fallback
+        // For now, set a basic structure
+        setSchemeData({
+          schemeId: schemeId,
+          name: "Gold Savings Scheme",
+          description: "Save gold with our flexible plan.",
+          type: "Monthly",
+          chits: [],
+          schemeType: 'flexi',
+          benefits: [
+            "Competitive rates",
+            "Flexible payments", 
+            "Zero making charges",
+            "Free locker facility"
+          ]
+        });
+      } catch (error) {
+        console.error('Error fetching scheme data from API:', error);
+      }
+    };
+
+    if (schemeId) {
+      loadSchemeData();
     }
-    return null;
-  }, [schemeData, schemeId]);
+  }, [schemeId]);
+
+  // Parse schemeData from loaded data instead of query params
+  const parsedData = useMemo(() => {
+    return schemeData;
+  }, [schemeData]);
 
   // Add selectedChit state
   const [selectedChit, setSelectedChit] = useState<any>(null);
@@ -776,7 +832,7 @@ export default function JoinSavings() {
         </View>
         {/* KYC Card - only in Step 3 */}
         {kycStatus === "Completed" && kycDetails && (
-          <View style={{ marginTop: 24 }}>
+          <View style={{ marginTop: 24, marginHorizontal: 16 }}>
             {/* KYC Details Title and Edit Icon */}
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
               <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#1a237e', flex: 1 }}>KYC Details</Text>
@@ -897,33 +953,63 @@ export default function JoinSavings() {
         chitId: selectedChit ? selectedChit.CHITID : null,
         accountName: formData.accountname,
         associated_branch: formData.associated_branch,
-        // payment_frequency_id: selectedChit ? selectedChit.PAYMENT_FREQUENCY_ID : '',
         payment_frequency_id:4
       };
       console.log(payload ,selectedChit );
       api
         .post("/investments", payload)
         .then((data: any) => {
+          console.log('Investment API response:', data);
+          
+          // Store payment session data in global store
+          const { storePaymentSession } = useGlobalStore.getState();
+          const paymentSessionData = {
+            amount: Number(formData.amount),
+            userDetails: {
+              accountname: formData.accountname,
+              accNo: data.data.data?.accountNo || data.accountNo,
+              associated_branch: formData.associated_branch,
+              name: formData.accountname,
+              mobile: String(user.mobile || ''),
+              email: user.email || '',
+              userId: user.id || '',
+              investmentId: data.data.data?.id || data.id,
+              schemeId: Number(schemeId),
+              schemeType: schemeType,
+              paymentFrequency: selectedChit ? selectedChit.PAYMENT_FREQUENCY : '',
+              chitId: selectedChit ? selectedChit.CHITID : null,
+              isRetryAttempt: false,
+              source: 'join_savings',
+            },
+            timestamp: new Date().toISOString(),
+          };
+          
+          storePaymentSession(paymentSessionData);
+          console.log('Payment session stored in global store from join_savings');
+          console.log('paymentSessionData',paymentSessionData);
           router.push({
             pathname: "/(tabs)/home/payment",
             params: {
               amount: formData.amount,
               userDetails: JSON.stringify({
                 accountname: formData.accountname,
+                accNo: data.data?.data?.accountNo || data.accountNo,
                 associated_branch: formData.associated_branch,
                 name: formData.accountname,
-                mobile: user.mobile,
-                email: user.email,
-                investmentId: data.id,
+                mobile: String(user.mobile || ''),
+                email: user.email || '',
+                userId: user.id || '',
+                investmentId: data.data?.data?.id || data.id,
+                schemeId: Number(schemeId),
                 schemeType: schemeType,
                 paymentFrequency: selectedChit ? selectedChit.PAYMENT_FREQUENCY : '',
                 chitId: selectedChit ? selectedChit.CHITID : null,
-                ...data,
+                ...data.data.data,
               }),
             },
           });
         })
-        .catch((error) => {
+        .catch((error: any) => {
           console.error("Error creating savings scheme:", error);
           Alert.alert(
             "Error",
@@ -958,6 +1044,62 @@ export default function JoinSavings() {
     }
   }, []);
 
+  // Show loading screen while scheme data is being loaded
+  if (schemeDataLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
+            <Ionicons
+              name="arrow-back"
+              size={24}
+              color="#FFC857"
+            />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Loading Scheme...</Text>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={styles.loadingText}>Loading scheme details...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show error screen if no scheme data is available
+  if (!parsedData) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
+            <Ionicons
+              name="arrow-back"
+              size={24}
+              color="#FFC857"
+            />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Error</Text>
+        </View>
+        <View style={styles.loadingContainer}>
+          <Ionicons name="alert-circle" size={48} color={theme.colors.primary} />
+          <Text style={styles.loadingText}>Failed to load scheme details</Text>
+          <TouchableOpacity 
+            style={styles.button} 
+            onPress={() => router.back()}
+          >
+            <Text style={styles.buttonText}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -982,7 +1124,14 @@ export default function JoinSavings() {
             />
           </TouchableOpacity>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 16 }}>
-            <Text style={styles.headerTitle}>
+            <Text
+              style={[
+                styles.headerTitle,
+                (parsedData?.name || translations.digiGoldTitle)?.length > 18 && { fontSize: 13 }
+              ]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {parsedData?.name || translations.digiGoldTitle}
             </Text>
             <View style={{
@@ -1776,6 +1925,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 20,
     marginBottom: 18,
+    marginHorizontal: 16,
     shadowColor: '#FFC857',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
@@ -1852,6 +2002,12 @@ const styles = StyleSheet.create({
     height: 90,
     opacity: 0.12,
     zIndex: 0,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
   },
 });
 

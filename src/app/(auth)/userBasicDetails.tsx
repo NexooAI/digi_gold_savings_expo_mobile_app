@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,16 +6,9 @@ import {
   StyleSheet,
   ImageBackground,
   TextInput,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Dimensions,
-  Alert,
-  ScrollView,
-  Keyboard,
-  Animated,
-  NativeSyntheticEvent,
-  TextInputKeyPressEventData,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useLocalSearchParams } from "expo-router";
@@ -24,55 +17,19 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 
 const { width } = Dimensions.get("window");
-const logoWidth = width * 0.3;
 
 // Error Alert Component (matching login page)
 const ErrorAlert = ({ message, onClose }: { message: string; onClose: () => void }) => {
-  const translateY = useRef(new Animated.Value(-100)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
-
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(translateY, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
     const timer = setTimeout(() => {
-      Animated.parallel([
-        Animated.timing(translateY, {
-          toValue: -100,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacity, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start(() => onClose());
+      onClose();
     }, 3000);
 
     return () => clearTimeout(timer);
   }, []);
 
   return (
-    <Animated.View
-      style={[
-        styles.errorAlert,
-        {
-          transform: [{ translateY }],
-          opacity,
-        },
-      ]}
-    >
+    <View style={styles.errorAlert}>
       <View style={styles.errorContent}>
         <Ionicons name="alert-circle" size={24} color="#fff" />
         <Text style={styles.errorMessage}>{message}</Text>
@@ -80,7 +37,7 @@ const ErrorAlert = ({ message, onClose }: { message: string; onClose: () => void
       <TouchableOpacity onPress={onClose} style={styles.closeButton}>
         <Ionicons name="close" size={20} color="#fff" />
       </TouchableOpacity>
-    </Animated.View>
+    </View>
   );
 };
 
@@ -88,7 +45,6 @@ export default function BasicDetailsForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [referralCode, setReferralCode] = useState("");
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [showError, setShowError] = useState(false);
@@ -99,7 +55,6 @@ export default function BasicDetailsForm() {
   const router = useRouter();
   const { mobile } = useLocalSearchParams();
   const mobileStr = Array.isArray(mobile) ? mobile[0] : mobile || "";
-  const scrollRef = React.useRef<ScrollView>(null);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -111,22 +66,6 @@ export default function BasicDetailsForm() {
       setReferralError("");
     }, [])
   );
-
-  useEffect(() => {
-    const keyboardDidShow = Keyboard.addListener("keyboardDidShow", (e) => {
-      setKeyboardHeight(e.endCoordinates.height);
-      scrollRef.current?.scrollToEnd({ animated: true });
-    });
-
-    const keyboardDidHide = Keyboard.addListener("keyboardDidHide", () => {
-      setKeyboardHeight(0);
-    });
-
-    return () => {
-      keyboardDidShow.remove();
-      keyboardDidHide.remove();
-    };
-  }, []);
 
   const showErrorAlert = (message: string) => {
     setErrorMessage(message);
@@ -226,166 +165,151 @@ export default function BasicDetailsForm() {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.container}
         >
-          <View style={styles.logoContainer}>
-            <Image
-              source={theme.image.transparentLogo}
-              style={[styles.logo, { width: logoWidth }]}
-              resizeMode="contain"
-            />
-          </View>
-
           <View style={styles.formContainer}>
             <View style={styles.cardContainer}>
               <Text style={styles.pageTitle}>Almost There!</Text>
               <Text style={styles.subtitle}>Complete your registration details</Text>
 
-              <ScrollView
-                ref={scrollRef}
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-                style={styles.scrollContainer}
+              {/* Mobile Number (Read-only) */}
+              <View style={styles.inputContainer}>
+                <View style={styles.inputWrapper}>
+                  <View style={styles.inputIcon}>
+                    <Ionicons name="call" size={20} color={theme.colors.primary} />
+                  </View>
+                  <View style={styles.inputContent}>
+                    <Text style={styles.inputLabel}>Registered Mobile</Text>
+                    <TextInput
+                      style={[styles.input, styles.disabledInput]}
+                      value={mobileStr}
+                      editable={false}
+                      placeholderTextColor="rgba(255,255,255,0.6)"
+                    />
+                  </View>
+                </View>
+              </View>
+
+              {/* Full Name */}
+              <View style={styles.inputContainer}>
+                <View style={styles.inputWrapper}>
+                  <View style={styles.inputIcon}>
+                    <Ionicons name="person-outline" size={20} color={theme.colors.primary} />
+                  </View>
+                  <View style={styles.inputContent}>
+                    <Text style={styles.inputLabel}>Full Name *</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter your full name"
+                      placeholderTextColor="rgba(255,255,255,0.6)"
+                      value={name}
+                      onChangeText={(text) => {
+                        setName(text);
+                        validateName(text);
+                      }}
+                      autoCapitalize="words"
+                    />
+                  </View>
+                </View>
+                {nameError ? (
+                  <Text style={styles.errorText}>{nameError}</Text>
+                ) : null}
+              </View>
+
+              {/* Email */}
+              <View style={styles.inputContainer}>
+                <View style={styles.inputWrapper}>
+                  <View style={styles.inputIcon}>
+                    <Ionicons name="mail-outline" size={20} color={theme.colors.primary} />
+                  </View>
+                  <View style={styles.inputContent}>
+                    <Text style={styles.inputLabel}>Email Address *</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter your email address"
+                      placeholderTextColor="rgba(255,255,255,0.6)"
+                      value={email}
+                      onChangeText={(text) => {
+                        setEmail(text);
+                        validateEmail(text);
+                      }}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                    />
+                  </View>
+                </View>
+                {emailError ? (
+                  <Text style={styles.errorText}>{emailError}</Text>
+                ) : null}
+              </View>
+
+              {/* Referral Code */}
+              <View style={styles.inputContainer}>
+                <View style={styles.inputWrapper}>
+                  <View style={styles.inputIcon}>
+                    <Ionicons name="gift-outline" size={20} color={theme.colors.secondary} />
+                  </View>
+                  <View style={styles.inputContent}>
+                    <Text style={styles.inputLabel}>Referral Code (Optional)</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="6 alphanumeric characters"
+                      placeholderTextColor="rgba(255,255,255,0.6)"
+                      value={referralCode}
+                      onChangeText={handleReferralCodeChange}
+                      keyboardType="default"
+                      autoCapitalize="characters"
+                      maxLength={6}
+                    />
+                  </View>
+                </View>
+                {referralError ? (
+                  <Text style={styles.errorText}>{referralError}</Text>
+                ) : null}
+                {referralCode.length > 0 && !referralError && (
+                  <View style={styles.successContainer}>
+                    <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+                    <Text style={styles.successText}>Valid referral code!</Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Submit Button */}
+              <TouchableOpacity
+                style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+                onPress={handleSubmit}
+                disabled={loading}
               >
-                {/* Mobile Number (Read-only) */}
-                <View style={styles.inputContainer}>
-                  <View style={styles.inputWrapper}>
-                    <View style={styles.inputIcon}>
-                      <Ionicons name="call" size={20} color={theme.colors.primary} />
-                    </View>
-                    <View style={styles.inputContent}>
-                      <Text style={styles.inputLabel}>Registered Mobile</Text>
-                      <TextInput
-                        style={[styles.input, styles.disabledInput]}
-                        value={mobileStr}
-                        editable={false}
-                        placeholderTextColor="rgba(255,255,255,0.6)"
-                      />
-                    </View>
-                  </View>
-                </View>
-
-                {/* Full Name */}
-                <View style={styles.inputContainer}>
-                  <View style={styles.inputWrapper}>
-                    <View style={styles.inputIcon}>
-                      <Ionicons name="person-outline" size={20} color={theme.colors.primary} />
-                    </View>
-                    <View style={styles.inputContent}>
-                      <Text style={styles.inputLabel}>Full Name *</Text>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Enter your full name"
-                        placeholderTextColor="rgba(255,255,255,0.6)"
-                        value={name}
-                        onChangeText={(text) => {
-                          setName(text);
-                          validateName(text);
-                        }}
-                        autoCapitalize="words"
-                      />
-                    </View>
-                  </View>
-                  {nameError ? (
-                    <Text style={styles.errorText}>{nameError}</Text>
-                  ) : null}
-                </View>
-
-                {/* Email */}
-                <View style={styles.inputContainer}>
-                  <View style={styles.inputWrapper}>
-                    <View style={styles.inputIcon}>
-                      <Ionicons name="mail-outline" size={20} color={theme.colors.primary} />
-                    </View>
-                    <View style={styles.inputContent}>
-                      <Text style={styles.inputLabel}>Email Address *</Text>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Enter your email address"
-                        placeholderTextColor="rgba(255,255,255,0.6)"
-                        value={email}
-                        onChangeText={(text) => {
-                          setEmail(text);
-                          validateEmail(text);
-                        }}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                      />
-                    </View>
-                  </View>
-                  {emailError ? (
-                    <Text style={styles.errorText}>{emailError}</Text>
-                  ) : null}
-                </View>
-
-                {/* Referral Code */}
-                <View style={styles.inputContainer}>
-                  <View style={styles.inputWrapper}>
-                    <View style={styles.inputIcon}>
-                      <Ionicons name="gift-outline" size={20} color={theme.colors.secondary} />
-                    </View>
-                    <View style={styles.inputContent}>
-                      <Text style={styles.inputLabel}>Referral Code (Optional)</Text>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="6 alphanumeric characters"
-                        placeholderTextColor="rgba(255,255,255,0.6)"
-                        value={referralCode}
-                        onChangeText={handleReferralCodeChange}
-                        keyboardType="default"
-                        autoCapitalize="characters"
-                        maxLength={6}
-                      />
-                    </View>
-                  </View>
-                  {referralError ? (
-                    <Text style={styles.errorText}>{referralError}</Text>
-                  ) : null}
-                  {referralCode.length > 0 && !referralError && (
-                    <View style={styles.successContainer}>
-                      <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-                      <Text style={styles.successText}>Valid referral code!</Text>
-                    </View>
-                  )}
-                </View>
-
-                {/* Submit Button */}
-                <TouchableOpacity
-                  style={[styles.submitButton, loading && styles.submitButtonDisabled]}
-                  onPress={handleSubmit}
-                  disabled={loading}
+                <LinearGradient
+                  colors={['#ffc90c', '#ffd700']}
+                  style={styles.gradientButton}
                 >
-                  <LinearGradient
-                    colors={['#ffc90c', '#ffd700']}
-                    style={styles.gradientButton}
-                  >
-                    <View style={styles.buttonContent}>
-                      {loading ? (
-                        <>
-                          <Ionicons name="hourglass" size={20} color={theme.colors.textDark} />
-                          <Text style={styles.submitButtonText}>Processing...</Text>
-                        </>
-                      ) : (
-                        <>
-                          <Ionicons name="arrow-forward" size={20} color={theme.colors.textDark} />
-                          <Text style={styles.submitButtonText}>Continue</Text>
-                        </>
-                      )}
-                    </View>
-                  </LinearGradient>
-                </TouchableOpacity>
+                  <View style={styles.buttonContent}>
+                    {loading ? (
+                      <>
+                        <Ionicons name="hourglass" size={20} color={theme.colors.textDark} />
+                        <Text style={styles.submitButtonText}>Processing...</Text>
+                      </>
+                    ) : (
+                      <>
+                        <Ionicons name="arrow-forward" size={20} color={theme.colors.textDark} />
+                        <Text style={styles.submitButtonText}>Continue</Text>
+                      </>
+                    )}
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
 
-                {/* Info Section */}
-                <View style={styles.infoSection}>
-                  <View style={styles.infoItem}>
-                    <Ionicons name="shield-checkmark" size={16} color={theme.colors.secondary} />
-                    <Text style={styles.infoText}>Your data is secure and encrypted</Text>
-                  </View>
-                  <View style={styles.infoItem}>
-                    <Ionicons name="time-outline" size={16} color={theme.colors.secondary} />
-                    <Text style={styles.infoText}>Quick 2-minute setup</Text>
-                  </View>
+              {/* Info Section */}
+              <View style={styles.infoSection}>
+                <View style={styles.infoItem}>
+                  <Ionicons name="shield-checkmark" size={16} color={theme.colors.secondary} />
+                  <Text style={styles.infoText}>Your data is secure and encrypted</Text>
                 </View>
-              </ScrollView>
+                <View style={styles.infoItem}>
+                  <Ionicons name="time-outline" size={16} color={theme.colors.secondary} />
+                  <Text style={styles.infoText}>Quick 2-minute setup</Text>
+                </View>
+              </View>
 
               {/* Back Button */}
               <TouchableOpacity
@@ -413,22 +337,12 @@ const styles = StyleSheet.create({
   },
   container: { 
     flex: 1,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 20,
-  },
-  logoContainer: {
-    width: '100%',
-    alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    marginBottom: 20,
-  },
-  logo: { 
-    aspectRatio: 1,
+    paddingVertical: 20,
   },
   formContainer: { 
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 20,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 0,
   },
   cardContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -437,8 +351,6 @@ const styles = StyleSheet.create({
     width: '100%',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
-    marginBottom: Platform.OS === 'ios' ? 20 : 10,
-    maxHeight: '80%',
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -451,27 +363,23 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  scrollContainer: {
-    flex: 1,
-    marginBottom: 20,
-  },
   pageTitle: {
     color: theme.colors.textLight,
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 8,
     textAlign: "center",
   },
   subtitle: {
     color: theme.colors.textLight,
-    fontSize: 16,
-    marginBottom: 30,
+    fontSize: 15,
+    marginBottom: 25,
     textAlign: "center",
     opacity: 0.8,
   },
   inputContainer: {
     width: '100%',
-    marginBottom: 20,
+    marginBottom: 15,
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -532,8 +440,8 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     overflow: 'hidden',
-    marginTop: 10,
-    marginBottom: 20,
+    marginTop: 15,
+    marginBottom: 15,
   },
   gradientButton: {
     flex: 1,
@@ -554,8 +462,8 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   infoSection: {
-    marginTop: 10,
-    marginBottom: 20,
+    marginTop: 5,
+    marginBottom: 15,
   },
   infoItem: {
     flexDirection: 'row',
@@ -572,7 +480,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
+    paddingVertical: 5,
   },
   backButtonText: {
     color: theme.colors.white,

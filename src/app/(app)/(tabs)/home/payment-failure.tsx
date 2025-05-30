@@ -16,23 +16,51 @@ import {
   ScrollView
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/constants/theme';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import useGlobalStore from '@/store/global.store';
 import { BlurView } from "expo-blur";
+
+// Payment retry data keys
+const PAYMENT_DATA_KEY = '@payment_data_retry';
+const INVESTMENT_DATA_KEY = '@investment_data_retry';
+const TRANSACTION_DATA_KEY = '@transaction_data_retry';
+const COMPLETE_RETRY_DATA_KEY = '@complete_payment_retry_data';
 
 const PaymentFailureScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth, height } = useWindowDimensions();
+  const { bottom } = useSafeAreaInsets();
   const [currentDate, setCurrentDate] = useState('');
+
+  // Get global store functions
+  const { 
+    hasPaymentRetryData, 
+    getPaymentRetryData, 
+    storePaymentSession,
+    clearPaymentRetryData 
+  } = useGlobalStore();
 
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const errorScale = useRef(new Animated.Value(0)).current;
+
+  // Calculate proper bottom padding for tab navigation
+  const bottomPadding = Math.max(bottom, 20) + 80;
+
+  // Create styles with dynamic height
+  const dynamicStyles = StyleSheet.create({
+    scrollContent: {
+      flexGrow: 1,
+      padding: 16,
+      justifyContent: 'space-between',
+      minHeight: height - 200, // Better screen utilization
+    },
+  });
 
   useEffect(() => {
     // Set current date
@@ -117,27 +145,92 @@ Please try again or contact support.
   };
 
   const handleViewTransactions = () => {
-    router.replace('/(tabs)/transactions');
+    Alert.alert('Coming Soon', 'This feature is coming soon');
+    // router.replace('/(tabs)/transactions');
   };
 
   const handleViewProfile = () => {
     router.replace('/(tabs)/profile');
   };
 
-  const handleRetryPayment = () => {
-    // Navigate back to payment page with the same parameters
-    router.replace({
-      pathname: '/(tabs)/home/payment',
-      params: {
-        amount: params.amount,
-        schemeId: params.schemeId,
-        chitId: params.chitId,
-        schemeName: params.schemeName,
-        installmentNumber: params.installmentNumber,
-        totalInstallments: params.totalInstallments,
-        goldWeight: params.goldWeight
+  const handleRetryPayment = async () => {
+    try {
+      console.log('Checking for payment retry data in global store...');
+      
+      // Check if we have payment retry data in global store
+      if (hasPaymentRetryData()) {
+        const retryData = getPaymentRetryData();
+        
+        if (retryData) {
+          console.log('Using payment retry data from global store:', retryData);
+
+          // Store the retry session data in the format expected by payment screen
+          const retryPaymentSession = {
+            amount: retryData.paymentData.amount,
+            userDetails: {
+              accountname: retryData.displayData.accountHolder,
+              accNo: retryData.displayData.accNo,
+              name: retryData.displayData.accountHolder,
+              mobile: retryData.paymentData.userMobile,
+              email: retryData.paymentData.userEmail,
+              userId: retryData.paymentData.userId,
+              
+              // Investment data
+              investmentId: retryData.paymentData.investmentId,
+              chitId: retryData.paymentData.chitId,
+              schemeId: retryData.paymentData.schemeId,
+              
+              // Retry context
+              isRetryAttempt: true,
+              originalPaymentTimestamp: retryData.timestamp,
+              retryTimestamp: new Date().toISOString(),
+              source: 'payment_failure_retry',
+              
+              // Store complete retry data for reference
+              retryData: retryData,
+            },
+            timestamp: new Date().toISOString(),
+          };
+
+          // Store the retry session data in global store
+          storePaymentSession(retryPaymentSession);
+          
+          console.log('Retry payment session stored successfully in global store');
+
+          // Navigate with minimal parameters - let payment screen load from store
+          router.replace({
+            pathname: '/(tabs)/home/payment',
+            params: {
+              amount: retryData.paymentData.amount.toString(),
+              isRetry: 'true',
+              retryTimestamp: new Date().getTime().toString(),
+            }
+          });
+        } else {
+          throw new Error('Payment retry data is null');
+        }
+      } else {
+        // No stored data available, show error
+        console.log('No payment retry data found in global store');
+        
+        Alert.alert(
+          'Retry Error',
+          'No payment data found for retry. Please try again from the savings screen.',
+          [
+            { text: 'OK', onPress: () => router.replace('/(tabs)/savings') }
+          ]
+        );
       }
-    });
+    } catch (error) {
+      console.error('Error retrieving payment data for retry:', error);
+      Alert.alert(
+        'Retry Error',
+        'Unable to retrieve payment data. Please try again from the savings screen.',
+        [
+          { text: 'OK', onPress: () => router.replace('/(tabs)/savings') }
+        ]
+      );
+    }
   };
 
   return (
@@ -160,7 +253,10 @@ Please try again or contact support.
 
         <ScrollView 
           style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            dynamicStyles.scrollContent,
+            { paddingBottom: bottomPadding }
+          ]}
           showsVerticalScrollIndicator={false}
         >
           <Animated.View
@@ -184,7 +280,7 @@ Please try again or contact support.
                   }
                 ]}
               >
-                <Ionicons name="close-circle" size={80} color="#fff" />
+                <Ionicons name="close-circle" size={60} color="#fff" />
               </Animated.View>
             </View>
 
@@ -355,49 +451,47 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  scrollContent: {
-    flexGrow: 1,
-    padding: 20,
-    justifyContent: 'center',
-  },
   failureContainer: {
     width: '100%',
     alignItems: 'center',
+    flex: 1,
+    justifyContent: 'space-around',
   },
   iconContainer: {
-    width: 120,
-    height: 120,
-    marginBottom: 24,
+    width: 100,
+    height: 100,
+    marginBottom: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
   errorContainer: {
-    width: 80,
-    height: 80,
+    width: 70,
+    height: 70,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 40,
+    borderRadius: 35,
   },
   failureTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '700',
     color: '#fff',
-    marginBottom: 8,
+    marginBottom: 6,
     textAlign: 'center',
   },
   failureSubtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: 'rgba(255,255,255,0.8)',
-    marginBottom: 32,
+    marginBottom: 20,
     textAlign: 'center',
+    paddingHorizontal: 20,
   },
   detailsCard: {
     width: '100%',
     backgroundColor: 'rgba(255,255,255,0.95)',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 24,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -413,19 +507,19 @@ const styles = StyleSheet.create({
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   detailItem: {
     flex: 1,
     alignItems: 'center',
   },
   detailLabel: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#666',
     marginBottom: 4,
   },
   detailValue: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     color: '#ef4444',
   },
@@ -435,19 +529,19 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: 'rgba(0,0,0,0.1)',
-    marginVertical: 16,
+    marginVertical: 12,
   },
   transactionInfo: {
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
   },
   transactionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 3,
   },
   transactionLabel: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#666',
     marginRight: 8,
   },
@@ -455,20 +549,21 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   transactionId: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#999',
+    textAlign: 'center',
   },
   buttonContainer: {
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 12,
-    marginTop: 16,
+    gap: 10,
+    marginTop: 12,
   },
   navigationButton: {
     flex: 1,
-    height: 50,
-    borderRadius: 25,
+    height: 45,
+    borderRadius: 22,
     overflow: 'hidden',
     ...Platform.select({
       ios: {
@@ -487,20 +582,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
   },
   buttonText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#fff',
-    marginLeft: 8,
+    marginLeft: 6,
   },
   retryButton: {
     width: '100%',
-    height: 50,
-    borderRadius: 25,
+    height: 48,
+    borderRadius: 24,
     overflow: 'hidden',
-    marginBottom: 16,
+    marginBottom: 12,
     ...Platform.select({
       ios: {
         shadowColor: '#ef4444',
@@ -521,7 +616,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   retryButtonText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     color: '#fff',
     marginLeft: 8,

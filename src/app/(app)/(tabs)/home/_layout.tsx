@@ -89,6 +89,11 @@ export default function HomeLayout() {
         name="payment-failure"
         options={{ title: "Payment Failure", headerShown: false }}
       />
+       <Stack.Screen
+        name="PaymentFailure"
+        options={{ title: "Payment Failure", headerShown: false }}
+      />
+      <Stack.Screen name="live-rates" options={{ title: "Live Rate", headerShown: false }} />
     </Stack>
     
   );

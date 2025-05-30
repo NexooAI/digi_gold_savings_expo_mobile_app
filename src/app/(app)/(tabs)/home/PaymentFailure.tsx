@@ -111,7 +111,9 @@ const PaymentFailure = () => {
   const handleContactSupport = () => {
     router.replace("/(tabs)/home");
   };
-
+  const  homePage = ()=>{
+    router.replace("/(tabs)/home");
+  }
   const handleShare = async () => {
     try {
       const message = `Payment Details\n\nAmount: ₹${params.amount}\nOrder ID: ${params.order_id}\nStatus: ${status === "cancelled" ? "Cancelled" : "Failed"}\nDate: ${formatDate()}\n\n${failureDetails.message}`;
@@ -268,14 +270,14 @@ const PaymentFailure = () => {
           >
             <TouchableOpacity 
               style={styles.primaryButton} 
-              onPress={handleRetryPayment}
+              onPress={homePage}
               activeOpacity={0.8}
             >
-              <LinearGradient
+              <LinearGradient 
                 colors={['#4CAF50', '#2E7D32']}
                 style={styles.buttonGradient}
               >
-                <Text style={styles.primaryButtonText}>Try Again</Text>
+                <Text style={styles.primaryButtonText}>Home</Text>
               </LinearGradient>
             </TouchableOpacity>
 

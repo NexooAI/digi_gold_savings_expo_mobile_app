@@ -8,8 +8,8 @@ import {
   useWindowDimensions,
   StyleSheet,
   ActivityIndicator,
-  ImageBackground,
   Modal,
+  Alert,
 } from "react-native";
 import {
   SafeAreaView,
@@ -27,6 +27,9 @@ import SupportContactCard from "@/app/components/SupportContactCard";
 import CustomAlert from "@/app/components/Alert";
 import Icon from "react-native-vector-icons/AntDesign";
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Clipboard from 'expo-clipboard';
+import { Socket } from 'socket.io-client';
 
 type Transaction = {
   paymentId: number;
@@ -56,16 +59,57 @@ type SchemeParams = {
   noOfIns: string;
 };
 
-// const DetailRow = ({ label, value }) => (
-//   <View style={styles.detailRow}>
-//     <Text style={styles.detailLabel}>{label}:</Text>
-//     <Text style={styles.detailValue} numberOfLines={2} ellipsizeMode="tail">
-//       {value}
-//     </Text>
-//   </View>
-// );
+interface DetailRowProps {
+  label: string;
+  value: string;
+  labelColor?: string;
+  valueColor?: string;
+  icon?: string;
+}
 
 const HEADER_HEIGHT = Platform.OS === "ios" ? 44 : 56;
+
+// Payment data storage keys
+const PAYMENT_DATA_KEY = '@payment_data_retry';
+const INVESTMENT_DATA_KEY = '@investment_data_retry';
+const TRANSACTION_DATA_KEY = '@transaction_data_retry';
+
+// PDF Generation function
+const generateInvoicePDF = async (transaction: Transaction) => {
+  try {
+    // Create invoice content as text
+    const invoiceText = `
+DIGIGOLD SAVINGS
+Transaction Invoice
+==================
+
+Amount Paid: ₹${Number(transaction.amountPaid).toLocaleString()}
+
+Transaction Details:
+- Transaction ID: ${transaction.transactionId}
+- Payment ID: ${transaction.paymentId}
+- Date: ${new Date(transaction.paymentDate).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })}
+- Payment Mode: ${(transaction.paymentMode || "NB").toUpperCase()}
+- Status: ${transaction.status}
+- Gold Rate: ₹${transaction.gold_rate}/gram
+
+Thank you for your investment with DigiGold Savings
+Generated on: ${new Date().toLocaleDateString("en-GB")}
+    `;
+
+    // Copy to clipboard
+    await Clipboard.setStringAsync(invoiceText);
+    Alert.alert('Success', 'Invoice details copied to clipboard. You can paste and share it anywhere.');
+
+  } catch (error) {
+    console.error('Error generating invoice:', error);
+    Alert.alert('Error', 'Failed to generate invoice. Please try again.');
+  }
+};
 
 const SavingsDetail = () => {
   const router = useRouter();
@@ -75,12 +119,12 @@ const SavingsDetail = () => {
   const [paymentHistrory, setPaymentHistrory] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [socket, setSocket] = useState(null);
+  const [socket, setSocket] = useState<Socket | null>(null);
   const { height } = useWindowDimensions();
   const { bottom } = useSafeAreaInsets();
   const bottomPadding = height * 0.1 + bottom;
   const [isNavigationReady, setIsNavigationReady] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState<"success" | "error" | "info">(
@@ -126,58 +170,129 @@ const SavingsDetail = () => {
   const parsedUserDetails = useMemo(
     () => ({
       name: params.accountHolder,
-      email: user.email || "",
-      mobile: user.mobile || "",
-      data: { data: { userId: user.id, schemeId: params.schemeCode } },
+      email: user?.email || "",
+      mobile: user?.mobile || "",
+      data: { data: { userId: user?.id, schemeId: params.schemeCode } },
     }),
     [params, user]
   );
+  
   const PaymentNow = async () => {
+    if (!user) {
+      setAlertMessage("User not found. Please log in again.");
+      setAlertType("error");
+      setAlertVisible(true);
+      return;
+    }
+
     let payload = {
       userId: user.id,
       investmentId: params.id,
     };
-    let responce = await api.post("investments/check-payment", payload);
-    if (responce?.data?.success === false) {
-      // alert(responce?.data?.message);
-      setAlertMessage(responce?.data.message || "Something went wrong");
-      setAlertType("error");
-      setAlertVisible(true);
-      setAlertVisible(true);
-      <CustomAlert
-        visible={alertVisible}
-        message="Transaction completed successfully!"
-        type="success"
-        onClose={() => setAlertVisible(false)}
-      />;
-    } else {
-      // initiatePayment({
-      //   navigation: isNavigationReady ? navigation : null,
-      //   amount: Number(params.emiAmount),
-      //   parsedUserDetails,
-      //   socket,
-      //   setIsLoading,
-      //   userId: user.id,
-      // });
-      // return;
+
+    try {
+      let responce = await api.post("investments/check-payment", payload);
+      if (responce?.data?.success === false) {
+        setAlertMessage(responce?.data.message || "Something went wrong");
+        setAlertType("error");
+        setAlertVisible(true);
+        return;
+      }
+
+      // Store comprehensive payment data for retry functionality using global store
+      const paymentRetryData = {
+        // Payment payload data
+        paymentData: {
+          amount: Number(params.emiAmount),
+          userId: user.id,
+          investmentId: params.id,
+          schemeId: params.schemeCode,
+          chitId: params.chitId,
+          userEmail: user.email,
+          userMobile: user.mobile,
+          userName: params.accountHolder,
+        },
+        
+        // Investment payload data
+        investmentData: {
+          userId: user.id,
+          schemeId: params.schemeCode,
+          chitId: params.chitId,
+          accountName: params.accountHolder,
+          accountNo: params.accNo,
+          paymentAmount: Number(params.emiAmount),
+          investmentId: params.id,
+        },
+        
+        // Transaction payload data
+        transactionData: {
+          userId: user.id,
+          investmentId: params.id,
+          schemeId: params.schemeCode,
+          chitId: params.chitId,
+          accountNumber: params.accNo,
+          amount: Number(params.emiAmount),
+        },
+        
+        // UI/Display data
+        displayData: {
+          schemeName: params.schemeName,
+          accountHolder: params.accountHolder,
+          accNo: params.accNo,
+          totalPaid: params.totalPaid,
+          monthsPaid: params.monthsPaid,
+          noOfIns: params.noOfIns,
+          goldWeight: params.goldWeight,
+          maturityDate: params.maturityDate,
+        },
+        
+        // Timestamp for retry reference
+        timestamp: new Date().toISOString(),
+        source: 'savings_detail',
+      };
+
+      // Store payment retry data in global store
+      const { storePaymentRetryData, storePaymentSession } = useGlobalStore.getState();
+      storePaymentRetryData(paymentRetryData);
+
+      // Store current payment session data
+      const currentPaymentSession = {
+        amount: Number(params.emiAmount),
+        userDetails: {
+          accountname: params.accountHolder,
+          accNo: params.accNo,
+          name: params.accountHolder,
+          mobile: user.mobile,
+          email: user.email,
+          userId: user.id,
+          investmentId: params.id,
+          chitId: params.chitId,
+          schemeId: params.schemeCode,
+          // Additional context
+          isRetryAttempt: false,
+          originalPaymentTimestamp: paymentRetryData.timestamp,
+          source: 'savings_detail',
+        },
+        timestamp: new Date().toISOString(),
+      };
+
+      storePaymentSession(currentPaymentSession);
+      
+      console.log("Payment data stored successfully in global store");
+
+      // Navigate to payment screen with minimal parameters
       router.push({
         pathname: "/(tabs)/home/payment",
         params: {
-          amount: params.emiAmount, // Use EMI amount from route params
-          userDetails: JSON.stringify({
-            accountname: params.accountHolder, // Using accountHolder from params
-            accNo: params.accNo,
-            name: params.accountHolder,
-            mobile: user.mobile,
-            email: user.email,
-            userId: user.id,
-            investmentId: params.id,
-            chitId: params.chitId,
-            schemeId: params.schemeCode,
-            // ...params,
-          }),
+          amount: params.emiAmount,
+          sessionId: Date.now().toString(), // Simple session identifier
         },
       });
+    } catch (error) {
+      console.error("Error in PaymentNow:", error);
+      setAlertMessage("An error occurred. Please try again.");
+      setAlertType("error");
+      setAlertVisible(true);
     }
   };
 
@@ -196,7 +311,8 @@ const SavingsDetail = () => {
     };
     fetchTransactions();
   }, [params.id]);
-  const DetailRow = ({
+  
+  const DetailRow: React.FC<DetailRowProps> = ({
     label,
     value,
     labelColor = "#595959",
@@ -220,34 +336,13 @@ const SavingsDetail = () => {
       </Text>
     </View>
   );
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f3f4f6" }}>
       {/* Fixed Header */}
       <View style={{ backgroundColor: "white", height: HEADER_HEIGHT }}>
         <AppHeader showBackButton={true} backRoute="index" />
       </View>
-
-      {/* Back Button */}
-      {/* <View style={{ marginTop: 16, height: HEADER_HEIGHT }}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={{
-            position: "absolute",
-            left: 16,
-            top: HEADER_HEIGHT / 2 - 12,
-            flexDirection: "row",
-            alignItems: "center",
-            backgroundColor: "white",
-            padding: 10,
-            borderRadius: 20,
-          }}
-        >
-          <Ionicons name="arrow-back" size={24} color="#7b0006" />
-          <Text style={{ marginLeft: 8, color: "#7b0006", fontWeight: "600" }}>
-            {translations.back}
-          </Text>
-        </TouchableOpacity>
-      </View> */}
 
       <ScrollView
         contentContainerStyle={{
@@ -260,7 +355,7 @@ const SavingsDetail = () => {
       >
         {/* Summary Card */}
         <LinearGradient
-          colors={['#1a237e', '#283593']}
+          colors={['#850111', '#5a000b', '#2e0406']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.summaryCard}
@@ -268,7 +363,7 @@ const SavingsDetail = () => {
           <View style={styles.summaryHeader}>
             <View style={styles.schemeInfo}>
               <View style={styles.schemeIconContainer}>
-                <Ionicons name="diamond-outline" size={24} color="#fff" />
+                <Ionicons name="diamond-outline" size={20} color="#fff" />
               </View>
               <View style={styles.schemeTextContainer}>
                 <Text style={styles.schemeName}>{params.schemeName}</Text>
@@ -286,7 +381,7 @@ const SavingsDetail = () => {
           <View style={styles.summaryStats}>
             <View style={styles.statItem}>
               <View style={styles.statIconContainer}>
-                <Ionicons name="wallet-outline" size={24} color="#fff" />
+                <Ionicons name="wallet-outline" size={18} color="#fff" />
               </View>
               <View style={styles.statInfo}>
                 <Text style={styles.statLabel}>{translations.totalInvested}</Text>
@@ -296,7 +391,7 @@ const SavingsDetail = () => {
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <View style={styles.statIconContainer}>
-                <Ionicons name="diamond-outline" size={24} color="#fff" />
+                <Ionicons name="diamond-outline" size={18} color="#fff" />
               </View>
               <View style={styles.statInfo}>
                 <Text style={styles.statLabel}>{translations.goldAccumulated}</Text>
@@ -322,21 +417,21 @@ const SavingsDetail = () => {
         </LinearGradient>
 
         {/* Details Section */}
-        <View style={[styles.detailsCard, { backgroundColor: '#fff5f5' }]}>
+        <View style={[styles.detailsCard, { backgroundColor: '#FFF8DC' }]}>
           <Text style={styles.sectionTitle}>Account Details</Text>
           <View style={styles.detailsGrid}>
             <View style={styles.detailItem}>
-              <Ionicons name="person-outline" size={20} color="#7b0006" />
+              <Ionicons name="person-outline" size={20} color="#8B4513" />
               <Text style={styles.detailLabel}>{translations.accountHolder}</Text>
               <Text style={styles.detailValue}>{params.accountHolder}</Text>
             </View>
             <View style={styles.detailItem}>
-              <Ionicons name="calendar-outline" size={20} color="#7b0006" />
+              <Ionicons name="calendar-outline" size={20} color="#8B4513" />
               <Text style={styles.detailLabel}>{translations.monthlyEMI}</Text>
               <Text style={styles.detailValue}>₹{Number(params.emiAmount).toLocaleString()}</Text>
             </View>
             <View style={styles.detailItem}>
-              <Ionicons name="time-outline" size={20} color="#7b0006" />
+              <Ionicons name="time-outline" size={20} color="#8B4513" />
               <Text style={styles.detailLabel}>{translations.maturityDate}</Text>
               <Text style={styles.detailValue}>{params.maturityDate}</Text>
             </View>
@@ -344,11 +439,11 @@ const SavingsDetail = () => {
         </View>
 
         {/* Transactions Section */}
-        <View style={[styles.transactionsCard, { backgroundColor: '#fff5f5' }]}>
+        <View style={[styles.transactionsCard, { backgroundColor: '#FFF8DC' }]}>
           <View style={styles.transactionsHeader}>
             <Text style={styles.sectionTitle}>{translations.transactionHistory}</Text>
             <TouchableOpacity style={styles.filterButton}>
-              <Ionicons name="filter" size={20} color="#7b0006" />
+              <Ionicons name="filter" size={20} color="#8B4513" />
             </TouchableOpacity>
           </View>
 
@@ -358,7 +453,7 @@ const SavingsDetail = () => {
             </View>
           ) : paymentHistrory.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Ionicons name="receipt-outline" size={48} color="#7b0006" />
+              <Ionicons name="receipt-outline" size={48} color="#8B4513" />
               <Text style={styles.emptyText}>{translations.noTransactionsFound}</Text>
             </View>
           ) : (
@@ -395,17 +490,15 @@ const SavingsDetail = () => {
                         setSelectedTransaction(transaction);
                       }}
                     >
-                      <Ionicons name="eye-outline" size={20} color="#7b0006" />
+                      <Ionicons name="eye-outline" size={20} color="#8B4513" />
                       <Text style={styles.actionText}>View Invoice</Text>
                     </TouchableOpacity>
                     
                     <TouchableOpacity 
                       style={styles.actionButton}
-                      onPress={() => {
-                        // Handle download invoice
-                      }}
+                      onPress={() => generateInvoicePDF(transaction)}
                     >
-                      <Ionicons name="download-outline" size={20} color="#7b0006" />
+                      <Ionicons name="download-outline" size={20} color="#8B4513" />
                       <Text style={styles.actionText}>Download</Text>
                     </TouchableOpacity>
                   </View>
@@ -422,7 +515,7 @@ const SavingsDetail = () => {
           disabled={isLoading}
         >
           <LinearGradient
-            colors={['#7b0006', '#9b0008']}
+            colors={['#850111', '#B8860B', '#DAA520']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.payButtonGradient}
@@ -444,9 +537,6 @@ const SavingsDetail = () => {
           type={alertType}
           onClose={() => setAlertVisible(false)}
         />
-
-        {/* Support Contact Card */}
-        {/* <SupportContactCard /> */}
       </ScrollView>
 
       {/* Transaction Details Modal */}
@@ -459,7 +549,7 @@ const SavingsDetail = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <LinearGradient
-              colors={['#7b0006', '#9b0008']}
+              colors={['#850111', '#B8860B', '#DAA520']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.modalHeader}
@@ -483,7 +573,7 @@ const SavingsDetail = () => {
                 <View style={styles.statusIconContainer}>
                   <Ionicons name="checkmark-circle" size={32} color="#00cc44" />
                 </View>
-                <Text style={styles.statusText}>Payment Successful</Text>
+                <Text style={styles.modalStatusText}>Payment Successful</Text>
               </View>
 
               <View style={styles.amountContainer}>
@@ -497,11 +587,11 @@ const SavingsDetail = () => {
                 <View style={styles.detailCard}>
                   <View style={styles.detailRow}>
                     <View style={styles.detailIconContainer}>
-                      <Ionicons name="calendar-outline" size={20} color="#7b0006" />
+                      <Ionicons name="calendar-outline" size={20} color="#850111" />
                     </View>
                     <View style={styles.detailInfo}>
-                      <Text style={styles.detailLabel}>Date</Text>
-                      <Text style={styles.detailValue}>
+                      <Text style={styles.modalDetailLabel}>Date</Text>
+                      <Text style={styles.modalDetailValue}>
                         {selectedTransaction && new Date(selectedTransaction.paymentDate).toLocaleDateString("en-GB", {
                           day: "2-digit",
                           month: "short",
@@ -513,21 +603,21 @@ const SavingsDetail = () => {
 
                   <View style={styles.detailRow}>
                     <View style={styles.detailIconContainer}>
-                      <Ionicons name="card-outline" size={20} color="#7b0006" />
+                      <Ionicons name="card-outline" size={20} color="#850111" />
                     </View>
                     <View style={styles.detailInfo}>
-                      <Text style={styles.detailLabel}>Transaction ID</Text>
-                      <Text style={styles.detailValue}>{selectedTransaction?.transactionId}</Text>
+                      <Text style={styles.modalDetailLabel}>Transaction ID</Text>
+                      <Text style={styles.modalDetailValue}>{selectedTransaction?.transactionId}</Text>
                     </View>
                   </View>
 
                   <View style={styles.detailRow}>
                     <View style={styles.detailIconContainer}>
-                      <Ionicons name="wallet-outline" size={20} color="#7b0006" />
+                      <Ionicons name="wallet-outline" size={20} color="#850111" />
                     </View>
                     <View style={styles.detailInfo}>
-                      <Text style={styles.detailLabel}>Payment Mode</Text>
-                      <Text style={styles.detailValue}>
+                      <Text style={styles.modalDetailLabel}>Payment Mode</Text>
+                      <Text style={styles.modalDetailValue}>
                         {(selectedTransaction?.paymentMode || "NB").toUpperCase()}
                       </Text>
                     </View>
@@ -542,7 +632,7 @@ const SavingsDetail = () => {
                 onPress={() => selectedTransaction && generateInvoicePDF(selectedTransaction)}
               >
                 <Ionicons name="download-outline" size={20} color="#fff" />
-                <Text style={styles.downloadButtonText}>Download Invoice</Text>
+                <Text style={styles.downloadButtonText}>Copy Invoice</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -551,25 +641,6 @@ const SavingsDetail = () => {
     </SafeAreaView>
   );
 };
-
-const detailRowStyles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  label: {
-    fontSize: 14,
-    color: "#555",
-  },
-  value: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#000",
-  },
-});
 
 const styles = StyleSheet.create({
   payButton: {
@@ -601,9 +672,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   summaryCard: {
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 20,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 14,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -617,72 +688,13 @@ const styles = StyleSheet.create({
     }),
   },
   summaryHeader: {
-    marginBottom: 20,
+    marginBottom: 14,
   },
   schemeInfo: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   schemeIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  schemeTextContainer: {
-    flex: 1,
-  },
-  schemeName: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#fff',
-    marginBottom: 4,
-  },
-  schemeDetails: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  schemeCode: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.8)',
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 6,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#4caf50',
-  },
-  statusText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  summaryStats: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
-  },
-  statItem: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statIconContainer: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -691,41 +703,100 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
+  schemeTextContainer: {
+    flex: 1,
+  },
+  schemeName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 3,
+  },
+  schemeDetails: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  schemeCode: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    gap: 4,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#4caf50',
+  },
+  statusText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  summaryStats: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 14,
+  },
+  statItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
   statInfo: {
     flex: 1,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: 'rgba(255,255,255,0.8)',
-    marginBottom: 4,
+    marginBottom: 3,
   },
   statValue: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: '#fff',
   },
   statDivider: {
     width: 1,
-    height: 40,
+    height: 32,
     backgroundColor: 'rgba(255,255,255,0.2)',
-    marginHorizontal: 16,
+    marginHorizontal: 12,
   },
   progressSection: {
-    marginTop: 20,
+    marginTop: 14,
   },
   progressHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   progressLabel: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: '#fff',
   },
   progressValue: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: '#fff',
   },
@@ -760,7 +831,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#333',
+    color: '#2C1810',
     marginBottom: 16,
   },
   detailsGrid: {
@@ -771,20 +842,20 @@ const styles = StyleSheet.create({
   detailItem: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5DEB3',
     padding: 16,
     borderRadius: 12,
   },
   detailLabel: {
     fontSize: 12,
-    color: '#666',
+    color: '#8B4513',
     marginTop: 8,
     marginBottom: 4,
   },
   detailValue: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: '#2C1810',
   },
   transactionsCard: {
     backgroundColor: '#fff',
@@ -812,7 +883,7 @@ const styles = StyleSheet.create({
   filterButton: {
     padding: 8,
     borderRadius: 8,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5DEB3',
   },
   transactionsList: {
     gap: 12,
@@ -820,7 +891,7 @@ const styles = StyleSheet.create({
   transactionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5DEB3',
     padding: 16,
     borderRadius: 12,
   },
@@ -839,17 +910,17 @@ const styles = StyleSheet.create({
   transactionDate: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: '#2C1810',
     marginBottom: 4,
   },
   transactionId: {
     fontSize: 12,
-    color: '#666',
+    color: '#8B4513',
   },
   transactionAmount: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#333',
+    color: '#2C1810',
   },
   loadingContainer: {
     padding: 40,
@@ -862,7 +933,7 @@ const styles = StyleSheet.create({
   emptyText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#666',
+    color: '#8B4513',
     textAlign: 'center',
   },
   transactionActions: {
@@ -875,7 +946,7 @@ const styles = StyleSheet.create({
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#F5DEB3',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -894,7 +965,7 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 12,
-    color: '#7b0006',
+    color: '#8B4513',
     fontWeight: '600',
   },
   modalOverlay: {
@@ -959,7 +1030,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  statusText: {
+  modalStatusText: {
     fontSize: 18,
     fontWeight: '600',
     color: '#00cc44',
@@ -968,24 +1039,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
     padding: 16,
-    backgroundColor: '#fff5f5',
+    backgroundColor: '#FFF8DC',
     borderRadius: 16,
   },
   amountLabel: {
     fontSize: 14,
-    color: '#666',
+    color: '#8B4513',
     marginBottom: 4,
   },
   amountValue: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#7b0006',
+    color: '#850111',
   },
   detailsContainer: {
     marginBottom: 24,
   },
   detailCard: {
-    backgroundColor: '#fff',
+    backgroundColor: '#FFF8DC',
     borderRadius: 16,
     padding: 16,
     ...Platform.select({
@@ -1011,7 +1082,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#fff5f5',
+    backgroundColor: '#F5DEB3',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -1019,15 +1090,15 @@ const styles = StyleSheet.create({
   detailInfo: {
     flex: 1,
   },
-  detailLabel: {
+  modalDetailLabel: {
     fontSize: 12,
-    color: '#666',
+    color: '#8B4513',
     marginBottom: 2,
   },
-  detailValue: {
+  modalDetailValue: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: '#2C1810',
   },
   modalFooter: {
     padding: 20,
@@ -1038,7 +1109,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#7b0006',
+    backgroundColor: '#850111',
     padding: 16,
     borderRadius: 12,
     gap: 8,
@@ -1050,4 +1121,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SavingsDetail;
+export default SavingsDetail; 

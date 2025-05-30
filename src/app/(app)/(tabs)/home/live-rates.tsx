@@ -2,14 +2,86 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ScrollView, ActivityIndicator, LogBox } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-// Note: Using alternative chart approach to avoid SVG rendering issues
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { moderateScale } from 'react-native-size-matters';
 import { theme } from '@/constants/theme';
 import { rates } from '@/services/api';
 
 const { width } = Dimensions.get('window');
+
+// Type definitions
+interface RateData {
+  date: string;
+  time: string;
+  price: number;
+}
+
+interface RateHistoryResponse {
+  status: string;
+  data: {
+    gold: RateData[];
+    silver: RateData[];
+  };
+}
+
+// Dummy data structure
+const dummyData: RateHistoryResponse = {
+  "status": "success",
+  "data": {
+    "gold": [
+      { "date": "01-03-2025", "time": "5:43 AM", "price": 84212 },
+      { "date": "28-03-2025", "time": "5:43 AM", "price": 89028 },
+      { "date": "31-03-2025", "time": "5:43 AM", "price": 90134 },
+      { "date": "21-05-2025", "time": "5:43 AM", "price": 93000 },
+      { "date": "28-05-2025", "time": "5:43 AM", "price": 98000 },
+      { "date": "29-05-2025", "time": "5:43 AM", "price": 97404 }
+    ],
+    "silver": [
+      { "date": "01-03-2025", "time": "5:43 AM", "price": 97000 },
+      { "date": "28-03-2025", "time": "5:43 AM", "price": 114000 },
+      { "date": "31-03-2025", "time": "5:43 AM", "price": 113000 },
+      { "date": "26-04-2025", "time": "5:43 AM", "price": 112000 },
+      { "date": "30-04-2025", "time": "5:43 AM", "price": 111000 },
+      { "date": "22-05-2025", "time": "5:43 AM", "price": 98492 },
+      { "date": "29-05-2025", "time": "5:43 AM", "price": 99900 }
+    ]
+  }
+};
+
+// Helper function to filter data based on period
+const filterDataByPeriod = (data: RateData[], period: '1D' | '1W' | '1M' | '1Y'): RateData[] => {
+  const now = new Date();
+  const filteredData: RateData[] = [];
+
+  data.forEach(item => {
+    const itemDate = new Date(item.date.split('-').reverse().join('-'));
+    const diffTime = Math.abs(now.getTime() - itemDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    switch (period) {
+      case '1D':
+        if (diffDays <= 1) filteredData.push(item);
+        break;
+      case '1W':
+        if (diffDays <= 7) filteredData.push(item);
+        break;
+      case '1M':
+        if (diffDays <= 30) filteredData.push(item);
+        break;
+      case '1Y':
+        if (diffDays <= 365) filteredData.push(item);
+        break;
+    }
+  });
+
+  // Sort by date
+  return filteredData.sort((a, b) => {
+    const dateA = new Date(a.date.split('-').reverse().join('-'));
+    const dateB = new Date(b.date.split('-').reverse().join('-'));
+    return dateA.getTime() - dateB.getTime();
+  });
+};
 
 export default function LiveRates() {
   const router = useRouter();
@@ -95,18 +167,40 @@ export default function LiveRates() {
   const fetchRateHistory = async () => {
     setChartLoading(true);
     try {
-      // Generate mock data based on selected period and metal type
-      const mockData = generateMockData(selectedPeriod);
-      setChartData(mockData);
+      // TODO: Replace with actual API call
+      // const response = await rates.getRateHistory();
+      const response = { data: dummyData };
       
-      // Fetch current live rates
-      const response = await rates.getLiveRates();
-      console.log('Live rates response:', response.data);
       if (response.data?.data) {
-        setCurrentRate(metalType === 'Gold' ? 
-          parseFloat(response.data.data.gold_rate) : 
-          parseFloat(response.data.data.silver_rate)
-        );
+        const metalData = response.data.data[metalType.toLowerCase() as keyof typeof response.data.data];
+        if (metalData && metalData.length > 0) {
+          // Filter data based on selected period
+          const filteredData = filterDataByPeriod(metalData, selectedPeriod);
+          
+          // Format data for chart
+          const formattedData = {
+            labels: filteredData.map(item => item.date),
+            datasets: [{
+              data: filteredData.map(item => item.price)
+            }]
+          };
+          
+          // Calculate statistics
+          const prices = filteredData.map(item => item.price);
+          const high = Math.max(...prices);
+          const low = Math.min(...prices);
+          const change = ((prices[prices.length - 1] - prices[0]) / prices[0] * 100).toFixed(2);
+          
+          setChartData(formattedData);
+          setChartStatistics({
+            high,
+            low,
+            change: parseFloat(change)
+          });
+          
+          // Set current rate
+          setCurrentRate(prices[prices.length - 1]);
+        }
       }
     } catch (error) {
       console.error('Error fetching rate history:', error);
@@ -264,7 +358,7 @@ export default function LiveRates() {
           <Text style={styles.headerTitle}>{metalType} Rate History</Text>
         </View>
 
-        <ScrollView style={styles.content}>
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Metal Type Selector */}
           <View style={styles.typeSelector}>
             <TouchableOpacity
@@ -315,7 +409,7 @@ export default function LiveRates() {
             ))}
           </View>
 
-          {/* Simple Chart Implementation (SVG-free to avoid rendering errors) */}
+          {/* Chart Section */}
           <View style={styles.chartContainer}>
             {chartLoading ? (
               <View style={styles.chartLoading}>
@@ -323,51 +417,45 @@ export default function LiveRates() {
                 <Text style={styles.chartLoadingText}>Loading chart data...</Text>
               </View>
             ) : (
-              <View style={styles.customChartContainer}>
-                {/* Chart Header with Stats */}
+              <View style={styles.chartWrapper}>
                 <View style={styles.chartHeader}>
                   <Text style={styles.chartTitle}>{metalType} Price Trend</Text>
                   <Text style={styles.chartSubtitle}>{selectedPeriod} view</Text>
                 </View>
                 
-                {/* Custom Chart Visualization */}
-                <View style={styles.customChart}>
-                  {/* Y-axis labels */}
-                  <View style={styles.yAxisLabels}>
-                    <Text style={styles.axisLabel}>₹{chartStatistics.high.toFixed(0)}</Text>
-                    <Text style={styles.axisLabel}>₹{((chartStatistics.high + chartStatistics.low) / 2).toFixed(0)}</Text>
-                    <Text style={styles.axisLabel}>₹{chartStatistics.low.toFixed(0)}</Text>
+                {chartData.labels.length > 0 && (
+                  <View style={styles.customChart}>
+                    {/* Y-axis labels */}
+                    <View style={styles.yAxisLabels}>
+                      <Text style={styles.axisLabel}>₹{chartStatistics.high.toFixed(0)}</Text>
+                      <Text style={styles.axisLabel}>₹{((chartStatistics.high + chartStatistics.low) / 2).toFixed(0)}</Text>
+                      <Text style={styles.axisLabel}>₹{chartStatistics.low.toFixed(0)}</Text>
+                    </View>
+                    
+                    {/* Bars */}
+                    <View style={styles.barsContainer}>
+                      {chartData.datasets[0].data.map((value, index) => {
+                        const percentage = (value - chartStatistics.low) / (chartStatistics.high - chartStatistics.low);
+                        return (
+                          <View key={index} style={styles.barWrapper}>
+                            <Text style={styles.barValue}>₹{value.toFixed(2)}</Text>
+                            <View style={styles.barContainer}>
+                              <LinearGradient
+                                colors={metalType === 'Gold' ? 
+                                  ['rgba(212, 175, 55, 0.8)', 'rgba(212, 175, 55, 0.3)'] : 
+                                  ['rgba(192, 192, 192, 0.8)', 'rgba(192, 192, 192, 0.3)']}
+                                style={[styles.bar, { height: `${percentage * 100}%` }]}
+                                start={{ x: 0, y: 1 }}
+                                end={{ x: 0, y: 0 }}
+                              />
+                            </View>
+                            <Text style={styles.barLabel}>{chartData.labels[index]}</Text>
+                          </View>
+                        );
+                      })}
+                    </View>
                   </View>
-                  
-                  {/* Price trend visualization */}
-                  <View style={styles.chartLine}>
-                    <LinearGradient
-                      colors={metalType === 'Gold' ? 
-                        ['rgba(212, 175, 55, 0.8)', 'rgba(212, 175, 55, 0.3)'] : 
-                        ['rgba(192, 192, 192, 0.8)', 'rgba(192, 192, 192, 0.3)']}
-                      style={{
-                        height: '100%',
-                        width: '100%',
-                        borderRadius: 8,
-                      }}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 0, y: 1 }}
-                    >
-                      <View style={styles.trendLine} />
-                    </LinearGradient>
-                  </View>
-                </View>
-                
-                {/* X-axis Labels */}
-                <View style={styles.xAxisLabels}>
-                  {chartData.labels.length > 0 && [
-                    chartData.labels[0],
-                    chartData.labels[Math.floor(chartData.labels.length / 2)],
-                    chartData.labels[chartData.labels.length - 1]
-                  ].map((label, index) => (
-                    <Text key={index} style={styles.axisLabel}>{label}</Text>
-                  ))}
-                </View>
+                )}
               </View>
             )}
           </View>
@@ -462,12 +550,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: moderateScale(20),
+    paddingHorizontal: moderateScale(4),
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: moderateScale(16),
+    padding: moderateScale(8),
   },
   periodButton: {
     paddingVertical: moderateScale(8),
     paddingHorizontal: moderateScale(16),
     borderRadius: moderateScale(20),
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    minWidth: moderateScale(60),
+    alignItems: 'center',
   },
   periodButtonActive: {
     backgroundColor: '#D4AF37',
@@ -485,9 +579,78 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: moderateScale(16),
     padding: moderateScale(16),
+    minHeight: moderateScale(300),
   },
-  chart: {
+  chartWrapper: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: moderateScale(16),
+    padding: moderateScale(16),
+    flex: 1,
+  },
+  chartHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: moderateScale(12),
+  },
+  chartTitle: {
+    color: '#fff',
+    fontSize: moderateScale(16),
+    fontWeight: '600',
+  },
+  chartSubtitle: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: moderateScale(12),
+  },
+  customChart: {
+    flexDirection: 'row',
+    height: moderateScale(220),
+    marginBottom: moderateScale(10),
+  },
+  yAxisLabels: {
+    justifyContent: 'space-between',
+    paddingRight: moderateScale(8),
+    height: '100%',
+    width: moderateScale(60),
+  },
+  axisLabel: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: moderateScale(10),
+  },
+  barsContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    paddingHorizontal: moderateScale(4),
+  },
+  barWrapper: {
+    alignItems: 'center',
+    width: moderateScale(30),
+    height: '100%',
+    justifyContent: 'space-between',
+  },
+  barContainer: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'flex-end',
+    marginVertical: moderateScale(4),
+  },
+  bar: {
+    width: moderateScale(22),
+    borderRadius: moderateScale(4),
+  },
+  barValue: {
+    color: '#fff',
+    fontSize: moderateScale(10),
+    textAlign: 'center',
+    marginBottom: moderateScale(4),
+  },
+  barLabel: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: moderateScale(10),
+    textAlign: 'center',
+    marginTop: moderateScale(4),
   },
   statsContainer: {
     flexDirection: 'row',
@@ -495,9 +658,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: moderateScale(16),
     padding: moderateScale(16),
+    marginTop: moderateScale(10),
   },
   statItem: {
     alignItems: 'center',
+    flex: 1,
   },
   statLabel: {
     color: '#888',
@@ -520,6 +685,8 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(20),
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     marginHorizontal: moderateScale(8),
+    minWidth: moderateScale(100),
+    alignItems: 'center',
   },
   typeButtonActive: {
     backgroundColor: '#D4AF37',
@@ -534,7 +701,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   chartLoading: {
-    height: 220,
+    height: moderateScale(220),
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -550,55 +717,5 @@ const styles = StyleSheet.create({
   chartDescriptionText: {
     color: 'rgba(255, 255, 255, 0.7)',
     fontSize: moderateScale(12),
-  },
-  
-  // Custom chart styles
-  customChartContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: moderateScale(16),
-    padding: moderateScale(16),
-  },
-  chartHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: moderateScale(12),
-  },
-  chartTitle: {
-    color: '#fff',
-    fontSize: moderateScale(16),
-    fontWeight: '600',
-  },
-  chartSubtitle: {
-    color: 'rgba(255, 255, 255, 0.7)',
-    fontSize: moderateScale(12),
-  },
-  customChart: {
-    flexDirection: 'row',
-    height: 200,
-    marginBottom: moderateScale(10),
-  },
-  yAxisLabels: {
-    justifyContent: 'space-between',
-    paddingRight: moderateScale(8),
-    height: '100%',
-  },
-  axisLabel: {
-    color: 'rgba(255, 255, 255, 0.7)',
-    fontSize: moderateScale(10),
-  },
-  chartLine: {
-    flex: 1,
-    borderRadius: moderateScale(8),
-    overflow: 'hidden',
-  },
-  trendLine: {
-    height: '100%',
-    borderRadius: moderateScale(8),
-  },
-  xAxisLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: moderateScale(4),
   },
 });
