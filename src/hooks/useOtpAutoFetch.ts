@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Platform, PermissionsAndroid } from 'react-native';
+import { Platform, PermissionsAndroid, Linking, Alert } from 'react-native';
 
 // Import SMS Retriever for Android
 let SmsRetriever: any;
@@ -54,23 +54,67 @@ export const useOtpAutoFetch = ({
     return null;
   };
 
+  // Open app settings
+  const openAppSettings = async () => {
+    try {
+      await Linking.openSettings();
+    } catch (error) {
+      console.error('Error opening settings:', error);
+    }
+  };
+
+  // Show permission denied alert
+  const showPermissionDeniedAlert = () => {
+    Alert.alert(
+      'SMS Permission Required',
+      'Please enable SMS permissions in Settings to use auto-fill OTP feature.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Open Settings',
+          onPress: openAppSettings
+        }
+      ]
+    );
+  };
+
   // Request SMS permission for Android
   const requestSmsPermission = async (): Promise<boolean> => {
     if (Platform.OS !== 'android') return true;
 
     try {
-      const granted = await PermissionsAndroid.request(
+      // Request both READ_SMS and RECEIVE_SMS permissions
+      const permissions = [
         PermissionsAndroid.PERMISSIONS.RECEIVE_SMS,
-        {
-          title: 'SMS Permission',
-          message: 'This app needs access to SMS to auto-fill OTP',
-          buttonNeutral: 'Ask Me Later',
-          buttonNegative: 'Cancel',
-          buttonPositive: 'OK',
-        }
+        PermissionsAndroid.PERMISSIONS.READ_SMS
+      ];
+
+      const results = await PermissionsAndroid.requestMultiple(permissions);
+      
+      // Check if all permissions are granted
+      const allGranted = Object.values(results).every(
+        result => result === PermissionsAndroid.RESULTS.GRANTED
       );
 
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
+      if (!allGranted) {
+        console.log('SMS permissions not granted:', results);
+        
+        // Check if any permission is permanently denied
+        const hasPermanentDenial = Object.values(results).some(
+          result => result === 'never_ask_again'
+        );
+
+        if (hasPermanentDenial) {
+          showPermissionDeniedAlert();
+        }
+        
+        return false;
+      }
+
+      return true;
     } catch (error) {
       console.error('SMS permission error:', error);
       return false;
@@ -87,7 +131,7 @@ export const useOtpAutoFetch = ({
     try {
       const hasPermission = await requestSmsPermission();
       if (!hasPermission) {
-        console.log('SMS permission denied');
+        console.log('SMS permissions denied');
         return;
       }
 

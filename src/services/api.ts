@@ -174,6 +174,9 @@ export const users = {
       device_type
     });
   },
+  getFcmToken: (userId: number) => {
+    return api.get(`/notifications/tokens/${userId}`);
+  }
 };
 
 export const news = {

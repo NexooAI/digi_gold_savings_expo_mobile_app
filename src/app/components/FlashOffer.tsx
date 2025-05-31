@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { View, Text, StyleSheet, Dimensions, Animated, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, Dimensions, Animated, TouchableOpacity, Easing } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { news } from "@/services/api";
 import { Ionicons } from "@expo/vector-icons";
@@ -26,15 +26,13 @@ interface FlashOfferProps {
 const FlashOffer: React.FC<FlashOfferProps> = ({
   fallbackMessages = ["🎉 Welcome to Digital Gold Savings!"],
   textColor = "#fff",
-  duration = 10000,
+  duration = 8000,
   onPress,
 }) => {
   const translateX = useRef(new Animated.Value(width)).current;
-  const spacing = 30; // Gap between messages
   const [activeNewsMessages, setActiveNewsMessages] = useState<string[]>(fallbackMessages);
   const [loading, setLoading] = useState(true);
   const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
-  const [newsItems, setNewsItems] = useState<FlashNews[]>([]);
 
   // Fetch flash news from API
   useEffect(() => {
@@ -43,9 +41,7 @@ const FlashOffer: React.FC<FlashOfferProps> = ({
         setLoading(true);
         const response = await news.getActiveFlashNews();
         const fetchedNewsItems: FlashNews[] = response.data.data;
-        setNewsItems(fetchedNewsItems);
         
-        // Filter news items by checking if current date is between start and end dates
         const now = new Date();
         const activeNews = fetchedNewsItems.filter(item => {
           const startDate = new Date(item.start_date);
@@ -54,21 +50,23 @@ const FlashOffer: React.FC<FlashOfferProps> = ({
         });
         
         if (activeNews.length > 0) {
-          // Extract news messages
           const messages = activeNews.map(item => item.f_news);
           setActiveNewsMessages(messages);
+        } else {
+          setActiveNewsMessages(fallbackMessages);
         }
       } catch (error) {
         console.error('Error fetching flash news:', error);
+        setActiveNewsMessages(fallbackMessages);
       } finally {
         setLoading(false);
       }
     };
 
     fetchFlashNews();
-  }, []);
+  }, [fallbackMessages]);
 
-  // Rotate through news items every 10 seconds if there are multiple items
+  // Rotate through news items
   useEffect(() => {
     if (activeNewsMessages.length <= 1) return;
     
@@ -79,31 +77,62 @@ const FlashOffer: React.FC<FlashOfferProps> = ({
     return () => clearInterval(interval);
   }, [activeNewsMessages, duration]);
 
-  // Animation for text scrolling
+  // Text scrolling animation
   useEffect(() => {
     if (loading || activeNewsMessages.length === 0) return;
-    
-    // Reset animation when news changes
-    translateX.setValue(width);
-    
-    const currentMessage = activeNewsMessages[currentNewsIndex];
-    const messageWidth = currentMessage.length * 8; // Adjusted for better spacing
 
+    const currentMessage = activeNewsMessages[currentNewsIndex];
+    const messageWidth = currentMessage.length * 8; // Approximate width of text
+    
+    // Reset position to start from right
+    translateX.setValue(width);
+
+    // Create the scrolling animation
     const animation = Animated.loop(
       Animated.sequence([
+        // Initial pause
+        Animated.delay(500),
+        // Scroll from right to left
         Animated.timing(translateX, {
           toValue: -messageWidth,
-          duration: duration * (messageWidth / width) * 5, // Doubled the duration for slower animation
+          duration: messageWidth * 10, // Faster animation
+          useNativeDriver: true,
+          easing: Easing.linear,
+        }),
+        // Reset position
+        Animated.timing(translateX, {
+          toValue: width,
+          duration: 0,
           useNativeDriver: true,
         }),
       ])
     );
-    animation.start();
-    return () => animation.stop();
-  }, [currentNewsIndex, activeNewsMessages, loading, duration]);
 
-  // Don't show anything if there are no active news items
-  if (!loading && activeNewsMessages.length === 0) {
+    animation.start();
+
+    return () => {
+      animation.stop();
+    };
+  }, [currentNewsIndex, activeNewsMessages, loading]);
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient
+          colors={['#850111', '#2e0406']}
+          style={styles.gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.contentContainer}>
+            <Text style={[styles.text, { color: textColor }]}>Loading...</Text>
+          </View>
+        </LinearGradient>
+      </View>
+    );
+  }
+
+  if (activeNewsMessages.length === 0) {
     return null;
   }
 
@@ -132,16 +161,19 @@ const FlashOffer: React.FC<FlashOfferProps> = ({
           
           <View style={styles.textWrapper}>
             <Animated.View
-              style={[styles.textContainer, { transform: [{ translateX }] }]}
+              style={[
+                styles.textContainer,
+                {
+                  transform: [{ translateX }],
+                },
+              ]}
             >
-              {activeNewsMessages.length > 0 && (
-                <Text
-                  style={[styles.text, { color: textColor }]}
-                  numberOfLines={1}
-                >
-                  {activeNewsMessages[currentNewsIndex]}
-                </Text>
-              )}
+              <Text
+                style={[styles.text, { color: textColor }]}
+                numberOfLines={1}
+              >
+                {activeNewsMessages[currentNewsIndex]}
+              </Text>
             </Animated.View>
           </View>
 

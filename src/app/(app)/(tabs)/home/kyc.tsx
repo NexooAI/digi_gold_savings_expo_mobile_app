@@ -10,6 +10,7 @@ import {
   Alert,
   StyleSheet,
   Keyboard,
+  ImageBackground,
 } from "react-native";
 import {
   SafeAreaView,
@@ -23,6 +24,7 @@ import useGlobalStore from "@/store/global.store";
 import RNPickerSelect from "react-native-picker-select";
 import api from "@/services/api";
 import { theme } from "@/constants/theme";
+import { LinearGradient } from "expo-linear-gradient";
 
 const indianStates = [
   "Andhra Pradesh",
@@ -416,332 +418,377 @@ export default function KycForm() {
     }
   };
 
+  const handleGoToSchemes = () => {
+    router.replace('/(tabs)/savings');
+  };
+
+  const handleRetryPayment = async () => {
+    // ... existing code ...
+  };
+
   return (
     <View style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        {/* Header - always visible */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={24} color="#FFC857" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Know Your Customer</Text>
-        </View>
-
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.keyboardAvoid}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
-        >
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={[
-              styles.scrollViewContent,
-              { paddingBottom: (navBarHeight + 72 + (insets.bottom || 0)) }
-            ]}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Address Section */}
-            <View style={[styles.groupCard, styles.groupAddress]}>
-              <Text style={[styles.groupTitle, { color: '#1976d2' }]}>Address Details</Text>
-              {/* Door Number */}
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Door No.</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your door number"
-                  value={formData.doorno}
-                  placeholderTextColor="gray"
-                  onChangeText={(text) => handleChange("doorno", text)}
-                />
-                {errors.doorno && (
-                  <Text style={styles.errorText}>{errors.doorno}</Text>
-                )}
-              </View>
-              {/* Street */}
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Street</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your street name"
-                  placeholderTextColor="gray"
-                  value={formData.street}
-                  onChangeText={(text) => handleChange("street", text)}
-                />
-                {errors.street && (
-                  <Text style={styles.errorText}>{errors.street}</Text>
-                )}
-              </View>
-              {/* Area */}
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Area</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your area/locality"
-                  placeholderTextColor="gray"
-                  value={formData.area}
-                  onChangeText={(text) => handleChange("area", text)}
-                />
-                {errors.area && (
-                  <Text style={styles.errorText}>{errors.area}</Text>
-                )}
-              </View>
-              {/* City */}
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>City</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your city"
-                  placeholderTextColor="gray"
-                  value={formData.city}
-                  onChangeText={(text) => handleChange("city", text)}
-                />
-                {errors.city && (
-                  <Text style={styles.errorText}>{errors.city}</Text>
-                )}
-              </View>
-              {/* District */}
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>District</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your district"
-                  placeholderTextColor="gray"
-                  value={formData.district}
-                  onChangeText={(text) => handleChange("district", text)}
-                />
-                {errors.district && (
-                  <Text style={styles.errorText}>{errors.district}</Text>
-                )}
-              </View>
-              {/* State (Dropdown) */}
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>State</Text>
-                <View style={styles.pickerContainer}>
-                  <RNPickerSelect
-                    onValueChange={(value) => handleChange("state", value)}
-                    onDonePress={() => {}}
-                    placeholder={{ label: "Select your state", value: "" }}
-                    value={formData.state}
-                    items={indianStates.map((state) => ({
-                      label: state,
-                      value: state,
-                    }))}
-                    style={pickerSelectStyles}
-                    useNativeAndroidPickerStyle={false}
-                  />
-                </View>
-                {errors.state && (
-                  <Text style={styles.errorText}>{errors.state}</Text>
-                )}
-              </View>
-              {/* Country (Default to India) */}
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Country</Text>
-                <TextInput
-                  style={[styles.input, styles.disabledInput]}
-                  placeholder="Country"
-                  value={formData.country}
-                  editable={false}
-                />
-                {errors.country && (
-                  <Text style={styles.errorText}>{errors.country}</Text>
-                )}
-              </View>
-              {/* Pincode */}
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Pincode</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your 6-digit pincode"
-                  placeholderTextColor="gray"
-                  keyboardType="number-pad"
-                  value={formData.pincode}
-                  onChangeText={(text) => handleChange("pincode", text)}
-                  maxLength={6}
-                />
-                {errors.pincode && (
-                  <Text style={styles.errorText}>{errors.pincode}</Text>
-                )}
-              </View>
-            </View>
-
-            {/* ID Proof Section */}
-            <View style={[styles.groupCard, styles.groupIdProof]}>
-              <Text style={[styles.groupTitle, { color: '#bfa14a' }]}>ID Proof</Text>
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Date of Birth</Text>
-                <FormDatePicker
-                  label="Date of Birth"
-                  value={formData.dob}
-                  onDateChange={(date) => handleChange("dob", date)}
-                  error={errors.dob}
-                />
-              </View>
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Address Proof Type</Text>
-                <View style={styles.pickerContainer}>
-                  <RNPickerSelect
-                    onValueChange={(value) => handleChange("addressprooftype", value)}
-                    onDonePress={() => {}}
-                    placeholder={{ label: "Select your ID proof", value: "" }}
-                    value={formData.addressprooftype}
-                    items={idTypes.map((id) => ({
-                      label: id.name,
-                      value: id.value,
-                    }))}
-                    style={pickerSelectStyles}
-                    useNativeAndroidPickerStyle={false}
-                  />
-                </View>
-                {errors.addressprooftype && (
-                  <Text style={styles.errorText}>{errors.addressprooftype}</Text>
-                )}
-              </View>
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>ID Number</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholderTextColor="gray"
-                  placeholder={getPlaceholderText(formData.addressprooftype)}
-                  value={formData.idNumber}
-                  onChangeText={(text) =>
-                    handleChange(
-                      "idNumber",
-                      formatIdNumber(text, formData.addressprooftype)
-                    )
-                  }
-                  autoCapitalize={
-                    formData.addressprooftype === "pan" ? "characters" : "none"
-                  }
-                  keyboardType={
-                    formData.addressprooftype === "pan" ? "default" : "number-pad"
-                  }
-                  maxLength={getMaxLength(formData.addressprooftype)}
-                />
-                {errors.idNumber && (
-                  <Text style={styles.errorText}>{errors.idNumber}</Text>
-                )}
-              </View>
-            </View>
-
-            {/* Nominee Section */}
-            <View style={[styles.groupCard, styles.groupNominee]}>
-              <Text style={[styles.groupTitle, { color: '#388e3c' }]}>Nominee Details</Text>
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Nominee Name</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your nominee's full name"
-                  placeholderTextColor="gray"
-                  value={formData.nominee_name}
-                  onChangeText={(text) => handleChange("nominee_name", text)}
-                />
-                {errors.nominee_name && (
-                  <Text style={styles.errorText}>{errors.nominee_name}</Text>
-                )}
-              </View>
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Nominee Relationship</Text>
-                <View style={styles.pickerContainer}>
-                  <RNPickerSelect
-                    onValueChange={(value) =>
-                      handleChange("nominee_relationship", value)
-                    }
-                    onDonePress={() => {}}
-                    placeholder={{ label: "Select relationship", value: "" }}
-                    value={formData.nominee_relationship}
-                    items={nomineeRelationship.map((id) => ({
-                      label: id.name,
-                      value: id.value,
-                    }))}
-                    style={pickerSelectStyles}
-                    useNativeAndroidPickerStyle={false}
-                  />
-                </View>
-                {errors.nominee_relationship && (
-                  <Text style={styles.errorText}>{errors.nominee_relationship}</Text>
-                )}
-              </View>
-            </View>
-
-            {/* Extra space at the bottom */}
-            <View style={styles.bottomSpace} />
-          </ScrollView>
-          {/* Submit Button - now at the end, not absolutely positioned */}
-          <View style={styles.buttonContainer}>
+      <ImageBackground
+        source={theme.image.bg_image}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        <LinearGradient
+          colors={['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.8)']}
+          style={StyleSheet.absoluteFillObject}
+        />
+        <SafeAreaView style={styles.safeArea}>
+          {/* Header */}
+          <View style={styles.header}>
             <TouchableOpacity
-              onPress={handleSubmit}
-              style={styles.submitButton}
-              activeOpacity={0.9}
+              onPress={() => router.back()}
+              style={styles.backButton}
+              activeOpacity={0.7}
             >
-              <Text style={styles.submitButtonText}>
-                {kycId ? "Update KYC" : "Submit KYC"}
-              </Text>
+              <Ionicons name="arrow-back" size={24} color="#FFC857" />
             </TouchableOpacity>
+            <Text style={styles.headerTitle}>Know Your Customer</Text>
           </View>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
+
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.keyboardAvoid}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
+          >
+            <ScrollView
+              style={styles.scrollView}
+              contentContainerStyle={[
+                styles.scrollViewContent,
+                { paddingBottom: keyboardVisible ? 200 : 100 }
+              ]}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              {/* Address Section */}
+              <View style={[styles.groupCard, styles.groupAddress]}>
+                <View style={styles.groupHeader}>
+                  <Ionicons name="home-outline" size={24} color="#1976d2" />
+                  <Text style={[styles.groupTitle, { color: '#1976d2' }]}>Address Details</Text>
+                </View>
+                <View style={styles.formContent}>
+                  {/* Door Number */}
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Door No.</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter your door number"
+                      value={formData.doorno}
+                      placeholderTextColor="gray"
+                      onChangeText={(text) => handleChange("doorno", text)}
+                    />
+                    {errors.doorno && (
+                      <Text style={styles.errorText}>{errors.doorno}</Text>
+                    )}
+                  </View>
+                  {/* Street */}
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Street</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter your street name"
+                      placeholderTextColor="gray"
+                      value={formData.street}
+                      onChangeText={(text) => handleChange("street", text)}
+                    />
+                    {errors.street && (
+                      <Text style={styles.errorText}>{errors.street}</Text>
+                    )}
+                  </View>
+                  {/* Area */}
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Area</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter your area/locality"
+                      placeholderTextColor="gray"
+                      value={formData.area}
+                      onChangeText={(text) => handleChange("area", text)}
+                    />
+                    {errors.area && (
+                      <Text style={styles.errorText}>{errors.area}</Text>
+                    )}
+                  </View>
+                  {/* City */}
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>City</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter your city"
+                      placeholderTextColor="gray"
+                      value={formData.city}
+                      onChangeText={(text) => handleChange("city", text)}
+                    />
+                    {errors.city && (
+                      <Text style={styles.errorText}>{errors.city}</Text>
+                    )}
+                  </View>
+                  {/* District */}
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>District</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter your district"
+                      placeholderTextColor="gray"
+                      value={formData.district}
+                      onChangeText={(text) => handleChange("district", text)}
+                    />
+                    {errors.district && (
+                      <Text style={styles.errorText}>{errors.district}</Text>
+                    )}
+                  </View>
+                  {/* State (Dropdown) */}
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>State</Text>
+                    <RNPickerSelect
+                      onValueChange={(value) => handleChange("state", value)}
+                      onDonePress={() => {}}
+                      placeholder={{ label: "Select your state", value: "" }}
+                      value={formData.state}
+                      items={indianStates.map((state) => ({
+                        label: state,
+                        value: state,
+                      }))}
+                      style={pickerSelectStyles}
+                      useNativeAndroidPickerStyle={false}
+                    />
+                    {errors.state && (
+                      <Text style={styles.errorText}>{errors.state}</Text>
+                    )}
+                  </View>
+                  {/* Country (Default to India) */}
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Country</Text>
+                    <TextInput
+                      style={[styles.input, styles.disabledInput]}
+                      placeholder="Country"
+                      value={formData.country}
+                      editable={false}
+                    />
+                    {errors.country && (
+                      <Text style={styles.errorText}>{errors.country}</Text>
+                    )}
+                  </View>
+                  {/* Pincode */}
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Pincode</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter your 6-digit pincode"
+                      placeholderTextColor="gray"
+                      keyboardType="number-pad"
+                      value={formData.pincode}
+                      onChangeText={(text) => handleChange("pincode", text)}
+                      maxLength={6}
+                    />
+                    {errors.pincode && (
+                      <Text style={styles.errorText}>{errors.pincode}</Text>
+                    )}
+                  </View>
+                </View>
+              </View>
+
+              {/* ID Proof Section */}
+              <View style={[styles.groupCard, styles.groupIdProof]}>
+                <View style={styles.groupHeader}>
+                  <Ionicons name="card-outline" size={24} color="#bfa14a" />
+                  <Text style={[styles.groupTitle, { color: '#bfa14a' }]}>ID Proof</Text>
+                </View>
+                <View style={styles.formContent}>
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Date of Birth</Text>
+                    <FormDatePicker
+                      label="Date of Birth"
+                      value={formData.dob}
+                      onDateChange={(date) => handleChange("dob", date)}
+                      error={errors.dob}
+                    />
+                  </View>
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Address Proof Type</Text>
+                    <RNPickerSelect
+                      onValueChange={(value) => handleChange("addressprooftype", value)}
+                      onDonePress={() => {}}
+                      placeholder={{ label: "Select your ID proof", value: "" }}
+                      value={formData.addressprooftype}
+                      items={idTypes.map((id) => ({
+                        label: id.name,
+                        value: id.value,
+                      }))}
+                      style={pickerSelectStyles}
+                      useNativeAndroidPickerStyle={false}
+                    />
+                    {errors.addressprooftype && (
+                      <Text style={styles.errorText}>{errors.addressprooftype}</Text>
+                    )}
+                  </View>
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>ID Number</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholderTextColor="gray"
+                      placeholder={getPlaceholderText(formData.addressprooftype)}
+                      value={formData.idNumber}
+                      onChangeText={(text) =>
+                        handleChange(
+                          "idNumber",
+                          formatIdNumber(text, formData.addressprooftype)
+                        )
+                      }
+                      autoCapitalize={
+                        formData.addressprooftype === "pan" ? "characters" : "none"
+                      }
+                      keyboardType={
+                        formData.addressprooftype === "pan" ? "default" : "number-pad"
+                      }
+                      maxLength={getMaxLength(formData.addressprooftype)}
+                    />
+                    {errors.idNumber && (
+                      <Text style={styles.errorText}>{errors.idNumber}</Text>
+                    )}
+                  </View>
+                </View>
+              </View>
+
+              {/* Nominee Section */}
+              <View style={[styles.groupCard, styles.groupNominee]}>
+                <View style={styles.groupHeader}>
+                  <Ionicons name="people-outline" size={24} color="#388e3c" />
+                  <Text style={[styles.groupTitle, { color: '#388e3c' }]}>Nominee Details</Text>
+                </View>
+                <View style={styles.formContent}>
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Nominee Name</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter your nominee's full name"
+                      placeholderTextColor="gray"
+                      value={formData.nominee_name}
+                      onChangeText={(text) => handleChange("nominee_name", text)}
+                    />
+                    {errors.nominee_name && (
+                      <Text style={styles.errorText}>{errors.nominee_name}</Text>
+                    )}
+                  </View>
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Nominee Relationship</Text>
+                    <RNPickerSelect
+                      onValueChange={(value) =>
+                        handleChange("nominee_relationship", value)
+                      }
+                      onDonePress={() => {}}
+                      placeholder={{ label: "Select relationship", value: "" }}
+                      value={formData.nominee_relationship}
+                      items={nomineeRelationship.map((id) => ({
+                        label: id.name,
+                        value: id.value,
+                      }))}
+                      style={pickerSelectStyles}
+                      useNativeAndroidPickerStyle={false}
+                    />
+                    {errors.nominee_relationship && (
+                      <Text style={styles.errorText}>{errors.nominee_relationship}</Text>
+                    )}
+                  </View>
+                </View>
+              </View>
+
+              {/* Submit Button */}
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  onPress={handleSubmit}
+                  style={styles.submitButton}
+                  activeOpacity={0.9}
+                >
+                  <LinearGradient
+                    colors={['#850111', '#5a000b', '#2e0406']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.gradientButton}
+                  >
+                    <Text style={styles.submitButtonText}>
+                      {kycId ? "Update KYC" : "Submit KYC"}
+                    </Text>
+                    <Ionicons name="arrow-forward" size={20} color="#FFC857" style={styles.buttonIcon} />
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+
+              {/* Extra space at the bottom */}
+              <View style={styles.bottomSpace} />
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </ImageBackground>
     </View>
   );
 }
+
 const pickerSelectStyles = StyleSheet.create({
   inputIOS: {
     backgroundColor: "#fff",
-    borderColor: "#CCCCCC",
+    borderColor: "#E0E0E0",
     borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
     fontSize: 16,
-    color: "black",
+    color: "#333",
     paddingRight: 30,
     marginBottom: 10,
   },
   inputAndroid: {
     fontSize: 16,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
     borderWidth: 1,
-    borderColor: "#CCCCCC",
-    borderRadius: 8,
-    color: "black",
+    borderColor: "#E0E0E0",
+    borderRadius: 12,
+    color: "#333",
     paddingRight: 30,
+    backgroundColor: "#fff",
   },
 });
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+  },
+  backgroundImage: {
+    flex: 1,
   },
   keyboardAvoid: {
     flex: 1,
   },
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 12,
+    backgroundColor: 'rgba(133, 1, 17, 0.9)',
     borderBottomWidth: 1,
-    borderBottomColor: "#EEEEEE",
-    backgroundColor: theme.colors.primary,
+    borderBottomColor: 'rgba(255, 200, 87, 0.3)',
   },
   backButton: {
     padding: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 8,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: "600",
     color: "#FFC857",
     marginLeft: 12,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   scrollView: {
     flex: 1,
@@ -749,79 +796,89 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     padding: 16,
   },
-  formGroup: {
-    marginBottom: 20,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
+  groupCard: {
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    marginHorizontal: 16,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  groupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+  },
+  groupTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 12,
+  },
+  formContent: {
+    paddingHorizontal: 4,
+  },
+  formGroup: {
+    marginBottom: 16,
   },
   label: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#444444",
-    marginBottom: 6,
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#444",
+    marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#CCCCCC",
-    borderRadius: 8,
-    padding: 12,
+    borderColor: "#E0E0E0",
+    borderRadius: 12,
+    padding: 14,
     fontSize: 16,
     backgroundColor: "#FFFFFF",
+    color: "#333",
   },
   disabledInput: {
     backgroundColor: "#F5F5F5",
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: "#CCCCCC",
-    borderRadius: 8,
-    overflow: "hidden",
-    backgroundColor: "#FFFFFF",
-  },
-  picker: {
-    height: 50,
-    width: "100%",
-  },
-  pickerItem: {
-    fontSize: 16,
+    color: "#666",
   },
   errorText: {
     color: "#FF3B30",
-    fontSize: 14,
-    marginTop: 4,
+    fontSize: 13,
+    marginTop: 6,
+    fontWeight: "500",
   },
   buttonContainer: {
-    paddingHorizontal: 26,
-    paddingBottom: 100,
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 24,
+    marginTop: 16,
+    marginBottom: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
     elevation: 10,
-    zIndex: 1000,
-    alignItems: 'center',
   },
   submitButton: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: 20,
-    paddingVertical: 22,
-    alignItems: "center",
-    width: '100%',
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.18,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#850111',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 6,
+  },
+  gradientButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
   },
   submitButtonText: {
     color: "#FFC857",
@@ -829,54 +886,43 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     letterSpacing: 1,
   },
+  buttonIcon: {
+    marginLeft: 8,
+  },
   bottomSpace: {
     height: 100,
   },
-  datePickerButton: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 12,
+  groupAddress: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#1976d2',
   },
-  dateText: {
-    fontSize: 16,
-    color: "#000000",
+  groupIdProof: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#bfa14a',
   },
-  placeholderText: {
-    fontSize: 16,
-    color: "#000000",
-  },
-  datePicker: {
-    width: "100%",
-    backgroundColor: "white",
-  },
-  dateContent: {
-    flex: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  dateContainer: {
-    marginVertical: 12,
-    paddingHorizontal: 20,
+  groupNominee: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#388e3c',
   },
   dateInputWrapper: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#cccccc",
-    borderRadius: 8,
-    paddingHorizontal: 12,
+    borderColor: "#E0E0E0",
+    borderRadius: 12,
+    paddingHorizontal: 14,
     height: 56,
+    backgroundColor: "#FFFFFF",
   },
   dateInput: {
     flex: 1,
     fontSize: 16,
-    color: "#333333",
+    color: "#333",
     paddingVertical: 16,
   },
   calendarIcon: {
     marginLeft: 10,
+    color: "#1976d2",
   },
   iosButtonContainer: {
     flexDirection: "row",
@@ -885,53 +931,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   iosButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#1976d2",
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   buttonText: {
     color: "white",
-    fontWeight: "500",
+    fontWeight: "600",
     fontSize: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: theme.colors.primary,
-    marginBottom: 16,
-    marginTop: 24,
-    paddingHorizontal: 16,
-  },
-  groupCard: {
-    borderRadius: 18,
-    padding: 18,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  groupTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    marginLeft: 2,
-  },
-  groupAddress: {
-    backgroundColor: '#e3f2fd', // Light blue
-    borderColor: '#90caf9',
-    borderWidth: 1,
-  },
-  groupIdProof: {
-    backgroundColor: '#fffde7', // Light yellow
-    borderColor: '#ffe082',
-    borderWidth: 1,
-  },
-  groupNominee: {
-    backgroundColor: '#e8f5e9', // Light green
-    borderColor: '#a5d6a7',
-    borderWidth: 1,
   },
 });
