@@ -8,7 +8,6 @@ import {
   StyleSheet,
   FlatList,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -16,7 +15,10 @@ const ITEM_HEIGHT = 200;
 
 // Define interface for component props
 interface ImageSliderProps {
-  images: Array<string | number | { uri: string }>;
+  images: Array<{
+    id: string | number;
+    image: string | number | { uri: string };
+  }>;
 }
 
 // Define the component with proper return type (React.ReactElement)
@@ -71,7 +73,7 @@ const ImageSlider = ({ images = [] }: ImageSliderProps): React.ReactElement => {
     return (
       <Animated.View style={[styles.itemContainer, { transform: [{ scale }] }]}>
         <Image
-          source={typeof item === 'string' ? { uri: item } : item}
+          source={item.image}
           style={styles.image}
         />
       </Animated.View>
@@ -105,7 +107,7 @@ const ImageSlider = ({ images = [] }: ImageSliderProps): React.ReactElement => {
       <Animated.FlatList
         ref={flatListRef}
         data={images}
-        keyExtractor={(_, index) => index.toString()}
+        keyExtractor={(item) => item.id.toString()}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
@@ -126,7 +128,7 @@ const ImageSlider = ({ images = [] }: ImageSliderProps): React.ReactElement => {
         }}
       />
 
-      {images.length > 1 && ( // Only show buttons if multiple images
+      {images.length > 1 && (
         <>
           <TouchableOpacity style={styles.prevButton} onPress={handlePrev}>
             <MaterialIcons name="chevron-left" size={20} color="white" />
@@ -137,7 +139,7 @@ const ImageSlider = ({ images = [] }: ImageSliderProps): React.ReactElement => {
         </>
       )}
 
-      {images.length > 1 && ( // Only show pagination if multiple images
+      {images.length > 1 && (
         <View style={styles.pagination}>
           {images.map((_, index) => (
             <Animated.View
@@ -180,11 +182,6 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'cover',
     borderRadius: 12,
-  },
-  gradient: {
-    ...StyleSheet.absoluteFillObject,
-    height: ITEM_HEIGHT / 2,
-    bottom: 0,
   },
   pagination: {
     flexDirection: 'row',

@@ -130,16 +130,10 @@ export default function Login() {
 
   useEffect(() => {
     if (isAndroid) {
-      // Auto-fetch OTP is now handled by the useOtpAutoFetch hook
-      console.log('SMS auto-fetch initialized for Android');
+      // Initialize SMS listener for Android
+      startSmsListener();
     }
   }, [isAndroid]);
-
-  useEffect(() => {
-    if (isIOS) {
-      setIsShowOtp(true);
-    }
-  }, [isIOS]);
 
   useEffect(() => {
     checkTokenValidity();
@@ -280,8 +274,14 @@ export default function Login() {
     api
       .post("/auth/check-mobile", { mobile_number: mobile })
       .then(() => {
+        // Show OTP screen for both platforms
         setIsShowOtp(true);
         setTimer(120);
+        
+        // Start SMS listener for Android
+        if (isAndroid) {
+          startSmsListener();
+        }
       })
       .catch((error) => {
         const errorMessage = error.response?.data?.error || "You are not registered.";

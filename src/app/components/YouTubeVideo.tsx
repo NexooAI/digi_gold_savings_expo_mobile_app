@@ -4,10 +4,15 @@ import {
   SafeAreaView,
   ActivityIndicator,
   Text,
+  StyleSheet,
+  View,
+  TouchableOpacity,
 } from "react-native";
 import YoutubePlayer from "react-native-youtube-iframe";
 import api from "@/services/api";
 import { theme } from "@/constants/theme";
+import { Ionicons } from '@expo/vector-icons';
+import { moderateScale } from "react-native-size-matters";
 
 const YouTubeVideo: React.FC = () => {
   const screenWidth = Dimensions.get("window").width;
@@ -69,18 +74,81 @@ const YouTubeVideo: React.FC = () => {
   }
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-    >
-      <YoutubePlayer
-        height={260}
-        width={screenWidth}
-        play={playing}
-        videoId={videoId}
-        onChangeState={onStateChange}
-      />
-    </SafeAreaView>
+    <View style={styles.container}>
+      <View style={styles.headerContainer}>
+        <View style={styles.headerContent}>
+          <Ionicons name="play-circle" size={24} color="#850111" />
+          <Text style={styles.headerText}>Featured Video</Text>
+        </View>
+        <View style={styles.headerLine} />
+      </View>
+      
+      <View style={styles.videoContainer}>
+        <View style={styles.videoWrapper}>
+          <YoutubePlayer
+            height={220}
+            width={screenWidth - 40}
+            play={playing}
+            videoId={videoId}
+            onChangeState={onStateChange}
+            initialPlayerParams={{
+              controls: true,
+              modestbranding: true,
+              rel: 0,
+            }}
+          />
+        </View>
+      </View>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    paddingHorizontal: 20,
+    marginVertical: 15,
+  },
+  headerContainer: {
+    marginBottom: 15,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  headerText: {
+    fontSize: moderateScale(18),
+    fontWeight: '700',
+    color: '#850111',
+    marginLeft: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  headerLine: {
+    height: 2,
+    backgroundColor: '#FFD700',
+    width: '100%',
+    borderRadius: 1,
+  },
+  videoContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  videoWrapper: {
+    borderRadius: 18,
+    overflow: 'hidden',
+    backgroundColor: '#000',
+  },
+});
 
 export default YouTubeVideo;

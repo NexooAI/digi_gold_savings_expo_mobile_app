@@ -14,6 +14,7 @@ import {
   FlatList,
   Image,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from "expo-router";
@@ -27,7 +28,7 @@ import FlashOffer from "@/app/components/FlashOffer";
 import YouTubeVideo from "@/app/components/YouTubeVideo";
 import SupportContactCard from "@/app/components/SupportContactCard";
 import useGlobalStore from "@/store/global.store";
-import api, { schemes, rates, collections } from "@/services/api";
+import api, { schemes, rates, collections, posters } from "@/services/api";
 import NetInfo from "@react-native-community/netinfo";
 import { ScaledSheet, moderateScale } from "react-native-size-matters";
 import { theme } from "@/constants/theme";
@@ -78,6 +79,70 @@ const banners: Banner[] = [
   },
 ];
 
+// Add default status images
+const defaultStatusImages: Collection[] = [
+  {
+    id: 1,
+    name: "Gold Collection",
+    thumbnail: require('../../../../../assets/images/status1.jpg'),
+    status_images: [
+      require('../../../../../assets/images/status1.jpg'),
+      require('../../../../../assets/images/status2.jpg'),
+      require('../../../../../assets/images/status3.jpg'),
+    ],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 2,
+    name: "Silver Collection",
+    thumbnail: require('../../../../../assets/images/status2.jpg'),
+    status_images: [
+      require('../../../../../assets/images/status2.jpg'),
+      require('../../../../../assets/images/status3.jpg'),
+      require('../../../../../assets/images/status4.jpg'),
+    ],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 3,
+    name: "Diamond Collection",
+    thumbnail: require('../../../../../assets/images/status3.jpg'),
+    status_images: [
+      require('../../../../../assets/images/status3.jpg'),
+      require('../../../../../assets/images/status4.jpg'),
+      require('../../../../../assets/images/status5.jpg'),
+    ],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 4,
+    name: "Platinum Collection",
+    thumbnail: require('../../../../../assets/images/status4.jpg'),
+    status_images: [
+      require('../../../../../assets/images/status4.jpg'),
+      require('../../../../../assets/images/status5.jpg'),
+      require('../../../../../assets/images/status1.jpg'),
+    ],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 5,
+    name: "Exclusive Collection",
+    thumbnail: require('../../../../../assets/images/status5.jpg'),
+    status_images: [
+      require('../../../../../assets/images/status5.jpg'),
+      require('../../../../../assets/images/status1.jpg'),
+      require('../../../../../assets/images/status2.jpg'),
+    ],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+];
+
 // Interfaces
 interface RatesData {
   data: {
@@ -96,10 +161,10 @@ interface Banner {
 interface Collection {
   id: number;
   name: string;
-  thumbnail: string;
-  status_images: string[];
-  created_at: string;
-  updated_at: string;
+  thumbnail: string | any;
+  status_images: string[] | any[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface UserInfoCardProps {
@@ -179,6 +244,8 @@ export default function Home() {
   const [collectionsData, setCollectionsData] = useState<Collection[]>([]);
   const [totalGoldSavings, setTotalGoldSavings] = useState(0);
   const [flashNews, setFlashNews] = useState<any[]>([]);
+  const [sliderImages, setSliderImages] = useState<any[]>([]);
+  const [isSliderLoading, setIsSliderLoading] = useState(true);
 
   // Refs
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -228,27 +295,92 @@ export default function Home() {
   // Data fetching
   const fetchData = useCallback(async (isRefreshing = false) => {
     try {
+      console.log('Starting data fetch...');
       isRefreshing ? setRefreshing(true) : setIsLoading(true);
 
-      const [schemesResponse, liveRatesResponse, collectionsResponse] = await Promise.all([
-        schemes.getSchemes(),
-        rates.getLiveRates(),
-        collections.getCollections(),
-        
+      const [schemesResponse, liveRatesResponse, collectionsResponse, postersResponse] = await Promise.all([
+        schemes.getSchemes().catch(error => {
+          console.error('Error fetching schemes:', error);
+          return { data: null };
+        }),
+        rates.getLiveRates().catch(error => {
+          console.error('Error fetching rates:', error);
+          return { data: null };
+        }),
+        collections.getCollections().catch(error => {
+          console.error('Error fetching collections:', error);
+          return { data: { data: [] } };
+        }),
+        posters.getActivePosters().catch(error => {
+          console.error('Error fetching posters:', error);
+          return { data: { data: [] } };
+        }),
       ]);
+
+      console.log('Data fetch completed:', {
+        schemes: !!schemesResponse.data,
+        rates: !!liveRatesResponse.data,
+        collections: !!collectionsResponse.data,
+        posters: !!postersResponse.data
+      });
 
       setSchemeData(schemesResponse.data);
       setRatesData(liveRatesResponse.data);
-      setCollectionsData(collectionsResponse.data.data);
+      
+      // Handle collections data with fallback
+      if (collectionsResponse.data?.data?.length > 0) {
+        setCollectionsData(collectionsResponse.data.data);
+      } else {
+        console.log('No collections found, using default images');
+        setCollectionsData(defaultStatusImages);
+      }
+
+      // Handle slider images
+      if (postersResponse.data?.data?.length > 0) {
+        const images = postersResponse.data.data.map((poster: any) => ({
+          id: poster.id,
+          image: poster.image.startsWith('http') ? poster.image : `${theme.baseUrl}${poster.image}`,
+          title: poster.title,
+        }));
+        setSliderImages(images);
+      } else {
+        console.log('No posters found, using dummy images');
+        setSliderImages(dummyData.sliderImages.map((image, index) => ({
+          id: index,
+          image,
+          title: `Slider ${index + 1}`,
+        })));
+      }
 
       if (liveRatesResponse.data?.data?.gold_rate) {
         await AsyncStorage.setItem('gold_rate', liveRatesResponse.data.data.gold_rate);
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
-      Alert.alert("Error", "Failed to fetch updated data");
+      console.error("Error in fetchData:", error);
+      // Set default data on error
+      setCollectionsData(defaultStatusImages);
+      setSliderImages(dummyData.sliderImages.map((image, index) => ({
+        id: index,
+        image,
+        title: `Slider ${index + 1}`,
+      })));
+      Alert.alert(
+        "Error",
+        "Failed to fetch data. Please check your internet connection and try again.",
+        [
+          {
+            text: "Retry",
+            onPress: () => fetchData(true)
+          },
+          {
+            text: "OK",
+            style: "cancel"
+          }
+        ]
+      );
     } finally {
       isRefreshing ? setRefreshing(false) : setIsLoading(false);
+      setIsSliderLoading(false);
     }
   }, []);
 
@@ -284,18 +416,21 @@ export default function Home() {
 
   // Effects
   useEffect(() => {
+    console.log('Initial data fetch...');
     fetchData();
   }, [fetchData]);
 
   useEffect(() => {
     if (user) {
+      console.log('Fetching user data...');
       fetchActiveSchemesCount();
       FetchFlashNews();
     }
-  }, [user, fetchActiveSchemesCount ,FetchFlashNews]);
+  }, [user, fetchActiveSchemesCount, FetchFlashNews]);
 
   useEffect(() => {
     if (user) {
+      console.log('Setting up notifications...');
       NotificationService.sendTokenToApi();
     }
   }, [user]);
@@ -371,7 +506,7 @@ export default function Home() {
       <View style={styles.statusItemWrapper}>
         <View style={styles.statusImageContainer}>
           <Image
-            source={{ uri: getFullImageUrl(item.thumbnail) }}
+            source={typeof item.thumbnail === 'string' ? { uri: getFullImageUrl(item.thumbnail) } : item.thumbnail}
             style={styles.statusImage}
             resizeMode="cover"
           />
@@ -440,7 +575,26 @@ export default function Home() {
                   )}
                 </>
               ) : (
-                <Text style={styles.loadingText}>{t("loadingRates")}</Text>
+                <View style={styles.rateWarningContainer}>
+                  <View style={styles.rateWarningContent}>
+                    <Ionicons name="warning" size={24} color="#FFD700" />
+                    <View style={styles.rateWarningTextContainer}>
+                      <Text style={styles.rateWarningTitle}>Live Rates Unavailable</Text>
+                      <Text style={styles.rateWarningSubtitle}>Please try again later</Text>
+                    </View>
+                  </View>
+                  <View style={styles.rateWarningRates}>
+                    <View style={styles.rateWarningRateItem}>
+                      <Text style={styles.rateWarningRateLabel}>Gold Rate</Text>
+                      <Text style={styles.rateWarningRateValue}>0.00</Text>
+                    </View>
+                    <View style={styles.rateWarningDivider} />
+                    <View style={styles.rateWarningRateItem}>
+                      <Text style={styles.rateWarningRateLabel}>Silver Rate</Text>
+                      <Text style={styles.rateWarningRateValue}>0.00</Text>
+                    </View>
+                  </View>
+                </View>
               )}
             </View>
 
@@ -456,7 +610,13 @@ export default function Home() {
             </View>
 
             <View style={styles.mainContent}>
-              <ImageSlider images={dummyData.sliderImages} />
+              {isSliderLoading ? (
+                <View style={styles.sliderLoadingContainer}>
+                  <ActivityIndicator size="large" color="#FFD700" />
+                </View>
+              ) : (
+                <ImageSlider images={sliderImages} />
+              )}
 
               <FlashOffer
                 fallbackMessages={[
@@ -476,6 +636,15 @@ export default function Home() {
                 onPress={() => router.push('/(tabs)/savings')}
               />
 
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionHeaderContent}>
+                  <View style={styles.sectionHeaderLine} />
+                  <Text style={styles.sectionHeaderText}>Active Schemes</Text>
+                  <View style={styles.sectionHeaderLine} />
+                </View>
+                <Text style={styles.sectionHeaderSubtext}>Explore our exclusive gold savings plans</Text>
+              </View>
+
               <View style={styles.bannerContainer}>
                 <FlatList
                   data={banners}
@@ -486,7 +655,11 @@ export default function Home() {
                   contentContainerStyle={styles.bannerListContent}
                 />
               </View>
-              <YouTubeVideo />
+
+              
+                  <YouTubeVideo />
+                
+
               <SupportContactCard />
               <View style={styles.spacer} />
             </View>
@@ -571,9 +744,11 @@ const styles = StyleSheet.create({
   bannerContainer: {
     width: '100%',
     marginVertical: 10,
+    paddingHorizontal: 10,
   },
   bannerListContent: {
     paddingHorizontal: 10,
+    paddingRight: 15,
   },
   bannerItem: {
     marginHorizontal: 5,
@@ -581,9 +756,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   bannerImage: {
-    width: screenWidth - 40,
+    width: screenWidth - 35,
     height: 200,
-    borderRadius: 8,
+    borderRadius:20,
   },
   userInfoCard: {
     width: '90%',
@@ -612,31 +787,31 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   welcomeText: {
-    fontSize: moderateScale(14),
+    fontSize: moderateScale(12),
     color: 'rgba(255, 255, 255, 0.7)',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   userName: {
-    fontSize: moderateScale(22),
+    fontSize: moderateScale(18),
     fontWeight: '700',
     color: '#FFFFFF',
   },
   userAvatarContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 12,
+    marginLeft: 10,
   },
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 10,
+    padding: 10,
   },
   statsContainer: {
     flexDirection: 'row',
@@ -649,9 +824,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statLabel: {
-    fontSize: moderateScale(12),
+    fontSize: moderateScale(11),
     color: 'rgba(255, 255, 255, 0.7)',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   statValue: {
     flexDirection: 'row',
@@ -659,12 +834,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   countText: {
-    fontSize: moderateScale(18),
+    fontSize: moderateScale(16),
     fontWeight: 'bold',
     color: '#FFFFFF',
   },
   unitText: {
-    fontSize: moderateScale(14),
+    fontSize: moderateScale(12),
     color: '#FFD700',
     fontWeight: '600',
   },
@@ -680,7 +855,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   viewMoreText: {
-    fontSize: moderateScale(12),
+    fontSize: moderateScale(11),
     color: '#FFD700',
     fontWeight: '600',
   },
@@ -748,5 +923,141 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     color: '#FFFFFF',
+  },
+  sliderLoadingContainer: {
+    width: '100%',
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    borderRadius: 8,
+    marginVertical: 10,
+  },
+  sectionHeader: {
+    width: '100%',
+    paddingHorizontal: 10,
+    marginTop: 20,
+    marginBottom: 12,
+    alignItems: 'center',
+  },
+  sectionHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  sectionHeaderLine: {
+    height: 1.5,
+    width: 20,
+    backgroundColor: '#FFD700',
+    marginHorizontal: 5,
+  },
+  sectionHeaderText: {
+    fontSize: moderateScale(16),
+    fontWeight: '700',
+    color: '#850111',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
+  },
+  sectionHeaderSubtext: {
+    fontSize: moderateScale(11),
+    color: '#666',
+    marginTop: 4,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  videoContainer: {
+    width: '100%',
+    paddingHorizontal: 10,
+    marginVertical: 15,
+  },
+  videoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingHorizontal: 5,
+  },
+  videoTitle: {
+    fontSize: moderateScale(16),
+    fontWeight: '700',
+    color: '#850111',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    marginRight: 10,
+  },
+  videoHeaderLine: {
+    flex: 1,
+    height: 1.5,
+    backgroundColor: '#FFD700',
+  },
+  videoWrapper: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  rateWarningContainer: {
+    width: '90%',
+    backgroundColor: 'rgba(133, 1, 17, 0.9)',
+    borderRadius: 16,
+    padding: 16,
+    marginVertical: 10,
+  },
+  rateWarningContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  rateWarningTextContainer: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  rateWarningTitle: {
+    fontSize: moderateScale(16),
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  rateWarningSubtitle: {
+    fontSize: moderateScale(12),
+    color: 'rgba(255, 255, 255, 0.7)',
+  },
+  rateWarningRates: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    borderRadius: 12,
+    padding: 12,
+  },
+  rateWarningRateItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  rateWarningRateLabel: {
+    fontSize: moderateScale(12),
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginBottom: 4,
+  },
+  rateWarningRateValue: {
+    fontSize: moderateScale(18),
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  rateWarningDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    marginHorizontal: 12,
   },
 });

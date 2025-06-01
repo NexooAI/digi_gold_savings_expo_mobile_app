@@ -1,4 +1,4 @@
-import { AppState } from 'react-native';
+import { AppState, AppStateStatus } from 'react-native';
 import useGlobalStore from '../store/global.store';
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
@@ -8,7 +8,7 @@ let backgroundTime: number = 0;
 const BACKGROUND_TIMEOUT = 30000; // 30 seconds - adjust based on your security requirements
 
 const setupAppStateListener = () => {
-  AppState.addEventListener('change', async (nextAppState) => {
+  const subscription = AppState.addEventListener('change', async (nextAppState: AppStateStatus) => {
     const { isLoggedIn } = useGlobalStore.getState();
     
     if (nextAppState === 'background') {
@@ -65,7 +65,7 @@ const setupAppStateListener = () => {
   
   // Return cleanup function
   return () => {
-    AppState.removeEventListener('change', () => {});
+    subscription.remove();
     if (appStateTimeout) {
       clearTimeout(appStateTimeout);
     }

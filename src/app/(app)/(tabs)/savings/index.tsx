@@ -55,6 +55,7 @@ type Scheme = {
   joiningDate: string; // parsed date string
   schemesData: any;
   chitData: any;
+  paymentFrequency: string; // Add payment frequency
 };
 
 export default function SavingsScreen() {
@@ -67,14 +68,6 @@ export default function SavingsScreen() {
     }
   }, [user, router]);
 
-  if (!user) {
-    return (
-      <SafeAreaView className="flex-1 justify-center items-center bg-white">
-        <ActivityIndicator size="large" color="#7b0006" />
-      </SafeAreaView>
-    );
-  }
-
   const [savings, setSavings] = useState<Scheme[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -84,6 +77,8 @@ export default function SavingsScreen() {
   const bottomPadding = height * 0.1 + bottom;
   // Fetch user investment data
   const fetchUserData = useCallback(async () => {
+    if (!user) return;
+    
     setLoading(true);
     setError(null);
     try {
@@ -135,6 +130,7 @@ export default function SavingsScreen() {
           schemesData: schemeObj,
           chitData: chit,
           transactions: [],
+          paymentFrequency: item.paymentFrequency || "Unknown",
         };
       });
       setSavings(transformedSavings);
@@ -144,7 +140,7 @@ export default function SavingsScreen() {
     } finally {
       setLoading(false);
     }
-  }, [user.id]);
+  }, [user]);
 
   useFocusEffect(
     useCallback(() => {
@@ -216,6 +212,7 @@ export default function SavingsScreen() {
           chitId: item?.chitData?.chitId || "",
           schemesData: item.schemesData || {},
           transactions: JSON.stringify(item.transactions || []),
+          paymentFrequency: item.paymentFrequency || "Monthly",
         },
       });
     };
@@ -529,7 +526,31 @@ export default function SavingsScreen() {
     </View>
   );
 
-  if (loading) {
+  // Error State Component
+  const ErrorState = () => (
+    <View className="flex-1 justify-center items-center px-4">
+      <Image
+        source={require("../../../../../assets/images/savingsbg.jpg")}
+        className="w-32 h-32 mb-4"
+        resizeMode="contain"
+      />
+      <Text className="text-lg font-semibold text-gray-800 mb-2">
+        {t("somethingWentWrong")}
+      </Text>
+      <Text className="text-sm text-gray-600 text-center mb-6">
+        {t("errorLoadingSavings")}
+      </Text>
+      <TouchableOpacity
+        onPress={fetchUserData}
+        className="bg-[#7b0006] px-6 py-3 rounded-full flex-row items-center"
+      >
+        <Ionicons name="refresh" size={20} color="white" className="mr-2" />
+        <Text className="text-white font-semibold">{t("retry")}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  if (!user) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center bg-white">
         <ActivityIndicator size="large" color="#7b0006" />
@@ -539,8 +560,9 @@ export default function SavingsScreen() {
 
   if (error) {
     return (
-      <SafeAreaView className="flex-1 justify-center items-center bg-white">
-        <Text className="text-red-500">Error: {error}</Text>
+      <SafeAreaView className="flex-1 bg-white">
+        <AppHeader showBackButton={false} backRoute={null} />
+        <ErrorState />
       </SafeAreaView>
     );
   }

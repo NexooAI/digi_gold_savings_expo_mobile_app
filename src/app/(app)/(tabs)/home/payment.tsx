@@ -33,6 +33,7 @@ interface PaymentData {
   investmentType: string;
   maturityDate?: string;
   currentGoldPrice: number;
+  paymentFrequency: string;
 }
 
 const PaymentProcessScreen = () => {
@@ -214,6 +215,7 @@ const PaymentProcessScreen = () => {
     investmentType: paramsParse?.investmentType || "Monthly",
     maturityDate: paramsParse?.maturityDate,
     currentGoldPrice: 0,
+    paymentFrequency: paramsParse?.paymentFrequency || "Monthly",
   });
 
   // Add new state for retry
@@ -881,6 +883,7 @@ const PaymentProcessScreen = () => {
           investmentType: "Monthly",
           maturityDate: paymentRetryData.displayData.maturityDate,
           currentGoldPrice: 0,
+          paymentFrequency: paramsParse?.paymentFrequency || "Monthly",
         });
 
         console.log('Payment screen configured for retry with stored data from global store');
@@ -960,8 +963,8 @@ const PaymentProcessScreen = () => {
                   </Text>
                 </View>
                 <View style={styles.schemeDetailItem}>
-                  <Text style={styles.schemeDetailLabel}>Type</Text>
-                  <Text style={styles.schemeDetailValue}>{paymentDetails.investmentType}</Text>
+                  <Text style={styles.schemeDetailLabel}>Frequency</Text>
+                  <Text style={styles.schemeDetailValue}>{paymentDetails.paymentFrequency}</Text>
                 </View>
                 {paymentDetails.maturityDate && (
                   <View style={styles.schemeDetailItem}>

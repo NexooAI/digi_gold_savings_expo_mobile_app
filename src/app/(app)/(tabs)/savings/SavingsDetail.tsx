@@ -57,6 +57,7 @@ type SchemeParams = {
   transactionId: string;
   id: string;
   noOfIns: string;
+  paymentFrequency?: string;
 };
 
 interface DetailRowProps {
@@ -204,18 +205,18 @@ const SavingsDetail = () => {
         // Payment payload data
         paymentData: {
           amount: Number(params.emiAmount),
-          userId: user.id,
+          userId: user.id || "",
           investmentId: params.id,
           schemeId: params.schemeCode,
           chitId: params.chitId,
-          userEmail: user.email,
-          userMobile: user.mobile,
+          userEmail: user.email || "",
+          userMobile: user.mobile?.toString() || "",
           userName: params.accountHolder,
         },
         
         // Investment payload data
         investmentData: {
-          userId: user.id,
+          userId: user.id || "",
           schemeId: params.schemeCode,
           chitId: params.chitId,
           accountName: params.accountHolder,
@@ -226,7 +227,7 @@ const SavingsDetail = () => {
         
         // Transaction payload data
         transactionData: {
-          userId: user.id,
+          userId: user.id || "",
           investmentId: params.id,
           schemeId: params.schemeCode,
           chitId: params.chitId,
@@ -244,6 +245,7 @@ const SavingsDetail = () => {
           noOfIns: params.noOfIns,
           goldWeight: params.goldWeight,
           maturityDate: params.maturityDate,
+          paymentFrequency: params.paymentFrequency || "Monthly",
         },
         
         // Timestamp for retry reference
@@ -262,12 +264,13 @@ const SavingsDetail = () => {
           accountname: params.accountHolder,
           accNo: params.accNo,
           name: params.accountHolder,
-          mobile: user.mobile,
-          email: user.email,
-          userId: user.id,
+          mobile: user.mobile?.toString() || "",
+          email: user.email || "",
+          userId: user.id || "",
           investmentId: params.id,
           chitId: params.chitId,
           schemeId: params.schemeCode,
+          paymentFrequency: params.paymentFrequency || "Monthly",
           // Additional context
           isRetryAttempt: false,
           originalPaymentTimestamp: paymentRetryData.timestamp,
@@ -285,7 +288,8 @@ const SavingsDetail = () => {
         pathname: "/(tabs)/home/payment",
         params: {
           amount: params.emiAmount,
-          sessionId: Date.now().toString(), // Simple session identifier
+          sessionId: Date.now().toString(),
+          paymentFrequency: params.paymentFrequency || "Monthly",
         },
       });
     } catch (error) {

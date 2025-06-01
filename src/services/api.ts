@@ -12,19 +12,64 @@ import LoadingService from './loadingServices';
 
 // Network state check
 const checkNetworkState = async () => {
-  const netInfo = await NetInfo.fetch();
-  if (!netInfo.isConnected) {
-    throw new Error('NO_INTERNET');
+  try {
+    const netInfo = await NetInfo.fetch();
+    if (!netInfo.isConnected) {
+      console.error('Network state: No internet connection');
+      throw new Error('NO_INTERNET');
+    }
+    console.log('Network state: Connected', netInfo.type);
+    return true;
+  } catch (error) {
+    console.error('Network state check failed:', error);
+    throw error;
   }
-  return true;
 };
 
 const checkTokenValidity = async () => {
   try {
     const token = await SecureStore.getItem("authToken");
+    if (!token) {
+      // No token found, redirect to login
+      handleLogout();
+      return null;
+    }
+
+    // Check if token is expired
+    try {
+      const tokenData = JSON.parse(atob(token.split('.')[1]));
+      const expirationTime = tokenData.exp * 1000; // Convert to milliseconds
+      
+      if (Date.now() >= expirationTime) {
+        // Token is expired, try to refresh
+        const refreshToken = await SecureStore.getItem("refreshToken");
+        if (refreshToken) {
+          try {
+            const response = await api.post('/auth/refresh-token', { refreshToken });
+            const newToken = response.data.token;
+            await SecureStore.setItem("authToken", newToken);
+            return newToken;
+          } catch (error) {
+            // Refresh failed, logout user
+            handleLogout();
+            return null;
+          }
+        } else {
+          // No refresh token, logout user
+          handleLogout();
+          return null;
+        }
+      }
+    } catch (error) {
+      console.error("Error parsing token:", error);
+      handleLogout();
+      return null;
+    }
+
     return token;
   } catch (error) {
     console.error("Error checking token:", error);
+    handleLogout();
     return null;
   }
 };
@@ -53,7 +98,7 @@ const handleLogout = async () => {
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
-      // Show loading for all API calls
+      console.log('Making API request to:', config.url);
       LoadingService.show('Loading...');
       
       await checkNetworkState();
@@ -65,7 +110,7 @@ api.interceptors.request.use(
       }
       return config;
     } catch (error: any) {
-      // Hide loading on error
+      console.error('Request interceptor error:', error);
       LoadingService.hide();
       
       if (error.message === 'NO_INTERNET') {
@@ -75,7 +120,7 @@ api.interceptors.request.use(
     }
   },
   (error: AxiosError) => {
-    // Hide loading on request error
+    console.error('Request interceptor error:', error);
     LoadingService.hide();
     return Promise.reject(error);
   }
@@ -84,10 +129,9 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Hide loading on successful response
+    console.log('API response received:', response.config.url, response.status);
     LoadingService.hide();
     
-    // Show success toast for non-GET requests
     if (response.config.method?.toUpperCase() !== 'GET') {
       const message = response.data?.message || 'Operation completed successfully';
       showToast(message, 'success', Toast.durations.SHORT);
@@ -95,10 +139,16 @@ api.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
-    // Hide loading on error response
+    console.error('API error:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    });
+    
     LoadingService.hide();
     
-    // Handle different error cases
     if (error.code === 'ECONNABORTED') {
       showToast('Request timeout. Please try again.', 'error');
     } else if (!error.response) {
@@ -129,12 +179,17 @@ api.interceptors.response.use(
           );
           break;
         case 403:
-          showToast('You are not authorized for this action.', 'error');
+          if (message.toLowerCase().includes('token') || message.toLowerCase().includes('authorization')) {
+            showToast('Authentication failed. Please login again.', 'error');
+            handleLogout();
+          } else {
+            showToast('You are not authorized for this action.', 'error');
+          }
           break;
         case 404:
           showToast('Resource not found.', 'warning');
           break;
-        case 422: // Validation errors
+        case 422:
           if (errorData && typeof errorData === 'object' && 'errors' in errorData) {
             const errors = (errorData as { errors: Record<string, string[]> }).errors;
             message = Object.values(errors).flat().join('\n');
@@ -189,6 +244,10 @@ export const posts = {
 
 export const collections = {
   getCollections: () => api.get('/collections'),
+};
+
+export const posters = {
+  getActivePosters: () => api.get('/posters/active'),
 };
 
 export default api;
