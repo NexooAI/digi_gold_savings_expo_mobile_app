@@ -41,7 +41,8 @@ const PaymentFailureScreen = () => {
     hasPaymentRetryData, 
     getPaymentRetryData, 
     storePaymentSession,
-    clearPaymentRetryData 
+    clearPaymentRetryData,
+    setTabVisibility
   } = useGlobalStore();
 
   const scaleAnim = useRef(new Animated.Value(0)).current;
@@ -102,6 +103,11 @@ const PaymentFailureScreen = () => {
         tension: 40,
       }).start();
     }, 300);
+
+    setTabVisibility(false);
+    return () => {
+      setTabVisibility(true);
+    };
   }, []);
 
   const handleCopyText = async (text: string, label: string) => {
@@ -380,7 +386,7 @@ Please try again or contact support.
               </TouchableOpacity>
             </View>
 
-            <View style={styles.buttonContainer}>
+            {/* <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={styles.navigationButton}
                 onPress={handleViewTransactions}
@@ -410,7 +416,7 @@ Please try again or contact support.
                   <Text style={styles.buttonText}>Profile</Text>
                 </LinearGradient>
               </TouchableOpacity>
-            </View>
+            </View> */}
           </Animated.View>
         </ScrollView>
       </LinearGradient>

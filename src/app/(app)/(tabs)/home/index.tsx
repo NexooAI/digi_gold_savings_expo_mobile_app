@@ -342,6 +342,7 @@ export default function Home() {
           image: poster.image.startsWith('http') ? poster.image : `${theme.baseUrl}${poster.image}`,
           title: poster.title,
         }));
+        console.log("=======================",images);
         setSliderImages(images);
       } else {
         console.log('No posters found, using dummy images');

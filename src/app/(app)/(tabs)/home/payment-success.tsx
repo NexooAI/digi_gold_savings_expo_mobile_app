@@ -25,6 +25,7 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as MediaLibrary from 'expo-media-library';
 import { BlurView } from "expo-blur";
+import useGlobalStore from '@/store/global.store';
 
 const { width } = Dimensions.get('window');
 
@@ -36,6 +37,7 @@ const PaymentSuccessScreen = () => {
   const [goldWeight, setGoldWeight] = useState(0);
   const [currentGoldRate, setCurrentGoldRate] = useState(0);
   const [currentDate, setCurrentDate] = useState('');
+  const { setTabVisibility } = useGlobalStore();
 
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
@@ -44,6 +46,13 @@ const PaymentSuccessScreen = () => {
 
   // Calculate safe bottom padding
   const bottomPadding = Math.max(bottom, 20) + 80;
+
+  useEffect(() => {
+    setTabVisibility(false);
+    return () => {
+      setTabVisibility(true);
+    };
+  }, []);
 
   useEffect(() => {
     // Get current gold rate and calculate weight

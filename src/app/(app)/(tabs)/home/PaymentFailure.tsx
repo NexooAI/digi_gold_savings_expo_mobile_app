@@ -64,7 +64,9 @@ const PaymentFailure = () => {
 
   const getFailureDetails = () => {
     switch (status) {
+      
       case "cancelled":
+        Alert.alert("Payment Status", status);
         return {
           title: "Payment Cancelled",
           message: "You cancelled the payment process",
@@ -72,6 +74,7 @@ const PaymentFailure = () => {
           suggestion: "You can try again anytime or contact support if you need help."
         };
       case "error":
+        Alert.alert("Payment Status", status);
         return {
           title: "Payment Error",
           message: "An error occurred during payment processing",
@@ -79,6 +82,7 @@ const PaymentFailure = () => {
           suggestion: "Please check your internet connection and try again."
         };
       default:
+        Alert.alert("Payment Status", status);
         return {
           title: "Payment Failed",
           message: "Something went wrong while processing your payment",

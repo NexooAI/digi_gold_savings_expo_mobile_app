@@ -11,7 +11,7 @@ import { View, StyleSheet, Animated, Text } from "react-native";
 import { useEffect, useRef } from "react";
 
 export default function TabLayout() {
-  const { language } = useGlobalStore();
+  const { language, isTabVisible } = useGlobalStore();
   const tabBarAnimation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -43,6 +43,7 @@ export default function TabLayout() {
             overflow: "visible",
             borderTopWidth: 0,
             paddingBottom: 8,
+            display: isTabVisible ? 'flex' : 'none',
           },
           tabBarItemStyle: {
             paddingVertical: 10,

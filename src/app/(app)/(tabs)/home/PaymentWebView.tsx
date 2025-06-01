@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import io from "socket.io-client";
 import api from "@/services/api";
 import { theme } from "@/constants/theme";
+import useGlobalStore from "@/store/global.store";
 
 const PaymentWebView = () => {
   const { paymentUrl } = useLocalSearchParams();
@@ -13,20 +14,32 @@ const PaymentWebView = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [socket, setSocket] = useState<any>(null);
   const loadingTimeout = useRef<NodeJS.Timeout>();
+  const isPaymentCompleted = useRef(false);
+  const { setTabVisibility } = useGlobalStore();
+
+  // Hide tabs when component mounts
+  useEffect(() => {
+    setTabVisibility(false);
+    return () => {
+      setTabVisibility(true);
+    };
+  }, []);
 
   // Handle WebView close event when component unmounts
   const handleWebViewClose = () => {
-    if (socket) {
-      socket.emit("payment_flow_exited", {
-        timestamp: new Date().toISOString(),
-        status: "webview_closed",
+    // Only trigger cancellation if payment wasn't completed
+    if (!isPaymentCompleted.current) {
+      if (socket) {
+        socket.emit("payment_flow_exited", {
+          timestamp: new Date().toISOString(),
+          status: "webview_closed",
+        });
+      }
+      router.replace({
+        pathname: "/(tabs)/home/PaymentFailure",
+        params: { status: "failure" }
       });
     }
-    // Navigate to failure screen instead of home
-    router.replace({
-      pathname: "/(tabs)/home/PaymentFailure",
-      params: { status: "cancelled" }
-    });
   };
 
   useEffect(() => {
@@ -44,18 +57,21 @@ const PaymentWebView = () => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
-        if (socket) {
-          socket.emit("payment_flow_exited", {
-            timestamp: new Date().toISOString(),
-            status: "user_cancelled",
+        // Only trigger cancellation if payment wasn't completed
+        if (!isPaymentCompleted.current) {
+          if (socket) {
+            socket.emit("payment_flow_exited", {
+              timestamp: new Date().toISOString(),
+              status: "user_cancelled",
+            });
+          }
+          router.replace({
+            pathname: "/(tabs)/home/PaymentFailure",
+            params: { status: "cancelled" }
           });
+          return true; // Prevent default back behavior
         }
-        // Navigate to failure screen instead of home
-        router.replace({
-          pathname: "/(tabs)/home/PaymentFailure",
-          params: { status: "cancelled" }
-        });
-        return true; // Prevent default back behavior
+        return false; // Allow default back behavior if payment is completed
       }
     );
     return () => backHandler.remove();
@@ -66,6 +82,7 @@ const PaymentWebView = () => {
     
     // Check for success keyword anywhere in the URL
     if (currentUrl.includes("success")) {
+      isPaymentCompleted.current = true; // Mark payment as completed
       let paymentId = "";
       let amount = "";
       let transaction_no = "";
@@ -98,6 +115,7 @@ const PaymentWebView = () => {
     }
     // Check for failure keyword anywhere in the URL
     else if (currentUrl.includes("failure") || currentUrl.includes("cancel")) {
+      isPaymentCompleted.current = true; // Mark payment as completed even for failure
       if (socket) {
         socket.emit("payment_failed", {
           status: "failure",

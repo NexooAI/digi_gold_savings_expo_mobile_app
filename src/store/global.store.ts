@@ -116,6 +116,10 @@ interface GlobalStore {
   hasPaymentRetryData: () => boolean;
   getPaymentRetryData: () => PaymentRetryData | null;
   getCurrentPaymentSession: () => PaymentSession | null;
+  
+  // Tab visibility
+  isTabVisible: boolean;
+  setTabVisibility: (visible: boolean) => void;
 }
 
 const useGlobalStore = create<GlobalStore>()(
@@ -187,6 +191,10 @@ const useGlobalStore = create<GlobalStore>()(
         const state = get();
         return state.currentPaymentSession;
       },
+      
+      // Tab visibility
+      isTabVisible: true,
+      setTabVisibility: (visible: boolean) => set({ isTabVisible: visible }),
     }),
     {
       name: 'global-storage',

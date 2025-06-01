@@ -12,8 +12,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const ITEM_HEIGHT = 200;
+const CONTAINER_WIDTH = SCREEN_WIDTH * 0.95;
 
-// Define interface for component props
 interface ImageSliderProps {
   images: Array<{
     id: string | number;
@@ -21,13 +21,12 @@ interface ImageSliderProps {
   }>;
 }
 
-// Define the component with proper return type (React.ReactElement)
 const ImageSlider = ({ images = [] }: ImageSliderProps): React.ReactElement => {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
-  const flatListRef = useRef<any>(null);
+  const flatListRef = useRef<FlatList>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const currentIndexRef = useRef(0); // Track current index with a ref
+  const currentIndexRef = useRef(0);
 
   useEffect(() => {
     startAutoPlay();
@@ -36,32 +35,30 @@ const ImageSlider = ({ images = [] }: ImageSliderProps): React.ReactElement => {
         clearInterval(timerRef.current);
       }
     };
-  }, [images]); // Restart autoplay when images change
+  }, [images]);
 
   const startAutoPlay = () => {
     if (timerRef.current) {
-      clearInterval(timerRef.current); // Clear existing interval
+      clearInterval(timerRef.current);
     }
-    if (images.length <= 1) return; // No autoplay if 0 or 1 image
+    if (images.length <= 1) return;
 
     timerRef.current = setInterval(() => {
       const nextIndex = (currentIndexRef.current + 1) % images.length;
       currentIndexRef.current = nextIndex;
       setActiveIndex(nextIndex);
-      if (flatListRef.current) {
-        flatListRef.current.scrollToIndex({
-          index: nextIndex,
-          animated: true,
-        });
-      }
+      flatListRef.current?.scrollToIndex({
+        index: nextIndex,
+        animated: true,
+      });
     }, 5000);
   };
 
   const renderItem = ({ item, index }: { item: any; index: number }) => {
     const inputRange = [
-      (index - 1) * SCREEN_WIDTH,
-      index * SCREEN_WIDTH,
-      (index + 1) * SCREEN_WIDTH,
+      (index - 1) * CONTAINER_WIDTH,
+      index * CONTAINER_WIDTH,
+      (index + 1) * CONTAINER_WIDTH,
     ];
 
     const scale = scrollX.interpolate({
@@ -73,8 +70,9 @@ const ImageSlider = ({ images = [] }: ImageSliderProps): React.ReactElement => {
     return (
       <Animated.View style={[styles.itemContainer, { transform: [{ scale }] }]}>
         <Image
-          source={item.image}
+          source={typeof item.image === 'string' ? { uri: item.image } : item.image}
           style={styles.image}
+          resizeMode="cover"
         />
       </Animated.View>
     );
@@ -85,10 +83,11 @@ const ImageSlider = ({ images = [] }: ImageSliderProps): React.ReactElement => {
     const newIndex = (currentIndexRef.current - 1 + images.length) % images.length;
     currentIndexRef.current = newIndex;
     setActiveIndex(newIndex);
-    if (flatListRef.current) {
-      flatListRef.current.scrollToIndex({ index: newIndex, animated: true });
-    }
-    startAutoPlay(); // Reset autoplay timer
+    flatListRef.current?.scrollToIndex({ 
+      index: newIndex, 
+      animated: true 
+    });
+    startAutoPlay();
   };
 
   const handleNext = () => {
@@ -96,10 +95,11 @@ const ImageSlider = ({ images = [] }: ImageSliderProps): React.ReactElement => {
     const newIndex = (currentIndexRef.current + 1) % images.length;
     currentIndexRef.current = newIndex;
     setActiveIndex(newIndex);
-    if (flatListRef.current) {
-      flatListRef.current.scrollToIndex({ index: newIndex, animated: true });
-    }
-    startAutoPlay(); // Reset autoplay timer
+    flatListRef.current?.scrollToIndex({ 
+      index: newIndex, 
+      animated: true 
+    });
+    startAutoPlay();
   };
 
   return (
@@ -117,15 +117,18 @@ const ImageSlider = ({ images = [] }: ImageSliderProps): React.ReactElement => {
           { useNativeDriver: true }
         )}
         getItemLayout={(_, index) => ({
-          length: SCREEN_WIDTH,
-          offset: SCREEN_WIDTH * index,
+          length: CONTAINER_WIDTH,
+          offset: CONTAINER_WIDTH * index,
           index,
         })}
         onMomentumScrollEnd={(event) => {
-          const newIndex = Math.round(event.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+          const newIndex = Math.round(event.nativeEvent.contentOffset.x / CONTAINER_WIDTH);
           currentIndexRef.current = newIndex;
           setActiveIndex(newIndex);
         }}
+        initialNumToRender={3}
+        maxToRenderPerBatch={3}
+        windowSize={3}
       />
 
       {images.length > 1 && (
@@ -172,7 +175,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   itemContainer: {
-    width: SCREEN_WIDTH,
+    width: CONTAINER_WIDTH,
     height: ITEM_HEIGHT,
     overflow: 'hidden',
     borderRadius: 12,

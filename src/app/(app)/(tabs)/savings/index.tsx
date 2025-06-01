@@ -175,6 +175,7 @@ export default function SavingsScreen() {
     const [isExpanded, setIsExpanded] = useState(false);
     const animatedHeight = useRef(new Animated.Value(0)).current;
     const [isActive, setIsActive] = useState(false);
+    const router = useRouter();
 
     const progressPercentage = useMemo(() => {
       const monthsPaid = Number(item.monthsPaid) || 0;
@@ -196,7 +197,7 @@ export default function SavingsScreen() {
     const handleNavigation = (item: Scheme) => {
       if (!item) return;
       router.push({
-        pathname: "/savings/savingsDetail",
+        pathname: "/(tabs)/savings/SavingsDetail",
         params: {
           schemeName: item.schemeName || "",
           totalPaid: item.totalPaid?.toString() || "0",
@@ -210,9 +211,27 @@ export default function SavingsScreen() {
           id: item.id || "",
           noOfIns: item.noOfIns || 0,
           chitId: item?.chitData?.chitId || "",
-          schemesData: item.schemesData || {},
+          schemesData: JSON.stringify(item.schemesData || {}),
           transactions: JSON.stringify(item.transactions || []),
           paymentFrequency: item.paymentFrequency || "Monthly",
+        },
+      });
+    };
+
+    const handlePayNow = () => {
+      if (!item) return;
+      router.push({
+        pathname: "/(tabs)/home/payment",
+        params: {
+          amount: item.emiAmount?.toString() || "0",
+          sessionId: Date.now().toString(),
+          paymentFrequency: item.paymentFrequency || "Monthly",
+          schemeName: item.schemeName || "",
+          accountHolder: item.accountHolder || "N/A",
+          accNo: item.accNo || "N/A",
+          schemeCode: item.schemeCode || "",
+          id: item.id || "",
+          chitId: item?.chitData?.chitId || "",
         },
       });
     };
@@ -285,6 +304,15 @@ export default function SavingsScreen() {
                     {item.status || 'INACTIVE'}
                   </Text>
                 </View>
+                <TouchableOpacity 
+                  style={styles.payNowButton}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    handlePayNow();
+                  }}
+                >
+                  <Text style={styles.payNowButtonText}>Pay Now</Text>
+                </TouchableOpacity>
                 <View style={styles.expandIcon}>
                   <Ionicons 
                     name={isExpanded ? "chevron-up" : "chevron-down"} 
@@ -417,7 +445,7 @@ export default function SavingsScreen() {
                 onPress={() => handleNavigation(item)}
               >
                 <LinearGradient
-                  colors={['#850111', '#5a000b', '#2e0406']}
+                  colors={['#850111', '#B8860B', '#DAA520']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.detailsButtonGradient}
@@ -499,8 +527,7 @@ export default function SavingsScreen() {
     <View style={styles.emptyStateContainer}>
       <LinearGradient
         colors={['rgba(133, 1, 17, 0.1)', 'rgba(90, 0, 11, 0.1)', 'rgba(46, 4, 6, 0.1)']}
-        style={styles.emptyStateCard}
-      >
+        style={styles.emptyStateCard}>
         <View style={styles.emptyStateIconContainer}>
           <Ionicons name="trending-up" size={40} color="#850111" />
         </View>
@@ -1108,5 +1135,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
+  },
+  payNowButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  payNowButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
