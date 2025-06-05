@@ -106,6 +106,7 @@ export default function Login() {
   const [timer, setTimer] = useState(120);
   const [resendAttempts, setResendAttempts] = useState(3);
   const [isShowOtp, setIsShowOtp] = useState(false);
+  const [showOtp, setShowOtp] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   
   // Refs for OTP inputs
@@ -547,7 +548,7 @@ export default function Login() {
                       ))}
                     </View>
                     <TouchableOpacity
-                      onPress={() => setShowOtp((prev) => !prev)}
+                      onPress={() => setShowOtp((prev: boolean) => !prev)}
                       style={styles.eyeButton}
                     >
                       <Feather
