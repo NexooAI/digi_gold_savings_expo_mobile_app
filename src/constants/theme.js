@@ -34,8 +34,6 @@ const theme = {
     sliderImages: [
       require("../../assets/images/slider1.png"),
       require("../../assets/images/slider2.png"),
-      require("../../assets/images/slider3.png"),
-      require("../../assets/images/slider4.png"),
     ],
     store_image: require("../../assets/images/store.png"),
     gold_pattern: require("../../assets/images/gold_pattern.jpg"),
