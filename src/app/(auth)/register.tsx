@@ -14,11 +14,12 @@ import {
 } from "react-native";
 import { useFocusEffect, useRouter, useLocalSearchParams } from "expo-router";
 import PhoneInput from "../components/PhoneInputs";
-import api from "@/services/api";
 import { theme } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import { useOtpAutoFetch } from "@/hooks/useOtpAutoFetch";
+import * as SecureStore from 'expo-secure-store';
+import { API_BASE_URL } from "@/config/api";
 
 const { width } = Dimensions.get("window");
 const logoWidth = width * 0.3;
@@ -77,7 +78,7 @@ export default function Register() {
     setShowError(false);
   };
 
-  const handleGetOtp = () => {
+  const handleGetOtp = async () => {
     const indianMobilePattern = /^[6-9]\d{9}$/;
 
     if (!mobile || !indianMobilePattern.test(mobile)) {
@@ -86,40 +87,76 @@ export default function Register() {
     }
 
     setLoading(true);
-    api
-      .post("/register/mobile", { mobile_number: mobile })
-      .then((res: any) => {
-        if (res.status === 200) {
-          setOtpSent(true);
-          setResendCount(OTP_RESEND_LIMIT);
-          startTimer();
-          Alert.alert("Success", res.data?.message);
-        }
-      })
-      .catch(handleApiError)
-      .finally(() => setLoading(false));
+    try {
+      const response = await fetch(`${API_BASE_URL}/register/mobile`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ mobile_number: mobile })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setOtpSent(true);
+        setResendCount(OTP_RESEND_LIMIT);
+        startTimer();
+        Alert.alert("Success", data?.message || 'OTP sent successfully');
+      } else {
+        throw new Error(data?.error || 'Failed to send OTP');
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send OTP';
+      handleApiError(new Error(errorMessage));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleResendOtp = () => {
+  const handleResendOtp = async () => {
     if (resendCount <= 0) return;
 
     setLoading(true);
-    api
-      .post("/auth/check-mobile", { mobile_number: mobile })
-      .then(() => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/check-mobile`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ mobile_number: mobile })
+      });
+
+      if (response.ok) {
         setResendCount((prev) => prev - 1);
         startTimer();
         setPins(["", "", "", ""]);
         Alert.alert("Success", "OTP resent successfully");
-      })
-      .catch(handleApiError)
-      .finally(() => setLoading(false));
+      } else {
+        const data = await response.json();
+        throw new Error(data?.error || 'Failed to resend OTP');
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to resend OTP';
+      handleApiError(new Error(errorMessage));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleApiError = (error: any) => {
-    const message = error.response?.data?.error || "An error occurred";
-    if (message === "Mobile number already registered") {
-      showErrorAlert("Mobile number already registered. Please goto login page.");
+  const handleApiError = (error: unknown) => {
+    let message = "An error occurred";
+    
+    if (error && typeof error === 'object') {
+      if ('response' in error && error.response && typeof error.response === 'object' && 'error' in error.response) {
+        message = String(error.response.error) || message;
+      } else if ('message' in error && error.message) {
+        message = String(error.message);
+      }
+    }
+    
+    if (message.toLowerCase().includes("already registered")) {
+      showErrorAlert("Mobile number already registered. Please go to login page.");
       return;
     }
     showErrorAlert(message);
@@ -144,26 +181,41 @@ export default function Register() {
     }
   };
 
-  const handleVerifyOtp = () => {
+  const handleVerifyOtp = async () => {
     const otp = pins.join("");
     if (otp.length !== 4) {
       showErrorAlert("Please enter complete 4-digit OTP");
       return;
     }
+    
     setLoading(true);
-    const data = { mobile_number: mobile, otp };
-    api
-      .post("/register/verify-otp", data)
-      .then((res: any) => {
-        if (res.status === 200) {
-          router.push({ pathname: "/(auth)/userBasicDetails", params: { mobile } });
-          setPins(["", "", "", ""]);
+    try {
+      const response = await fetch(`${API_BASE_URL}/register/verify-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ mobile_number: mobile, otp })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Store the token if present in the response
+        if (data.token) {
+          await SecureStore.setItemAsync('authToken', data.token);
         }
-      })
-      .catch((err: any) =>
-        showErrorAlert(err.response?.data?.message || "Invalid OTP")
-      )
-      .finally(() => setLoading(false));
+        router.push({ pathname: "/(auth)/userBasicDetails", params: { mobile } });
+        setPins(["", "", "", ""]);
+      } else {
+        throw new Error(data?.message || "Invalid OTP");
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to verify OTP';
+      showErrorAlert(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Auto-fetch OTP functionality

@@ -187,7 +187,7 @@ const ProfileScreen = () => {
   };
 
   const handleChangeMPIN = () => {
-    router.push("/reset_mpin");
+    router.push({ pathname: "/reset_mpin", params: { mode: "create", from: "profile" } });
   };
 
   // Interpolated wave animation

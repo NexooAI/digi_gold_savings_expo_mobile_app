@@ -22,7 +22,6 @@ import useGlobalStore from "@/store/global.store";
 import api from "@/services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
-import SmsRetriever from "react-native-sms-retriever";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { theme } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
@@ -33,7 +32,13 @@ import { useOtpAutoFetch } from "@/hooks/useOtpAutoFetch";
 const { width } = Dimensions.get("window");
 const logoWidth = width * 0.3;
 
-const ErrorAlert = ({ message, onClose }: { message: string; onClose: () => void }) => {
+const ErrorAlert = ({
+  message,
+  onClose,
+}: {
+  message: string;
+  onClose: () => void;
+}) => {
   const translateY = useRef(new Animated.Value(-100)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
@@ -91,29 +96,42 @@ const ErrorAlert = ({ message, onClose }: { message: string; onClose: () => void
 };
 
 export default function Login() {
+  // State for mobile number and OTP
   const [mobile, setMobile] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  
+  // OTP related state
   const [pins, setPins] = useState(["", "", "", ""]);
   const [timer, setTimer] = useState(120);
-  const [resendAttempts, setResendAttempts] = useState(0);
+  const [resendAttempts, setResendAttempts] = useState(3);
   const [isShowOtp, setIsShowOtp] = useState(false);
-  const inputRefs = [useRef<TextInput>(null), useRef<TextInput>(null), useRef<TextInput>(null), useRef<TextInput>(null)];
+  const [otpSent, setOtpSent] = useState(false);
+  
+  // Refs for OTP inputs
+  const inputRefs = [
+    useRef<TextInput>(null),
+    useRef<TextInput>(null),
+    useRef<TextInput>(null),
+    useRef<TextInput>(null),
+  ];
+  
+  // Global state and error handling
   const { login, isLoggedIn } = useGlobalStore();
-  const [error, setError] = useState("");
-  const [isAndroid, setIsAndroid] = useState(Platform.OS === "android");
-  const [isIOS, setIsIOS] = useState(Platform.OS === "ios");
-  const [showOtp, setShowOtp] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [showError, setShowError] = useState(false);
   const [mobileError, setMobileError] = useState("");
+  
+  // Platform detection
+  const isAndroid = Platform.OS === "android";
+  const isIOS = Platform.OS === "ios";
 
   // Auto-fetch OTP functionality
   const handleOtpAutoFill = (otp: string) => {
-    console.log('Auto-filling OTP:', otp);
-    const otpArray = otp.split('');
+    console.log("Auto-filling OTP:", otp);
+    const otpArray = otp.split("");
     setPins(otpArray);
-    
+
     // Auto-verify if we get a complete 4-digit OTP
     if (otp.length === 4) {
       setTimeout(() => {
@@ -122,17 +140,30 @@ export default function Login() {
     }
   };
 
-  const { startSmsListener, stopSmsListener } = useOtpAutoFetch({
-    onOtpReceived: handleOtpAutoFill,
-    isActive: isShowOtp, // Start listening when OTP screen is shown
-    senderName: 'Dc Jewellery', // Match your SMS sender
-  });
-
   useEffect(() => {
-    if (isAndroid) {
-      // Initialize SMS listener for Android
-      startSmsListener();
-    }
+    let subscription: any;
+    
+    const startSmsListener = async () => {
+      if (isAndroid) {
+        const { status } = await SMSRetriever.requestPhoneNumber();
+        if (status === 'granted') {
+          subscription = SMSRetriever.addSMSListener(({ message }: { message: string }) => {
+            const otpMatch = /\b\d{4}\b/.exec(message);
+            if (otpMatch) {
+              handleOtpAutoFill(otpMatch[0]);
+            }
+          });
+        }
+      }
+    };
+    
+    startSmsListener();
+    
+    return () => {
+      if (subscription) {
+        subscription.remove();
+      }
+    };
   }, [isAndroid]);
 
   useEffect(() => {
@@ -185,20 +216,35 @@ export default function Login() {
   };
 
   const handlePinChange = (text: string, index: number) => {
-    const newPins = [...pins];
-    newPins[index] = text;
-    setPins(newPins);
-    if (text.length === 1 && index < 3 && inputRefs[index + 1].current) {
-      inputRefs[index + 1].current?.focus();
+    // Only allow numeric input
+    const numericValue = text.replace(/[^0-9]/g, "");
+    if (numericValue === "" || /^\d+$/.test(numericValue)) {
+      const newPins = [...pins];
+      newPins[index] = numericValue;
+      setPins(newPins);
+
+      // Auto-focus next input if there's a value
+      if (numericValue && index < 3 && inputRefs[index + 1]?.current) {
+        inputRefs[index + 1].current?.focus();
+      }
+
+      // Auto-submit when all digits are entered
+      const isOtpComplete = newPins.every((pin) => pin.trim() !== "");
+      if (isOtpComplete) {
+        verifyOtp(newPins.join(""));
+      }
     }
   };
 
-  const handleKeyPress = (e: NativeSyntheticEvent<TextInputKeyPressEventData>, index: number) => {
-    if (e.nativeEvent.key === "Backspace" && !pins[index] && index > 0 && inputRefs[index - 1].current) {
+  const handleKeyPress = (
+    e: NativeSyntheticEvent<TextInputKeyPressEventData>,
+    index: number
+  ) => {
+    if (e.nativeEvent.key === "Backspace" && !pins[index] && index > 0) {
       const newPins = [...pins];
       newPins[index - 1] = "";
       setPins(newPins);
-      inputRefs[index - 1].current?.focus();
+      inputRefs[index - 1]?.current?.focus();
     }
   };
 
@@ -249,7 +295,10 @@ export default function Login() {
           });
 
           const storedHashedMPIN = await SecureStore.getItemAsync("user_mpin");
-          router.push(storedHashedMPIN ? "/mpin_verify" : "/reset_mpin");
+          router.push({ pathname: storedHashedMPIN ? "/mpin_verify" : "/reset_mpin", params: { 
+            mode: 'create', // Indicates this is initial MPIN creation
+            from: 'login'   // Indicates coming from login flow
+          } });
           setIsShowOtp(false);
         }
       })
@@ -259,76 +308,108 @@ export default function Login() {
       .finally(() => setLoading(false));
   };
 
-  const loginAxio = () => {
+  const loginAxio = async () => {
     const indianMobilePattern = /^[6-9]\d{9}$/;
     if (!mobile) {
       setMobileError("Please enter mobile number");
       return;
     }
     if (!indianMobilePattern.test(mobile)) {
-      setMobileError("Invalid mobile number");
+      setMobileError("Please enter a valid 10-digit Indian mobile number");
       return;
     }
+
     setMobileError("");
     setLoading(true);
-    api
-      .post("/auth/check-mobile", { mobile_number: mobile })
-      .then(() => {
-        // Show OTP screen for both platforms
+
+    try {
+      const response = await fetch(`${theme.baseUrl}/auth/check-mobile`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ mobile_number: mobile })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Show OTP screen
         setIsShowOtp(true);
         setTimer(120);
-        
-        // Start SMS listener for Android
-        if (isAndroid) {
-          startSmsListener();
-        }
-      })
-      .catch((error) => {
-        const errorMessage = error.response?.data?.error || "You are not registered.";
-        if (errorMessage.toLowerCase().includes("invalid mobile number")) {
-          Alert.alert(
-            "Invalid Mobile Number",
-            "This mobile number is not registered. Would you like to create an account?",
-            [
-              {
-                text: "Cancel",
-                style: "cancel",
-                onPress: () => setLoading(false)
+        // Auto-focus first OTP input
+        setTimeout(() => inputRefs[0]?.current?.focus(), 100);
+      } else {
+        throw new Error(data?.error || 'Failed to send OTP');
+      }
+
+      // Start SMS listener for Android
+      if (isAndroid) {
+        startSmsListener();
+      }
+      setLoading(false);
+    } catch (error: any) {
+      const errorMessage = error.message || "You are not registered.";
+      if (errorMessage.toLowerCase().includes("invalid mobile number")) {
+        Alert.alert(
+          "Invalid Mobile Number",
+          "This mobile number is not registered. Would you like to create an account?",
+          [
+            {
+              text: "Cancel",
+              style: "cancel",
+              onPress: () => setLoading(false),
+            },
+            {
+              text: "Create Account",
+              onPress: () => {
+                // Handle create account navigation
+                router.push(`/register?mobile=${mobile}`);
+                setLoading(false);
               },
-              {
-                text: "OK",
-                onPress: () => {
-                  setLoading(false);
-                  router.push({
-                    pathname: "/register",
-                    params: { mobile: mobile }
-                  });
-                }
-              }
-            ]
-          );
-        } else {
-          showErrorAlert(errorMessage);
-        }
-      })
-      .finally(() => setLoading(false));
+            },
+          ]
+        );
+      } else {
+        showErrorAlert(errorMessage);
+        setLoading(false);
+      }
+    }
   };
 
-  const resendOtp = () => {
-    if (resendAttempts >= 3) {
-      showErrorAlert("Max resend attempts exceeded.");
-      return;
-    }
-    api
-      .post("/auth/check-mobile", { mobile_number: mobile })
-      .then(() => {
-        setTimer(120);
-        setPins(["", "", "", ""]);
-      })
-      .catch((error) => {
-        showErrorAlert(error.response?.data?.error || "Something went wrong.");
+  const handleResendOtp = async () => {
+    if (resendAttempts   <= 0) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${theme.baseUrl}/auth/check-mobile`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ mobile_number: mobile })
       });
-    setResendAttempts((prev) => prev + 1);
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setResendAttempts(prev => prev - 1);
+        setTimer(INITIAL_TIMER);
+        setPins(["", "", "", ""]);
+        Alert.alert("Success", "OTP resent successfully");
+        // Auto-focus first OTP input
+        setTimeout(() => inputRefs[0]?.current?.focus(), 100);
+      } else {
+        throw new Error(data?.error || 'Failed to resend OTP');
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to resend OTP';
+      showErrorAlert(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBackButton = () => {
@@ -350,11 +431,11 @@ export default function Login() {
 
   return (
     <ImageBackground
-      source={theme.image.bg_image}
+      source={theme.image.gold_image}
       style={styles.backgroundImage}
     >
       <LinearGradient
-        colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.7)']}
+        colors={["rgba(0,0,0,0.7)", "rgba(0,0,0,0.5)", "rgba(0,0,0,0.7)"]}
         style={styles.gradient}
       >
         {showError && (
@@ -393,12 +474,15 @@ export default function Login() {
                     ) : null}
                   </View>
                   <TouchableOpacity
-                    style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+                    style={[
+                      styles.loginButton,
+                      loading && styles.loginButtonDisabled,
+                    ]}
                     onPress={loginAxio}
                     disabled={loading}
                   >
                     <LinearGradient
-                      colors={['#ffc90c', '#ffd700']}
+                      colors={["#ffc90c", "#ffd700"]}
                       style={styles.gradientButton}
                     >
                       <Text style={styles.loginButtonText}>
@@ -407,7 +491,9 @@ export default function Login() {
                     </LinearGradient>
                   </TouchableOpacity>
                   <View style={styles.registerContainer}>
-                    <Text style={styles.registerText}>Don't have an account? </Text>
+                    <Text style={styles.registerText}>
+                      Don't have an account?{" "}
+                    </Text>
                     <TouchableOpacity onPress={() => router.push("/register")}>
                       <Text style={styles.registerLink}>Register</Text>
                     </TouchableOpacity>
@@ -424,19 +510,40 @@ export default function Login() {
                   <View style={styles.otpInputsWrapper}>
                     <View style={styles.otpInputsContainer}>
                       {pins.map((pin, index) => (
-                        <TextInput
-                          key={index}
-                          ref={inputRefs[index]}
-                          style={styles.otpInput}
-                          keyboardType="numeric"
-                          maxLength={1}
-                          value={pin}
-                          onChangeText={(text) => handlePinChange(text, index)}
-                          onKeyPress={(e) => handleKeyPress(e, index)}
-                          secureTextEntry={!showOtp}
-                          textContentType="oneTimeCode"
-                          autoComplete="sms-otp"
-                        />
+                        <View key={index} style={styles.otpInputWrapper}>
+                          <TextInput
+                            ref={inputRefs[index]}
+                            style={[
+                              styles.otpInput,
+                              loading && styles.otpInputDisabled, // Only apply disabled style when loading
+                            ]}
+                            keyboardType="number-pad"
+                            maxLength={1}
+                            value={pin}
+                            onChangeText={(text) =>
+                              handlePinChange(text, index)
+                            }
+                            onKeyPress={(e) => handleKeyPress(e, index)}
+                            secureTextEntry={!showOtp}
+                            textContentType="oneTimeCode"
+                            autoComplete="sms-otp"
+                            autoCorrect={false}
+                            autoCapitalize="none"
+                            importantForAutofill="yes"
+                            accessibilityLabel={`OTP digit ${index + 1}`}
+                            editable={!loading} // Only disable when loading
+                            selectTextOnFocus
+                            caretHidden={false}
+                            contextMenuHidden={true}
+                            onFocus={() => {
+                              if (pin) {
+                                const newPins = [...pins];
+                                newPins[index] = "";
+                                setPins(newPins);
+                              }
+                            }}
+                          />
+                        </View>
                       ))}
                     </View>
                     <TouchableOpacity
@@ -452,26 +559,41 @@ export default function Login() {
                   </View>
 
                   <View style={styles.timerContainer}>
-                    <Ionicons name="time-outline" size={20} color={theme.colors.white} />
+                    <Ionicons
+                      name="time-outline"
+                      size={20}
+                      color={theme.colors.white}
+                    />
                     <Text style={styles.timerText}>Resend in {timer}s</Text>
                   </View>
-                  
+
                   {timer === 0 && resendAttempts < 3 && (
-                    <TouchableOpacity onPress={resendOtp} style={styles.resendButton}>
+                    <TouchableOpacity
+                      onPress={handleResendOtp}
+                      style={styles.resendButton}
+                    >
                       <Text style={styles.resendText}>Resend OTP</Text>
                     </TouchableOpacity>
                   )}
-                  
+
                   <TouchableOpacity
-                    style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+                    style={[
+                      styles.loginButton,
+                      (loading || !pins.every((pin) => pin.trim() !== "")) &&
+                        styles.loginButtonDisabled,
+                    ]}
                     onPress={() => verifyOtp(pins.join(""))}
-                    disabled={loading || pins.includes("")}
+                    disabled={
+                      loading || !pins.every((pin) => pin.trim() !== "")
+                    }
                   >
                     <LinearGradient
-                      colors={['#ffc90c', '#ffd700']}
+                      colors={["#ffc90c", "#ffd700"]}
                       style={styles.gradientButton}
                     >
-                      <Text style={styles.loginButtonText}>Submit</Text>
+                      <Text style={styles.loginButtonText}>
+                        {loading ? "Verifying..." : "Submit"}
+                      </Text>
                     </LinearGradient>
                   </TouchableOpacity>
                 </View>
@@ -481,7 +603,11 @@ export default function Login() {
                 style={styles.backButton}
                 onPress={handleBackButton}
               >
-                <Ionicons name="arrow-back" size={20} color={theme.colors.white} />
+                <Ionicons
+                  name="arrow-back"
+                  size={20}
+                  color={theme.colors.white}
+                />
                 <Text style={styles.backButtonText}>Back</Text>
               </TouchableOpacity>
             </View>
@@ -493,40 +619,40 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-  backgroundImage: { 
-    flex: 1, 
-    resizeMode: "cover" 
+  backgroundImage: {
+    flex: 1,
+    resizeMode: "cover",
   },
   gradient: {
     flex: 1,
   },
-  container: { 
+  container: {
     flex: 1,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 20,
+    paddingBottom: Platform.OS === "ios" ? 40 : 20,
   },
   logoContainer: {
-    width: '100%',
-    alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    width: "100%",
+    alignItems: "center",
+    paddingTop: Platform.OS === "ios" ? 60 : 40,
     marginBottom: 20,
   },
-  logo: { 
+  logo: {
     aspectRatio: 1,
   },
-  formContainer: { 
+  formContainer: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: 20,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 0,
+    paddingBottom: Platform.OS === "ios" ? 40 : 0,
   },
   cardContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 20,
     padding: 20,
-    width: '100%',
+    width: "100%",
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    marginBottom: Platform.OS === 'ios' ? 20 : 10,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+    marginBottom: Platform.OS === "ios" ? 20 : 10,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -554,23 +680,23 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   inputContainer: {
-    width: '100%',
+    width: "100%",
     marginBottom: 20,
   },
   loginButton: {
     width: "100%",
     height: 50,
     borderRadius: 25,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginTop: 20,
   },
   gradientButton: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
-  loginButtonDisabled: { 
-    opacity: 0.6 
+  loginButtonDisabled: {
+    opacity: 0.6,
   },
   loginButtonText: {
     color: theme.colors.textDark,
@@ -585,7 +711,7 @@ const styles = StyleSheet.create({
   otpTitle: {
     color: theme.colors.textLight,
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
   },
   otpSentText: {
@@ -606,17 +732,37 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     width: "100%",
     marginTop: 10,
+    gap: 10,
+  },
+  otpInputWrapper: {
+    flex: 1,
+    height: 60,
+    width: 50,
+    marginHorizontal: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+    // Ensure these are not present:
+    // pointerEvents: 'none',
+    // opacity: 0.5,
   },
   otpInput: {
-    width: 50,
-    height: 50,
-    borderWidth: 1,
-    borderColor: theme.colors.white,
-    borderRadius: 12,
+    width: "100%",
+    height: "100%",
     color: theme.colors.white,
     fontSize: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     textAlign: "center",
+    backgroundColor: "transparent",
+    padding: 0,
+    margin: 0,
+    includeFontPadding: false,
+    textAlignVertical: "center",
+  },
+  otpInputDisabled: {
+    opacity: 0.6,
   },
   eyeButton: {
     position: "absolute",
@@ -624,12 +770,12 @@ const styles = StyleSheet.create({
     top: 20,
   },
   timerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 15,
   },
-  timerText: { 
-    color: theme.colors.white, 
+  timerText: {
+    color: theme.colors.white,
     marginLeft: 8,
     fontSize: 16,
   },
@@ -644,9 +790,9 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
   registerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 20,
   },
   registerText: {
@@ -656,14 +802,14 @@ const styles = StyleSheet.create({
   registerLink: {
     color: theme.colors.secondary,
     fontSize: 16,
-    fontWeight: 'bold',
-    textDecorationLine: 'underline',
+    fontWeight: "bold",
+    textDecorationLine: "underline",
     marginLeft: 4,
   },
   backButton: {
     marginTop: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   backButtonText: {
     color: theme.colors.white,
@@ -671,18 +817,18 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
   errorAlert: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 30,
+    position: "absolute",
+    top: Platform.OS === "ios" ? 50 : 30,
     left: 20,
     right: 20,
-    backgroundColor: 'rgba(255, 68, 68, 0.95)',
+    backgroundColor: "rgba(255, 68, 68, 0.95)",
     borderRadius: 12,
     padding: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     zIndex: 1000,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -693,11 +839,11 @@ const styles = StyleSheet.create({
   },
   errorContent: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   errorMessage: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
     marginLeft: 10,
     flex: 1,
@@ -706,7 +852,7 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   errorText: {
-    color: '#ff4444',
+    color: "#ff4444",
     fontSize: 12,
     marginTop: 4,
     marginLeft: 4,

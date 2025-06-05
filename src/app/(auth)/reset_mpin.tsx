@@ -16,7 +16,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from 'expo-linear-gradient';
+import { LinearGradient } from "expo-linear-gradient";
 import api from "@/services/api";
 import * as SecureStore from "expo-secure-store";
 import * as Crypto from "expo-crypto";
@@ -87,10 +87,12 @@ const MpinInput: React.FC<MpinInputProps> = ({
       {values.map((value, index) => (
         <View key={index} style={styles.inputWrapper}>
           <TextInput
-            ref={(ref) => {inputs.current[index] = ref}}
+            ref={(ref) => {
+              inputs.current[index] = ref;
+            }}
             style={[
               styles.mpinInput,
-              value ? styles.mpinInputFilled : styles.mpinInputEmpty
+              value ? styles.mpinInputFilled : styles.mpinInputEmpty,
             ]}
             keyboardType="number-pad"
             maxLength={1}
@@ -100,9 +102,7 @@ const MpinInput: React.FC<MpinInputProps> = ({
             onKeyPress={(e) => handleKeyPress(e, index)}
             textAlign="center"
           />
-          {value && !secureTextEntry && (
-            <View style={styles.inputIndicator} />
-          )}
+          {value && !secureTextEntry && <View style={styles.inputIndicator} />}
         </View>
       ))}
     </View>
@@ -110,7 +110,8 @@ const MpinInput: React.FC<MpinInputProps> = ({
 };
 
 export default function ResetMpin() {
-  const { name, email, mobile } = useLocalSearchParams();
+  const { name, email, mobile, mode, from } = useLocalSearchParams();
+
   const router = useRouter();
   const [mpin, setMpin] = useState("");
   const [confirmMpin, setConfirmMpin] = useState("");
@@ -119,6 +120,8 @@ export default function ResetMpin() {
   const [error, setError] = useState("");
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const isCreatingMPIN = mode === "create";
+  const fromLogin = from === "login";
 
   useEffect(() => {
     if (mpin.length === 4 && confirmMpin.length === 4) {
@@ -157,7 +160,7 @@ export default function ResetMpin() {
       style={styles.backgroundImage}
     >
       <LinearGradient
-        colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.7)']}
+        colors={["rgba(0,0,0,0.7)", "rgba(0,0,0,0.5)", "rgba(0,0,0,0.7)"]}
         style={styles.gradient}
       >
         {showError && (
@@ -166,7 +169,10 @@ export default function ResetMpin() {
               <Ionicons name="alert-circle" size={24} color="#fff" />
               <Text style={styles.errorMessage}>{errorMessage}</Text>
             </View>
-            <TouchableOpacity onPress={() => setShowError(false)} style={styles.closeButton}>
+            <TouchableOpacity
+              onPress={() => setShowError(false)}
+              style={styles.closeButton}
+            >
               <Ionicons name="close" size={20} color="#fff" />
             </TouchableOpacity>
           </View>
@@ -183,10 +189,25 @@ export default function ResetMpin() {
                   style={[styles.logo, { width: 100 }]}
                   resizeMode="contain"
                 />
+                {fromLogin ? (
+                  <TouchableOpacity onPress={() => router.back()}>
+                    <Ionicons name="arrow-back" size={24} color="black" />
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity onPress={() => router.push("/profile")}>
+                    <Ionicons name="arrow-back" size={24} color="black" />
+                  </TouchableOpacity>
+                )}
               </View>
               <View style={styles.cardContainer}>
-                <Text style={styles.pageTitle}>Reset MPIN </Text>
-                <Text style={styles.subtitle}>Create a new 4-digit MPIN to secure your account</Text>
+                <Text style={styles.pageTitle}>
+                  {isCreatingMPIN ? "Create MPIN" : "Reset MPIN"}
+                </Text>
+                <Text style={styles.subtitle}>
+                  {isCreatingMPIN
+                    ? "Create a new 4-digit MPIN to secure your account"
+                    : "Enter your new MPIN to reset it"}
+                </Text>
                 <Text style={styles.label}>New MPIN</Text>
                 <MpinInput
                   length={4}
@@ -219,12 +240,24 @@ export default function ResetMpin() {
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.submitButton, (error || loading || mpin.length < 4 || confirmMpin.length < 4) && styles.submitButtonDisabled]}
+                  style={[
+                    styles.submitButton,
+                    (error ||
+                      loading ||
+                      mpin.length < 4 ||
+                      confirmMpin.length < 4) &&
+                      styles.submitButtonDisabled,
+                  ]}
                   onPress={handleSubmit}
-                  disabled={!!error || loading || mpin.length < 4 || confirmMpin.length < 4}
+                  disabled={
+                    !!error ||
+                    loading ||
+                    mpin.length < 4 ||
+                    confirmMpin.length < 4
+                  }
                 >
                   <LinearGradient
-                    colors={['#ffc90c', '#ffd700']}
+                    colors={["#ffc90c", "#ffd700"]}
                     style={styles.gradientButton}
                   >
                     <Text style={styles.submitButtonText}>
@@ -236,7 +269,11 @@ export default function ResetMpin() {
                   style={styles.backButtonBottom}
                   onPress={() => router.back()}
                 >
-                  <Ionicons name="arrow-back" size={20} color={theme.colors.white} />
+                  <Ionicons
+                    name="arrow-back"
+                    size={20}
+                    color={theme.colors.white}
+                  />
                   <Text style={styles.backButtonText}>Back</Text>
                 </TouchableOpacity>
               </View>
@@ -254,16 +291,16 @@ const styles = StyleSheet.create({
   },
   backgroundImage: {
     flex: 1,
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   gradient: {
     flex: 1,
   },
   logoContainer: {
-    width: '100%',
-    alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    width: "100%",
+    alignItems: "center",
+    paddingTop: Platform.OS === "ios" ? 60 : 40,
     marginBottom: 10,
   },
   logo: {
@@ -271,27 +308,27 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingBottom: 0,
   },
   contentContainer: {
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
     flex: 1,
   },
   cardContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 20,
     padding: 20,
-    width: '100%',
+    width: "100%",
     maxWidth: 400,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: "rgba(255, 255, 255, 0.2)",
     marginBottom: 0,
-    alignItems: 'center',
+    alignItems: "center",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -328,16 +365,16 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 50,
     borderRadius: 25,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginTop: 20,
   },
   gradientButton: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
-  submitButtonDisabled: { 
-    opacity: 0.6 
+  submitButtonDisabled: {
+    opacity: 0.6,
   },
   submitButtonText: {
     color: theme.colors.textDark,
@@ -348,7 +385,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginVertical: 20,
-    alignSelf: 'center',
+    alignSelf: "center",
   },
   eyeText: {
     color: theme.colors.secondary,
@@ -356,18 +393,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   errorAlert: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 30,
+    position: "absolute",
+    top: Platform.OS === "ios" ? 50 : 30,
     left: 20,
     right: 20,
-    backgroundColor: 'rgba(255, 68, 68, 0.95)',
+    backgroundColor: "rgba(255, 68, 68, 0.95)",
     borderRadius: 12,
     padding: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     zIndex: 1000,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -378,11 +415,11 @@ const styles = StyleSheet.create({
   },
   errorContent: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   errorMessage: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
     marginLeft: 10,
     flex: 1,
@@ -391,24 +428,24 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   errorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 107, 107, 0.15)',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 107, 107, 0.15)",
     borderRadius: 8,
     padding: 10,
     marginBottom: 15,
     borderLeftWidth: 3,
-    borderLeftColor: '#FF6B6B',
+    borderLeftColor: "#FF6B6B",
   },
   errorText: {
-    color: '#FF6B6B',
+    color: "#FF6B6B",
     fontSize: 14,
     marginLeft: 8,
   },
   backButtonBottom: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 18,
   },
   backButtonText: {
@@ -422,7 +459,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   inputWrapper: {
-    position: 'relative',
+    position: "relative",
   },
   mpinInput: {
     width: 55,
@@ -430,26 +467,26 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 15,
     fontSize: moderateScale(20),
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#FFFFFF',
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "#FFFFFF",
   },
   mpinInputEmpty: {
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: "rgba(255, 255, 255, 0.3)",
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
   },
   mpinInputFilled: {
-    borderColor: '#FFD700',
-    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+    borderColor: "#FFD700",
+    backgroundColor: "rgba(255, 215, 0, 0.1)",
   },
   inputIndicator: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 8,
-    left: '50%',
+    left: "50%",
     marginLeft: -3,
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#FFD700',
+    backgroundColor: "#FFD700",
   },
 });
