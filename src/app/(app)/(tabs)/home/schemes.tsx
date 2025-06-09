@@ -149,7 +149,7 @@ export default function SchemeList() {
               "Zero making charges",
               "Free locker facility"
             ],
-            SCHEMETYPE: scheme.SCHEMETYPE || (activeTab.toLowerCase() === 'flexi' ? 'Flexi' : 'Fixed'),
+            SCHEMETYPE: activeTab === 'Flexi' ? 'Flexi' : 'Fixed',
             ACTIVE: scheme.ACTIVE,
             chits: relevantChits,
             relevantChits: relevantChits.map(chit => ({
@@ -392,7 +392,7 @@ export default function SchemeList() {
                       styles.typeText,
                       item.SCHEMETYPE === 'Flexi' && styles.flexiTypeText
                     ]}>
-                      {item.SCHEMETYPE}
+                      {item.SCHEMETYPE === 'Flexi' ? 'Flexi' : 'Fixed'}
                     </Text>
                   </View>
                 </View>
@@ -773,9 +773,9 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
   flexiSchemeName: {
-    fontSize: 9,
+    fontSize: 16,
     letterSpacing: 0.3,
-    fontWeight: "600",
+    fontWeight: "700",
     textTransform: 'uppercase',
   },
   slogan: {
@@ -801,12 +801,13 @@ const styles = StyleSheet.create({
   typeText: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#850111",
+    color: "#FFFFFF",
     textTransform: 'capitalize',
   },
   flexiTypeText: {
     fontSize: 14,
     fontWeight: "700",
+    color: "#FFFFFF",
   },
   schemeDescription: {
     fontSize: 14,

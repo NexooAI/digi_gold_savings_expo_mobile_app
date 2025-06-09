@@ -58,6 +58,31 @@ type Scheme = {
   paymentFrequency: string; // Add payment frequency
 };
 
+interface InvestmentResponse {
+  investmentId: string;
+  schemeName?: string;
+  scheme?: {
+    schemeId: string;
+    schemeName: string;
+    type: string;
+    schemeType: string;
+  };
+  chits?: {
+    amount: string;
+    noOfInstallments: number;
+  };
+  status: string;
+  total_paid: string;
+  lastInstallment: number;
+  start_date: string;
+  end_date: string;
+  totalgoldweight: string;
+  accountName: string;
+  accountNo: string;
+  amount: string;
+  paymentFrequency: string;
+}
+
 export default function SavingsScreen() {
   const router = useRouter();
   const { language, user } = useGlobalStore();
@@ -82,61 +107,141 @@ export default function SavingsScreen() {
     setLoading(true);
     setError(null);
     try {
+      console.log('=== FETCHING SAVINGS LIST ===');
       const response = await api.get(`investments/user_investments/${user.id}`);
+      console.log('Raw API Response:', JSON.stringify(response.data, null, 2));
+      
       const investments = response.data.data || [];
-      // Transform each investment into your Scheme structure
-      const transformedSavings: Scheme[] = investments.map((item: any) => {
-        const schemeObj = item.scheme || {};
-        const chit = item.chits || {};
-        // Parse dates
-        const doj = item.start_date
-          ? new Date(item.start_date).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })
-          : "N/A";
+      
+      // Validate and transform each investment
+      const transformedSavings: Scheme[] = investments
+        .filter((item: InvestmentResponse) => {
+          // Basic validation
+          const isValid = item.investmentId && (item.schemeName || item.scheme?.schemeName);
+          if (!isValid) {
+            console.warn('Invalid investment item:', item);
+          }
+          return isValid;
+        })
+        .map((item: InvestmentResponse) => {
+          const schemeObj = item.scheme || {
+            schemeId: '',
+            schemeName: '',
+            type: 'gold',
+            schemeType: 'weight'
+          };
+          const chit = item.chits || {
+            amount: '0',
+            noOfInstallments: 0
+          };
+          
+          // Log each investment item for debugging
+          console.log('Processing investment item:', {
+            investmentId: item.investmentId,
+            schemeName: schemeObj.schemeName || item.schemeName,
+            emiAmount: chit.amount,
+            paymentFrequency: item.paymentFrequency,
+            schemeType: schemeObj.schemeType,
+            totalPaid: item.total_paid,
+            monthsPaid: item.lastInstallment,
+            noOfInstallments: chit.noOfInstallments
+          });
 
-        const dom = item.end_date
-          ? new Date(item.end_date).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })
-          : "N/A";
+          // Parse dates with error handling
+          const doj = item.start_date
+            ? new Date(item.start_date).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })
+            : "N/A";
 
-        return {
-          id: item.investmentId,
-          // Prefer scheme name from scheme object if available
-          schemeName:
-            schemeObj.schemeName || item.schemeName || "Unknown Scheme",
-          // New fields: metalType and savingType (default to gold & weight if missing)
-          metalType: schemeObj.type ? schemeObj.type.toLowerCase() : "gold",
-          savingType: schemeObj.schemeType
-            ? schemeObj.schemeType.toLowerCase()
-            : "weight",
-          status: item.status,
-          totalPaid: parseFloat(item.total_paid) || 0,
-          // Replace with item.monthsPaid if available; here using item.lastInstallment for demo
-          monthsPaid: item.lastInstallment || 0,
-          emiAmount: parseFloat(chit.amount) || 0,
-          maturityDate: dom,
-          goldWeight: parseFloat(item.totalgoldweight) || 0,
-          accountHolder: item.accountName || "",
-          accNo: item.accountNo || "",
-          joiningDate: doj,
-          schemeCode: schemeObj.schemeId ? schemeObj.schemeId.toString() : "",
-          noOfIns: chit.noOfInstallments,
-          schemesData: schemeObj,
-          chitData: chit,
-          transactions: [],
-          paymentFrequency: item.paymentFrequency || "Unknown",
-        };
-      });
+          const dom = item.end_date
+            ? new Date(item.end_date).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })
+            : "N/A";
+
+          // Calculate installment amount based on scheme type with validation
+          let installmentAmount = 0;
+          try {
+            if (schemeObj.schemeType?.toLowerCase() === 'flexi') {
+              installmentAmount = parseFloat(item.amount) || 0;
+            } else {
+              installmentAmount = parseFloat(chit.amount) || 0;
+            }
+            
+            // Validate installment amount
+            if (isNaN(installmentAmount) || installmentAmount <= 0) {
+              console.warn(`Invalid installment amount for investment ${item.investmentId}:`, installmentAmount);
+              installmentAmount = 0;
+            }
+          } catch (error) {
+            console.error(`Error calculating installment amount for investment ${item.investmentId}:`, error);
+            installmentAmount = 0;
+          }
+
+          // Calculate total paid with validation
+          let totalPaid = 0;
+          try {
+            totalPaid = parseFloat(item.total_paid) || 0;
+            if (isNaN(totalPaid) || totalPaid < 0) {
+              console.warn(`Invalid total paid for investment ${item.investmentId}:`, totalPaid);
+              totalPaid = 0;
+            }
+          } catch (error) {
+            console.error(`Error calculating total paid for investment ${item.investmentId}:`, error);
+            totalPaid = 0;
+          }
+
+          // Calculate gold weight with validation
+          let goldWeight = 0;
+          try {
+            goldWeight = parseFloat(item.totalgoldweight) || 0;
+            if (isNaN(goldWeight) || goldWeight < 0) {
+              console.warn(`Invalid gold weight for investment ${item.investmentId}:`, goldWeight);
+              goldWeight = 0;
+            }
+          } catch (error) {
+            console.error(`Error calculating gold weight for investment ${item.investmentId}:`, error);
+            goldWeight = 0;
+          }
+
+          // Validate months paid
+          const monthsPaid = Math.max(0, item.lastInstallment || 0);
+
+          return {
+            id: item.investmentId,
+            schemeName: schemeObj.schemeName || item.schemeName || "Unknown Scheme",
+            metalType: schemeObj.type ? schemeObj.type.toLowerCase() : "gold",
+            savingType: schemeObj.schemeType
+              ? schemeObj.schemeType.toLowerCase()
+              : "weight",
+            status: item.status || "active",
+            totalPaid,
+            monthsPaid,
+            emiAmount: installmentAmount,
+            maturityDate: dom,
+            goldWeight,
+            accountHolder: item.accountName || "",
+            accNo: item.accountNo || "",
+            joiningDate: doj,
+            schemeCode: schemeObj.schemeId ? schemeObj.schemeId.toString() : "",
+            noOfIns: chit.noOfInstallments || 0,
+            schemesData: schemeObj,
+            chitData: chit,
+            transactions: [],
+            paymentFrequency: item.paymentFrequency || "Monthly",
+          };
+        });
+      
+      console.log('Transformed Savings List:', JSON.stringify(transformedSavings, null, 2));
       setSavings(transformedSavings);
     } catch (err: any) {
-      console.error("Error fetching data:", err.message);
-      setError(err.message);
+      console.error("Error fetching data:", err);
+      setError(err.message || "Failed to fetch savings data");
     } finally {
       setLoading(false);
     }
@@ -220,18 +325,25 @@ export default function SavingsScreen() {
 
     const handlePayNow = () => {
       if (!item) return;
+      const userDetails = {
+        userId: user?.id,
+        investmentId: item.id,
+        schemeId: item.schemeCode,
+        chitId: item?.chitData?.chitId || "",
+        name: item.accountHolder,
+        accNo: item.accNo,
+        mobile: user?.mobile,
+        email: user?.email,
+        paymentFrequency: item.paymentFrequency || "Monthly",
+        schemeName: item.schemeName || "",
+        amount: item.emiAmount
+      };
+      
       router.push({
         pathname: "/(tabs)/home/payment",
         params: {
           amount: item.emiAmount?.toString() || "0",
-          sessionId: Date.now().toString(),
-          paymentFrequency: item.paymentFrequency || "Monthly",
-          schemeName: item.schemeName || "",
-          accountHolder: item.accountHolder || "N/A",
-          accNo: item.accNo || "N/A",
-          schemeCode: item.schemeCode || "",
-          id: item.id || "",
-          chitId: item?.chitData?.chitId || "",
+          userDetails: JSON.stringify(userDetails)
         },
       });
     };
@@ -597,12 +709,12 @@ export default function SavingsScreen() {
   return (
     <View style={{ flex: 1 }}>
       <ImageBackground
-        source={theme.image.bg_image}
+        source={require("../../../../../assets/images/bg_new.jpg")}
         style={{ flex: 1 }}
         resizeMode="cover"
       >
         <LinearGradient
-          colors={['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.8)']}
+          colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.0)']}
           style={StyleSheet.absoluteFillObject}
         />
         

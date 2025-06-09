@@ -36,6 +36,50 @@ interface PaymentData {
   paymentFrequency: string;
 }
 
+interface DisplayData {
+  schemeName: string;
+  accountHolder: string;
+  accNo: string;
+  totalPaid: string;
+  monthsPaid: string;
+  noOfIns: string;
+  goldWeight: string;
+  maturityDate: string;
+  paymentFrequency: string;
+}
+
+interface UserDetails {
+  name?: string;
+  accountname?: string;
+  accNo?: string;
+  accountNo?: string;
+  mobile?: string;
+  email?: string;
+  userId?: string;
+  investmentId?: string;
+  schemeId?: string;
+  chitId?: string;
+  paymentFrequency?: string;
+  schemeName?: string;
+  isRetryAttempt?: boolean;
+  retryData?: any;
+  data?: {
+    data?: {
+      schemeId?: string;
+      chitId?: string;
+    };
+  };
+  userEmail?: string;
+  userMobile?: string;
+}
+
+interface PaymentRetryData {
+  paymentData: {
+    amount: number;
+  };
+  displayData: DisplayData;
+}
+
 const PaymentProcessScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -149,18 +193,21 @@ const PaymentProcessScreen = () => {
   }, [userDetails, parsedUserDetails, params.isRetry]);
 
   // Combine user details from URL params and session data
-  const finalUserDetails = useMemo(() => {
+  const finalUserDetails = useMemo<UserDetails>(() => {
     if (Object.keys(parsedUserDetails).length > 0) {
       // Use URL parameters if available
       console.log('Using user details from URL parameters');
-      return parsedUserDetails;
+      return {
+        ...parsedUserDetails,
+        paymentFrequency: parsedUserDetails.paymentFrequency || "Monthly"
+      };
     } else if (sessionData?.userDetails) {
       // Use session data as fallback
       console.log('Using user details from session data');
       const userDetails = sessionData.userDetails;
       
       // Ensure all necessary fields are available and properly mapped
-      const mappedUserDetails = {
+      const mappedUserDetails: UserDetails = {
         ...userDetails,
         // Map different field variations to standard names
         name: userDetails.name || userDetails.accountname,
@@ -171,6 +218,7 @@ const PaymentProcessScreen = () => {
         investmentId: userDetails.investmentId,
         schemeId: userDetails.schemeId,
         chitId: userDetails.chitId,
+        paymentFrequency: userDetails.paymentFrequency || "Monthly"
       };
       
       // If this is retry data, make sure retryData is accessible
@@ -183,7 +231,7 @@ const PaymentProcessScreen = () => {
     }
     
     console.log('No user details available from URL or session');
-    return {};
+    return { paymentFrequency: "Monthly" };
   }, [parsedUserDetails, sessionData]);
 
   const paramsParse = useMemo(
@@ -209,17 +257,29 @@ const PaymentProcessScreen = () => {
   const [paymentDetails, setPaymentDetails] = useState<PaymentData>({
     amount: amount,
     goldWeight: 0,
-    schemeName: paramsParse?.schemeName || "Gold Savings Scheme",
-    installmentNumber: paramsParse?.installmentNumber || 1,
-    totalInstallments: paramsParse?.totalInstallments || 11,
-    investmentType: paramsParse?.investmentType || "Monthly",
-    maturityDate: paramsParse?.maturityDate,
+    schemeName: finalUserDetails?.schemeName || "Gold Savings Scheme",
+    installmentNumber: 1,
+    totalInstallments: 11,
+    investmentType: finalUserDetails?.paymentFrequency || "Monthly",
+    maturityDate: undefined,
     currentGoldPrice: 0,
-    paymentFrequency: paramsParse?.paymentFrequency || "Monthly",
+    paymentFrequency: finalUserDetails?.paymentFrequency || "Monthly",
   });
 
   // Add new state for retry
   const [isRetry, setIsRetry] = useState(false);
+
+  // Update payment details when finalUserDetails changes
+  useEffect(() => {
+    if (finalUserDetails?.paymentFrequency) {
+      const frequency = finalUserDetails.paymentFrequency;
+      setPaymentDetails(prev => ({
+        ...prev,
+        paymentFrequency: frequency,
+        investmentType: frequency,
+      }));
+    }
+  }, [finalUserDetails?.paymentFrequency]);
 
   // Check if this is a retry using global store
   const checkRetryStatus = async () => {
@@ -227,7 +287,7 @@ const PaymentProcessScreen = () => {
       if (hasPaymentRetryData()) {
         console.log('Retry data found in global store');
         setIsRetry(true);
-        const paymentRetryData = getPaymentRetryData();
+        const paymentRetryData = getPaymentRetryData() as PaymentRetryData;
         if (paymentRetryData) {
           // Update payment details with stored data
           setPaymentDetails(prev => ({
@@ -237,9 +297,10 @@ const PaymentProcessScreen = () => {
             schemeName: paymentRetryData.displayData.schemeName,
             installmentNumber: Number(paymentRetryData.displayData.monthsPaid) + 1 || 1,
             totalInstallments: Number(paymentRetryData.displayData.noOfIns) || 11,
-            investmentType: "Monthly",
+            investmentType: paymentRetryData.displayData.paymentFrequency || "Monthly",
             maturityDate: paymentRetryData.displayData.maturityDate,
             currentGoldPrice: 0,
+            paymentFrequency: paymentRetryData.displayData.paymentFrequency || "Monthly",
           }));
         }
       }
@@ -355,93 +416,7 @@ const PaymentProcessScreen = () => {
     ]).start();
   };
 
-  const handlePayPress = () => {
-    animateButton();
-    paymentInit();
-  };
-
-  // Initialize socket connection
-  useEffect(() => {
-    const socketInstance = io(theme.baseUrl); // Replace with your server URL
-    setSocket(socketInstance);
-
-    socketInstance.on("connect", () => {});
-
-    return () => {
-      socketInstance.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = navigation.addListener("state", () => {
-      setIsNavigationReady(true);
-    });
-    return unsubscribe;
-  }, [navigation]);
-
-  const handlePaymentSuccess = async (data: any) => {
-    console.log("Payment Response:", data);
-    
-    const paymentStatus = data?.paymentResponse?.txn_detail?.status;
-    const isSuccess = paymentStatus === "CHARGED";
-    
-    if (isSuccess) {
-      // Clear stored payment data on success from global store
-      clearPaymentRetryData();
-      clearPaymentSession();
-      
-      setPaymentSuccessData({
-        txn_id: data?.paymentResponse?.txn_id,
-        amount: data?.paymentResponse?.amount,
-        order_id: data?.paymentResponse?.order_id,
-      });
-      
-      router.push({
-        pathname: "/(tabs)/home/payment-success",
-        params: {
-          amount: data?.paymentResponse?.amount,
-          txnId: data?.paymentResponse?.txn_id,
-          orderId: data?.paymentResponse?.order_id,
-          goldWeight: paymentDetails.goldWeight,
-          schemeName: paymentDetails.schemeName,
-          installmentNumber: paymentDetails.installmentNumber,
-          totalInstallments: paymentDetails.totalInstallments,
-          schemeId: finalUserDetails.data?.data?.schemeId || finalUserDetails.schemeId,
-          chitId: finalUserDetails.data?.data?.chitId || finalUserDetails.chitId
-        }
-      });
-    } else {
-      handlePaymentFailure(data);
-    }
-  };
-
-  const handlePaymentFailure = async (data: any) => {
-    console.log("Payment Failed:", data);
-    const errorMessage = data?.paymentResponse?.payment_gateway_response?.resp_message || 
-                        data?.message || 
-                        "Your payment has failed. Please try again.";
-    
-    // The payment retry data should already be stored in global store from when payment was initiated
-    // We don't need to store it again here, just ensure it's available for retry
-    console.log('Payment failed, retry data should be available in global store');
-    
-    router.push({
-      pathname: "/(tabs)/home/payment-failure",
-      params: {
-        amount: data?.paymentResponse?.amount,
-        txnId: data?.paymentResponse?.txn_id,
-        errorMessage: errorMessage
-      }
-    });
-  };
-
-  const retryPayment = (orderId: any) => {
-    // Your retry implementation
-    console.log("Retrying payment for order:", orderId);
-    processedPaymentRef.current = false;
-    paymentInit();
-    // Example: router.push(`/payment?orderId=${orderId}`);
-  };
+  // Define paymentInit before handlePayPress
   const paymentInit = async () => {
     if (!isNavigationReady) return;
     processedPaymentRef.current = false;
@@ -468,184 +443,9 @@ const PaymentProcessScreen = () => {
         chitId: finalUserDetails.chitId || finalUserDetails.data?.data?.chitId || 1,
       };
 
-      console.log('Initial payload (before retry logic):', payloadToUse);
-
-      // Check if this is a retry attempt - look in parsedUserDetails instead of paramsParse
-      const isRetryAttempt = finalUserDetails.isRetryAttempt || isRetry;
-      
-      // If this is a retry attempt, try to load stored data
-      if (isRetryAttempt) {
-        console.log('Detected retry attempt, loading stored data...');
-        
-        // First try to use data directly from finalUserDetails (passed from retry or session)
-        if (finalUserDetails.userId && finalUserDetails.investmentId && finalUserDetails.schemeId) {
-          console.log('Using retry data directly from finalUserDetails');
-          payloadToUse = {
-            userId: finalUserDetails.userId,
-            amount: finalUserDetails.amount || amount,
-            investmentId: finalUserDetails.investmentId,
-            schemeId: finalUserDetails.schemeId,
-            userEmail: finalUserDetails.email,
-            userMobile: finalUserDetails.mobile,
-            userName: finalUserDetails.name,
-            chitId: finalUserDetails.chitId || 1,
-          };
-          setIsRetry(true);
-        } else if (finalUserDetails.retryData?.paymentData) {
-          // Try to use retryData stored in finalUserDetails
-          console.log('Using retry data from finalUserDetails.retryData');
-          const retryData = finalUserDetails.retryData;
-          payloadToUse = {
-            userId: retryData.paymentData.userId,
-            amount: retryData.paymentData.amount,
-            investmentId: retryData.paymentData.investmentId,
-            schemeId: retryData.paymentData.schemeId,
-            userEmail: retryData.paymentData.userEmail,
-            userMobile: retryData.paymentData.userMobile,
-            userName: retryData.paymentData.userName,
-            chitId: retryData.paymentData.chitId,
-          };
-          
-          // Store the complete retry data in finalUserDetails for later use
-          finalUserDetails.retryData = retryData;
-          setIsRetry(true);
-        } else {
-          // Try to load complete retry data from global store
-          let retryData = getPaymentRetryData();
-
-          // If complete retry data is available, use it
-          if (retryData && retryData.paymentData) {
-            console.log('Using complete stored payment data for retry from global store');
-            payloadToUse = {
-              userId: retryData.paymentData.userId,
-              amount: retryData.paymentData.amount,
-              investmentId: retryData.paymentData.investmentId,
-              schemeId: retryData.paymentData.schemeId,
-              userEmail: retryData.paymentData.userEmail,
-              userMobile: retryData.paymentData.userMobile,
-              userName: retryData.paymentData.userName,
-              chitId: retryData.paymentData.chitId,
-            };
-            
-            // Store the complete retry data in finalUserDetails for later use
-            finalUserDetails.retryData = retryData;
-            setIsRetry(true);
-          } else {
-            // Fallback: try to use stored payloads from finalUserDetails
-            console.log('Using fallback retry data from storedPaymentPayload');
-            if (finalUserDetails.storedPaymentPayload) {
-              payloadToUse = {
-                userId: finalUserDetails.storedPaymentPayload.userId,
-                amount: finalUserDetails.storedPaymentPayload.amount,
-                investmentId: finalUserDetails.storedPaymentPayload.investmentId,
-                schemeId: finalUserDetails.storedPaymentPayload.schemeId,
-                userEmail: finalUserDetails.storedPaymentPayload.userEmail,
-                userMobile: finalUserDetails.storedPaymentPayload.userMobile,
-                userName: finalUserDetails.storedPaymentPayload.userName,
-                chitId: finalUserDetails.storedPaymentPayload.chitId,
-              };
-              setIsRetry(true);
-            }
-          }
-        }
-        
-        console.log('Final retry payload:', payloadToUse);
-      }
-
-      // Validate payload before proceeding
-      if (!payloadToUse.userId || !payloadToUse.investmentId || !payloadToUse.schemeId) {
-        console.error('Critical payment data missing:', payloadToUse);
-        console.error('This means retry data was not loaded correctly');
-        
-        // Try one more time to load from global store
-        const emergencyRetryData = getPaymentRetryData();
-        if (emergencyRetryData && emergencyRetryData.paymentData) {
-          console.log('Emergency retry data load from global store');
-          payloadToUse = {
-            userId: emergencyRetryData.paymentData.userId,
-            amount: emergencyRetryData.paymentData.amount,
-            investmentId: emergencyRetryData.paymentData.investmentId,
-            schemeId: emergencyRetryData.paymentData.schemeId,
-            userEmail: emergencyRetryData.paymentData.userEmail,
-            userMobile: emergencyRetryData.paymentData.userMobile,
-            userName: emergencyRetryData.paymentData.userName,
-            chitId: emergencyRetryData.paymentData.chitId,
-          };
-          console.log('Emergency retry payload:', payloadToUse);
-        }
-        
-        // Final validation
-        if (!payloadToUse.userId || !payloadToUse.investmentId || !payloadToUse.schemeId) {
-          Alert.alert("Payment Error", "Some required information is missing. Please try again from the savings screen.");
-          router.back();
-          return;
-        }
-      }
-
-      // Store payment data before initiating (for both new and retry attempts) in global store
-      const paymentRetryDataToStore = {
-        // Payment payload data
-        paymentData: {
-          amount: payloadToUse.amount,
-          userId: payloadToUse.userId,
-          investmentId: payloadToUse.investmentId,
-          schemeId: payloadToUse.schemeId,
-          chitId: payloadToUse.chitId,
-          userEmail: payloadToUse.userEmail,
-          userMobile: payloadToUse.userMobile,
-          userName: payloadToUse.userName,
-        },
-        
-        // Investment payload data
-        investmentData: {
-          userId: payloadToUse.userId,
-          schemeId: payloadToUse.schemeId,
-          chitId: payloadToUse.chitId,
-          accountName: finalUserDetails.name || finalUserDetails.accountname || payloadToUse.userName,
-          accountNo: finalUserDetails.accNo || finalUserDetails.accountNo || sessionData?.userDetails?.accNo || "N/A",
-          paymentAmount: payloadToUse.amount,
-          investmentId: payloadToUse.investmentId,
-        },
-        
-        // Transaction payload data
-        transactionData: {
-          userId: payloadToUse.userId,
-          investmentId: payloadToUse.investmentId,
-          schemeId: payloadToUse.schemeId,
-          chitId: payloadToUse.chitId,
-          accountNumber: finalUserDetails.accNo || finalUserDetails.accountNo || sessionData?.userDetails?.accNo || "N/A",
-          amount: payloadToUse.amount,
-        },
-        
-        // UI/Display data
-        displayData: {
-          schemeName: paymentDetails.schemeName,
-          accountHolder: finalUserDetails.name || finalUserDetails.accountname || payloadToUse.userName,
-          accNo: finalUserDetails.accNo || finalUserDetails.accountNo || sessionData?.userDetails?.accNo || "N/A",
-          totalPaid: "0", // Will be updated
-          monthsPaid: (paymentDetails.installmentNumber - 1).toString(),
-          noOfIns: paymentDetails.totalInstallments.toString(),
-          goldWeight: paymentDetails.goldWeight.toString(),
-          maturityDate: paymentDetails.maturityDate || "",
-        },
-        
-        // Metadata
-        timestamp: new Date().toISOString(),
-        source: isRetryAttempt ? 'payment_retry' : 'payment_init',
-      };
-
-      storePaymentRetryData(paymentRetryDataToStore);
-      console.log('Payment retry data stored in global store before initiating payment');
-
-      // Notify server that payment was initiated
-      if (socket) {
-        socket.emit("payment_initiated", {
-          amount: payloadToUse.amount,
-          userId: payloadToUse.userId,
-          timestamp: new Date().toISOString(),
-          isRetryAttempt: isRetryAttempt,
-        });
-      }
+      console.log('=== PAYMENT API CALL ===');
+      console.log('API Endpoint:', '/payments/initiate');
+      console.log('Request Payload:', payloadToUse);
 
       // Convert payload to x-www-form-urlencoded format
       const formBody = new URLSearchParams();
@@ -653,12 +453,14 @@ const PaymentProcessScreen = () => {
         formBody.append(key, String(value));
       });
 
-      console.log('=== FINAL PAYMENT PAYLOAD ===');
-      console.log('Payment payload being sent:', payloadToUse);
-
       const response = await apiService.post("/payments/initiate", formBody.toString(), {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
       });
+
+      console.log('=== PAYMENT API RESPONSE ===');
+      console.log('Response Status:', response.status);
+      console.log('Response Data:', response.data);
+      console.log('Payment URL:', response.data.session.payment_links.web);
 
       const paymentUrl = response.data.session.payment_links.web;
       router.push({
@@ -666,7 +468,12 @@ const PaymentProcessScreen = () => {
         params: { paymentUrl },
       });
     } catch (error: any) {
-      console.error("Payment initiation failed:", error);
+      console.error('=== PAYMENT API ERROR ===');
+      console.error('Error Type:', error.name);
+      console.error('Error Message:', error.message);
+      console.error('Error Response:', error.response?.data);
+      console.error('Error Status:', error.response?.status);
+      
       if (socket) {
         socket.emit("payment_initiation_failed", {
           error: error.message,
@@ -680,7 +487,31 @@ const PaymentProcessScreen = () => {
     }
   };
 
-  // Attach the socket event handler only once
+  const handlePayPress = () => {
+    animateButton();
+    paymentInit();
+  };
+
+  // Initialize socket connection
+  useEffect(() => {
+    const socketInstance = io(theme.baseUrl); // Replace with your server URL
+    setSocket(socketInstance);
+
+    socketInstance.on("connect", () => {});
+
+    return () => {
+      socketInstance.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("state", () => {
+      setIsNavigationReady(true);
+    });
+    return unsubscribe;
+  }, [navigation]);
+
+  // Keep the implementation inside useEffect
   useEffect(() => {
     if (!socket) return;
 
@@ -712,76 +543,82 @@ const PaymentProcessScreen = () => {
             }
           };
         }
+
+        // Check if this is an API error
+        if (data?.data?.data?.error) {
+          // Show API error in popup
+          setAlertState({
+            visible: true,
+            title: "Payment Error",
+            message: data.data.data.message || "An error occurred while processing the payment.",
+            type: "error",
+            txn_id: data?.paymentResponse?.txn_id || "",
+            order_id: data?.paymentResponse?.order_id || "",
+            amount: data?.paymentResponse?.amount?.toString() || "",
+            buttons: [
+              {
+                text: "OK",
+                onPress: () => {
+                  setAlertState(prev => ({ ...prev, visible: false }));
+                  router.back();
+                }
+              }
+            ]
+          });
+          return;
+        }
         
-        // Always record transaction regardless of success/failure
-        const transactionPayload = {
-          userId: baseUserDetails.data?.data?.userId || baseUserDetails.userId,
-          investmentId: baseUserDetails.data?.data?.id || baseUserDetails.investmentId,
-          schemeId: baseUserDetails.data?.data?.schemeId || baseUserDetails.schemeId,
-          chitId: baseUserDetails.data?.data?.chitId || baseUserDetails.chitId,
-          accountNumber: baseUserDetails.data?.data?.accountNo || baseUserDetails.accNo,
-          paymentId: paymentId,
-          orderId: data?.paymentResponse?.order_id,
-          amount: data?.paymentResponse?.amount,
-          currency: data?.paymentResponse?.currency,
-          paymentMethod: data?.paymentResponse?.txn_detail?.txn_flow_type,
-          signature: "000",
-          paymentStatus: data?.paymentResponse?.payment_gateway_response?.resp_code || "Canceled",
-          paymentDate: data?.paymentResponse?.date_created,
-          status: data?.paymentResponse?.status,
-          gatewayTransactionId: data?.paymentResponse?.txn_id,
-          gatewayresponse: JSON.stringify(data),
-          isRetryAttempt: isRetryAttempt,
-        };
-
-        await postTransaction(transactionPayload);
+        // Check payment status
+        const paymentStatus = data?.paymentResponse?.txn_detail?.status;
+        const isSuccess = paymentStatus === "CHARGED";
         
-        if (data?.paymentResponse?.txn_detail?.status === "CHARGED") {
-          // Payment API call with stored data if retry
-          const paymentPayload = {
-            investmentId: baseUserDetails.data?.data?.id || baseUserDetails.investmentId,
-            paymentAmount: data?.paymentResponse?.amount,
-            userId: baseUserDetails.data?.data?.userId || baseUserDetails.userId,
-            paymentMethod: data?.paymentResponse?.payment_method_type,
-            schemeId: baseUserDetails.data?.data?.schemeId || baseUserDetails.schemeId,
-            transactionId: data?.paymentResponse?.txn_id,
-            orderId: data?.paymentResponse?.order_id,
-            isManual: "no",
-            utr_reference_number: data?.paymentResponse?.txn_detail?.utr_reference_number,
-            chitId: baseUserDetails.data?.data?.chitId || baseUserDetails.chitId,
-            isRetryAttempt: isRetryAttempt,
-          };
-          console.log("paymentPayload", paymentPayload);
-          const paymentResult = await postPayment(paymentPayload);
-          paymentId = paymentResult?.data?.paymentId || 0;
-
-          // Investment API call with stored data if retry
-          const investmentPayload = {
-            userId: baseUserDetails.data?.data?.userId || baseUserDetails.userId,
-            schemeId: baseUserDetails.data?.data?.schemeId || baseUserDetails.schemeId,
-            chitId: baseUserDetails.data?.data?.chitId || baseUserDetails.chitId,
-            accountName: baseUserDetails.data?.data?.accountName || baseUserDetails.name,
-            accountNo: baseUserDetails.data?.data?.accountNo || baseUserDetails.accNo,
-            paymentStatus: "PAID",
-            paymentAmount: data?.paymentResponse?.amount,
-            isRetryAttempt: isRetryAttempt,
-          };
-
-          await updateInversment(
-            baseUserDetails.data?.data?.id || baseUserDetails.investmentId,
-            investmentPayload
-          );
-
+        if (isSuccess) {
           // Clear stored payment data on success from global store
           clearPaymentRetryData();
           clearPaymentSession();
           
-          handlePaymentSuccess(data);
-        } else {
-          // Payment failed - retry data is already in global store, no need to store again
-          console.log('Payment failed in handlePaymentStatusUpdate, retry data available in global store');
+          setPaymentSuccessData({
+            txn_id: data?.paymentResponse?.txn_id,
+            amount: data?.paymentResponse?.amount,
+            order_id: data?.paymentResponse?.order_id,
+          });
           
-          handlePaymentFailure(data);
+          router.push({
+            pathname: "/(tabs)/home/payment-success",
+            params: {
+              amount: data?.paymentResponse?.amount,
+              txnId: data?.paymentResponse?.txn_id,
+              orderId: data?.paymentResponse?.order_id,
+              goldWeight: paymentDetails.goldWeight,
+              schemeName: paymentDetails.schemeName,
+              installmentNumber: paymentDetails.installmentNumber,
+              totalInstallments: paymentDetails.totalInstallments,
+              schemeId: finalUserDetails.data?.data?.schemeId || finalUserDetails.schemeId,
+              chitId: finalUserDetails.data?.data?.chitId || finalUserDetails.chitId
+            }
+          });
+        } else {
+          // Show payment failure in popup
+          setAlertState({
+            visible: true,
+            title: "Payment Failed",
+            message: data?.paymentResponse?.payment_gateway_response?.resp_message || 
+                    data?.message || 
+                    "Your payment has failed. Please try again.",
+            type: "error",
+            txn_id: data?.paymentResponse?.txn_id || "",
+            order_id: data?.paymentResponse?.order_id || "",
+            amount: data?.paymentResponse?.amount?.toString() || "",
+            buttons: [
+              {
+                text: "OK",
+                onPress: () => {
+                  setAlertState(prev => ({ ...prev, visible: false }));
+                  router.back();
+                }
+              }
+            ]
+          });
         }
         
         console.log('Payment processing completed', {
@@ -791,9 +628,23 @@ const PaymentProcessScreen = () => {
         });
       } catch (error) {
         console.error("Error processing payment status update:", error);
-        handlePaymentFailure({
+        setAlertState({
+          visible: true,
+          title: "Payment Error",
           message: "An error occurred while processing the transaction.",
-          paymentResponse: data?.paymentResponse
+          type: "error",
+          txn_id: "",
+          order_id: "",
+          amount: "",
+          buttons: [
+            {
+              text: "OK",
+              onPress: () => {
+                setAlertState(prev => ({ ...prev, visible: false }));
+                router.back();
+              }
+            }
+          ]
         });
       }
     };
@@ -807,30 +658,69 @@ const PaymentProcessScreen = () => {
   // API call functions
   const postTransaction = async (payload: any) => {
     try {
+      console.log('=== CREATE TRANSACTION API ===');
+      console.log('API Endpoint:', '/transactions');
+      console.log('Request Payload:', payload);
+
       const response = await apiService.post("/transactions", payload);
+      
+      console.log('=== TRANSACTION API RESPONSE ===');
+      console.log('Response Status:', response.status);
+      console.log('Response Data:', response.data);
+      
       return response.data;
-    } catch (error) {
-      console.error("Error posting transaction:", error);
+    } catch (error: any) {
+      console.error('=== TRANSACTION API ERROR ===');
+      console.error('Error Type:', error.name);
+      console.error('Error Message:', error.message);
+      console.error('Error Response:', error.response?.data);
+      console.error('Error Status:', error.response?.status);
       throw error;
     }
   };
 
   const postPayment = async (payload: any) => {
     try {
+      console.log('=== CREATE PAYMENT RECORD API ===');
+      console.log('API Endpoint:', '/payments');
+      console.log('Request Payload:', payload);
+
       const response = await apiService.post("/payments", payload);
+      
+      console.log('=== PAYMENT RECORD API RESPONSE ===');
+      console.log('Response Status:', response.status);
+      console.log('Response Data:', response.data);
+      
       return response.data;
-    } catch (error) {
-      console.error("Error posting payment:", error);
+    } catch (error: any) {
+      console.error('=== PAYMENT RECORD API ERROR ===');
+      console.error('Error Type:', error.name);
+      console.error('Error Message:', error.message);
+      console.error('Error Response:', error.response?.data);
+      console.error('Error Status:', error.response?.status);
       throw error;
     }
   };
 
   const updateInversment = async (id: any, payload: any) => {
     try {
+      console.log('=== UPDATE INVESTMENT API ===');
+      console.log('API Endpoint:', `/investments/${id}`);
+      console.log('Request Payload:', payload);
+
       const response = await apiService.put(`/investments/${id}`, payload);
+      
+      console.log('=== INVESTMENT UPDATE API RESPONSE ===');
+      console.log('Response Status:', response.status);
+      console.log('Response Data:', response.data);
+      
       return response.data;
-    } catch (error) {
-      console.error("Error updating investment:", error);
+    } catch (error: any) {
+      console.error('=== INVESTMENT UPDATE API ERROR ===');
+      console.error('Error Type:', error.name);
+      console.error('Error Message:', error.message);
+      console.error('Error Response:', error.response?.data);
+      console.error('Error Status:', error.response?.status);
       throw error;
     }
   };
@@ -893,6 +783,88 @@ const PaymentProcessScreen = () => {
       console.error('Error loading retry data from global store:', error);
     }
     return null;
+  };
+
+  const handlePaymentFailure = async (data: any) => {
+    console.log("Payment Failed:", data);
+    
+    // Check if this is an API error
+    if (data?.data?.data?.error) {
+      setAlertState({
+        visible: true,
+        title: "Payment Error",
+        message: data.data.data.message || "An error occurred while processing the payment.",
+        type: "error",
+        txn_id: data?.paymentResponse?.txn_id || "",
+        order_id: data?.paymentResponse?.order_id || "",
+        amount: data?.paymentResponse?.amount?.toString() || "",
+        buttons: [
+          {
+            text: "OK",
+            onPress: () => {
+              setAlertState(prev => ({ ...prev, visible: false }));
+              router.back();
+            }
+          }
+        ]
+      });
+      return;
+    }
+
+    // Check if payment was actually successful
+    const paymentStatus = data?.paymentResponse?.txn_detail?.status;
+    if (paymentStatus === "CHARGED") {
+      // Clear stored payment data on success from global store
+      clearPaymentRetryData();
+      clearPaymentSession();
+      
+      setPaymentSuccessData({
+        txn_id: data?.paymentResponse?.txn_id,
+        amount: data?.paymentResponse?.amount,
+        order_id: data?.paymentResponse?.order_id,
+      });
+      
+      router.push({
+        pathname: "/(tabs)/home/payment-success",
+        params: {
+          amount: data?.paymentResponse?.amount,
+          txnId: data?.paymentResponse?.txn_id,
+          orderId: data?.paymentResponse?.order_id,
+          goldWeight: paymentDetails.goldWeight,
+          schemeName: paymentDetails.schemeName,
+          installmentNumber: paymentDetails.installmentNumber,
+          totalInstallments: paymentDetails.totalInstallments,
+          schemeId: finalUserDetails.data?.data?.schemeId || finalUserDetails.schemeId,
+          chitId: finalUserDetails.data?.data?.chitId || finalUserDetails.chitId
+        }
+      });
+      return;
+    }
+    
+    // Show payment failure in popup
+    setAlertState({
+      visible: true,
+      title: "Payment Failed",
+      message: data?.paymentResponse?.payment_gateway_response?.resp_message || 
+              data?.message || 
+              "Your payment has failed. Please try again.",
+      type: "error",
+      txn_id: data?.paymentResponse?.txn_id || "",
+      order_id: data?.paymentResponse?.order_id || "",
+      amount: data?.paymentResponse?.amount?.toString() || "",
+      buttons: [
+        {
+          text: "OK",
+          onPress: () => {
+            setAlertState(prev => ({ ...prev, visible: false }));
+            router.back();
+          }
+        }
+      ]
+    });
+    
+    // The payment retry data should already be stored in global store
+    console.log('Payment failed, retry data should be available in global store');
   };
 
   return (

@@ -141,7 +141,11 @@ export default function JoinSavings() {
 
   // State declarations - now only 3 steps
   const [step, setStep] = useState(1);
-  const [schemeType, setSchemeType] = useState(parsedData?.schemeType || 'flexi');
+  const [schemeType, setSchemeType] = useState(() => {
+    // Set initial scheme type based on payment frequency
+    const frequency = parsedData?.chits?.[0]?.PAYMENT_FREQUENCY?.toLowerCase();
+    return frequency === 'flexi' ? 'flexi' : 'fixed';
+  });
   const [paymentFrequency, setPaymentFrequency] = useState('monthly');
   const [amount, setAmount] = useState(0);
   const [kycStatus, setKycStatus] = useState<string | null>(null);
@@ -823,12 +827,6 @@ export default function JoinSavings() {
             <Text style={styles.summaryLabelModern}>Payment Frequency</Text>
             <Text style={styles.summaryValueModern}>{selectedChit?.PAYMENT_FREQUENCY || ''}</Text>
           </View>
-          {selectedChit && (
-            <View style={styles.summaryRowModern}>
-              <Text style={styles.summaryLabelModern}>Chit ID</Text>
-              <Text style={styles.summaryValueModern}>{selectedChit.CHITID}</Text>
-            </View>
-          )}
         </View>
         {/* KYC Card - only in Step 3 */}
         {kycStatus === "Completed" && kycDetails && (
@@ -1043,6 +1041,14 @@ export default function JoinSavings() {
       }
     }
   }, []);
+
+  // Update scheme type when payment frequency changes
+  useEffect(() => {
+    if (selectedChit) {
+      const frequency = selectedChit.PAYMENT_FREQUENCY?.toLowerCase();
+      setSchemeType(frequency === 'flexi' ? 'flexi' : 'fixed');
+    }
+  }, [selectedChit]);
 
   // Show loading screen while scheme data is being loaded
   if (schemeDataLoading) {
