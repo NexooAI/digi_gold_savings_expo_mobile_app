@@ -1,21 +1,51 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { View, ActivityIndicator, StyleSheet, BackHandler } from "react-native";
 import { WebView } from "react-native-webview";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import io from "socket.io-client";
-import api from "@/services/api";
 import { theme } from "@/constants/theme";
 import useGlobalStore from "@/store/global.store";
+import { usePaymentSocket } from "@/hooks/usePaymentSocket";
 
 const PaymentWebView = () => {
   const { paymentUrl } = useLocalSearchParams();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const [socket, setSocket] = useState<any>(null);
   const loadingTimeout = useRef<NodeJS.Timeout>();
-  const isPaymentCompleted = useRef(false);
   const { setTabVisibility } = useGlobalStore();
+
+  const handlePaymentSuccess = useCallback((data: any) => {
+    const { txn_id, amount, order_id } = data.paymentResponse;
+    router.push({
+      pathname: "/(tabs)/home/payment-success",
+      params: {
+        amount,
+        txnId: txn_id,
+        orderId: order_id
+      }
+    });
+  }, [router]);
+
+  const handlePaymentFailure = useCallback(() => {
+    router.replace({
+      pathname: "/(tabs)/home/PaymentFailure",
+      params: { status: "failure" }
+    });
+  }, [router]);
+
+  const handlePaymentError = useCallback((error: any) => {
+    console.error('Payment error:', error);
+    router.replace({
+      pathname: "/(tabs)/home/PaymentFailure",
+      params: { status: "error" }
+    });
+  }, [router]);
+
+  const { emitPaymentEvent } = usePaymentSocket({
+    onPaymentSuccess: handlePaymentSuccess,
+    onPaymentFailure: handlePaymentFailure,
+    onPaymentError: handlePaymentError
+  });
 
   // Hide tabs when component mounts
   useEffect(() => {
@@ -26,126 +56,109 @@ const PaymentWebView = () => {
   }, []);
 
   // Handle WebView close event when component unmounts
-  const handleWebViewClose = () => {
-    // Only trigger cancellation if payment wasn't completed
-    if (!isPaymentCompleted.current) {
-      if (socket) {
-        socket.emit("payment_flow_exited", {
-          timestamp: new Date().toISOString(),
-          status: "webview_closed",
-        });
-      }
-      router.replace({
-        pathname: "/(tabs)/home/PaymentFailure",
-        params: { status: "failure" }
-      });
-    }
-  };
+  const handleWebViewClose = useCallback(() => {
+    emitPaymentEvent('payment_flow_exited', {
+      status: "webview_closed"
+    });
+    router.replace({
+      pathname: "/(tabs)/home/PaymentFailure",
+      params: { status: "failure" }
+    });
+  }, [emitPaymentEvent, router]);
 
   useEffect(() => {
     return () => {
       handleWebViewClose();
-      // Clear any pending loading timeout
       if (loadingTimeout.current) {
         clearTimeout(loadingTimeout.current);
       }
     };
-  }, []);
+  }, [handleWebViewClose]);
 
-  // Listen for hardware back press to notify server if user exits payment flow
+  // Listen for hardware back press
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
-        // Only trigger cancellation if payment wasn't completed
-        if (!isPaymentCompleted.current) {
-          if (socket) {
-            socket.emit("payment_flow_exited", {
-              timestamp: new Date().toISOString(),
-              status: "user_cancelled",
-            });
-          }
-          router.replace({
-            pathname: "/(tabs)/home/PaymentFailure",
-            params: { status: "cancelled" }
-          });
-          return true; // Prevent default back behavior
-        }
-        return false; // Allow default back behavior if payment is completed
+        emitPaymentEvent('payment_flow_exited', {
+          status: "user_cancelled"
+        });
+        router.replace({
+          pathname: "/(tabs)/home/PaymentFailure",
+          params: { status: "cancelled" }
+        });
+        return true;
       }
     );
     return () => backHandler.remove();
-  }, [socket]);
+  }, [emitPaymentEvent, router]);
 
-  const handleNavigationStateChange = (navState: any) => {
+  const handleNavigationStateChange = useCallback((navState: any) => {
     const currentUrl = navState.url.toLowerCase();
     
-    // Check for success keyword anywhere in the URL
     if (currentUrl.includes("success")) {
-      isPaymentCompleted.current = true; // Mark payment as completed
       let paymentId = "";
       let amount = "";
       let transaction_no = "";
+      
       try {
         const urlObj = new URL(navState.url);
-        paymentId =
-          urlObj.searchParams.get("paymentId") ||
-          `PAY${Math.floor(Math.random() * 100000)}`;
+        paymentId = urlObj.searchParams.get("paymentId") || `PAY${Math.floor(Math.random() * 100000)}`;
         amount = urlObj.searchParams.get("amount") || "";
         transaction_no = urlObj.searchParams.get("txn_id") || "";
       } catch (error) {
         console.warn("URL parsing error:", error);
       }
 
-      if (socket) {
-        socket.emit("payment_completed", {
-          status: "success",
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      router.push({
-        pathname: "/(tabs)/home/payment-success",
-        params: {
-          amount: amount,
-          txnId: transaction_no,
-          orderId: paymentId
-        }
+      emitPaymentEvent('payment_completed', {
+        status: "success",
+        paymentId,
+        amount,
+        transaction_no
       });
-    }
-    // Check for failure keyword anywhere in the URL
-    else if (currentUrl.includes("failure") || currentUrl.includes("cancel")) {
-      isPaymentCompleted.current = true; // Mark payment as completed even for failure
-      if (socket) {
-        socket.emit("payment_failed", {
-          status: "failure",
-          timestamp: new Date().toISOString(),
-        });
-      }
+    } else if (currentUrl.includes("failure") || currentUrl.includes("cancel")) {
+      emitPaymentEvent('payment_failed', {
+        status: "failure"
+      });
       router.replace({
         pathname: "/(tabs)/home/PaymentFailure",
         params: { status: "cancelled" }
       });
     }
-  };
+  }, [emitPaymentEvent, router]);
 
-  const handleLoadStart = () => {
+  const handleLoadStart = useCallback(() => {
     setIsLoading(true);
-    // Set a timeout to force hide the loader after 10 seconds
     if (loadingTimeout.current) {
       clearTimeout(loadingTimeout.current);
     }
     loadingTimeout.current = setTimeout(() => {
       setIsLoading(false);
     }, 10000);
-  };
+  }, []);
 
-  const handleLoadEnd = () => {
+  const handleLoadEnd = useCallback(() => {
     setIsLoading(false);
     if (loadingTimeout.current) {
       clearTimeout(loadingTimeout.current);
     }
-  };
+  }, []);
+
+  const handleError = useCallback((syntheticEvent: any) => {
+    const { nativeEvent } = syntheticEvent;
+    setIsLoading(false);
+    if (loadingTimeout.current) {
+      clearTimeout(loadingTimeout.current);
+    }
+    emitPaymentEvent('payment_error', {
+      error: nativeEvent.description,
+      code: nativeEvent.code
+    });
+    router.replace({
+      pathname: "/(tabs)/home/PaymentFailure",
+      params: { status: "error" }
+    });
+  }, [emitPaymentEvent, router]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -161,44 +174,21 @@ const PaymentWebView = () => {
         onLoadStart={handleLoadStart}
         onLoadEnd={handleLoadEnd}
         onNavigationStateChange={handleNavigationStateChange}
-        onError={(syntheticEvent) => {
-          const { nativeEvent } = syntheticEvent;
-          setIsLoading(false);
-          if (loadingTimeout.current) {
-            clearTimeout(loadingTimeout.current);
-          }
-          if (socket) {
-            socket.emit("payment_error", {
-              error: nativeEvent.description,
-              code: nativeEvent.code,
-              timestamp: new Date().toISOString(),
-            });
-          }
-          // Navigate to failure screen on error
-          router.replace({
-            pathname: "/(tabs)/home/PaymentFailure",
-            params: { status: "error" }
-          });
-        }}
-        onHttpError={() => {
-          setIsLoading(false);
-          if (loadingTimeout.current) {
-            clearTimeout(loadingTimeout.current);
-          }
-          // Navigate to failure screen on HTTP error
-          router.replace({
-            pathname: "/(tabs)/home/PaymentFailure",
-            params: { status: "error" }
-          });
-        }}
+        onError={handleError}
+        onHttpError={handleError}
       />
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
-  webview: { flex: 1 },
+  container: { 
+    flex: 1, 
+    backgroundColor: "#fff" 
+  },
+  webview: { 
+    flex: 1 
+  },
   loadingContainer: {
     position: "absolute",
     top: 0,

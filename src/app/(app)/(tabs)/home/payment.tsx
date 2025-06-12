@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -9,75 +9,39 @@ import {
   Dimensions,
   Animated,
   Platform,
+  BackHandler,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import io from "socket.io-client";
-import apiService, { rates } from "@/services/api";
-import { theme } from "@/constants/theme";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import CustomAlert from "@/app/components/Alert";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import useGlobalStore from "@/store/global.store";
+import { theme } from "@/constants/theme";
+import CustomAlert from "@/app/components/Alert";
+import paymentService from "../../../../services/payment.service";
+import { usePaymentSocket } from "../../../../hooks/usePaymentSocket";
+import { 
+  PaymentDetails, 
+  UserDetails, 
+  PaymentRetryData,
+  PaymentStatusUpdate,
+  PaymentInitPayload
+} from "./types/payment.types";
 
 const { width } = Dimensions.get("window");
 
-interface PaymentData {
+interface PaymentState {
   amount: number;
   goldWeight: number;
   schemeName: string;
   installmentNumber: number;
   totalInstallments: number;
   investmentType: string;
-  maturityDate?: string;
+  maturityDate: string;
   currentGoldPrice: number;
   paymentFrequency: string;
-}
-
-interface DisplayData {
-  schemeName: string;
-  accountHolder: string;
-  accNo: string;
-  totalPaid: string;
-  monthsPaid: string;
-  noOfIns: string;
-  goldWeight: string;
-  maturityDate: string;
-  paymentFrequency: string;
-}
-
-interface UserDetails {
-  name?: string;
-  accountname?: string;
-  accNo?: string;
-  accountNo?: string;
-  mobile?: string;
-  email?: string;
-  userId?: string;
-  investmentId?: string;
-  schemeId?: string;
-  chitId?: string;
-  paymentFrequency?: string;
-  schemeName?: string;
-  isRetryAttempt?: boolean;
-  retryData?: any;
-  data?: {
-    data?: {
-      schemeId?: string;
-      chitId?: string;
-    };
-  };
-  userEmail?: string;
-  userMobile?: string;
-}
-
-interface PaymentRetryData {
-  paymentData: {
-    amount: number;
-  };
-  displayData: DisplayData;
 }
 
 const PaymentProcessScreen = () => {
@@ -98,14 +62,31 @@ const PaymentProcessScreen = () => {
     amount: "",
     buttons: [{ text: "OK", onPress: () => {} }],
   });
+
   const [paymentSuccessData, setPaymentSuccessData] = useState<{
     txn_id?: string;
     amount?: number | string;
     order_id?: string;
   } | null>(null);
-  const MAX_RETRY = 3;
-  const [retryCount, setRetryCount] = useState(MAX_RETRY);
+
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [sessionDataLoading, setSessionDataLoading] = useState(true);
+  const [sessionData, setSessionData] = useState<any>(null);
+  const [isRetry, setIsRetry] = useState(false);
+
+  const scaleAnim = React.useRef(new Animated.Value(1)).current;
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const slideAnim = React.useRef(new Animated.Value(50)).current;
+
+  const { 
+    getCurrentPaymentSession, 
+    getPaymentRetryData, 
+    hasPaymentRetryData,
+    clearPaymentRetryData,
+    clearPaymentSession,
+    storePaymentRetryData
+  } = useGlobalStore();
 
   const parsedUserDetails = useMemo(
     () => {
@@ -123,18 +104,119 @@ const PaymentProcessScreen = () => {
     },
     [userDetails]
   );
-  
-  const [sessionData, setSessionData] = useState<any>(null);
-  const [sessionDataLoading, setSessionDataLoading] = useState(true);
 
-  const { 
-    getCurrentPaymentSession, 
-    getPaymentRetryData, 
-    hasPaymentRetryData,
-    clearPaymentRetryData,
-    clearPaymentSession,
-    storePaymentRetryData
-  } = useGlobalStore();
+  const [paymentDetails, setPaymentDetails] = useState<PaymentState>({
+    amount: 0,
+    goldWeight: 0,
+    schemeName: "",
+    installmentNumber: 1,
+    totalInstallments: 11,
+    investmentType: "Monthly",
+    maturityDate: "",
+    currentGoldPrice: 0,
+    paymentFrequency: "Monthly"
+  });
+
+  const finalUserDetails = useMemo<UserDetails>(() => {
+    if (Object.keys(parsedUserDetails).length > 0) {
+      return {
+        ...parsedUserDetails,
+        paymentFrequency: parsedUserDetails.paymentFrequency || "Monthly"
+      };
+    } else if (sessionData?.userDetails) {
+      const userDetails = sessionData.userDetails;
+      return {
+        ...userDetails,
+        name: userDetails.name || userDetails.accountname,
+        accNo: userDetails.accNo || userDetails.accountNo,
+        mobile: userDetails.mobile,
+        email: userDetails.email,
+        userId: userDetails.userId,
+        investmentId: userDetails.investmentId,
+        schemeId: userDetails.schemeId,
+        chitId: userDetails.chitId,
+        paymentFrequency: userDetails.paymentFrequency || "Monthly",
+        retryData: userDetails.isRetryAttempt ? userDetails.retryData : undefined
+      };
+    }
+    return { paymentFrequency: "Monthly" };
+  }, [parsedUserDetails, sessionData]);
+
+  const handlePaymentSuccess = useCallback((data: PaymentStatusUpdate) => {
+    clearPaymentRetryData();
+    clearPaymentSession();
+    
+    setPaymentSuccessData({
+      txn_id: data.paymentResponse.txn_id,
+      amount: data.paymentResponse.amount,
+      order_id: data.paymentResponse.order_id,
+    });
+    
+    router.push({
+      pathname: "/(tabs)/home/payment-success",
+      params: {
+        amount: data.paymentResponse.amount,
+        txnId: data.paymentResponse.txn_id,
+        orderId: data.paymentResponse.order_id,
+        goldWeight: paymentDetails.goldWeight,
+        schemeName: paymentDetails.schemeName,
+        installmentNumber: paymentDetails.installmentNumber,
+        totalInstallments: paymentDetails.totalInstallments,
+        schemeId: finalUserDetails.data?.data?.schemeId || finalUserDetails.schemeId,
+        chitId: finalUserDetails.data?.data?.chitId || finalUserDetails.chitId
+      }
+    });
+  }, [clearPaymentRetryData, clearPaymentSession, router, paymentDetails, finalUserDetails]);
+
+  const handlePaymentFailure = useCallback((data: PaymentStatusUpdate) => {
+    setAlertState({
+      visible: true,
+      title: "Payment Failed",
+      message: data.paymentResponse.payment_gateway_response?.resp_message || 
+              "Your payment has failed. Please try again.",
+      type: "error",
+      txn_id: data.paymentResponse.txn_id || "",
+      order_id: data.paymentResponse.order_id || "",
+      amount: data.paymentResponse.amount?.toString() || "",
+      buttons: [
+        {
+          text: "OK",
+          onPress: () => {
+            setAlertState(prev => ({ ...prev, visible: false }));
+            router.back();
+          }
+        }
+      ]
+    });
+  }, [router]);
+
+  const handlePaymentError = useCallback((error: any) => {
+    console.error("Error processing payment status update:", error);
+    setAlertState({
+      visible: true,
+      title: "Payment Error",
+      message: "An error occurred while processing the transaction.",
+      type: "error",
+      txn_id: "",
+      order_id: "",
+      amount: "",
+      buttons: [
+        {
+          text: "OK",
+          onPress: () => {
+            setAlertState(prev => ({ ...prev, visible: false }));
+            router.back();
+          }
+        }
+      ]
+    });
+  }, [router]);
+
+  const { emitPaymentEvent } = usePaymentSocket({
+    onPaymentSuccess: handlePaymentSuccess,
+    onPaymentFailure: handlePaymentFailure,
+    onPaymentError: handlePaymentError
+  });
 
   useEffect(() => {
     const loadSessionData = async () => {
@@ -160,68 +242,6 @@ const PaymentProcessScreen = () => {
     loadSessionData();
   }, [userDetails, parsedUserDetails, params.isRetry]);
 
-  const finalUserDetails = useMemo<UserDetails>(() => {
-    if (Object.keys(parsedUserDetails).length > 0) {
-      return {
-        ...parsedUserDetails,
-        paymentFrequency: parsedUserDetails.paymentFrequency || "Monthly"
-      };
-    } else if (sessionData?.userDetails) {
-      const userDetails = sessionData.userDetails;
-      const mappedUserDetails: UserDetails = {
-        ...userDetails,
-        name: userDetails.name || userDetails.accountname,
-        accNo: userDetails.accNo || userDetails.accountNo,
-        mobile: userDetails.mobile,
-        email: userDetails.email,
-        userId: userDetails.userId,
-        investmentId: userDetails.investmentId,
-        schemeId: userDetails.schemeId,
-        chitId: userDetails.chitId,
-        paymentFrequency: userDetails.paymentFrequency || "Monthly"
-      };
-      
-      if (userDetails.isRetryAttempt && userDetails.retryData) {
-        mappedUserDetails.retryData = userDetails.retryData;
-      }
-      
-      return mappedUserDetails;
-    }
-    return { paymentFrequency: "Monthly" };
-  }, [parsedUserDetails, sessionData]);
-
-  const paramsParse = useMemo(
-    () =>
-      JSON.parse(
-        Array.isArray(params.data) ? params.data[0] : params.data || "{}"
-      ),
-    [params.data]
-  );
-
-  const [isLoading, setIsLoading] = useState(false);
-  const [socket, setSocket] = useState<any>(null);
-  const navigation = useNavigation();
-  const [isNavigationReady, setIsNavigationReady] = useState(false);
-  const processedPaymentRef = useRef(false);
-
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-
-  const [paymentDetails, setPaymentDetails] = useState<PaymentData>({
-    amount: amount,
-    goldWeight: 0,
-    schemeName: finalUserDetails?.schemeName || "Gold Savings Scheme",
-    installmentNumber: 1,
-    totalInstallments: 11,
-    investmentType: finalUserDetails?.paymentFrequency || "Monthly",
-    maturityDate: undefined,
-    currentGoldPrice: 0,
-    paymentFrequency: finalUserDetails?.paymentFrequency || "Monthly",
-  });
-
-  const [isRetry, setIsRetry] = useState(false);
-
   useEffect(() => {
     if (finalUserDetails?.paymentFrequency) {
       const frequency = finalUserDetails.paymentFrequency;
@@ -234,52 +254,12 @@ const PaymentProcessScreen = () => {
   }, [finalUserDetails?.paymentFrequency]);
 
   useEffect(() => {
-    const debugGlobalStore = async () => {
-      try {
-        const currentPaymentSession = getCurrentPaymentSession();
-        const paymentRetryData = getPaymentRetryData();
-        const hasRetryData = hasPaymentRetryData();
-      } catch (error) {
-        console.error('Error debugging global store:', error);
-      }
-    };
-    
-    debugGlobalStore();
-    checkRetryStatus();
-  }, []);
-
-  const checkRetryStatus = async () => {
-    try {
-      if (hasPaymentRetryData()) {
-        setIsRetry(true);
-        const paymentRetryData = getPaymentRetryData() as PaymentRetryData;
-        if (paymentRetryData) {
-          setPaymentDetails(prev => ({
-            ...prev,
-            amount: paymentRetryData.paymentData.amount,
-            goldWeight: Number(paymentRetryData.displayData.goldWeight) || 0,
-            schemeName: paymentRetryData.displayData.schemeName,
-            installmentNumber: Number(paymentRetryData.displayData.monthsPaid) + 1 || 1,
-            totalInstallments: Number(paymentRetryData.displayData.noOfIns) || 11,
-            investmentType: paymentRetryData.displayData.paymentFrequency || "Monthly",
-            maturityDate: paymentRetryData.displayData.maturityDate,
-            currentGoldPrice: 0,
-            paymentFrequency: paymentRetryData.displayData.paymentFrequency || "Monthly",
-          }));
-        }
-      }
-    } catch (error) {
-      console.error('Error checking retry status:', error);
-    }
-  };
-
-  useEffect(() => {
     const fetchCurrentGoldRate = async () => {
       try {
         const cachedRate = await AsyncStorage.getItem('gold_rate');
         if (cachedRate) {
           const rate = parseFloat(cachedRate);
-          setPaymentDetails(prev => ({
+          setPaymentDetails((prev: PaymentState) => ({
             ...prev,
             currentGoldPrice: rate,
             goldWeight: amount / rate
@@ -287,10 +267,10 @@ const PaymentProcessScreen = () => {
           return;
         }
 
-        const response = await rates.getLiveRates();
+        const response = await paymentService.getLiveRates();
         if (response.data?.data?.gold_rate) {
           const rate = parseFloat(response.data.data.gold_rate);
-          setPaymentDetails(prev => ({
+          setPaymentDetails((prev: PaymentState) => ({
             ...prev,
             currentGoldPrice: rate,
             goldWeight: amount / rate
@@ -298,7 +278,7 @@ const PaymentProcessScreen = () => {
           await AsyncStorage.setItem('gold_rate', response.data.data.gold_rate);
         } else {
           const fallbackRate = 7315;
-          setPaymentDetails(prev => ({
+          setPaymentDetails((prev: PaymentState) => ({
             ...prev,
             currentGoldPrice: fallbackRate,
             goldWeight: amount / fallbackRate
@@ -307,7 +287,7 @@ const PaymentProcessScreen = () => {
       } catch (error) {
         console.error('Error fetching gold rate:', error);
         const fallbackRate = 7315;
-        setPaymentDetails(prev => ({
+        setPaymentDetails((prev: PaymentState) => ({
           ...prev,
           currentGoldPrice: fallbackRate,
           goldWeight: amount / fallbackRate
@@ -328,7 +308,7 @@ const PaymentProcessScreen = () => {
     }
   }, [amount, paymentDetails.currentGoldPrice]);
 
-  const animateButton = () => {
+  const animateButton = useCallback(() => {
     Animated.sequence([
       Animated.timing(scaleAnim, {
         toValue: 0.95,
@@ -341,306 +321,41 @@ const PaymentProcessScreen = () => {
         useNativeDriver: true,
       }),
     ]).start();
-  };
+  }, [scaleAnim]);
 
-  const paymentInit = async () => {
-    if (!isNavigationReady) return;
-    processedPaymentRef.current = false;
+  const handlePayPress = useCallback(async () => {
+    animateButton();
     setIsLoading(true);
 
     try {
-      let payloadToUse = {
-        userId: finalUserDetails.userId || finalUserDetails.data?.data?.userId,
+      const payload: PaymentInitPayload = {
+        userId: finalUserDetails.userId || finalUserDetails.data?.data?.userId || '',
         amount: amount,
-        investmentId: finalUserDetails.investmentId || finalUserDetails.data?.data?.id,
-        schemeId: finalUserDetails.schemeId || finalUserDetails.data?.data?.schemeId,
-        userEmail: finalUserDetails.email || finalUserDetails.userEmail,
-        userMobile: finalUserDetails.mobile || finalUserDetails.userMobile,
-        userName: finalUserDetails.name || finalUserDetails.userName || finalUserDetails.accountname,
+        investmentId: finalUserDetails.investmentId || finalUserDetails.data?.data?.id || '',
+        schemeId: finalUserDetails.schemeId || finalUserDetails.data?.data?.schemeId || '',
+        userEmail: finalUserDetails.email || finalUserDetails.userEmail || '',
+        userMobile: finalUserDetails.mobile || finalUserDetails.userMobile || '',
+        userName: finalUserDetails.name || finalUserDetails.accountname || '',
         chitId: finalUserDetails.chitId || finalUserDetails.data?.data?.chitId || 1,
       };
 
-      const formBody = new URLSearchParams();
-      Object.entries(payloadToUse).forEach(([key, value]) => {
-        formBody.append(key, String(value));
-      });
-
-      const response = await apiService.post("/payments/initiate", formBody.toString(), {
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      });
-
-      const paymentUrl = response.data.session.payment_links.web;
+      const response = await paymentService.initiatePayment(payload);
+      const paymentUrl = response.session.payment_links.web;
+      
       router.push({
-        pathname: "/(tabs)/home/PaymentWebView",
+        pathname: "/(tabs)/home/PaymentWebViewNew",
         params: { paymentUrl },
       });
     } catch (error: any) {
-      if (socket) {
-        socket.emit("payment_initiation_failed", {
-          error: error.message,
-          timestamp: new Date().toISOString(),
-          isRetryAttempt: isRetry,
-        });
-      }
+      emitPaymentEvent('payment_initiation_failed', {
+        error: error.message,
+        isRetryAttempt: isRetry,
+      });
       Alert.alert("Payment Error", "Failed to initiate payment. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handlePayPress = () => {
-    animateButton();
-    paymentInit();
-  };
-
-  useEffect(() => {
-    const socketInstance = io(theme.baseUrl);
-    setSocket(socketInstance);
-
-    return () => {
-      socketInstance.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = navigation.addListener("state", () => {
-      setIsNavigationReady(true);
-    });
-    return unsubscribe;
-  }, [navigation]);
-
-  // API call functions
-  const postTransaction = async (payload: any) => {
-    try {
-      const response = await apiService.post("/transactions", payload);
-      return response.data;
-    } catch (error: any) {
-      throw error;
-    }
-  };
-
-  const postPayment = async (payload: any) => {
-    try {
-      const response = await apiService.post("/payments", payload);
-      return response.data;
-    } catch (error: any) {
-      throw error;
-    }
-  };
-
-  // Process successful payment in background
-  const processSuccessfulPayment = async (paymentResponse: any) => {
-    try {
-      setIsProcessing(true);
-      
-      // Prepare transaction payload with all required fields
-      const transactionPayload = {
-        userId: Number(finalUserDetails.userId || finalUserDetails.data?.data?.userId),
-        investmentId: Number(finalUserDetails.investmentId || finalUserDetails.data?.data?.id),
-        schemeId: Number(finalUserDetails.schemeId || finalUserDetails.data?.data?.schemeId),
-        chitId: Number(finalUserDetails.chitId || finalUserDetails.data?.data?.chitId || 1),
-        accountNumber: finalUserDetails.accNo || finalUserDetails.accountNo,
-        paymentId: 1, // This should be generated by the backend
-        orderId: paymentResponse.order_id,
-        amount: Number(paymentResponse.amount),
-        currency: "INR",
-        paymentMethod: "Razorpay",
-        signature: paymentResponse.txn_id,
-        paymentStatus: "Success",
-        paymentDate: new Date().toISOString(),
-        status: "paid",
-        gatewayTransactionId: paymentResponse.txn_id
-      };
-
-      console.log('Creating transaction with payload:', transactionPayload);
-      await postTransaction(transactionPayload);
-
-      // Prepare payment payload with all required fields
-      const paymentPayload = {
-        userId: Number(finalUserDetails.userId || finalUserDetails.data?.data?.userId),
-        investmentId: Number(finalUserDetails.investmentId || finalUserDetails.data?.data?.id),
-        schemeId: Number(finalUserDetails.schemeId || finalUserDetails.data?.data?.schemeId),
-        chitId: Number(finalUserDetails.chitId || finalUserDetails.data?.data?.chitId || 1),
-        accountNumber: finalUserDetails.accNo || finalUserDetails.accountNo,
-        paymentId: 1, // This should be generated by the backend
-        orderId: paymentResponse.order_id,
-        transactionId: paymentResponse.txn_id,
-        amount: Number(paymentResponse.amount),
-        currency: "INR",
-        paymentMethod: "Razorpay",
-        signature: paymentResponse.txn_id,
-        paymentStatus: "Success",
-        paymentDate: new Date().toISOString(),
-        status: "paid",
-        gatewayTransactionId: paymentResponse.txn_id,
-        paymentType: "online",
-        paymentMode: "Razorpay",
-        paymentGateway: "Razorpay",
-        paymentReference: paymentResponse.txn_id,
-        paymentDescription: `Payment for ${paymentDetails.schemeName} - Installment ${paymentDetails.installmentNumber}`,
-        paymentMetadata: {
-          schemeName: paymentDetails.schemeName,
-          installmentNumber: Number(paymentDetails.installmentNumber),
-          totalInstallments: Number(paymentDetails.totalInstallments),
-          paymentFrequency: paymentDetails.paymentFrequency,
-          goldWeight: Number(paymentDetails.goldWeight),
-          currentGoldPrice: Number(paymentDetails.currentGoldPrice)
-        }
-      };
-
-      console.log('Creating payment record with payload:', paymentPayload);
-      await postPayment(paymentPayload);
-
-      // Update payment status via WebSocket
-      if (socket) {
-        socket.emit("payment_status_update", {
-          userId: finalUserDetails.userId || finalUserDetails.data?.data?.userId,
-          investmentId: finalUserDetails.investmentId || finalUserDetails.data?.data?.id,
-          amount: paymentResponse.amount,
-          status: "completed",
-          transactionId: paymentResponse.txn_id,
-          orderId: paymentResponse.order_id,
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      console.log('Payment processing completed successfully');
-    } catch (error) {
-      console.error('Error in payment processing:', error);
-      // Show error alert
-      setAlertState({
-        visible: true,
-        title: "Payment Processing Error",
-        message: "Payment was successful but failed to update records. Please contact support.",
-        type: "error",
-        txn_id: paymentResponse.txn_id || "",
-        order_id: paymentResponse.order_id || "",
-        amount: paymentResponse.amount?.toString() || "",
-        buttons: [
-          {
-            text: "OK",
-            onPress: () => {
-              setAlertState(prev => ({ ...prev, visible: false }));
-              router.back();
-            }
-          }
-        ]
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!socket) return;
-
-    const handlePaymentStatusUpdate = async (data: any) => {
-      if (processedPaymentRef.current) return;
-      processedPaymentRef.current = true;
-      
-      try {
-        let paymentId = 0;
-        let baseUserDetails = finalUserDetails;
-        const isRetryAttempt = finalUserDetails.isRetryAttempt || isRetry;
-        
-        if (isRetryAttempt && finalUserDetails.retryData) {
-          baseUserDetails = {
-            ...finalUserDetails,
-            data: {
-              data: {
-                userId: finalUserDetails.retryData.paymentData.userId,
-                id: finalUserDetails.retryData.paymentData.investmentId,
-                schemeId: finalUserDetails.retryData.paymentData.schemeId,
-                chitId: finalUserDetails.retryData.paymentData.chitId,
-                accountName: finalUserDetails.retryData.investmentData.accountName,
-                accountNo: finalUserDetails.retryData.investmentData.accountNo,
-              }
-            }
-          };
-        }
-        
-        const paymentStatus = data?.paymentResponse?.txn_detail?.status;
-        const isSuccess = paymentStatus === "CHARGED";
-        
-        if (isSuccess) {
-          // Clear stored payment data
-          clearPaymentRetryData();
-          clearPaymentSession();
-          
-          setPaymentSuccessData({
-            txn_id: data?.paymentResponse?.txn_id,
-            amount: data?.paymentResponse?.amount,
-            order_id: data?.paymentResponse?.order_id,
-          });
-          
-          // Navigate to success screen
-          router.push({
-            pathname: "/(tabs)/home/payment-success",
-            params: {
-              amount: data?.paymentResponse?.amount,
-              txnId: data?.paymentResponse?.txn_id,
-              orderId: data?.paymentResponse?.order_id,
-              goldWeight: paymentDetails.goldWeight,
-              schemeName: paymentDetails.schemeName,
-              installmentNumber: paymentDetails.installmentNumber,
-              totalInstallments: paymentDetails.totalInstallments,
-              schemeId: finalUserDetails.data?.data?.schemeId || finalUserDetails.schemeId,
-              chitId: finalUserDetails.data?.data?.chitId || finalUserDetails.chitId
-            }
-          });
-          
-          // Process payment in background
-          processSuccessfulPayment(data.paymentResponse);
-        } else {
-          setAlertState({
-            visible: true,
-            title: "Payment Failed",
-            message: data?.paymentResponse?.payment_gateway_response?.resp_message || 
-                    data?.message || 
-                    "Your payment has failed. Please try again.",
-            type: "error",
-            txn_id: data?.paymentResponse?.txn_id || "",
-            order_id: data?.paymentResponse?.order_id || "",
-            amount: data?.paymentResponse?.amount?.toString() || "",
-            buttons: [
-              {
-                text: "OK",
-                onPress: () => {
-                  setAlertState(prev => ({ ...prev, visible: false }));
-                  router.back();
-                }
-              }
-            ]
-          });
-        }
-      } catch (error) {
-        console.error("Error processing payment status update:", error);
-        setAlertState({
-          visible: true,
-          title: "Payment Error",
-          message: "An error occurred while processing the transaction.",
-          type: "error",
-          txn_id: "",
-          order_id: "",
-          amount: "",
-          buttons: [
-            {
-              text: "OK",
-              onPress: () => {
-                setAlertState(prev => ({ ...prev, visible: false }));
-                router.back();
-              }
-            }
-          ]
-        });
-      }
-    };
-
-    socket.on("payment_status_update", handlePaymentStatusUpdate);
-    return () => {
-      socket.off("payment_status_update", handlePaymentStatusUpdate);
-    };
-  }, [socket, isRetry, finalUserDetails]);
+  }, [animateButton, amount, finalUserDetails, isRetry, router, emitPaymentEvent]);
 
   useEffect(() => {
     Animated.parallel([
@@ -666,11 +381,12 @@ const PaymentProcessScreen = () => {
     }
   }, [finalUserDetails.isRetryAttempt, params.isRetry, sessionData]);
 
-  const loadRetryData = async () => {
+  const loadRetryData = useCallback(async () => {
     try {
       const paymentRetryData = getPaymentRetryData();
       if (paymentRetryData) {
-        setPaymentDetails({
+        setPaymentDetails((prev: PaymentState) => ({
+          ...prev,
           amount: paymentRetryData.paymentData.amount,
           goldWeight: Number(paymentRetryData.displayData.goldWeight) || 0,
           schemeName: paymentRetryData.displayData.schemeName || "Gold Savings Scheme",
@@ -679,15 +395,15 @@ const PaymentProcessScreen = () => {
           investmentType: "Monthly",
           maturityDate: paymentRetryData.displayData.maturityDate,
           currentGoldPrice: 0,
-          paymentFrequency: paramsParse?.paymentFrequency || "Monthly",
-        });
+          paymentFrequency: "Monthly"
+        }));
         return paymentRetryData;
       }
     } catch (error) {
       console.error('Error loading retry data:', error);
     }
     return null;
-  };
+  }, [getPaymentRetryData]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -992,7 +708,7 @@ const styles = StyleSheet.create({
   schemeName: {
     fontSize: 18,
     fontWeight: '600',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
     flex: 1,
   },
   schemeDetails: {
@@ -1011,7 +727,7 @@ const styles = StyleSheet.create({
   schemeDetailValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
   },
   userDetailsCard: {
     backgroundColor: '#fff',
@@ -1073,7 +789,7 @@ const styles = StyleSheet.create({
   userDetailValue: {
     fontSize: 14,
     fontWeight: '500',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
   },
   userDetailDivider: {
     height: 1,
