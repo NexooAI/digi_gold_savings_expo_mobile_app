@@ -13,6 +13,10 @@ export default function HomeLayout() {
         options={{ title: "Join Schemes", headerShown: false }}
       />
       <Stack.Screen
+        name="payment-preview"
+        options={{ title: "Payment Preview", headerShown: false }}
+      />
+      <Stack.Screen
         name="schemes"
         options={{ title: "Schemes", headerShown: false }}
       />
@@ -49,10 +53,6 @@ export default function HomeLayout() {
         name="faq"
         options={{ title: "FAQ", headerShown: false }}
       />
-      {/* <Stack.Screen
-        name="storeLocator"
-        options={{ title: "Store Locator", headerShown: false }}
-      /> */}
       <Stack.Screen
         name="(storeInfo)/contact_us"
         options={{ title: "Contact US", headerShown: false }}
@@ -61,10 +61,6 @@ export default function HomeLayout() {
         name="offers"
         options={{ title: "Our Offers", headerShown: false }}
       />
-      {/* <Stack.Screen
-        name="StoreLocator"
-        options={{ title: "Store Locator", headerShown: false }}
-      /> */}
       <Stack.Screen
         name="our_stores"
         options={{ title: "Our Stores", headerShown: false }}
@@ -95,6 +91,5 @@ export default function HomeLayout() {
       />
       <Stack.Screen name="live-rates" options={{ title: "Live Rate", headerShown: false }} />
     </Stack>
-    
   );
 }

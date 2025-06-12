@@ -6,7 +6,8 @@
     "start": "expo start --dev-client",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "test:payment": "ts-node src/tests/payment-flow.test.ts"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",

@@ -129,11 +129,18 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response: AxiosResponse) => {
-    console.log('API response received:', response.config.url, response.status);
+    console.log('API response received:', {
+      url: response.config.url,
+      method: response.config.method,
+      status: response.status,
+      data: response.data,
+      headers: response.headers
+    });
     LoadingService.hide();
     
     if (response.config.method?.toUpperCase() !== 'GET') {
       const message = response.data?.message || 'Operation completed successfully';
+      console.log('Response message:', message);
       showToast(message, 'success', Toast.durations.SHORT);
     }
     return response;
@@ -144,7 +151,8 @@ api.interceptors.response.use(
       method: error.config?.method,
       status: error.response?.status,
       data: error.response?.data,
-      message: error.message
+      message: error.message,
+      headers: error.response?.headers
     });
     
     LoadingService.hide();

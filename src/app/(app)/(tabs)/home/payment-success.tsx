@@ -1,361 +1,115 @@
-import React, { useEffect, useState, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
-  Animated,
-  Platform,
-  StatusBar,
-  Share,
-  Clipboard,
-  Alert,
-  Image,
-  useWindowDimensions,
-  ScrollView
-} from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from '@/constants/theme';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
-import * as MediaLibrary from 'expo-media-library';
-import { BlurView } from "expo-blur";
-import useGlobalStore from '@/store/global.store';
 
-const { width } = Dimensions.get('window');
-
-const PaymentSuccessScreen = () => {
+export default function PaymentSuccessScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { width: windowWidth, height } = useWindowDimensions();
-  const { bottom } = useSafeAreaInsets();
-  const [goldWeight, setGoldWeight] = useState(0);
-  const [currentGoldRate, setCurrentGoldRate] = useState(0);
-  const [currentDate, setCurrentDate] = useState('');
-  const { setTabVisibility } = useGlobalStore();
+  const userDetails = params.userDetails ? JSON.parse(params.userDetails as string) : null;
 
-  const scaleAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const checkmarkScale = useRef(new Animated.Value(0)).current;
-
-  // Calculate safe bottom padding
-  const bottomPadding = Math.max(bottom, 20) + 80;
-
-  useEffect(() => {
-    setTabVisibility(false);
-    return () => {
-      setTabVisibility(true);
-    };
-  }, []);
-
-  useEffect(() => {
-    // Get current gold rate and calculate weight
-    const getGoldRate = async () => {
-      try {
-        const cachedRate = await AsyncStorage.getItem('gold_rate');
-        if (cachedRate) {
-          const rate = parseFloat(cachedRate);
-          setCurrentGoldRate(rate);
-          const amount = parseFloat(params.amount as string);
-          const calculatedWeight = amount / rate;
-          setGoldWeight(calculatedWeight);
-        }
-      } catch (error) {
-        console.error('Error getting gold rate:', error);
-      }
-    };
-
-    // Set current date
-    const now = new Date();
-    const formattedDate = now.toLocaleDateString('en-IN', {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('en-IN', {
       day: '2-digit',
-      month: 'short',
+      month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      second: '2-digit',
+      hour12: true
     });
-    setCurrentDate(formattedDate);
-
-    getGoldRate();
-
-    // Start animations
-    Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        friction: 8,
-        tension: 40,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    setTimeout(() => {
-      Animated.spring(checkmarkScale, {
-        toValue: 1,
-        useNativeDriver: true,
-        friction: 8,
-        tension: 40,
-      }).start();
-    }, 300);
-  }, []);
-
-  const handleCopyText = async (text: string, label: string) => {
-    try {
-      await Clipboard.setString(text);
-      Alert.alert('Success', `${label} copied to clipboard`);
-    } catch (error) {
-      Alert.alert('Error', `Failed to copy ${label}`);
-    }
-  };
-
-  const handleShare = async () => {
-    try {
-      const message = `
-Payment Successful!
-
-Amount Paid: ₹${params.amount}
-Gold Weight: ${goldWeight.toFixed(3)}g
-Transaction ID: ${params.txnId}
-Order ID: ${params.orderId}
-Date & Time: ${currentDate}
-
-Scheme: ${params.schemeName}
-Installment: ${params.installmentNumber} of ${params.totalInstallments}
-
-Thank you for your payment!
-      `;
-
-      await Share.share({
-        message,
-        title: 'Payment Receipt',
-      });
-    } catch (error) {
-      Alert.alert('Error', 'Failed to share payment details');
-    }
-  };
-
-  const handleGoToHome = () => {
-    router.replace('/(tabs)/home');
-  };
-
-  const handleGoToSchemes = () => {
-    router.replace('/(tabs)/savings');
-  };
-
-  const handleViewTransactions = () => {
-    Alert.alert('Coming Soon', 'This feature is coming soon');
-    // router.replace('/(tabs)/transactions');
-  };
-
-  const handleViewProfile = () => {
-    router.replace('/(tabs)/profile');
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={theme.colors.primary} barStyle="light-content" />
-      <LinearGradient
-        colors={['#4CAF50', '#2E7D32']}
-        style={styles.gradientBackground}
-      >
+      <ScrollView style={styles.scrollView}>
+        {/* Header */}
         <View style={styles.header}>
-          <View style={styles.headerPlaceholder} />
-          <Text style={styles.headerTitle}>Payment Success</Text>
           <TouchableOpacity 
-            onPress={handleShare}
-            style={styles.shareButton}
+            onPress={() => router.push('/(tabs)/home')}
+            style={styles.backButton}
           >
-            <Ionicons name="share-outline" size={24} color="#fff" />
+            <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
           </TouchableOpacity>
+          <Text style={styles.headerTitle}>Payment Successful</Text>
+          <View style={styles.placeholder} />
         </View>
 
-        <View 
-          style={[styles.contentContainer, { paddingBottom: bottomPadding }]}
-        >
-          <Animated.View
-            style={[
-              styles.successContainer,
-              {
-                transform: [
-                  { scale: scaleAnim },
-                  { translateY: slideAnim }
-                ],
-                opacity: fadeAnim,
-              },
-            ]}
-          >
-            <View style={styles.iconContainer}>
-              <Animated.View
-                style={[
-                  styles.checkmarkContainer,
-                  {
-                    transform: [{ scale: checkmarkScale }]
-                  }
-                ]}
-              >
-                <Ionicons name="checkmark-circle" size={60} color="#fff" />
-              </Animated.View>
+        {/* Content */}
+        <View style={styles.content}>
+          <View style={styles.iconContainer}>
+            <MaterialCommunityIcons 
+              name="check-circle" 
+              size={80} 
+              color="#4CAF50" 
+            />
+          </View>
+
+          <Text style={styles.title}>Payment Successful</Text>
+          <Text style={styles.message}>
+            Your payment has been processed successfully. Thank you for your investment!
+          </Text>
+
+          <View style={styles.detailsContainer}>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Transaction ID:</Text>
+              <Text style={styles.detailValue}>{params.transactionId}</Text>
             </View>
-
-            <Text style={styles.successTitle}>Payment Successful!</Text>
-            <Text style={styles.successSubtitle}>
-              Your gold investment has been processed
-            </Text>
-
-            <View style={styles.detailsCard}>
-              <View style={styles.detailRow}>
-                <View style={styles.detailItem}>
-                  <Text style={styles.detailLabel}>Amount Paid</Text>
-                  <Text style={styles.detailValue}>₹{params.amount}</Text>
-                </View>
-                <View style={styles.detailItem}>
-                  <Text style={styles.detailLabel}>Gold Weight</Text>
-                  <Text style={styles.detailValue}>{goldWeight.toFixed(3)} g</Text>
-                </View>
-              </View>
-
-              <View style={styles.divider} />
-
-              <View style={styles.schemeInfo}>
-                <Text style={styles.schemeName}>{params.schemeName}</Text>
-                <Text style={styles.installmentInfo}>
-                  Installment {params.installmentNumber} of {params.totalInstallments}
-                </Text>
-              </View>
-
-              <View style={styles.transactionInfo}>
-                <View style={styles.transactionRow}>
-                  <View style={styles.transactionItem}>
-                    <Text style={styles.transactionLabel}>Transaction ID</Text>
-                    <View style={styles.transactionValueContainer}>
-                      <Text style={styles.transactionId}>{params.txnId}</Text>
-                      <TouchableOpacity 
-                        onPress={() => handleCopyText(params.txnId as string, 'Transaction ID')}
-                        style={styles.copyButton}
-                      >
-                        <Ionicons name="copy-outline" size={16} color={theme.colors.primary} />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </View>
-
-                <View style={styles.transactionRow}>
-                  <View style={styles.transactionItem}>
-                    <Text style={styles.transactionLabel}>Order ID</Text>
-                    <View style={styles.transactionValueContainer}>
-                      <Text style={styles.transactionId}>{params.orderId}</Text>
-                      <TouchableOpacity 
-                        onPress={() => handleCopyText(params.orderId as string, 'Order ID')}
-                        style={styles.copyButton}
-                      >
-                        <Ionicons name="copy-outline" size={16} color={theme.colors.primary} />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </View>
-
-                <View style={styles.transactionRow}>
-                  <View style={styles.transactionItem}>
-                    <Text style={styles.transactionLabel}>Date & Time</Text>
-                    <Text style={styles.transactionId}>{currentDate}</Text>
-                  </View>
-                </View>
-              </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Order ID:</Text>
+              <Text style={styles.detailValue}>{params.orderId}</Text>
             </View>
-
-            <View style={styles.allButtonsContainer}>
-              <View style={styles.buttonRow}>
-                <TouchableOpacity
-                  style={styles.navigationButton}
-                  onPress={handleGoToHome}
-                >
-                  <LinearGradient
-                    colors={['#4CAF50', '#2E7D32']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.buttonGradient}
-                  >
-                    <Ionicons name="home-outline" size={16} color="#fff" />
-                    <Text style={styles.buttonText}>Home</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.navigationButton}
-                  onPress={handleGoToSchemes}
-                >
-                  <LinearGradient
-                    colors={['#4CAF50', '#2E7D32']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.buttonGradient}
-                  >
-                    <Ionicons name="list-outline" size={16} color="#fff" />
-                    <Text style={styles.buttonText}>Schemes</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.buttonRow}>
-                <TouchableOpacity
-                  style={styles.navigationButton}
-                  onPress={handleViewTransactions}
-                >
-                  <LinearGradient
-                    colors={['#4CAF50', '#2E7D32']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.buttonGradient}
-                  >
-                    <Ionicons name="time-outline" size={16} color="#fff" />
-                    <Text style={styles.buttonText}>Transactions</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.navigationButton}
-                  onPress={handleViewProfile}
-                >
-                  <LinearGradient
-                    colors={['#4CAF50', '#2E7D32']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.buttonGradient}
-                  >
-                    <Ionicons name="person-outline" size={16} color="#fff" />
-                    <Text style={styles.buttonText}>Profile</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Amount:</Text>
+              <Text style={styles.detailValue}>₹{params.amount}</Text>
             </View>
-          </Animated.View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Payment Date:</Text>
+              <Text style={styles.detailValue}>{formatDate(new Date().toISOString())}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Scheme Name:</Text>
+              <Text style={styles.detailValue}>{userDetails?.schemeName || 'N/A'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Payment Method:</Text>
+              <Text style={styles.detailValue}>UPI</Text>
+            </View>
+          </View>
+
+          {/* Action Buttons */}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity 
+              style={[styles.button, styles.homeButton]}
+              onPress={() => router.push('/(tabs)/home')}
+            >
+              <Text style={styles.buttonText}>Go to Home</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.button, styles.detailsButton]}
+              onPress={() => {
+                // Implement view transaction details logic
+                router.push('/(tabs)/savings');
+              }}
+            >
+              <Text style={[styles.buttonText, styles.detailsButtonText]}>View My Savings</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </LinearGradient>
+      </ScrollView>
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
   },
-  gradientBackground: {
+  scrollView: {
     flex: 1,
   },
   header: {
@@ -363,187 +117,93 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
+    borderBottomColor: '#f0f0f0',
   },
-  headerPlaceholder: {
-    width: 40,
+  backButton: {
+    padding: 8,
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    color: '#333',
   },
-  shareButton: {
-    padding: 6,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+  placeholder: {
+    width: 40,
   },
-  contentContainer: {
+  content: {
     flex: 1,
-    padding: 16,
-    justifyContent: 'space-between',
-  },
-  successContainer: {
-    width: '100%',
+    padding: 24,
     alignItems: 'center',
-    flex: 1,
-    justifyContent: 'space-around',
   },
   iconContainer: {
-    width: 80,
-    height: 80,
+    marginTop: 40,
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
     marginBottom: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
-  checkmarkContainer: {
-    width: 60,
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 30,
-  },
-  successTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#fff',
-    marginBottom: 4,
+  message: {
+    fontSize: 16,
+    color: '#666',
     textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 24,
   },
-  successSubtitle: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.8)',
-    marginBottom: 16,
-    textAlign: 'center',
-    paddingHorizontal: 20,
-  },
-  detailsCard: {
+  detailsContainer: {
     width: '100%',
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    borderRadius: 16,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 12,
     padding: 16,
-    marginBottom: 16,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+    marginBottom: 32,
   },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 12,
-  },
-  detailItem: {
-    flex: 1,
-    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   detailLabel: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#666',
-    marginBottom: 4,
+    fontWeight: '500',
   },
   detailValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#4CAF50',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: 'rgba(0,0,0,0.1)',
-    marginVertical: 12,
-  },
-  schemeInfo: {
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  schemeName: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 14,
     color: '#333',
-    marginBottom: 2,
+    fontWeight: '600',
   },
-  installmentInfo: {
-    fontSize: 12,
-    color: '#666',
-  },
-  transactionInfo: {
-    gap: 8,
-  },
-  transactionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  transactionItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  transactionLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginRight: 8,
-  },
-  transactionValueContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  copyButton: {
-    padding: 4,
-  },
-  transactionId: {
-    fontSize: 11,
-    color: '#999',
-    textAlign: 'center',
-  },
-  allButtonsContainer: {
+  buttonContainer: {
     width: '100%',
-    gap: 8,
+    gap: 12,
   },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  navigationButton: {
-    flex: 1,
-    height: 40,
-    borderRadius: 20,
-    overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#4CAF50',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
-  },
-  buttonGradient: {
-    flex: 1,
-    flexDirection: 'row',
+  button: {
+    width: '100%',
+    padding: 16,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 12,
+  },
+  homeButton: {
+    backgroundColor: theme.colors.primary,
+  },
+  detailsButton: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
   },
   buttonText: {
-    fontSize: 13,
+    fontSize: 16,
     fontWeight: '600',
     color: '#fff',
-    marginLeft: 6,
   },
-});
-
-export default PaymentSuccessScreen; 
+  detailsButtonText: {
+    color: theme.colors.primary,
+  },
+}); 

@@ -14,7 +14,7 @@ import { theme } from "@/constants/theme";
 import { Ionicons } from '@expo/vector-icons';
 import { moderateScale } from "react-native-size-matters";
 
-const YouTubeVideo: React.FC = () => {
+const YouTubeVideo = () => {
   const screenWidth = Dimensions.get("window").width;
   const [playing, setPlaying] = useState(false);
   const [videoId, setVideoId] = useState<string>("");

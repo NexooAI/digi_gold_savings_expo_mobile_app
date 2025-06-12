@@ -1,20 +1,9 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, Dimensions, Animated, TouchableOpacity, Easing } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { news } from "@/services/api";
 import { Ionicons } from "@expo/vector-icons";
 
 const { width } = Dimensions.get("window");
-
-interface FlashNews {
-  id: number;
-  f_news: string;
-  start_date: string;
-  end_date: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-}
 
 interface FlashOfferProps {
   fallbackMessages?: string[];
@@ -30,58 +19,24 @@ const FlashOffer: React.FC<FlashOfferProps> = ({
   onPress,
 }) => {
   const translateX = useRef(new Animated.Value(width)).current;
-  const [activeNewsMessages, setActiveNewsMessages] = useState<string[]>(fallbackMessages);
-  const [loading, setLoading] = useState(true);
   const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
-
-  // Fetch flash news from API
-  useEffect(() => {
-    const fetchFlashNews = async () => {
-      try {
-        setLoading(true);
-        const response = await news.getActiveFlashNews();
-        const fetchedNewsItems: FlashNews[] = response.data.data;
-        
-        const now = new Date();
-        const activeNews = fetchedNewsItems.filter(item => {
-          const startDate = new Date(item.start_date);
-          const endDate = new Date(item.end_date);
-          return item.status === 'active' && now >= startDate && now <= endDate;
-        });
-        
-        if (activeNews.length > 0) {
-          const messages = activeNews.map(item => item.f_news);
-          setActiveNewsMessages(messages);
-        } else {
-          setActiveNewsMessages(fallbackMessages);
-        }
-      } catch (error) {
-        console.error('Error fetching flash news:', error);
-        setActiveNewsMessages(fallbackMessages);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFlashNews();
-  }, [fallbackMessages]);
 
   // Rotate through news items
   useEffect(() => {
-    if (activeNewsMessages.length <= 1) return;
+    if (fallbackMessages.length <= 1) return;
     
     const interval = setInterval(() => {
-      setCurrentNewsIndex(prevIndex => (prevIndex + 1) % activeNewsMessages.length);
+      setCurrentNewsIndex(prevIndex => (prevIndex + 1) % fallbackMessages.length);
     }, duration);
     
     return () => clearInterval(interval);
-  }, [activeNewsMessages, duration]);
+  }, [fallbackMessages, duration]);
 
   // Text scrolling animation
   useEffect(() => {
-    if (loading || activeNewsMessages.length === 0) return;
+    if (fallbackMessages.length === 0) return;
 
-    const currentMessage = activeNewsMessages[currentNewsIndex];
+    const currentMessage = fallbackMessages[currentNewsIndex];
     const messageWidth = currentMessage.length * 8; // Approximate width of text
     
     // Reset position to start from right
@@ -113,26 +68,9 @@ const FlashOffer: React.FC<FlashOfferProps> = ({
     return () => {
       animation.stop();
     };
-  }, [currentNewsIndex, activeNewsMessages, loading]);
+  }, [currentNewsIndex, fallbackMessages]);
 
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <LinearGradient
-          colors={['#850111', '#2e0406']}
-          style={styles.gradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        >
-          <View style={styles.contentContainer}>
-            <Text style={[styles.text, { color: textColor }]}>Loading...</Text>
-          </View>
-        </LinearGradient>
-      </View>
-    );
-  }
-
-  if (activeNewsMessages.length === 0) {
+  if (fallbackMessages.length === 0) {
     return null;
   }
 
@@ -172,15 +110,15 @@ const FlashOffer: React.FC<FlashOfferProps> = ({
                 style={[styles.text, { color: textColor }]}
                 numberOfLines={1}
               >
-                {activeNewsMessages[currentNewsIndex]}
+                {fallbackMessages[currentNewsIndex]}
               </Text>
             </Animated.View>
           </View>
 
-          {activeNewsMessages.length > 1 && (
+          {fallbackMessages.length > 1 && (
             <View style={styles.counterContainer}>
               <Text style={styles.counterText}>
-                {currentNewsIndex + 1}/{activeNewsMessages.length}
+                {currentNewsIndex + 1}/{fallbackMessages.length}
               </Text>
             </View>
           )}

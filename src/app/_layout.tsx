@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Alert,
   BackHandler,
+  Text,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "../global.css";
@@ -23,6 +24,7 @@ import NotificationService from "@/services/NotificationService";
 import * as Notifications from "expo-notifications";
 import { RootSiblingParent } from "react-native-root-siblings";
 import GlobalLoadingProvider from "@/app/components/GlobalLoadingProvider";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function RootLayout() {
   const { isFirstLaunch } = useFirstLaunch();
@@ -30,6 +32,7 @@ export default function RootLayout() {
   const navigation = useNavigation();
   const [overallLoading, setOverallLoading] = useState<boolean>(false);
   const { user, setUser, setLanguage } = useGlobalStore();
+  const [isSocketConnected, setIsSocketConnected] = useState<boolean>(false);
 
   // Initialize language on app start
   useEffect(() => {
@@ -177,6 +180,17 @@ export default function RootLayout() {
             </GlobalLoadingProvider>
           </LanguageProvider1>
         </AuthProvider>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+          <Ionicons
+            name={isSocketConnected ? 'wifi' : 'wifi-off'}
+            size={18}
+            color={isSocketConnected ? 'green' : 'red'}
+            style={{ marginRight: 6 }}
+          />
+          <Text>
+            {isSocketConnected ? 'Connected to payment server' : 'Not connected to payment server'}
+          </Text>
+        </View>
       </GestureHandlerRootView>
     </RootSiblingParent>
   );
