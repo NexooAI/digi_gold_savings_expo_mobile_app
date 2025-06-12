@@ -175,11 +175,11 @@ export interface PaymentRetryData {
   };
 }
 
-export interface PaymentSocket extends Socket {
-  emit(event: 'payment_status_update', data: any): boolean;
-  emit(event: 'payment_flow_exited', data: any): boolean;
-  emit(event: 'payment_completed', data: any): boolean;
-  emit(event: 'payment_failed', data: any): boolean;
+export interface PaymentSocket extends Socket<DefaultEventsMap, DefaultEventsMap> {
+  emit(event: 'payment_status_update', data: any): this;
+  emit(event: 'payment_flow_exited', data: any): this;
+  emit(event: 'payment_completed', data: any): this;
+  emit(event: 'payment_failed', data: any): this;
   emit(event: 'payment_error', data: any): boolean;
   on(event: 'payment_status_update', listener: (data: PaymentStatusUpdate) => void): this;
 } 

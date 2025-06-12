@@ -215,7 +215,9 @@ const PaymentProcessScreen = () => {
   const { emitPaymentEvent } = usePaymentSocket({
     onPaymentSuccess: handlePaymentSuccess,
     onPaymentFailure: handlePaymentFailure,
-    onPaymentError: handlePaymentError
+    onPaymentError: handlePaymentError,
+    parsedUserDetails: finalUserDetails,
+    router
   });
 
   useEffect(() => {

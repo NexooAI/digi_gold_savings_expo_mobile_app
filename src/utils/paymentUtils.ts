@@ -92,7 +92,7 @@ export const postTransaction = async (payload) => {
 
 export const postPayment = async (payload) => {
   try {
-    const response = await apiService.post("/payment", payload);
+    const response = await apiService.post("/payments", payload);
     return response.data;
   } catch (error) {
     console.error("Error posting payment:", error);

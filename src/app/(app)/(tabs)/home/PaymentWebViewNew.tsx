@@ -24,9 +24,11 @@ const PaymentWebViewNew = () => {
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const webViewRef = useRef<WebView>(null);
   const loadingTimerRef = useRef<NodeJS.Timeout>();
+  const [isPaymentDone, setIsPaymentDone] = useState(false);
 
   const { emitPaymentEvent } = usePaymentSocket({
     onPaymentSuccess: (data: PaymentStatusUpdate) => {
+      setIsPaymentDone(true);
       router.push({
         pathname: "/(tabs)/home/payment-success",
         params: {
@@ -37,31 +39,25 @@ const PaymentWebViewNew = () => {
       });
     },
     onPaymentFailure: (data: PaymentStatusUpdate) => {
-      Alert.alert(
-        "Payment Failed",
-        data.paymentResponse.payment_gateway_response?.resp_message || 
-        "Your payment has failed. Please try again.",
-        [
-          {
-            text: "OK",
-            onPress: () => router.back()
-          }
-        ]
-      );
+      console.log("Payment Failure", data);
+      router.replace({ pathname: '/(tabs)/home/payment-failed', params: {
+        message: data.paymentResponse.payment_gateway_response?.resp_message || "Your payment has failed. Please try again.",
+        orderId: data.paymentResponse.order_id,
+        txnId: data.paymentResponse.txn_id,
+        amount: data.paymentResponse.amount,
+      } });
     },
     onPaymentError: (error: any) => {
       console.error("Error processing payment status update:", error);
-      Alert.alert(
-        "Payment Error",
-        "An error occurred while processing the transaction.",
-        [
-          {
-            text: "OK",
-            onPress: () => router.back()
-          }
-        ]
-      );
-    }
+      router.replace({ pathname: '/(tabs)/home/payment-failed', params: {
+        message: "An error occurred while processing the transaction.",
+        orderId: error.paymentResponse.order_id,
+        txnId: error.paymentResponse.txn_id,
+        amount: error.paymentResponse.amount,
+      } });
+    },
+    parsedUserDetails: undefined,
+    router
   });
 
   const handleNavigationStateChange = useCallback((navState: any) => {
@@ -72,7 +68,7 @@ const PaymentWebViewNew = () => {
     if (loadingTimerRef.current) {
       clearTimeout(loadingTimerRef.current);
     }
-
+console.log("URL", url ,url.includes('payment-success'),url.includes('payment-failure'),url.includes('payment-error') );
     // Handle success URL
     if (url.includes('payment-success')) {
       setIsLoading(false);
@@ -141,6 +137,8 @@ const PaymentWebViewNew = () => {
   }, [emitPaymentEvent]);
 
   useEffect(() => {
+    if (isPaymentDone) return; // Don't register handler if payment is done
+
     const backHandler = BackHandler.addEventListener(
       'hardwareBackPress',
       () => {
@@ -175,7 +173,7 @@ const PaymentWebViewNew = () => {
         clearTimeout(loadingTimerRef.current);
       }
     };
-  }, [router, emitPaymentEvent]);
+  }, [router, emitPaymentEvent, isPaymentDone]);
 
   const handleReload = useCallback(() => {
     if (webViewRef.current) {
@@ -227,6 +225,7 @@ const PaymentWebViewNew = () => {
         cacheEnabled={false}
         cacheMode="LOAD_NO_CACHE"
         onHttpError={(syntheticEvent) => {
+          console.log("HTTP Error", syntheticEvent);
           const { nativeEvent } = syntheticEvent;
           console.error('WebView HTTP error:', nativeEvent);
           setHasError(true);
