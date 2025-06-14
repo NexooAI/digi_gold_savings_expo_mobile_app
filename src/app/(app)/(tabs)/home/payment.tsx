@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -10,8 +10,9 @@ import {
   Animated,
   Platform,
   BackHandler,
+  StatusBar,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -29,6 +30,7 @@ import {
   PaymentStatusUpdate,
   PaymentInitPayload
 } from "./types/payment.types";
+import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get("window");
 
@@ -42,11 +44,16 @@ interface PaymentState {
   maturityDate: string;
   currentGoldPrice: number;
   paymentFrequency: string;
+  txn_id?: string;
+  order_id?: string;
+  schemeId?: string;
+  chitId?: string;
 }
 
-const PaymentProcessScreen = () => {
+export default function PaymentProcessScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
   const { amount: amountString, userDetails } = useLocalSearchParams();
   const amount = parseFloat(
     Array.isArray(amountString) ? amountString[0] : amountString
@@ -142,53 +149,107 @@ const PaymentProcessScreen = () => {
     return { paymentFrequency: "Monthly" };
   }, [parsedUserDetails, sessionData]);
 
-  const handlePaymentSuccess = useCallback((data: PaymentStatusUpdate) => {
-    clearPaymentRetryData();
-    clearPaymentSession();
-    
-    setPaymentSuccessData({
-      txn_id: data.paymentResponse.txn_id,
-      amount: data.paymentResponse.amount,
-      order_id: data.paymentResponse.order_id,
-    });
-    
-    router.push({
-      pathname: "/(tabs)/home/payment-success",
-      params: {
-        amount: data.paymentResponse.amount,
-        txnId: data.paymentResponse.txn_id,
-        orderId: data.paymentResponse.order_id,
-        goldWeight: paymentDetails.goldWeight,
-        schemeName: paymentDetails.schemeName,
-        installmentNumber: paymentDetails.installmentNumber,
-        totalInstallments: paymentDetails.totalInstallments,
-        schemeId: finalUserDetails.data?.data?.schemeId || finalUserDetails.schemeId,
-        chitId: finalUserDetails.data?.data?.chitId || finalUserDetails.chitId
-      }
-    });
-  }, [clearPaymentRetryData, clearPaymentSession, router, paymentDetails, finalUserDetails]);
+  const navigation = useNavigation();
 
-  const handlePaymentFailure = useCallback((data: PaymentStatusUpdate) => {
-    setAlertState({
-      visible: true,
-      title: "Payment Failed",
-      message: data.paymentResponse.payment_gateway_response?.resp_message || 
-              "Your payment has failed. Please try again.",
-      type: "error",
-      txn_id: data.paymentResponse.txn_id || "",
-      order_id: data.paymentResponse.order_id || "",
-      amount: data.paymentResponse.amount?.toString() || "",
-      buttons: [
-        {
-          text: "OK",
-          onPress: () => {
-            setAlertState(prev => ({ ...prev, visible: false }));
-            router.back();
-          }
-        }
-      ]
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      navigation.setOptions({
+        tabBarStyle: { display: 'flex' }
+      });
     });
-  }, [router]);
+
+    return unsubscribe;
+  }, [navigation]);
+
+  const handlePaymentSuccess = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      navigation.setOptions({
+        tabBarStyle: { display: 'flex' }
+      });
+      
+      clearPaymentRetryData();
+      clearPaymentSession();
+      
+      router.push({
+        pathname: "/(tabs)/home/payment-success",
+        params: {
+          amount: paymentDetails.amount,
+          txnId: paymentDetails.txn_id || '',
+          orderId: paymentDetails.order_id || '',
+          goldWeight: paymentDetails.goldWeight,
+          schemeName: paymentDetails.schemeName,
+          schemeId: paymentDetails.schemeId || '',
+          chitId: paymentDetails.chitId || '',
+          installmentNumber: paymentDetails.installmentNumber,
+          totalInstallments: paymentDetails.totalInstallments,
+        }
+      });
+    } catch (error) {
+      console.error('Error in payment success:', error);
+      setAlertState({
+        visible: true,
+        title: "Payment Error",
+        message: "Failed to process payment success",
+        type: "error",
+        buttons: [
+          {
+            text: "OK",
+            onPress: () => {
+              setAlertState(prev => ({ ...prev, visible: false }));
+              router.back();
+            }
+          }
+        ]
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [clearPaymentRetryData, clearPaymentSession, router, paymentDetails, navigation]);
+
+  const handlePaymentFailure = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      navigation.setOptions({
+        tabBarStyle: { display: 'flex' }
+      });
+      
+      setAlertState({
+        visible: true,
+        title: "Payment Failed",
+        message: "Your payment has failed. Please try again.",
+        type: "error",
+        buttons: [
+          {
+            text: "Try Again",
+            onPress: () => {
+              setAlertState(prev => ({ ...prev, visible: false }));
+              router.back();
+            }
+          }
+        ]
+      });
+    } catch (error) {
+      console.error('Error in payment failure:', error);
+      setAlertState({
+        visible: true,
+        title: "Payment Error",
+        message: "Failed to process payment failure",
+        type: "error",
+        buttons: [
+          {
+            text: "OK",
+            onPress: () => {
+              setAlertState(prev => ({ ...prev, visible: false }));
+              router.back();
+            }
+          }
+        ]
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [router, navigation]);
 
   const handlePaymentError = useCallback((error: any) => {
     console.error("Error processing payment status update:", error);
@@ -197,9 +258,6 @@ const PaymentProcessScreen = () => {
       title: "Payment Error",
       message: "An error occurred while processing the transaction.",
       type: "error",
-      txn_id: "",
-      order_id: "",
-      amount: "",
       buttons: [
         {
           text: "OK",
@@ -326,10 +384,14 @@ const PaymentProcessScreen = () => {
   }, [scaleAnim]);
 
   const handlePayPress = useCallback(async () => {
-    animateButton();
-    setIsLoading(true);
-
     try {
+      setIsLoading(true);
+      navigation.setOptions({
+        tabBarStyle: { display: 'none' }
+      });
+
+      animateButton();
+
       const payload: PaymentInitPayload = {
         userId: finalUserDetails.userId || finalUserDetails.data?.data?.userId || '',
         amount: amount,
@@ -357,7 +419,7 @@ const PaymentProcessScreen = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [animateButton, amount, finalUserDetails, isRetry, router, emitPaymentEvent]);
+  }, [animateButton, amount, finalUserDetails, isRetry, router, emitPaymentEvent, navigation]);
 
   useEffect(() => {
     Animated.parallel([
@@ -407,13 +469,23 @@ const PaymentProcessScreen = () => {
     return null;
   }, [getPaymentRetryData]);
 
+  useEffect(() => {
+    return () => {
+      navigation.setOptions({
+        tabBarStyle: { display: 'flex' }
+      });
+    };
+  }, [navigation]);
+
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" />
       <LinearGradient
         colors={[theme.colors.primary, '#8B0000']}
         style={styles.gradientBackground}
       >
-        <View style={styles.header}>
+        {/* Header */}
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
           <TouchableOpacity 
             onPress={() => router.back()} 
             style={styles.backButton}
@@ -436,29 +508,42 @@ const PaymentProcessScreen = () => {
               styles.scrollContent,
               {
                 opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }]
+                transform: [{ translateY: slideAnim }],
+                paddingBottom: 140
               }
             ]}
           >
+            {/* Amount Card with Modern Design */}
             <View style={styles.amountCard}>
-              <BlurView intensity={30} style={styles.amountCardBlur}>
-                <View style={styles.amountHeader}>
-                  <Text style={styles.amountLabel}>Total Amount</Text>
-                  <View style={styles.amountDecoration} />
+              <LinearGradient
+                colors={['#C0C0C0', '#E8E8E8', '#C0C0C0', '#F5F5F5', '#C0C0C0']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.amountCardGradient}
+              >
+                <View style={styles.amountCardContent}>
+                  <View style={styles.cardPattern}>
+                    <View style={styles.patternLine} />
+                    <View style={styles.patternLine} />
+                    <View style={styles.patternLine} />
+                    <View style={styles.patternLine} />
+                  </View>
+                  <View style={styles.amountHeader}>
+                    <Text style={styles.amountLabel}>Total Amount</Text>
+                    <Text style={styles.amountValue}>₹{amount}</Text>
+                  </View>
+                  <View style={styles.amountDetails}>
+                    <View style={styles.amountDetailRow}>
+                      <Text style={styles.amountDetailLabel}>Scheme Amount</Text>
+                      <Text style={styles.amountDetailValue}>₹{amount}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.cardShine} />
                 </View>
-                <Text style={styles.amountValue}>₹{amount}</Text>
-                <View style={styles.goldWeightContainer}>
-                  <Ionicons name="cube-outline" size={16} color={theme.colors.primary} />
-                  <Text style={styles.goldWeightText}>
-                    {paymentDetails.goldWeight.toFixed(3)} grams
-                  </Text>
-                  <Text style={styles.goldPriceText}>
-                    @ ₹{paymentDetails.currentGoldPrice}/gram
-                  </Text>
-                </View>
-              </BlurView>
+              </LinearGradient>
             </View>
 
+            {/* Scheme Details Card */}
             <View style={styles.schemeInfoCard}>
               <View style={styles.schemeHeader}>
                 <View style={styles.schemeIconContainer}>
@@ -486,10 +571,11 @@ const PaymentProcessScreen = () => {
               </View>
             </View>
 
+            {/* User Details Card */}
             <View style={styles.userDetailsCard}>
               <View style={styles.userDetailsHeader}>
                 <View style={styles.userDetailsIconContainer}>
-                  <Ionicons name="person-circle-outline" size={20} color={theme.colors.primary} />
+                  <Ionicons name="person-circle-outline" size={20} color={theme.colors.white} />
                 </View>
                 <Text style={styles.userDetailsTitle}>User Details</Text>
               </View>
@@ -536,39 +622,38 @@ const PaymentProcessScreen = () => {
                 </View>
               </View>
             </View>
-
-            <View style={styles.payButtonContainer}>
-              {isLoading ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="large" color={theme.colors.primary} />
-                  <Text style={styles.loadingText}>Processing Payment...</Text>
-                </View>
-              ) : (
-                <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-                  <TouchableOpacity 
-                    style={styles.payButton} 
-                    onPress={handlePayPress}
-                    activeOpacity={0.7}
-                  >
-                    <LinearGradient
-                      colors={[theme.colors.primary, '#8B0000']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.payButtonGradient}
-                    >
-                      <View style={styles.payButtonContent}>
-                        <Text style={styles.payButtonText}>Pay Now</Text>
-                        <View style={styles.payButtonIconContainer}>
-                          <Ionicons name="arrow-forward" size={20} color="#fff" />
-                        </View>
-                      </View>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </Animated.View>
-              )}
-            </View>
           </Animated.ScrollView>
         )}
+
+        {/* Fixed Pay Button */}
+        <View style={styles.payButtonContainer}>
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator color="#fff" size="small" />
+              <Text style={styles.processingText}>Processing...</Text>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={styles.payButton}
+              onPress={handlePayPress}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={[theme.colors.primary, '#8B0000']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.payButtonGradient}
+              >
+                <View style={styles.payButtonContent}>
+                  <Text style={styles.payButtonText}>Pay Now</Text>
+                  <View style={styles.payButtonIconContainer}>
+                    <Ionicons name="arrow-forward" size={20} color="#fff" />
+                  </View>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+        </View>
       </LinearGradient>
 
       <CustomAlert
@@ -583,7 +668,6 @@ const PaymentProcessScreen = () => {
         amount={alertState.amount}
       />
 
-      {/* Processing Overlay */}
       {isProcessing && (
         <View style={styles.processingOverlay}>
           <ActivityIndicator size="large" color="#fff" />
@@ -592,7 +676,7 @@ const PaymentProcessScreen = () => {
       )}
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -606,7 +690,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 15,
-    paddingTop: Platform.OS === 'ios' ? 10 : 20,
     backgroundColor: 'rgba(0,0,0,0.3)',
   },
   backButton: {
@@ -614,7 +697,7 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
   },
@@ -626,81 +709,115 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
   amountCard: {
-    borderRadius: 20,
+    borderRadius: 24,
+    marginBottom: 24,
     overflow: 'hidden',
-    marginBottom: 20,
-    elevation: 5,
+    elevation: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
   },
-  amountCardBlur: {
-    padding: 25,
-    alignItems: 'center',
+  amountCardGradient: {
+    padding: 2,
+  },
+  amountCardContent: {
+    backgroundColor: '#E8E8E8',
+    borderRadius: 22,
+    overflow: 'hidden',
+    padding: 20,
+    position: 'relative',
+  },
+  cardPattern: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+  },
+  patternLine: {
+    width: 1,
+    height: '100%',
+    backgroundColor: '#2C3E50',
+    opacity: 0.2,
+    transform: [{ rotate: '45deg' }],
   },
   amountHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 16,
+    position: 'relative',
+    zIndex: 1,
   },
   amountLabel: {
-    fontSize: 18,
-    color: '#fff',
-    fontWeight: '500',
-  },
-  amountDecoration: {
-    height: 1,
-    flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    marginLeft: 10,
+    fontSize: 16,
+    color: '#2C3E50',
+    marginBottom: 4,
+    fontWeight: '600',
+    letterSpacing: 0.5,
   },
   amountValue: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: '#fff',
-    marginVertical: 5,
+    color: '#2C3E50',
+    letterSpacing: 0.5,
   },
-  goldWeightContainer: {
+  amountDetails: {
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(44, 62, 80, 0.2)',
+    paddingTop: 12,
+    position: 'relative',
+    zIndex: 1,
+  },
+  amountDetailRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingVertical: 6,
-    paddingHorizontal: 15,
-    borderRadius: 20,
-    marginTop: 10,
   },
-  goldWeightText: {
-    color: theme.colors.primary,
-    fontWeight: '600',
-    marginLeft: 5,
+  amountDetailLabel: {
     fontSize: 14,
-  },
-  goldPriceText: {
-    color: '#fff',
+    color: '#2C3E50',
     fontWeight: '500',
-    marginLeft: 5,
-    fontSize: 12,
+    letterSpacing: 0.3,
+  },
+  amountDetailValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#2C3E50',
+    letterSpacing: 0.3,
+  },
+  cardShine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '50%',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    transform: [{ rotate: '-45deg' }],
+    opacity: 0.5,
+    zIndex: 1,
   },
   schemeInfoCard: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 24,
     padding: 20,
-    marginBottom: 20,
-    elevation: 3,
+    marginBottom: 24,
+    elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.15,
     shadowRadius: 4,
   },
   schemeHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 16,
   },
   schemeIconContainer: {
     backgroundColor: 'rgba(139, 0, 0, 0.1)',
-    borderRadius: 12,
+    borderRadius: 16,
     width: 40,
     height: 40,
     justifyContent: 'center',
@@ -710,11 +827,11 @@ const styles = StyleSheet.create({
   schemeName: {
     fontSize: 18,
     fontWeight: '600',
-    color: theme.colors.textPrimary,
+    color: '#000',
     flex: 1,
   },
   schemeDetails: {
-    marginTop: 10,
+    marginTop: 8,
   },
   schemeDetailItem: {
     flexDirection: 'row',
@@ -723,34 +840,39 @@ const styles = StyleSheet.create({
   },
   schemeDetailLabel: {
     fontSize: 14,
-    color: '#666',
+    color: '#444',
     fontWeight: '500',
   },
   schemeDetailValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: theme.colors.textPrimary,
+    color: '#000',
   },
   userDetailsCard: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 24,
     overflow: 'hidden',
-    marginBottom: 20,
+    marginBottom: 24,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
   userDetailsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 15,
-    backgroundColor: theme.colors.primary,
+    padding: 16,
+    backgroundColor: 'rgba(103, 2, 2, 1)',
   },
   userDetailsIconContainer: {
     backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 10,
-    width: 30,
-    height: 30,
+    borderRadius: 12,
+    width: 32,
+    height: 32,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
+    marginRight: 12,
   },
   userDetailsTitle: {
     fontSize: 16,
@@ -758,62 +880,75 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   userDetailsContent: {
-    padding: 15,
+    padding: 16,
   },
   userDetailsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 15,
+    marginBottom: 16,
   },
   userDetailItem: {
     flexDirection: 'row',
     flex: 1,
     alignItems: 'center',
-    marginRight: 10,
+    marginRight: 12,
   },
   userDetailIconContainer: {
     backgroundColor: theme.colors.primary,
-    borderRadius: 8,
-    width: 30,
-    height: 30,
+    borderRadius: 10,
+    width: 32,
+    height: 32,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
+    marginRight: 12,
   },
   userDetailInfo: {
     flex: 1,
   },
   userDetailLabel: {
     fontSize: 12,
-    color: '#888',
+    color: '#666',
     marginBottom: 2,
   },
   userDetailValue: {
     fontSize: 14,
     fontWeight: '500',
-    color: theme.colors.textPrimary,
+    color: '#000',
   },
   userDetailDivider: {
     height: 1,
     backgroundColor: '#eee',
-    marginVertical: 10,
+    marginVertical: 12,
   },
   payButtonContainer: {
-    marginTop: 10,
-    marginBottom: 30,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    bottom: 60,
+    height: 120,
   },
   payButton: {
-    borderRadius: 25,
+    borderRadius: 24,
     overflow: 'hidden',
-    elevation: 5,
+    elevation: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowRadius: 4,
   },
   payButtonGradient: {
     paddingVertical: 16,
-    paddingHorizontal: 30,
+    paddingHorizontal: 28,
   },
   payButtonContent: {
     flexDirection: 'row',
@@ -829,12 +964,13 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   loadingContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 30,
+    gap: 12,
   },
   loadingText: {
-    marginTop: 15,
+    marginTop: 16,
     fontSize: 16,
     color: theme.colors.primary,
     textAlign: 'center',
@@ -847,11 +983,8 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   processingText: {
-    color: '#fff',
-    marginTop: 15,
+    color: theme.colors.primary,
     fontSize: 16,
     fontWeight: '500',
   },
 });
-
-export default PaymentProcessScreen;
