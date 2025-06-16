@@ -1,4 +1,10 @@
-import React, { useMemo, useState, useCallback, useEffect, useRef } from "react";
+import React, {
+  useMemo,
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+} from "react";
 import {
   View,
   Text,
@@ -103,40 +109,41 @@ export default function SavingsScreen() {
   // Fetch user investment data
   const fetchUserData = useCallback(async () => {
     if (!user) return;
-    
+
     setLoading(true);
     setError(null);
     try {
-      console.log('=== FETCHING SAVINGS LIST ===');
+      console.log("=== FETCHING SAVINGS LIST ===");
       const response = await api.get(`investments/user_investments/${user.id}`);
-      console.log('Raw API Response:', JSON.stringify(response.data, null, 2));
-      
+      console.log("Raw API Response:", JSON.stringify(response.data, null, 2));
+
       const investments = response.data.data || [];
-      
+
       // Validate and transform each investment
       const transformedSavings: Scheme[] = investments
         .filter((item: InvestmentResponse) => {
           // Basic validation
-          const isValid = item.investmentId && (item.schemeName || item.scheme?.schemeName);
+          const isValid =
+            item.investmentId && (item.schemeName || item.scheme?.schemeName);
           if (!isValid) {
-            console.warn('Invalid investment item:', item);
+            console.warn("Invalid investment item:", item);
           }
           return isValid;
         })
         .map((item: InvestmentResponse) => {
           const schemeObj = item.scheme || {
-            schemeId: '',
-            schemeName: '',
-            type: 'gold',
-            schemeType: 'weight'
+            schemeId: "",
+            schemeName: "",
+            type: "gold",
+            schemeType: "weight",
           };
           const chit = item.chits || {
-            amount: '0',
-            noOfInstallments: 0
+            amount: "0",
+            noOfInstallments: 0,
           };
-          
+
           // Log each investment item for debugging
-          console.log('Processing investment item:', {
+          console.log("Processing investment item:", {
             investmentId: item.investmentId,
             schemeName: schemeObj.schemeName || item.schemeName,
             emiAmount: chit.amount,
@@ -144,7 +151,7 @@ export default function SavingsScreen() {
             schemeType: schemeObj.schemeType,
             totalPaid: item.total_paid,
             monthsPaid: item.lastInstallment,
-            noOfInstallments: chit.noOfInstallments
+            noOfInstallments: chit.noOfInstallments,
           });
 
           // Parse dates with error handling
@@ -167,19 +174,25 @@ export default function SavingsScreen() {
           // Calculate installment amount based on scheme type with validation
           let installmentAmount = 0;
           try {
-            if (schemeObj.schemeType?.toLowerCase() === 'flexi') {
-              installmentAmount = parseFloat(item.amount) || 0;
-            } else {
-              installmentAmount = parseFloat(chit.amount) || 0;
-            }
-            
+            // if (schemeObj.schemeType?.toLowerCase() === 'flexi') {
+            installmentAmount = parseFloat(item.amount) || 0;
+            // } else {
+            //   installmentAmount = parseFloat(amount) || 0;
+            // }
+
             // Validate installment amount
             if (isNaN(installmentAmount) || installmentAmount <= 0) {
-              console.warn(`Invalid installment amount for investment ${item.investmentId}:`, installmentAmount);
+              console.warn(
+                `Invalid installment amount for investment ${item.investmentId}:`,
+                installmentAmount
+              );
               installmentAmount = 0;
             }
           } catch (error) {
-            console.error(`Error calculating installment amount for investment ${item.investmentId}:`, error);
+            console.error(
+              `Error calculating installment amount for investment ${item.investmentId}:`,
+              error
+            );
             installmentAmount = 0;
           }
 
@@ -188,11 +201,17 @@ export default function SavingsScreen() {
           try {
             totalPaid = parseFloat(item.total_paid) || 0;
             if (isNaN(totalPaid) || totalPaid < 0) {
-              console.warn(`Invalid total paid for investment ${item.investmentId}:`, totalPaid);
+              console.warn(
+                `Invalid total paid for investment ${item.investmentId}:`,
+                totalPaid
+              );
               totalPaid = 0;
             }
           } catch (error) {
-            console.error(`Error calculating total paid for investment ${item.investmentId}:`, error);
+            console.error(
+              `Error calculating total paid for investment ${item.investmentId}:`,
+              error
+            );
             totalPaid = 0;
           }
 
@@ -201,11 +220,17 @@ export default function SavingsScreen() {
           try {
             goldWeight = parseFloat(item.totalgoldweight) || 0;
             if (isNaN(goldWeight) || goldWeight < 0) {
-              console.warn(`Invalid gold weight for investment ${item.investmentId}:`, goldWeight);
+              console.warn(
+                `Invalid gold weight for investment ${item.investmentId}:`,
+                goldWeight
+              );
               goldWeight = 0;
             }
           } catch (error) {
-            console.error(`Error calculating gold weight for investment ${item.investmentId}:`, error);
+            console.error(
+              `Error calculating gold weight for investment ${item.investmentId}:`,
+              error
+            );
             goldWeight = 0;
           }
 
@@ -214,7 +239,8 @@ export default function SavingsScreen() {
 
           return {
             id: item.investmentId,
-            schemeName: schemeObj.schemeName || item.schemeName || "Unknown Scheme",
+            schemeName:
+              schemeObj.schemeName || item.schemeName || "Unknown Scheme",
             metalType: schemeObj.type ? schemeObj.type.toLowerCase() : "gold",
             savingType: schemeObj.schemeType
               ? schemeObj.schemeType.toLowerCase()
@@ -236,8 +262,11 @@ export default function SavingsScreen() {
             paymentFrequency: item.paymentFrequency || "Monthly",
           };
         });
-      
-      console.log('Transformed Savings List:', JSON.stringify(transformedSavings, null, 2));
+
+      console.log(
+        "Transformed Savings List:",
+        JSON.stringify(transformedSavings, null, 2)
+      );
       setSavings(transformedSavings);
     } catch (err: any) {
       console.error("Error fetching data:", err);
@@ -273,9 +302,18 @@ export default function SavingsScreen() {
 
   // Enhanced Scheme Card Component
   const EnhancedSchemeCard = ({ item }: { item: Scheme }) => {
-    const bgColors: readonly [string, string, string] = item.metalType === "gold" 
-      ? ["rgba(133, 1, 17, 0.95)", "rgba(90, 0, 11, 0.95)", "rgba(46, 4, 6, 0.95)"] as const
-      : ["rgba(192, 192, 192, 0.95)", "rgba(168, 168, 168, 0.95)", "rgba(128, 128, 128, 0.95)"] as const;
+    const bgColors: readonly [string, string, string] =
+      item.metalType === "gold"
+        ? ([
+            "rgba(133, 1, 17, 0.95)",
+            "rgba(90, 0, 11, 0.95)",
+            "rgba(46, 4, 6, 0.95)",
+          ] as const)
+        : ([
+            "rgba(192, 192, 192, 0.95)",
+            "rgba(168, 168, 168, 0.95)",
+            "rgba(128, 128, 128, 0.95)",
+          ] as const);
 
     const [isExpanded, setIsExpanded] = useState(false);
     const animatedHeight = useRef(new Animated.Value(0)).current;
@@ -336,87 +374,106 @@ export default function SavingsScreen() {
         email: user?.email,
         paymentFrequency: item.paymentFrequency || "Monthly",
         schemeName: item.schemeName || "",
-        amount: item.emiAmount
+        amount: item.emiAmount,
       };
-      
+
       router.push({
         pathname: "/(tabs)/home/payment",
         params: {
           amount: item.emiAmount?.toString() || "0",
-          userDetails: JSON.stringify(userDetails)
+          userDetails: JSON.stringify(userDetails),
         },
       });
     };
 
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         activeOpacity={0.9}
         onPress={toggleExpand}
-        style={[
-          styles.cardWrapper,
-          isActive && styles.cardWrapperActive
-        ]}
+        style={[styles.cardWrapper, isActive && styles.cardWrapperActive]}
       >
         <ImageBackground
-          source={item.metalType === "gold" 
-            ? require('../../../../../assets/images/gold.png')
-            : require('../../../../../assets/images/silver.png')
+          source={
+            item.metalType === "gold"
+              ? require("../../../../../assets/images/gold.png")
+              : require("../../../../../assets/images/silver.png")
           }
           style={styles.cardBackgroundImage}
           imageStyle={styles.cardBackgroundImageStyle}
           resizeMode="cover"
         >
-          <LinearGradient
-            colors={bgColors}
-            style={styles.cardContainer}
-          >
+          <LinearGradient colors={bgColors} style={styles.cardContainer}>
             <View style={styles.cardHeader}>
               <View style={styles.schemeInfo}>
-                <View style={[
-                  styles.schemeIconContainer,
-                  { backgroundColor: 'rgba(255, 255, 255, 0.2)' }
-                ]}>
-                  <Ionicons 
-                    name={item.metalType === "gold" ? "diamond-outline" : "cube-outline"} 
-                    size={24} 
-                    color="#FFFFFF" 
+                <View
+                  style={[
+                    styles.schemeIconContainer,
+                    { backgroundColor: "rgba(255, 255, 255, 0.2)" },
+                  ]}
+                >
+                  <Ionicons
+                    name={
+                      item.metalType === "gold"
+                        ? "diamond-outline"
+                        : "cube-outline"
+                    }
+                    size={24}
+                    color="#FFFFFF"
                   />
                 </View>
                 <View style={styles.schemeTitleContainer}>
                   <Text style={styles.schemeTitle}>{item.schemeName}</Text>
                   <View style={styles.schemeSubtitleContainer}>
-                    <View style={[
-                      styles.metalTypeBadge,
-                      { backgroundColor: 'rgba(255, 255, 255, 0.2)' }
-                    ]}>
+                    <View
+                      style={[
+                        styles.metalTypeBadge,
+                        { backgroundColor: "rgba(255, 255, 255, 0.2)" },
+                      ]}
+                    >
                       <Text style={styles.metalTypeText}>
-                        {item.metalType.charAt(0).toUpperCase() + item.metalType.slice(1)}
+                        {item.metalType.charAt(0).toUpperCase() +
+                          item.metalType.slice(1)}
                       </Text>
                     </View>
-                    <View style={[
-                      styles.savingTypeBadge,
-                      { backgroundColor: 'rgba(255, 255, 255, 0.2)' }
-                    ]}>
+                    <View
+                      style={[
+                        styles.savingTypeBadge,
+                        { backgroundColor: "rgba(255, 255, 255, 0.2)" },
+                      ]}
+                    >
                       <Text style={styles.savingTypeText}>
-                        {item.schemesData?.schemeType === 'flexi' ? 'Flexi' : 'Fixed'}
+                        {item.schemesData?.schemeType === "flexi"
+                          ? "Flexi"
+                          : "Fixed"}
                       </Text>
                     </View>
                   </View>
                 </View>
               </View>
               <View style={styles.headerRight}>
-                <View style={[
-                  styles.statusBadge,
-                  { backgroundColor: item.status === 'ACTIVE' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(255, 0, 0, 0.2)' }
-                ]}>
-                  <Text style={[
-                    styles.statusText,
-                    { color: item.status === 'ACTIVE' ? '#00FF00' : '#FF0000' }
-                  ]}>
-                    {item.status || 'INACTIVE'}
+                <View
+                  style={[
+                    styles.statusBadge,
+                    {
+                      backgroundColor:
+                        item.status === "ACTIVE"
+                          ? "rgba(0, 255, 0, 0.2)"
+                          : "rgba(255, 0, 0, 0.2)",
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.statusText,
+                      {
+                        color: item.status === "ACTIVE" ? "#00FF00" : "#FF0000",
+                      },
+                    ]}
+                  >
+                    {item.status || "INACTIVE"}
                   </Text>
                 </View>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.payNowButton}
                   onPress={(e) => {
                     e.stopPropagation();
@@ -426,10 +483,10 @@ export default function SavingsScreen() {
                   <Text style={styles.payNowButtonText}>Pay Now</Text>
                 </TouchableOpacity>
                 <View style={styles.expandIcon}>
-                  <Ionicons 
-                    name={isExpanded ? "chevron-up" : "chevron-down"} 
-                    size={20} 
-                    color="#FFFFFF" 
+                  <Ionicons
+                    name={isExpanded ? "chevron-up" : "chevron-down"}
+                    size={20}
+                    color="#FFFFFF"
                   />
                 </View>
               </View>
@@ -452,27 +509,39 @@ export default function SavingsScreen() {
               </View>
             </View>
 
-            <Animated.View style={[
-              styles.cardContent,
-              { maxHeight: animatedHeight.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, 500]
-              })}
-            ]}>
+            <Animated.View
+              style={[
+                styles.cardContent,
+                {
+                  maxHeight: animatedHeight.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 500],
+                  }),
+                },
+              ]}
+            >
               <View style={styles.infoGrid}>
                 <View style={styles.infoItem}>
                   <View style={styles.infoIconContainer}>
                     <Ionicons name="wallet-outline" size={20} color="#FFFFFF" />
                   </View>
                   <Text style={styles.infoLabel}>Amount Paid</Text>
-                  <Text style={styles.infoValue}>₹{item.totalPaid.toLocaleString()}</Text>
+                  <Text style={styles.infoValue}>
+                    ₹{item.totalPaid.toLocaleString()}
+                  </Text>
                 </View>
                 <View style={styles.infoItem}>
                   <View style={styles.infoIconContainer}>
-                    <Ionicons name="calendar-outline" size={20} color="#FFFFFF" />
+                    <Ionicons
+                      name="calendar-outline"
+                      size={20}
+                      color="#FFFFFF"
+                    />
                   </View>
                   <Text style={styles.infoLabel}>Months Paid</Text>
-                  <Text style={styles.infoValue}>{item.monthsPaid} / {item.noOfIns}</Text>
+                  <Text style={styles.infoValue}>
+                    {item.monthsPaid} / {item.noOfIns}
+                  </Text>
                 </View>
                 <View style={styles.infoItem}>
                   <View style={styles.infoIconContainer}>
@@ -486,14 +555,20 @@ export default function SavingsScreen() {
                     <Ionicons name="scale-outline" size={20} color="#FFFFFF" />
                   </View>
                   <Text style={styles.infoLabel}>Total Weight</Text>
-                  <Text style={styles.infoValue}>{item.goldWeight.toFixed(2)} g</Text>
+                  <Text style={styles.infoValue}>
+                    {item.goldWeight.toFixed(2)} g
+                  </Text>
                 </View>
               </View>
 
               <View style={styles.dateContainer}>
                 <View style={styles.dateSection}>
                   <View style={styles.dateIconContainer}>
-                    <Ionicons name="calendar-outline" size={20} color="#FFFFFF" />
+                    <Ionicons
+                      name="calendar-outline"
+                      size={20}
+                      color="#FFFFFF"
+                    />
                   </View>
                   <View style={styles.dateInfo}>
                     <Text style={styles.dateLabel}>Date of Joining</Text>
@@ -516,36 +591,48 @@ export default function SavingsScreen() {
                 <View style={styles.progressHeader}>
                   <Text style={styles.progressLabel}>Installment Progress</Text>
                   <View style={styles.progressStats}>
-                    <Text style={styles.progressValue}>{progressPercentage}%</Text>
+                    <Text style={styles.progressValue}>
+                      {progressPercentage}%
+                    </Text>
                     <Text style={styles.progressMonths}>
                       {item.monthsPaid}/{item.noOfIns} months
                     </Text>
                   </View>
                 </View>
                 <View style={styles.progressBar}>
-                  <Animated.View 
+                  <Animated.View
                     style={[
                       styles.progressFill,
-                      { width: animatedHeight.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: ['0%', `${progressPercentage}%`]
-                      })}
-                    ]} 
+                      {
+                        width: animatedHeight.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ["0%", `${progressPercentage}%`],
+                        }),
+                      },
+                    ]}
                   />
                 </View>
                 <View style={styles.monthsInfo}>
                   <View style={styles.monthItem}>
-                    <View style={[styles.monthDot, { backgroundColor: '#850111' }]} />
+                    <View
+                      style={[styles.monthDot, { backgroundColor: "#850111" }]}
+                    />
                     <Text style={styles.monthLabel}>Paid</Text>
                     <Text style={styles.monthValue}>{item.monthsPaid}</Text>
                   </View>
                   <View style={styles.monthItem}>
-                    <View style={[styles.monthDot, { backgroundColor: '#DAA520' }]} />
+                    <View
+                      style={[styles.monthDot, { backgroundColor: "#DAA520" }]}
+                    />
                     <Text style={styles.monthLabel}>Pending</Text>
-                    <Text style={styles.monthValue}>{Number(item.noOfIns) - Number(item.monthsPaid)}</Text>
+                    <Text style={styles.monthValue}>
+                      {Number(item.noOfIns) - Number(item.monthsPaid)}
+                    </Text>
                   </View>
                   <View style={styles.monthItem}>
-                    <View style={[styles.monthDot, { backgroundColor: '#850111' }]} />
+                    <View
+                      style={[styles.monthDot, { backgroundColor: "#850111" }]}
+                    />
                     <Text style={styles.monthLabel}>Total</Text>
                     <Text style={styles.monthValue}>{item.noOfIns}</Text>
                   </View>
@@ -557,7 +644,7 @@ export default function SavingsScreen() {
                 onPress={() => handleNavigation(item)}
               >
                 <LinearGradient
-                  colors={['#850111', '#B8860B', '#DAA520']}
+                  colors={["#850111", "#B8860B", "#DAA520"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.detailsButtonGradient}
@@ -576,7 +663,7 @@ export default function SavingsScreen() {
   const ListHeader = () => (
     <View style={styles.headerContainer}>
       <LinearGradient
-        colors={['#850111', '#5a000b', '#2e0406']}
+        colors={["#850111", "#5a000b", "#2e0406"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.portfolioCard}
@@ -603,7 +690,9 @@ export default function SavingsScreen() {
             </View>
             <View style={styles.statInfo}>
               <Text style={styles.statLabel}>{translations.totalInvested}</Text>
-              <Text style={styles.statValue}>₹{totalInvested.toLocaleString()}</Text>
+              <Text style={styles.statValue}>
+                ₹{totalInvested.toLocaleString()}
+              </Text>
             </View>
           </View>
           <View style={styles.statDivider} />
@@ -629,17 +718,20 @@ export default function SavingsScreen() {
           </View>
         </View>
       </LinearGradient>
-      <Text style={styles.sectionTitle}>
-        {translations.activeSavingsPlans}
-      </Text>
+      <Text style={styles.sectionTitle}>{translations.activeSavingsPlans}</Text>
     </View>
   );
 
   const EmptyState = () => (
     <View style={styles.emptyStateContainer}>
       <LinearGradient
-        colors={['rgba(133, 1, 17, 0.1)', 'rgba(90, 0, 11, 0.1)', 'rgba(46, 4, 6, 0.1)']}
-        style={styles.emptyStateCard}>
+        colors={[
+          "rgba(133, 1, 17, 0.1)",
+          "rgba(90, 0, 11, 0.1)",
+          "rgba(46, 4, 6, 0.1)",
+        ]}
+        style={styles.emptyStateCard}
+      >
         <View style={styles.emptyStateIconContainer}>
           <Ionicons name="trending-up" size={40} color="#850111" />
         </View>
@@ -654,9 +746,9 @@ export default function SavingsScreen() {
         <Text style={styles.emptyStateSubtitle}>
           Start your gold savings journey today and build your wealth
         </Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.emptyStateButton}
-          onPress={() => router.push('/(tabs)/home/schemes')}
+          onPress={() => router.push("/(tabs)/home/schemes")}
         >
           <Ionicons name="add-circle-outline" size={20} color="#fff" />
           <Text style={styles.emptyStateButtonText}>Start New Savings</Text>
@@ -714,10 +806,10 @@ export default function SavingsScreen() {
         resizeMode="cover"
       >
         <LinearGradient
-          colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.0)']}
+          colors={["rgba(0,0,0,0.0)", "rgba(0,0,0,0.0)"]}
           style={StyleSheet.absoluteFillObject}
         />
-        
+
         <SafeAreaView style={{ flex: 1 }}>
           <View className="absolute top-0 left-0 right-0 z-10 px-4">
             <AppHeader showBackButton={false} backRoute="index" />
@@ -765,9 +857,9 @@ const styles = StyleSheet.create({
     }),
   },
   portfolioHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   portfolioTitleContainer: {
@@ -775,27 +867,27 @@ const styles = StyleSheet.create({
   },
   portfolioTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#fff',
+    fontWeight: "700",
+    color: "#fff",
     marginBottom: 4,
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowColor: "rgba(0, 0, 0, 0.2)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
     letterSpacing: 0.5,
   },
   portfolioBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.2)",
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
   portfolioBadgeText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: "600",
     marginLeft: 3,
     letterSpacing: 0.5,
   },
@@ -803,31 +895,31 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255,255,255,0.15)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   portfolioStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.1)",
     borderRadius: 12,
     padding: 12,
     marginBottom: 12,
   },
   statItem: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   statIconContainer: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255,255,255,0.15)",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 10,
   },
   statInfo: {
@@ -835,48 +927,48 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 11,
-    color: 'rgba(255,255,255,0.9)',
+    color: "rgba(255,255,255,0.9)",
     marginBottom: 3,
-    fontWeight: '500',
+    fontWeight: "500",
     letterSpacing: 0.3,
   },
   statValue: {
     fontSize: 15,
-    fontWeight: '700',
-    color: '#fff',
+    fontWeight: "700",
+    color: "#fff",
     letterSpacing: 0.5,
   },
   statDivider: {
     width: 1,
     height: 32,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: "rgba(255,255,255,0.2)",
     marginHorizontal: 12,
   },
   portfolioFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.2)',
+    borderTopColor: "rgba(255,255,255,0.2)",
     paddingTop: 10,
   },
   footerItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   footerText: {
-    color: 'rgba(255,255,255,0.9)',
+    color: "rgba(255,255,255,0.9)",
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: "600",
     marginLeft: 4,
     letterSpacing: 0.3,
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: '800',
-    color: '#850111',
-    textAlign: 'center',
+    fontWeight: "800",
+    color: "#850111",
+    textAlign: "center",
     marginBottom: 16,
-    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowColor: "rgba(0,0,0,0.3)",
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
@@ -884,9 +976,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 20,
-    overflow: 'hidden',
+    overflow: "hidden",
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -897,7 +989,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
   },
   cardBackgroundImage: {
-    width: '100%',
+    width: "100%",
   },
   cardBackgroundImageStyle: {
     borderRadius: 20,
@@ -906,22 +998,22 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   schemeInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
   schemeIconContainer: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 12,
   },
   schemeTitleContainer: {
@@ -929,12 +1021,12 @@ const styles = StyleSheet.create({
   },
   schemeTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontWeight: "600",
+    color: "#FFFFFF",
     marginBottom: 4,
   },
   schemeSubtitleContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
   },
   metalTypeBadge: {
@@ -944,8 +1036,8 @@ const styles = StyleSheet.create({
   },
   metalTypeText: {
     fontSize: 12,
-    fontWeight: '500',
-    color: '#FFFFFF',
+    fontWeight: "500",
+    color: "#FFFFFF",
   },
   savingTypeBadge: {
     paddingHorizontal: 8,
@@ -954,12 +1046,12 @@ const styles = StyleSheet.create({
   },
   savingTypeText: {
     fontSize: 12,
-    fontWeight: '500',
-    color: '#FFFFFF',
+    fontWeight: "500",
+    color: "#FFFFFF",
   },
   headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   statusBadge: {
@@ -969,171 +1061,171 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   expandIcon: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   accountInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 16,
     paddingHorizontal: 8,
   },
   accountItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   accountIconContainer: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: 'rgba(133, 1, 17, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(133, 1, 17, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   accountLabel: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: "rgba(255, 255, 255, 0.8)",
   },
   accountValue: {
     fontSize: 12,
-    fontWeight: '500',
-    color: '#FFFFFF',
+    fontWeight: "500",
+    color: "#FFFFFF",
   },
   cardContent: {
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   infoGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 16,
     marginBottom: 16,
   },
   infoItem: {
     flex: 1,
-    minWidth: '45%',
-    alignItems: 'center',
+    minWidth: "45%",
+    alignItems: "center",
     padding: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: "rgba(255, 255, 255, 0.5)",
     borderRadius: 12,
   },
   infoIconContainer: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(133, 1, 17, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(133, 1, 17, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 8,
   },
   infoLabel: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: "rgba(255, 255, 255, 0.8)",
     marginBottom: 4,
   },
   infoValue: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
   dateContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.5)",
     borderRadius: 12,
     padding: 12,
     marginBottom: 16,
   },
   dateSection: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   dateIconContainer: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(133, 1, 17, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(133, 1, 17, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   dateInfo: {
     flex: 1,
   },
   dateLabel: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: "rgba(255, 255, 255, 0.8)",
     marginBottom: 2,
   },
   dateValue: {
     fontSize: 13,
-    fontWeight: '500',
-    color: '#FFFFFF',
+    fontWeight: "500",
+    color: "#FFFFFF",
   },
   dateDivider: {
     width: 1,
-    height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    height: "100%",
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
     marginHorizontal: 12,
   },
   progressContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: "rgba(255, 255, 255, 0.5)",
     borderRadius: 12,
     padding: 12,
     marginBottom: 16,
   },
   progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
   },
   progressLabel: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
   progressStats: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
+    flexDirection: "row",
+    alignItems: "baseline",
     gap: 4,
   },
   progressValue: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
   progressMonths: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: "rgba(255, 255, 255, 0.8)",
   },
   progressBar: {
     height: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
     borderRadius: 4,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 12,
   },
   progressFill: {
-    height: '100%',
-    backgroundColor: '#850111',
+    height: "100%",
+    backgroundColor: "#850111",
     borderRadius: 4,
   },
   monthsInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   monthItem: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: 4,
   },
   monthDot: {
@@ -1143,33 +1235,33 @@ const styles = StyleSheet.create({
   },
   monthLabel: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: "rgba(255, 255, 255, 0.8)",
   },
   monthValue: {
     fontSize: 12,
-    fontWeight: '500',
-    color: '#FFFFFF',
+    fontWeight: "500",
+    color: "#FFFFFF",
   },
   detailsButton: {
     borderRadius: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
     elevation: 4,
-    shadowColor: '#850111',
+    shadowColor: "#850111",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
   detailsButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 12,
     paddingHorizontal: 24,
   },
   detailsButtonText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: "600",
+    color: "#fff",
     marginRight: 8,
   },
   emptyStateContainer: {
@@ -1179,10 +1271,10 @@ const styles = StyleSheet.create({
   emptyStateCard: {
     borderRadius: 20,
     padding: 24,
-    alignItems: 'center',
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: 'rgba(133, 1, 17, 0.2)',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: "rgba(133, 1, 17, 0.2)",
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
     ...Platform.select({
       ios: {
         shadowColor: "#850111",
@@ -1199,9 +1291,9 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(133, 1, 17, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(133, 1, 17, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 16,
   },
   emptyStateImage: {
@@ -1211,22 +1303,22 @@ const styles = StyleSheet.create({
   },
   emptyStateTitle: {
     fontSize: 20,
-    fontWeight: '700',
-    color: 'white',
-    textAlign: 'center',
+    fontWeight: "700",
+    color: "white",
+    textAlign: "center",
     marginBottom: 8,
   },
   emptyStateSubtitle: {
     fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
     marginBottom: 24,
     lineHeight: 20,
   },
   emptyStateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#850111',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#850111",
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 12,
@@ -1243,21 +1335,21 @@ const styles = StyleSheet.create({
     }),
   },
   emptyStateButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginLeft: 8,
   },
   payNowButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
     marginRight: 8,
   },
   payNowButtonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

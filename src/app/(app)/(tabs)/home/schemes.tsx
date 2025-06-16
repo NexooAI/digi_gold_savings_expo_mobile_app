@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -70,106 +70,111 @@ interface Scheme {
 const DEFAULT_SCHEME_TYPE = "Monthly";
 
 export default function SchemeList() {
-  // Changed default tab to Flexi since we're reversing the order
   const [activeTab, setActiveTab] = useState<"Daily" | "Weekly" | "Monthly" | "Flexi">("Monthly");
   const [schemes, setSchemes] = useState<Scheme[]>([]);
   const [loading, setLoading] = useState(true);
+  const [allSchemes, setAllSchemes] = useState<Scheme[]>([]);
+  const [expandedCard, setExpandedCard] = useState<number | null>(null);
   const router = useRouter();
   const { language } = useGlobalStore();
   const underlineAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
   const [tabLayouts, setTabLayouts] = useState<{ [key: string]: { x: number, width: number } }>({});
-  // Reversed the order of tabs
   const tabs: ("Daily" | "Weekly" | "Monthly" | "Flexi")[] = ["Monthly", "Weekly", "Daily", "Flexi"];
-
   const flatListRef = useRef<FlatList>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const currentTabIndex = tabs.indexOf(activeTab);
-  const [allSchemes, setAllSchemes] = useState<Scheme[]>([]);
-  const [expandedCard, setExpandedCard] = useState<number | null>(null);
+
+  // Memoize the filtered schemes to prevent unnecessary recalculations
+  const filteredSchemes = useMemo(() => {
+    if (!allSchemes.length) return [];
+
+    // Create buckets for each frequency
+    const buckets: { [key: string]: any[] } = {
+      daily: [],
+      weekly: [],
+      monthly: [],
+      flexi: []
+    };
+
+    // Process all schemes and their chits
+    allSchemes.forEach((scheme: Scheme) => {
+      if (scheme.ACTIVE !== 'Y') return;
+
+      // Get the relevant chits for the current frequency
+      const relevantChits = scheme.chits?.filter(chit => 
+        (chit.PAYMENT_FREQUENCY || '').toLowerCase() === activeTab.toLowerCase()
+      ) || [];
+
+      if (relevantChits.length > 0) {
+        buckets[activeTab.toLowerCase()].push({
+          SCHEMEID: scheme.SCHEMEID,
+          SCHEMENAME: scheme.SCHEMENAME,
+          DESCRIPTION: scheme.DESCRIPTION || "Save gold with our flexible plan.",
+          BENEFITS: scheme.BENEFITS || [
+            "Competitive rates",
+            "Flexible payments",
+            "Zero making charges",
+            "Free locker facility"
+          ],
+          SCHEMETYPE: activeTab === 'Flexi' ? 'Flexi' : 'Fixed',
+          ACTIVE: scheme.ACTIVE,
+          chits: relevantChits,
+          relevantChits: relevantChits.map(chit => ({
+            CHITID: chit.CHITID,
+            AMOUNT: parseFloat(chit.AMOUNT)
+          }))
+        });
+      }
+    });
+
+    return buckets[activeTab.toLowerCase()];
+  }, [activeTab, allSchemes]);
+
+  // Update schemes when filteredSchemes changes
+  useEffect(() => {
+    setSchemes(filteredSchemes);
+  }, [filteredSchemes]);
 
   // Fetch all schemes only once on mount
   useEffect(() => {
+    let isMounted = true;
+
     const fetchAllSchemes = async () => {
+      if (!isMounted) return;
+      
       setLoading(true);
       try {
         const response = await api.get(`/schemes`);
-        if (response.data?.data) {
-          console.log('Fetched schemes:', response.data.data);
-          setAllSchemes(response.data.data);
-        } else {
-          console.warn('No schemes data in response');
-          setAllSchemes([]);
+        if (isMounted) {
+          if (response.data?.data) {
+            console.log('Fetched schemes:', response.data.data);
+            setAllSchemes(response.data.data);
+          } else {
+            console.warn('No schemes data in response');
+            setAllSchemes([]);
+          }
         }
       } catch (error) {
-        console.error("Error fetching schemes:", error);
-        Alert.alert("Error", "Failed to fetch schemes. Please try again later.");
-        setAllSchemes([]);
+        if (isMounted) {
+          console.error("Error fetching schemes:", error);
+          Alert.alert("Error", "Failed to fetch schemes. Please try again later.");
+          setAllSchemes([]);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
+
     fetchAllSchemes();
-  }, []);
 
-  // Filter schemes locally when activeTab or allSchemes changes
-  useEffect(() => {
-    if (!allSchemes.length) {
-      setSchemes([]);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // Create buckets for each frequency
-      const buckets: { [key: string]: any[] } = {
-        daily: [],
-        weekly: [],
-        monthly: [],
-        flexi: []
-      };
-
-      // Process all schemes and their chits
-      allSchemes.forEach((scheme: Scheme) => {
-        if (scheme.ACTIVE !== 'Y') return;
-
-        // Get the relevant chits for the current frequency
-        const relevantChits = scheme.chits?.filter(chit => 
-          (chit.PAYMENT_FREQUENCY || '').toLowerCase() === activeTab.toLowerCase()
-        ) || [];
-
-        if (relevantChits.length > 0) {
-          buckets[activeTab.toLowerCase()].push({
-            SCHEMEID: scheme.SCHEMEID,
-            SCHEMENAME: scheme.SCHEMENAME,
-            DESCRIPTION: scheme.DESCRIPTION || "Save gold with our flexible plan.",
-            BENEFITS: scheme.BENEFITS || [
-              "Competitive rates",
-              "Flexible payments",
-              "Zero making charges",
-              "Free locker facility"
-            ],
-            SCHEMETYPE: activeTab === 'Flexi' ? 'Flexi' : 'Fixed',
-            ACTIVE: scheme.ACTIVE,
-            chits: relevantChits,
-            relevantChits: relevantChits.map(chit => ({
-              CHITID: chit.CHITID,
-              AMOUNT: parseFloat(chit.AMOUNT)
-            }))
-          });
-        }
-      });
-
-      const filteredSchemes = buckets[activeTab.toLowerCase()];
-      console.log(`Filtered ${activeTab} schemes:`, filteredSchemes);
-      setSchemes(filteredSchemes);
-    } catch (error) {
-      console.error("Error filtering schemes:", error);
-      setSchemes([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [activeTab, allSchemes]);
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Empty dependency array means it runs once on mount
 
   useEffect(() => {
     // Animate the slide transition when active tab changes

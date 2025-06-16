@@ -3,29 +3,74 @@ import io from 'socket.io-client';
 import { theme } from '@/constants/theme';
 import { PaymentSocket, PaymentStatusUpdate } from '@/app/(app)/(tabs)/home/types/payment.types';
 import { postPayment, postTransaction, updateInvestment } from '@/utils/paymentUtils';
+import { Alert } from 'react-native';
 
 interface UsePaymentSocketProps {
   onPaymentSuccess?: (data: PaymentStatusUpdate) => void;
   onPaymentFailure?: (data: PaymentStatusUpdate) => void;
   onPaymentError?: (error: any) => void;
+  onPaymentExpired?: () => void;
 }
 
 export const usePaymentSocket = ({
   onPaymentSuccess,
   onPaymentFailure,
   onPaymentError,
+  onPaymentExpired,
   parsedUserDetails,
   router
-}: UsePaymentSocketProps & { parsedUserDetails?: any, router?: any } = {}) => {
+}: UsePaymentSocketProps & { parsedUserDetails?: any, router?: any } = {} as UsePaymentSocketProps & { parsedUserDetails?: any, router?: any }) => {
   const [socket, setSocket] = useState<PaymentSocket | null>(null);
   const isPaymentCompleted = useRef(false);
+
+  const handleError = (error: any) => {
+    if (error?.error?.includes('HTTP Error:')) {
+      const errorCode = error.error.split('HTTP Error:')[1].trim();
+      
+      Alert.alert(
+        "Payment Error",
+        "There was an error processing your payment. Please try again.",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              console.log("------------------------->> ❤️ ❤️ ❤️ ", router)
+              router.replace('/(tabs)/home/payment');
+              // if (router) {
+              //   router.replace({
+              //     pathname: "/(tabs)/home/payment",
+              //     params: {
+              //       amount: parsedUserDetails?.amount || "",
+              //       userDetails: JSON.stringify(parsedUserDetails),
+              //       error: `Server Error (${errorCode})`,
+              //       errorTimestamp: error.timestamp || new Date().toISOString()
+              //     }
+              //   });
+              // }
+            }
+          }
+        ]
+      );
+
+      onPaymentError?.({
+        error: `Server Error (${errorCode})`,
+        message: 'The server encountered an error while processing your payment.',
+        timestamp: error.timestamp || new Date().toISOString(),
+        type: 'HTTP_ERROR',
+        code: errorCode
+      });
+    } else {
+      onPaymentError?.(error);
+    }
+  };
 
   useEffect(() => {
     const socketInstance = io(theme.baseUrl) as unknown as PaymentSocket;
     setSocket(socketInstance);
 
     socketInstance.on('payment_status_update', async (data: PaymentStatusUpdate) => {
-      console.log("------------------------->> ❤️ ❤️ ❤️ ",data)
+      console.log("------------------------->> ❤️ ❤️ ❤️ ", data);
+      console.log("------------------------->> ❤️ ❤️ ❤️ ", parsedUserDetails, router);
       const txnStatus = data?.paymentResponse?.txn_detail?.status;
       try {
         if (txnStatus === 'CHARGED') {
@@ -80,6 +125,7 @@ export const usePaymentSocket = ({
             await updateInvestment(parsedUserDetails.data?.data?.id || parsedUserDetails.investmentId || '', investmentPayload);
           }
           onPaymentSuccess?.(data);
+          console.log("------------------------->> end ",data)
           if (socketInstance && socketInstance.connected) {
             socketInstance.disconnect();
           }
@@ -129,12 +175,18 @@ export const usePaymentSocket = ({
         }
       } catch (error) {
         console.error('Error in payment status update API sequence:', error);
-        onPaymentError?.(error);
+        handleError(error);
       }
     });
 
     (socketInstance as any).on('error', (error: any) => {
-      onPaymentError?.(error);
+      console.error('Socket error received:', error);
+      handleError(error);
+    });
+
+    (socketInstance as any).on('payment_error', (error: any) => {
+      console.error('Payment error received:', error);
+      handleError(error);
     });
 
     return () => {
@@ -145,7 +197,7 @@ export const usePaymentSocket = ({
   }, []);
 
   const emitPaymentEvent = (event: string, data: any) => {
-    console.log("------------------------->>",event, "❤️ ❤️ ❤️",data)
+    console.log("------------------------->>", event, "❤️ ❤️ ❤️", data);
     if (socket) {
       (socket as any).emit(event, {
         ...data,
@@ -154,9 +206,24 @@ export const usePaymentSocket = ({
     }
   };
 
+  const handleCancel = () => {
+    if (router) {
+      router.replace({
+        pathname: "/(tabs)/home/payment",
+        params: {
+          amount: parsedUserDetails?.amount || "",
+          userDetails: JSON.stringify(parsedUserDetails),
+          error: "Payment Cancelled",
+          errorTimestamp: new Date().toISOString()
+        }
+      });
+    }
+  };
+
   return {
     socket,
     isPaymentCompleted: isPaymentCompleted.current,
-    emitPaymentEvent
+    emitPaymentEvent,
+    handleCancel
   };
 }; 

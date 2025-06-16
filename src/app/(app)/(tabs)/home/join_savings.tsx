@@ -989,6 +989,10 @@ export default function JoinSavings() {
             pathname: "/(tabs)/home/payment",
             params: {
               amount: formData.amount,
+              schemeName: parsedData?.name, // Pass scheme name
+              schemeId: parsedData?.schemeId,
+              chitId: selectedChit?.CHITID,
+              paymentFrequency: selectedChit?.PAYMENT_FREQUENCY,
               userDetails: JSON.stringify({
                 accountname: formData.accountname,
                 accNo: data.data?.data?.accountNo || data.accountNo,
@@ -1000,8 +1004,9 @@ export default function JoinSavings() {
                 investmentId: data.data?.data?.id || data.id,
                 schemeId: Number(schemeId),
                 schemeType: schemeType,
-                paymentFrequency: selectedChit ? selectedChit.PAYMENT_FREQUENCY : '',
-                chitId: selectedChit ? selectedChit.CHITID : null,
+                schemeName: parsedData?.name, // Also inside userDetails for redundancy
+                paymentFrequency: selectedChit?.PAYMENT_FREQUENCY,
+                chitId: selectedChit?.CHITID,
                 ...data.data.data,
               }),
             },

@@ -123,6 +123,21 @@ export const setupPaymentStatusListener = (socket, parsedUserDetails, router, pr
 
     try {
       if (paymentSuccess) {
+        // Validate required payment data
+        // if (!data?.paymentResponse?.txn_id || !data?.paymentResponse?.order_id) {
+        //   console.error('Missing required payment data:', {
+        //     txnId: data?.paymentResponse?.txn_id,
+        //     orderId: data?.paymentResponse?.order_id,
+        //     amount: data?.paymentResponse?.amount
+        //   });
+        //   Alert.alert(
+        //     'Payment Error',
+        //     'Some payment details are missing. Please contact support.',
+        //     [{ text: 'OK', onPress: () => router.replace('/(tabs)/home') }]
+        //   );
+        //   return;
+        // }
+
         // Payment API call
         const paymentPayload = {
           investmentId: parsedUserDetails.data?.data?.id,
@@ -148,6 +163,14 @@ export const setupPaymentStatusListener = (socket, parsedUserDetails, router, pr
           parsedUserDetails.data?.data?.id,
           investmentPayload
         );
+
+        // Log payment success data before navigation
+        console.log('Payment Success Data:', {
+          amount: data?.paymentResponse?.amount,
+          txnId: data?.paymentResponse?.txn_id,
+          orderId: data?.paymentResponse?.order_id,
+          timestamp: new Date().toISOString()
+        });
 
         router.push({
           pathname: "/(tabs)/home/payment-success",

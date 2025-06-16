@@ -1,75 +1,153 @@
-import React, { useEffect, useCallback, useState, useRef } from 'react';
+import React, { useEffect, useCallback, useState, useRef } from "react";
 import {
   View,
   StyleSheet,
   ActivityIndicator,
   BackHandler,
-  Platform,
   Alert,
   Text,
   TouchableOpacity,
-} from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { WebView } from 'react-native-webview';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { usePaymentSocket } from '../../../../hooks/usePaymentSocket';
-import { theme } from '@/constants/theme';
-import { PaymentStatusUpdate } from './types/payment.types';
+} from "react-native";
+import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
+import { WebView } from "react-native-webview";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { usePaymentSocket } from "../../../../hooks/usePaymentSocket";
+import { theme } from "@/constants/theme";
+import { PaymentStatusUpdate } from "./types/payment.types";
+import useGlobalStore from "@/store/global.store";
 
 const PaymentWebViewNew = () => {
   const router = useRouter();
-  const { paymentUrl } = useLocalSearchParams();
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
+  const navigation = useNavigation();
+  const {
+    paymentUrl,
+    totalInstallments,
+    installmentNumber,
+    schemeName,
+    schemeId,
+    chitId,
+    goldWeight,
+  } = useLocalSearchParams();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const webViewRef = useRef<WebView>(null);
   const loadingTimerRef = useRef<NodeJS.Timeout>();
   const [isPaymentDone, setIsPaymentDone] = useState(false);
+  const { setTabVisibility } = useGlobalStore();
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    setTabVisibility(false);
+    return () => {
+      setTabVisibility(true);
+    };
+  }, [setTabVisibility]);
+
+  useEffect(() => {
+    if (!paymentUrl) {
+      setTimeout(() => {
+        Alert.alert(
+          "Invalid Payment",
+          "Payment URL is missing. Please try again.",
+          [{ text: "OK", onPress: () => router.replace("/(tabs)/home") }]
+        );
+      }, 500);
+    } 
+  }, [paymentUrl, router]);
 
   const { emitPaymentEvent } = usePaymentSocket({
-    onPaymentSuccess: (data: PaymentStatusUpdate) => {
-      setIsPaymentDone(true);
-      router.push({
-        pathname: "/(tabs)/home/payment-success",
+    // onPaymentSuccess: (data: PaymentStatusUpdate) => {
+    //   console.log("Payment Success Data:", data);
+    //   if (!data?.paymentResponse?.txn_id || !data?.paymentResponse?.order_id) {
+    //     Alert.alert(
+    //       "Payment Error",
+    //       "Some payment details are missing. Please contact support.",
+    //       [{ text: "OK", onPress: () => router.replace("/(tabs)/home") }]
+    //     );
+    //     return;
+    //   }
+    //   setIsPaymentDone(true);
+    //   setTabVisibility(true);
+    //   router.push({
+    //     pathname: "/(app)/(tabs)/home/payment-success",
+    //     params: {
+    //       amount: data?.paymentResponse?.amount?.toString() || "",
+    //       txnId: data?.paymentResponse?.txn_id || "",
+    //       orderId: data?.paymentResponse?.order_id || "",
+    //       totalInstallments: totalInstallments?.toString() || "",
+    //       installmentNumber: installmentNumber?.toString() || "",
+    //       schemeName: schemeName || "",
+    //       schemeId: schemeId?.toString() || "",
+    //       chitId: chitId?.toString() || "",
+    //       goldWeight: goldWeight?.toString() || "",
+    //       paymentMethod: "Online Payment",
+    //       paymentDate: new Date().toISOString(),
+    //     },
+    //   });
+    // },
+    // onPaymentFailure: (data: PaymentStatusUpdate) => {
+    //   setTabVisibility(true);
+    //   router.replace({
+    //     pathname: "/(tabs)/home/payment-failure",
+    //     params: {
+    //       message:
+    //         data?.paymentResponse?.payment_gateway_response?.resp_message ||
+    //         "Your payment has failed. Please try again.",
+    //       orderId: data?.paymentResponse?.order_id,
+    //       txnId: data?.paymentResponse?.txn_id,
+    //       amount: data?.paymentResponse?.amount,
+    //     },
+    //   });
+    // },
+    onPaymentError: (error: any) => {
+      setTabVisibility(true);
+      router.replace({
+        pathname: "/(tabs)/home/payment-failure",
         params: {
-          amount: data.paymentResponse.amount,
-          txnId: data.paymentResponse.txn_id,
-          orderId: data.paymentResponse.order_id,
-        }
+          message: "An error occurred while processing the transaction.",
+          orderId: error?.paymentResponse?.order_id || "",
+          txnId: error?.paymentResponse?.txn_id || "",
+          amount: error?.paymentResponse?.amount || "",
+        },
       });
     },
-    onPaymentFailure: (data: PaymentStatusUpdate) => {
-      console.log("Payment Failure", data);
-      router.replace({ pathname: '/(tabs)/home/payment-failed', params: {
-        message: data.paymentResponse.payment_gateway_response?.resp_message || "Your payment has failed. Please try again.",
-        orderId: data.paymentResponse.order_id,
-        txnId: data.paymentResponse.txn_id,
-        amount: data.paymentResponse.amount,
-      } });
-    },
-    onPaymentError: (error: any) => {
-      console.error("Error processing payment status update:", error);
-      router.replace({ pathname: '/(tabs)/home/payment-failed', params: {
-        message: "An error occurred while processing the transaction.",
-        orderId: error.paymentResponse.order_id,
-        txnId: error.paymentResponse.txn_id,
-        amount: error.paymentResponse.amount,
-      } });
+    onPaymentExpired: () => {
+      setIsPaymentDone(true);
+      setTabVisibility(true);
+      router.replace({
+        pathname: "/(tabs)/home/payment-failure",
+        params: {
+          message: "Payment session has expired. Please try again.",
+          orderId: "",
+          txnId: "",
+          amount: "",
+        },
+      });
     },
     parsedUserDetails: undefined,
-    router
+    router,
   });
 
   const handleNavigationStateChange = useCallback((navState: any) => {
+    if (isProcessing) {
+      return;
+    }
+
     const { url } = navState;
-    console.log('Navigation URL:', url); // Debug log
+    console.log('Navigation URL:', url);
     
-    // Clear loading timeout when navigation changes
     if (loadingTimerRef.current) {
       clearTimeout(loadingTimerRef.current);
     }
-console.log("URL", url ,url.includes('payment-success'),url.includes('payment-failure'),url.includes('payment-error') );
-    // Handle success URL
+
+    setIsProcessing(true);
+
+    if (url.includes('PageExpired')) {
+      emitPaymentEvent('payment_expired', {
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
     if (url.includes('payment-success')) {
       setIsLoading(false);
       emitPaymentEvent('payment_success', {
@@ -79,7 +157,6 @@ console.log("URL", url ,url.includes('payment-success'),url.includes('payment-fa
       return;
     }
 
-    // Handle failure URL
     if (url.includes('payment-failure')) {
       setIsLoading(false);
       emitPaymentEvent('payment_failed', {
@@ -89,7 +166,6 @@ console.log("URL", url ,url.includes('payment-success'),url.includes('payment-fa
       return;
     }
 
-    // Handle error URL
     if (url.includes('payment-error')) {
       setIsLoading(false);
       emitPaymentEvent('payment_error', {
@@ -99,86 +175,80 @@ console.log("URL", url ,url.includes('payment-success'),url.includes('payment-fa
       return;
     }
 
-    // Handle netbanking URLs
     if (url.includes('netbanking')) {
       setIsLoading(false);
-      // Set a timeout to show loading if the page takes too long
       loadingTimerRef.current = setTimeout(() => {
         setLoadingTimeout(true);
-      }, 30000); // 30 seconds timeout
+      }, 30000);
     }
+
+    setTimeout(() => {
+      setIsProcessing(false);
+    }, 1000);
   }, [emitPaymentEvent]);
 
-  const handleLoadStart = useCallback(() => {
-    setIsLoading(false);
-    setLoadingTimeout(false);
-    if (loadingTimerRef.current) {
-      clearTimeout(loadingTimerRef.current);
-    }
-  }, []);
-
-  const handleLoadEnd = useCallback(() => {
-    setIsLoading(false);
-    setLoadingTimeout(false);
-    if (loadingTimerRef.current) {
-      clearTimeout(loadingTimerRef.current);
-    }
-  }, []);
-
-  const handleError = useCallback((syntheticEvent: any) => {
-    const { nativeEvent } = syntheticEvent;
-    console.error('WebView error:', nativeEvent);
-    setHasError(true);
-    setIsLoading(false);
-    emitPaymentEvent('payment_error', {
-      error: nativeEvent.description,
-      timestamp: new Date().toISOString()
-    });
-  }, [emitPaymentEvent]);
+  const handleError = useCallback(
+    (syntheticEvent: any) => {
+      const { nativeEvent } = syntheticEvent;
+      emitPaymentEvent("payment_error", {
+        error: nativeEvent.description,
+        timestamp: new Date().toISOString(),
+      });
+    },
+    [emitPaymentEvent]
+  );
 
   useEffect(() => {
-    if (isPaymentDone) return; // Don't register handler if payment is done
-
+    if (isPaymentDone) return;
     const backHandler = BackHandler.addEventListener(
-      'hardwareBackPress',
+      "hardwareBackPress",
       () => {
         Alert.alert(
-          'Cancel Payment',
-          'Are you sure you want to cancel the payment?',
+          "Cancel Payment",
+          "Are you sure you want to cancel the payment?",
           [
+            { text: "No", style: "cancel" },
             {
-              text: 'No',
-              style: 'cancel',
-              onPress: () => {}
-            },
-            {
-              text: 'Yes',
-              style: 'destructive',
+              text: "Yes",
+              style: "destructive",
               onPress: () => {
-                emitPaymentEvent('payment_cancelled', {
-                  timestamp: new Date().toISOString()
+                setTabVisibility(true);
+                emitPaymentEvent("payment_cancelled", {
+                  timestamp: new Date().toISOString(),
                 });
                 router.back();
-              }
-            }
+              },
+            },
           ]
         );
         return true;
       }
     );
-
     return () => {
       backHandler.remove();
+      if (loadingTimerRef.current) clearTimeout(loadingTimerRef.current);
+    };
+  }, [router, emitPaymentEvent, isPaymentDone, setTabVisibility]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("beforeRemove", (e: any) => {
+      if (!isPaymentDone) e.preventDefault();
+      else setTabVisibility(true);
+    });
+    return unsubscribe;
+  }, [navigation, isPaymentDone, setTabVisibility]);
+
+  const handleReload = useCallback(() => {
+    webViewRef.current?.reload();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      setIsProcessing(false);
       if (loadingTimerRef.current) {
         clearTimeout(loadingTimerRef.current);
       }
     };
-  }, [router, emitPaymentEvent, isPaymentDone]);
-
-  const handleReload = useCallback(() => {
-    if (webViewRef.current) {
-      webViewRef.current.reload();
-    }
   }, []);
 
   if (!paymentUrl) {
@@ -193,54 +263,43 @@ console.log("URL", url ,url.includes('payment-success'),url.includes('payment-fa
 
   return (
     <SafeAreaView style={styles.container}>
-      {isLoading && (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Loading payment gateway...</Text>
-        </View>
-      )}
-      
       {loadingTimeout && (
         <View style={styles.timeoutContainer}>
-          <Text style={styles.timeoutText}>The page is taking longer than expected to load.</Text>
+          <Text style={styles.timeoutText}>
+            The page is taking longer than expected to load.
+          </Text>
           <TouchableOpacity style={styles.reloadButton} onPress={handleReload}>
             <Text style={styles.reloadButtonText}>Reload Page</Text>
           </TouchableOpacity>
         </View>
       )}
-      
+
       <WebView
         ref={webViewRef}
         source={{ uri: paymentUrl as string }}
         style={styles.webview}
-        onLoadStart={handleLoadStart}
-        onLoadEnd={handleLoadEnd}
         onNavigationStateChange={handleNavigationStateChange}
         onError={handleError}
         javaScriptEnabled={true}
         domStorageEnabled={true}
-        startInLoadingState={true}
         scalesPageToFit={true}
         incognito={true}
         cacheEnabled={false}
         cacheMode="LOAD_NO_CACHE"
         onHttpError={(syntheticEvent) => {
-          console.log("HTTP Error", syntheticEvent);
+          console.log('syntheticEvent',syntheticEvent)
+          if (isProcessing) return;
+          
           const { nativeEvent } = syntheticEvent;
-          console.error('WebView HTTP error:', nativeEvent);
-          setHasError(true);
-          setIsLoading(false);
-          emitPaymentEvent('payment_error', {
-            error: `HTTP Error: ${nativeEvent.statusCode}`,
-            timestamp: new Date().toISOString()
-          });
+          if (nativeEvent.statusCode === 500) {
+            emitPaymentEvent("payment_error", {
+              error: `HTTP Error: ${nativeEvent.statusCode}`,
+              timestamp: new Date().toISOString(),
+            });
+          } else {
+            handleCancel();
+          }
         }}
-        renderLoading={() => (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text style={styles.loadingText}>Loading payment gateway...</Text>
-          </View>
-        )}
       />
     </SafeAreaView>
   );
@@ -254,38 +313,26 @@ const styles = StyleSheet.create({
   webview: {
     flex: 1,
   },
-  loadingContainer: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: theme.colors.primary,
-  },
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   timeoutContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
     padding: 20,
     zIndex: 2,
-    alignItems: 'center',
+    alignItems: "center",
   },
   timeoutText: {
     fontSize: 16,
     color: theme.colors.textPrimary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 10,
   },
   reloadButton: {
@@ -295,10 +342,10 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   reloadButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 
-export default PaymentWebViewNew; 
+export default PaymentWebViewNew;
