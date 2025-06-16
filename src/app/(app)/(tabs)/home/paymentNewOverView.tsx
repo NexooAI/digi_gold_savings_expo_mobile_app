@@ -1,15 +1,24 @@
-import { useLocalSearchParams } from 'expo-router';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Modal, Pressable, Alert } from 'react-native';
-import { useEffect, useState, useMemo } from 'react';
-import { t } from '@/i18n';
-import useGlobalStore from '@/store/global.store';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { theme } from '@/constants/theme';
-import api from '@/services/api';
-import paymentService from '../../../../services/payment.service';
-import { PaymentInitPayload } from './types/payment.types';
+import { useLocalSearchParams } from "expo-router";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  Modal,
+  Pressable,
+  Alert,
+} from "react-native";
+import { useEffect, useState, useMemo } from "react";
+import { t } from "@/i18n";
+import useGlobalStore from "@/store/global.store";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { theme } from "@/constants/theme";
+import api from "@/services/api";
+import paymentService from "../../../../services/payment.service";
+import { PaymentInitPayload } from "./types/payment.types";
 
 export default function PaymentNewOverView() {
   const params = useLocalSearchParams();
@@ -18,7 +27,7 @@ export default function PaymentNewOverView() {
   const [userDetails, setUserDetails] = useState<any>(null);
   const [isTermsAccepted, setIsTermsAccepted] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
-  const [termsContent, setTermsContent] = useState('test');
+  const [termsContent, setTermsContent] = useState("test");
   // Parse user details only once when component mounts
   useEffect(() => {
     if (params.userDetails && !userDetails) {
@@ -26,22 +35,22 @@ export default function PaymentNewOverView() {
         const details = JSON.parse(params.userDetails as string);
         setUserDetails(details);
       } catch (error) {
-        console.error('Error parsing user details:', error);
+        console.error("Error parsing user details:", error);
       }
     }
   }, []); // Empty dependency array to run only once
-const fetchTermsAndConditions = async () => {
-  const response = await api.get('/policies/type/terms_and_conditions');
-  setTermsContent(response.data.data.description);
-}
-useEffect(() => {
+  const fetchTermsAndConditions = async () => {
+    const response = await api.get("/policies/type/terms_and_conditions");
+    setTermsContent(response.data.data.description);
+  };
+  useEffect(() => {
     fetchTermsAndConditions();
   }, []);
   // Memoize formatted amount to prevent unnecessary recalculations
   const formattedAmount = useMemo(() => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(Number(params.amount) || 0);
@@ -49,40 +58,50 @@ useEffect(() => {
 
   const handlePayment = async () => {
     if (!userDetails) {
-      Alert.alert('Error', 'User details not available');
+      Alert.alert("Error", "User details not available");
       return;
     }
     try {
+      console.log("userDetails ======>", userDetails, params);
       const payload: PaymentInitPayload = {
         userId: userDetails.userId,
         amount: Number(params.amount),
-        investmentId: Array.isArray(params.investmentId) ? params.investmentId[0] : params.investmentId,
-        schemeId: Array.isArray(params.schemeId) ? params.schemeId[0] : params.schemeId,
+        investmentId: userDetails.investmentId,
+        schemeId: Array.isArray(params.schemeId)
+          ? params.schemeId[0]
+          : params.schemeId,
         userEmail: userDetails.email,
         userMobile: userDetails.mobile,
         userName: userDetails.accountname,
         chitId: Array.isArray(params.chitId) ? params.chitId[0] : params.chitId,
       };
+      console.log("initialpayment ======>", payload);
       const response = await paymentService.initiatePayment(payload);
       if (response?.session.payment_links.web) {
         router.push({
-          pathname: '/(tabs)/home/paymentWebView',
-          params: { 
+          pathname: "/(tabs)/home/paymentWebView",
+          params: {
             url: response.session.payment_links.web,
             userDetails: JSON.stringify({
               ...userDetails,
               amount: params.amount,
-              investmentId: Array.isArray(params.investmentId) ? params.investmentId[0] : params.investmentId,
-              schemeId: Array.isArray(params.schemeId) ? params.schemeId[0] : params.schemeId,
-              chitId: Array.isArray(params.chitId) ? params.chitId[0] : params.chitId,
-            })
-          }
+              investmentId: Array.isArray(params.investmentId)
+                ? params.investmentId[0]
+                : params.investmentId,
+              schemeId: Array.isArray(params.schemeId)
+                ? params.schemeId[0]
+                : params.schemeId,
+              chitId: Array.isArray(params.chitId)
+                ? params.chitId[0]
+                : params.chitId,
+            }),
+          },
         });
       } else {
-        Alert.alert('Error', 'No payment URL received');
+        Alert.alert("Error", "No payment URL received");
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to initiate payment');
+      Alert.alert("Error", "Failed to initiate payment");
       console.error(error);
     }
   };
@@ -97,7 +116,7 @@ useEffect(() => {
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{t('termsAndConditions')}</Text>
+            <Text style={styles.modalTitle}>{t("termsAndConditions")}</Text>
             <TouchableOpacity
               onPress={() => setShowTermsModal(false)}
               style={styles.closeButton}
@@ -119,7 +138,7 @@ useEffect(() => {
                 setShowTermsModal(false);
               }}
             >
-              <Text style={styles.acceptButtonText}>{t('accept')}</Text>
+              <Text style={styles.acceptButtonText}>{t("accept")}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -134,25 +153,31 @@ useEffect(() => {
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={24} color={theme.colors.secondary} />
+          <Ionicons
+            name="arrow-back"
+            size={24}
+            color={theme.colors.secondary}
+          />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {t('paymentOverview')}
-        </Text>
+        <Text style={styles.headerTitle}>{t("paymentOverview")}</Text>
       </View>
 
-      <ScrollView 
-        style={styles.content} 
+      <ScrollView
+        style={styles.content}
         contentContainerStyle={[
           styles.contentContainer,
-          { paddingBottom: 100 } // Add extra padding at bottom for button
+          { paddingBottom: 100 }, // Add extra padding at bottom for button
         ]}
       >
         {/* Amount Card */}
         <View style={styles.amountCard}>
           <View style={styles.amountHeader}>
-            <MaterialCommunityIcons name="gold" size={24} color={theme.colors.secondary} />
-            <Text style={styles.amountTitle}>{t('totalAmount')}</Text>
+            <MaterialCommunityIcons
+              name="gold"
+              size={24}
+              color={theme.colors.secondary}
+            />
+            <Text style={styles.amountTitle}>{t("totalAmount")}</Text>
           </View>
           <Text style={styles.amountValue}>{formattedAmount}</Text>
         </View>
@@ -160,19 +185,23 @@ useEffect(() => {
         {/* Scheme Details Card */}
         <View style={styles.detailsCard}>
           <View style={styles.cardHeader}>
-            <MaterialCommunityIcons name="file-document" size={24} color={theme.colors.primary} />
-            <Text style={styles.cardTitle}>{t('schemeDetails')}</Text>
+            <MaterialCommunityIcons
+              name="file-document"
+              size={24}
+              color={theme.colors.primary}
+            />
+            <Text style={styles.cardTitle}>{t("schemeDetails")}</Text>
           </View>
           <View style={styles.detailsRow}>
-            <Text style={styles.detailLabel}>{t('schemeName')}</Text>
+            <Text style={styles.detailLabel}>{t("schemeName")}</Text>
             <Text style={styles.detailValue}>{params.schemeName}</Text>
           </View>
           <View style={styles.detailsRow}>
-            <Text style={styles.detailLabel}>{t('schemeType')}</Text>
+            <Text style={styles.detailLabel}>{t("schemeType")}</Text>
             <Text style={styles.detailValue}>{params.schemeType}</Text>
           </View>
           <View style={styles.detailsRow}>
-            <Text style={styles.detailLabel}>{t('paymentFrequency')}</Text>
+            <Text style={styles.detailLabel}>{t("paymentFrequency")}</Text>
             <Text style={styles.detailValue}>{params.paymentFrequency}</Text>
           </View>
         </View>
@@ -180,19 +209,23 @@ useEffect(() => {
         {/* User Account Details Card */}
         <View style={styles.detailsCard}>
           <View style={styles.cardHeader}>
-            <MaterialCommunityIcons name="account" size={24} color={theme.colors.primary} />
-            <Text style={styles.cardTitle}>{t('accountDetails')}</Text>
+            <MaterialCommunityIcons
+              name="account"
+              size={24}
+              color={theme.colors.primary}
+            />
+            <Text style={styles.cardTitle}>{t("accountDetails")}</Text>
           </View>
           <View style={styles.detailsRow}>
-            <Text style={styles.detailLabel}>{t('accountName')}</Text>
+            <Text style={styles.detailLabel}>{t("accountName")}</Text>
             <Text style={styles.detailValue}>{userDetails?.accountname}</Text>
           </View>
           <View style={styles.detailsRow}>
-            <Text style={styles.detailLabel}>{t('mobile')}</Text>
+            <Text style={styles.detailLabel}>{t("mobile")}</Text>
             <Text style={styles.detailValue}>{userDetails?.mobile}</Text>
           </View>
           <View style={styles.detailsRow}>
-            <Text style={styles.detailLabel}>{t('email')}</Text>
+            <Text style={styles.detailLabel}>{t("email")}</Text>
             <Text style={styles.detailValue}>{userDetails?.email}</Text>
           </View>
         </View>
@@ -205,34 +238,40 @@ useEffect(() => {
             style={styles.checkboxContainer}
             onPress={() => setIsTermsAccepted(!isTermsAccepted)}
           >
-            <View style={[
-              styles.checkbox,
-              isTermsAccepted && styles.checkboxChecked
-            ]}>
+            <View
+              style={[
+                styles.checkbox,
+                isTermsAccepted && styles.checkboxChecked,
+              ]}
+            >
               {isTermsAccepted && (
-                <Ionicons name="checkmark" size={16} color={theme.colors.secondary} />
+                <Ionicons
+                  name="checkmark"
+                  size={16}
+                  color={theme.colors.secondary}
+                />
               )}
             </View>
             <Text style={styles.termsText}>
-              {t('iAccept')}{' '}
+              {t("iAccept")}{" "}
               <Text
                 style={styles.termsLink}
                 onPress={() => setShowTermsModal(true)}
               >
-                {t('termsAndConditions')}
+                {t("termsAndConditions")}
               </Text>
             </Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[
             styles.payButton,
-            !isTermsAccepted && styles.payButtonDisabled
+            !isTermsAccepted && styles.payButtonDisabled,
           ]}
           onPress={handlePayment}
           disabled={!isTermsAccepted}
         >
-          <Text style={styles.payButtonText}>{t('payNow')}</Text>
+          <Text style={styles.payButtonText}>{t("payNow")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -244,22 +283,22 @@ useEffect(() => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 16,
     backgroundColor: theme.colors.primary,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: "rgba(255, 255, 255, 0.1)",
   },
   backButton: {
     padding: 8,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.secondary,
     marginLeft: 16,
   },
@@ -282,76 +321,76 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   amountHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 12,
   },
   amountTitle: {
     fontSize: 16,
     color: theme.colors.secondary,
     marginLeft: 8,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   amountValue: {
     fontSize: 32,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: theme.colors.secondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   detailsCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
     borderWidth: 1,
-    borderColor: '#e5e5e5',
+    borderColor: "#e5e5e5",
   },
   cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e5e5',
+    borderBottomColor: "#e5e5e5",
     paddingBottom: 12,
   },
   cardTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: theme.colors.primary,
     marginLeft: 8,
   },
   detailsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   detailLabel: {
     fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
+    color: "#666",
+    fontWeight: "500",
   },
   detailValue: {
     fontSize: 14,
-    color: '#333',
-    fontWeight: '600',
+    color: "#333",
+    fontWeight: "600",
   },
   footer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 100,
     left: 0,
     right: 0,
     padding: 16,
     paddingBottom: 32, // Extra padding for tab bar
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderTopWidth: 1,
-    borderTopColor: '#e5e5e5',
-    shadowColor: '#000',
+    borderTopColor: "#e5e5e5",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -361,8 +400,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 8,
   },
   checkbox: {
@@ -372,20 +411,20 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.primary,
     borderRadius: 4,
     marginRight: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   checkboxChecked: {
     backgroundColor: theme.colors.primary,
   },
   termsText: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     flex: 1,
   },
   termsLink: {
     color: theme.colors.primary,
-    textDecorationLine: 'underline',
+    textDecorationLine: "underline",
   },
   payButtonDisabled: {
     opacity: 0.6,
@@ -394,41 +433,41 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     borderRadius: 8,
     padding: 16,
-    alignItems: 'center',
+    alignItems: "center",
   },
   payButtonText: {
     color: theme.colors.secondary,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 16,
-    width: '90%',
-    maxHeight: '80%',
-    shadowColor: '#000',
+    width: "90%",
+    maxHeight: "80%",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
   },
   modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e5e5',
+    borderBottomColor: "#e5e5e5",
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: theme.colors.primary,
   },
   closeButton: {
@@ -436,22 +475,22 @@ const styles = StyleSheet.create({
   },
   modalBody: {
     padding: 16,
-    maxHeight: '70%',
+    maxHeight: "70%",
   },
   modalFooter: {
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#e5e5e5',
+    borderTopColor: "#e5e5e5",
   },
   acceptButton: {
     backgroundColor: theme.colors.primary,
     borderRadius: 8,
     padding: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   acceptButtonText: {
     color: theme.colors.secondary,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

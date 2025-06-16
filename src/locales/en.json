@@ -207,8 +207,11 @@
   "transactionAmount": "Transaction Amount",
   "transactionType": "Transaction Type",
   "paymentFailureMessage": "Payment failed. Please try again later.",
-  "paymentSuccessMessage": "Payment successful! Your transaction ID is {transactionId}.",
+  "paymentSuccessMessage": "Payment successful! Please Check Your transaction ID.",
   "orderId": "Order ID",
   "tryAgain": "Try Again",
-  "backToHome": "Back to Home"
+  "backToHome": "Back to Home",
+  "paymentSuccessful": "Payment Successful",
+  "paymentFailedMessage": "Your payment has failed. Please check your details and try again.",
+  "paymentPending": "Payment Pending"
 }

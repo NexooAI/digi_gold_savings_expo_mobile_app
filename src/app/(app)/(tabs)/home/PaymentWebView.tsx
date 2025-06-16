@@ -16,14 +16,14 @@ export default function PaymentWebView() {
       if (socket && socket.connected) {
         socket.disconnect();
       }
-      // router.replace({
-      //   pathname: '/(tabs)/home/payment-success',
-      //   params: {
-      //     txnId: data?.paymentResponse?.txn_id,
-      //     orderId: data?.paymentResponse?.order_id,
-      //     amount: data?.paymentResponse?.amount,
-      //   }
-      // });
+      router.replace({
+        pathname: '/(tabs)/home/payment-success',
+        params: {
+          txnId: data?.paymentResponse?.txn_id,
+          orderId: data?.paymentResponse?.order_id,
+          amount: data?.paymentResponse?.amount,
+        }
+      });
     },
     onPaymentFailure: (data) => {
       console.log("Payment Failed:", data);
@@ -31,16 +31,16 @@ export default function PaymentWebView() {
       if (socket && socket.connected) {
         socket.disconnect();
       }
-      // router.replace({
-      //   pathname: '/(tabs)/home/payment-failure',
-      //   params: {
-      //     message: ((data?.paymentResponse?.txn_detail as any)?.error_message || (data?.paymentResponse?.txn_detail as any)?.response_message || 'Payment Failed'),
-      //     orderId: data?.paymentResponse?.order_id,
-      //     txnId: data?.paymentResponse?.txn_id,
-      //     amount: data?.paymentResponse?.amount,
-      //     status: data?.paymentResponse?.txn_detail?.status
-      //   }
-      // });
+      router.replace({
+        pathname: '/(tabs)/home/payment-failure',
+        params: {
+          message: ((data?.paymentResponse?.txn_detail as any)?.error_message || (data?.paymentResponse?.txn_detail as any)?.response_message || 'Payment Failed'),
+          orderId: data?.paymentResponse?.order_id,
+          txnId: data?.paymentResponse?.txn_id,
+          amount: data?.paymentResponse?.amount,
+          status: data?.paymentResponse?.txn_detail?.status
+        }
+      });
     },
     onPaymentError: (error) => {
       console.error("Payment Error:", error);
@@ -48,13 +48,13 @@ export default function PaymentWebView() {
       if (socket && socket.connected) {
         socket.disconnect();
       }
-      // router.replace({
-      //   pathname: '/(tabs)/home/payment-failure',
-      //   params: {
-      //     message: error?.message || 'An error occurred during payment',
-      //     error: error?.error || 'Unknown error'
-      //   }
-      // });
+      router.replace({
+        pathname: '/(tabs)/home/payment-failure',
+        params: {
+          message: error?.message || 'An error occurred during payment',
+          error: error?.error || 'Unknown error'
+        }
+      });
     },
     onPaymentExpired: () => {
       console.log("Payment Expired");
@@ -62,12 +62,12 @@ export default function PaymentWebView() {
       if (socket && socket.connected) {
         socket.disconnect();
       }
-      // router.replace({
-      //   pathname: '/(tabs)/home/payment-failure',
-      //   params: {
-      //     message: 'Payment session expired. Please try again.'
-      //   }
-      // });
+      router.replace({
+        pathname: '/(tabs)/home/payment-failure',
+        params: {
+          message: 'Payment session expired. Please try again.'
+        }
+      });
     },
     parsedUserDetails: params.userDetails
       ? JSON.parse(params.userDetails as string)
@@ -76,13 +76,13 @@ export default function PaymentWebView() {
   });
 
   // Cleanup socket on component unmount
-  // useEffect(() => {
-  //   return () => {
-  //     if (socket && socket.connected) {
-  //       socket.disconnect();
-  //     }
-  //   };
-  // }, [socket]);
+  useEffect(() => {
+    return () => {
+      if (socket && socket.connected) {
+        socket.disconnect();
+      }
+    };
+  }, [socket]);
 
   return (
     <Modal visible={true} animationType="slide" presentationStyle="fullScreen">

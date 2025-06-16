@@ -76,113 +76,113 @@ export const usePaymentSocket = ({
       console.log("------------------------->> ❤️ ❤️ ❤️ ", data);
       console.log("------------------------->> ❤️ ❤️ ❤️ ", parsedUserDetails, router);
       const txnStatus = data?.paymentResponse?.txn_detail?.status;
-      console.log(txnStatus ,data?.paymentResponse);
+      console.log(txnStatus, data?.paymentResponse);
       try {
-        // if (txnStatus === 'CHARGED') {
-        //   console.log('charged');
-        //   isPaymentCompleted.current = true;
-        //   if (parsedUserDetails && router) {
-        //     const paymentPayload = {
-        //       investmentId: parsedUserDetails.data?.data?.id || parsedUserDetails.investmentId || '',
-        //       userId: parsedUserDetails.data?.data?.userId || parsedUserDetails.userId || '',
-        //       paymentAmount: data?.paymentResponse?.amount || '',
-        //       paymentMethod: (data?.paymentResponse as any)?.payment_method || '',
-        //       schemeId: parsedUserDetails.data?.data?.schemeId || parsedUserDetails.schemeId || '',
-        //       chitId: parsedUserDetails.data?.data?.chitId || parsedUserDetails.chitId || '',
-        //       transactionId: data?.paymentResponse?.txn_id || '',
-        //       orderId: data?.paymentResponse?.order_id || '',
-        //       isManual: 'no',
-        //       utr_reference_number: '',
-        //     };
-        //     const paymentResult = await postPayment(paymentPayload);
-        //     const paymentId = paymentResult?.id || paymentResult?.paymentId || 1;
+        if (txnStatus === 'CHARGED') {
+          console.log('charged');
+          isPaymentCompleted.current = true;
+          if (parsedUserDetails && router) {
+            const paymentPayload = {
+              investmentId: parsedUserDetails.data?.data?.id || parsedUserDetails.id || '',
+              userId: parsedUserDetails.data?.data?.userId || parsedUserDetails.userId || '',
+              paymentAmount: data?.paymentResponse?.amount || '',
+              paymentMethod: (data?.paymentResponse as any)?.payment_method || '',
+              schemeId: parsedUserDetails.data?.data?.schemeId || parsedUserDetails.schemeId || '',
+              chitId: parsedUserDetails.data?.data?.chitId || parsedUserDetails.chitId || '',
+              transactionId: data?.paymentResponse?.txn_id || '',
+              orderId: data?.paymentResponse?.order_id || '',
+              isManual: 'no',
+              utr_reference_number: '',
+            };
+            const paymentResult = await postPayment(paymentPayload);
+            const paymentId = paymentResult?.id || paymentResult?.paymentId || 1;
 
-        //     const transactionPayload = {
-        //       userId: parsedUserDetails.data?.data?.userId || parsedUserDetails.userId || '',
-        //       investmentId: parsedUserDetails.data?.data?.id || parsedUserDetails.investmentId || '',
-        //       schemeId: parsedUserDetails.data?.data?.schemeId || parsedUserDetails.schemeId || '',
-        //       chitId: parsedUserDetails.data?.data?.chitId || parsedUserDetails.chitId || '',
-        //       accountNumber: parsedUserDetails.data?.data?.accountNo || parsedUserDetails.accountNo || '',
-        //       paymentId,
-        //       orderId: data?.paymentResponse?.order_id || '',
-        //       amount: data?.paymentResponse?.amount || '',
-        //       currency: (data?.paymentResponse as any)?.currency || 'INR',
-        //       paymentMethod: (data?.paymentResponse as any)?.payment_method || '',
-        //       signature: '000',
-        //       paymentStatus: (data?.paymentResponse?.payment_gateway_response as any)?.resp_message || 'Success',
-        //       paymentDate: (data?.paymentResponse as any)?.date_created || '',
-        //       status: txnStatus || 'CHARGED',
-        //       gatewayTransactionId: data?.paymentResponse?.txn_id || '',
-        //       gatewayresponse: '',
-        //       isManual: 'no',
-        //       utr_reference_number: '',
-        //     };
-        //     await postTransaction(transactionPayload);
+            const transactionPayload = {
+              userId: parsedUserDetails.data?.data?.userId || parsedUserDetails.userId || '',
+              investmentId: parsedUserDetails.data?.data?.id || parsedUserDetails.id || '',
+              schemeId: parsedUserDetails.data?.data?.schemeId || parsedUserDetails.schemeId || '',
+              chitId: parsedUserDetails.data?.data?.chitId || parsedUserDetails.chitId || '',
+              accountNumber: parsedUserDetails.data?.data?.accountNo || parsedUserDetails.accountNo || '',
+              paymentId,
+              orderId: data?.paymentResponse?.order_id || '',
+              amount: data?.paymentResponse?.amount || '',
+              currency: (data?.paymentResponse as any)?.currency || 'INR',
+              paymentMethod: (data?.paymentResponse as any)?.payment_method || '',
+              signature: '000',
+              paymentStatus: (data?.paymentResponse?.payment_gateway_response as any)?.resp_message || 'Success',
+              paymentDate: (data?.paymentResponse as any)?.date_created || '',
+              status: txnStatus || 'CHARGED',
+              gatewayTransactionId: data?.paymentResponse?.txn_id || '',
+              gatewayresponse: '',
+              isManual: 'no',
+              utr_reference_number: '',
+            };
+            await postTransaction(transactionPayload);
 
-        //     const investmentPayload = {
-        //       userId: parsedUserDetails.data?.data?.userId || parsedUserDetails.userId || '',
-        //       schemeId: parsedUserDetails.data?.data?.schemeId || parsedUserDetails.schemeId || '',
-        //       chitId: parsedUserDetails.data?.data?.chitId || parsedUserDetails.chitId || '',
-        //       accountName: parsedUserDetails.data?.data?.accountName || parsedUserDetails.accountName || '',
-        //       accountNo: parsedUserDetails.data?.data?.accountNo || parsedUserDetails.accountNo || '',
-        //       paymentStatus: 'PAID',
-        //       paymentAmount: data?.paymentResponse?.amount || '',
-        //     };
-        //     await updateInvestment(parsedUserDetails.data?.data?.id || parsedUserDetails.investmentId || '', investmentPayload);
-        //   }
-        //   onPaymentSuccess?.(data);
-        //   console.log("------------------------->> end ", data)
-        //   if (socketInstance && socketInstance.connected) {
-        //     socketInstance.disconnect();
-        //   }
-        // } else if (String(txnStatus) !== 'CHARGED') {
-        //   console.log('charged');
-        //   isPaymentCompleted.current = true;
-        //   if (parsedUserDetails && router) {
-        //     const transactionPayload = {
-        //       userId: parsedUserDetails.data?.data?.userId || parsedUserDetails.userId || '',
-        //       investmentId: parsedUserDetails.data?.data?.id || parsedUserDetails.investmentId || '',
-        //       schemeId: parsedUserDetails.data?.data?.schemeId || parsedUserDetails.schemeId || '',
-        //       chitId: parsedUserDetails.data?.data?.chitId || parsedUserDetails.chitId || '',
-        //       accountNumber: parsedUserDetails.data?.data?.accountNo || parsedUserDetails.accountNo || '',
-        //       paymentId: 0,
-        //       orderId: data?.paymentResponse?.order_id || '',
-        //       amount: data?.paymentResponse?.amount || '',
-        //       currency: (data?.paymentResponse as any)?.currency || 'INR',
-        //       paymentMethod: (data?.paymentResponse as any)?.payment_method || '',
-        //       signature: '000',
-        //       paymentStatus: (data?.paymentResponse?.payment_gateway_response as any)?.resp_message || 'Failed',
-        //       paymentDate: (data?.paymentResponse as any)?.date_created || '',
-        //       status: txnStatus,
-        //       gatewayTransactionId: data?.paymentResponse?.txn_id || '',
-        //       gatewayresponse: '',
-        //       isManual: 'no',
-        //       utr_reference_number: '',
-        //     };
-        //     await postTransaction(transactionPayload);
-        //     router.replace({
-        //       pathname: '/(tabs)/home/payment-failure', params: {
-        //         message: ((data?.paymentResponse?.txn_detail as any)?.error_message || (data?.paymentResponse?.txn_detail as any)?.response_message || 'Payment Failed'),
-        //         orderId: data?.paymentResponse?.order_id,
-        //         txnId: data?.paymentResponse?.txn_id,
-        //         amount: data?.paymentResponse?.amount,
-        //         status: txnStatus
-        //       }
-        //     });
-        //   }
-        //   onPaymentFailure?.(data);
-        //   if (socketInstance && socketInstance.connected) {
-        //     socketInstance.disconnect();
-        //   }
-        // } else if (String(txnStatus) === 'CANCELLED' || (data as any)?.status === 'cancelled') {
-        //   console.log('charged');
-        //   if (router) {
-        //     router.replace({ pathname: '/(tabs)/home/payment-faliure', params: {} });
-        //   }
-        //   if (socketInstance && socketInstance.connected) {
-        //     socketInstance.disconnect();
-        //   }
-        // }
+            const investmentPayload = {
+              userId: parsedUserDetails.data?.data?.userId || parsedUserDetails.userId || '',
+              schemeId: parsedUserDetails.data?.data?.schemeId || parsedUserDetails.schemeId || '',
+              chitId: parsedUserDetails.data?.data?.chitId || parsedUserDetails.chitId || '',
+              accountName: parsedUserDetails.data?.data?.accountName || parsedUserDetails.accountName || '',
+              accountNo: parsedUserDetails.data?.data?.accountNo || parsedUserDetails.accountNo || '',
+              paymentStatus: 'PAID',
+              paymentAmount: data?.paymentResponse?.amount || '',
+            };
+            await updateInvestment(parsedUserDetails.data?.data?.id || parsedUserDetails.id || '', investmentPayload);
+          }
+          onPaymentSuccess?.(data);
+          console.log("------------------------->> end ", data)
+          if (socketInstance && socketInstance.connected) {
+            socketInstance.disconnect();
+          }
+        } else if (String(txnStatus) !== 'CHARGED') {
+          console.log('charged');
+          isPaymentCompleted.current = true;
+          if (parsedUserDetails && router) {
+            const transactionPayload = {
+              userId: parsedUserDetails.data?.data?.userId || parsedUserDetails.userId || '',
+              investmentId: parsedUserDetails.data?.data?.id || parsedUserDetails.id || '',
+              schemeId: parsedUserDetails.data?.data?.schemeId || parsedUserDetails.schemeId || '',
+              chitId: parsedUserDetails.data?.data?.chitId || parsedUserDetails.chitId || '',
+              accountNumber: parsedUserDetails.data?.data?.accountNo || parsedUserDetails.accountNo || '',
+              paymentId: 0,
+              orderId: data?.paymentResponse?.order_id || '',
+              amount: data?.paymentResponse?.amount || '',
+              currency: (data?.paymentResponse as any)?.currency || 'INR',
+              paymentMethod: (data?.paymentResponse as any)?.payment_method || '',
+              signature: '000',
+              paymentStatus: (data?.paymentResponse?.payment_gateway_response as any)?.resp_message || 'Failed',
+              paymentDate: (data?.paymentResponse as any)?.date_created || '',
+              status: txnStatus,
+              gatewayTransactionId: data?.paymentResponse?.txn_id || '',
+              gatewayresponse: '',
+              isManual: 'no',
+              utr_reference_number: '',
+            };
+            await postTransaction(transactionPayload);
+            router.replace({
+              pathname: '/(tabs)/home/payment-failure', params: {
+                message: ((data?.paymentResponse?.txn_detail as any)?.error_message || (data?.paymentResponse?.txn_detail as any)?.response_message || 'Payment Failed'),
+                orderId: data?.paymentResponse?.order_id,
+                txnId: data?.paymentResponse?.txn_id,
+                amount: data?.paymentResponse?.amount,
+                status: txnStatus
+              }
+            });
+          }
+          onPaymentFailure?.(data);
+          if (socketInstance && socketInstance.connected) {
+            socketInstance.disconnect();
+          }
+        } else if (String(txnStatus) === 'CANCELLED' || (data as any)?.status === 'cancelled') {
+          console.log('charged');
+          if (router) {
+            router.replace({ pathname: '/(tabs)/home/payment-faliure', params: {} });
+          }
+          if (socketInstance && socketInstance.connected) {
+            socketInstance.disconnect();
+          }
+        }
       } catch (error) {
         console.error('Error in payment status update API sequence:', error);
         handleError(error);
