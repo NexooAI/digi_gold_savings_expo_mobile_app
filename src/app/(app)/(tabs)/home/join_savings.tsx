@@ -986,13 +986,14 @@ export default function JoinSavings() {
           console.log('Payment session stored in global store from join_savings');
           console.log('paymentSessionData',paymentSessionData);
           router.push({
-            pathname: "/(tabs)/home/payment",
+            pathname: "/(tabs)/home/paymentNewOverView",
             params: {
               amount: formData.amount,
               schemeName: parsedData?.name, // Pass scheme name
               schemeId: parsedData?.schemeId,
               chitId: selectedChit?.CHITID,
               paymentFrequency: selectedChit?.PAYMENT_FREQUENCY,
+              schemeType: schemeType,
               userDetails: JSON.stringify({
                 accountname: formData.accountname,
                 accNo: data.data?.data?.accountNo || data.accountNo,

@@ -77,6 +77,10 @@ export default function HomeLayout() {
         name="payment"
         options={{ title: "Payment Process", headerShown: false }}
       />
+       <Stack.Screen
+        name="paymentNewOverView"
+        options={{ title: "Payment Process", headerShown: false }}
+      />
       <Stack.Screen
         name="PaymentWebViewNew"
         options={{ title: "PaymentWebViewNew", headerShown: false }}

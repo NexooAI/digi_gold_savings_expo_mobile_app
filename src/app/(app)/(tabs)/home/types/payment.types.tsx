@@ -181,5 +181,5 @@ export interface PaymentSocket extends Socket<DefaultEventsMap, DefaultEventsMap
   emit(event: 'payment_completed', data: any): this;
   emit(event: 'payment_failed', data: any): this;
   emit(event: 'payment_error', data: any): boolean;
-  on(event: 'payment_status_update', listener: (data: PaymentStatusUpdate) => void): this;
+  on(event: 'payment_status_update' | `payment_status_update_${string}`, listener: (data: PaymentStatusUpdate) => void): this;
 } 
