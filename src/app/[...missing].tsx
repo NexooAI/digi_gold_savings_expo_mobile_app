@@ -1,10 +1,16 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { theme } from '@/constants/theme';
 
 export default function NotFoundScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const missingPath = Array.isArray(params.missing) 
+    ? `/${params.missing.join('/')}`
+    : params.missing 
+      ? `/${params.missing}`
+      : '';
 
   return (
     <View style={styles.container}>
@@ -18,6 +24,11 @@ export default function NotFoundScreen() {
       <Text style={styles.message}>
         Oops! The page you're looking for doesn't exist or has been moved.
       </Text>
+      {missingPath && (
+        <Text style={styles.missingPath}>
+          You tried to access: <Text style={styles.pathText}>{missingPath}</Text>
+        </Text>
+      )}
 
       <TouchableOpacity 
         style={styles.button}
@@ -52,8 +63,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 20,
     paddingHorizontal: 20,
+  },
+  missingPath: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 30,
+  },
+  pathText: {
+    color: theme.colors.primary,
+    fontWeight: '600',
   },
   button: {
     backgroundColor: theme.colors.primary,

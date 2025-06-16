@@ -91,12 +91,22 @@ export default function PaymentWebView() {
           source={{ uri: params.url as string }}
           style={{ flex: 1 }}
           onNavigationStateChange={(navState) => {
+            console.log('Payment Navigation State:', {
+              url: navState.url,
+              title: navState.title,
+              loading: navState.loading,
+              canGoBack: navState.canGoBack
+            });
+            
             const url = navState.url.toLowerCase();
+            // Only trigger cancel if explicitly cancelled or failed
             if (
-              url.includes("cancel") ||
-              url.includes("error") ||
-              url.includes("failed")
+              url.includes("/cancel") ||
+              url.includes("/error") ||
+              url.includes("/failed") ||
+              (url.includes("payment") && url.includes("status=failed"))
             ) {
+              console.log('Payment cancelled/failed detected:', url);
               // Disconnect socket before handling cancel
               if (socket && socket.connected) {
                 socket.disconnect();
