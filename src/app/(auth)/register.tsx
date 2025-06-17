@@ -479,18 +479,6 @@ export default function Register() {
                     </TouchableOpacity>
                   </View>
                 )}
-
-                <TouchableOpacity
-                  style={styles.backButton}
-                  onPress={handleBackButton}
-                >
-                  <Ionicons
-                    name="arrow-back"
-                    size={20}
-                    color={theme.colors.white}
-                  />
-                  <Text style={styles.backButtonText}>Back</Text>
-                </TouchableOpacity>
               </View>
             </View>
           </View>
@@ -530,6 +518,7 @@ const styles = StyleSheet.create({
   cardContainer: {
     borderRadius: 20,
     padding: 20,
+    paddingBottom: 40,
     width: "100%",
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.4)",
@@ -690,17 +679,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textDecorationLine: "underline",
     marginLeft: 4,
-  },
-  backButton: {
-    marginTop: 20,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  backButtonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    marginLeft: 5,
-    opacity: 0.8,
   },
   errorAlert: {
     position: "absolute",

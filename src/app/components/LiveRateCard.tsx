@@ -32,14 +32,14 @@ const LiveRateCard = ({ type, rate, lastupdated, image, onPress, isSingle }: Liv
         onPress();
       } else {
         const formattedType = type?.toString().trim() || "Gold";
-        router.push({
-          pathname: "/(app)/(tabs)/home/live-rates",
-          params: { type: formattedType }
-        });
+        // router.push({
+        //   pathname: "/(app)/(tabs)/home/live-rates",
+        //   params: { type: formattedType }
+        // });
       }
     } catch (error) {
       console.error("Navigation error:", error);
-      router.push("/(app)/(tabs)/home/live-rates");
+      // router.push("/(app)/(tabs)/home/live-rates");
     }
   };
 

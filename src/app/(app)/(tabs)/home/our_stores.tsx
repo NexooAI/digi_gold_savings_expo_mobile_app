@@ -77,7 +77,7 @@ const StoreLocator = () => {
           contentContainerStyle={{ paddingTop: 100, paddingHorizontal: 16 }}
         >
           <ImageBackground
-            source={theme.image.store_image}
+            source={require("../../../../../assets/images/shop.jpg")}
             style={styles.imageBackground}
           >
             <View style={styles.headerContainer}>

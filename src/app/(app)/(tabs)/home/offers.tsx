@@ -114,13 +114,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#F9F9F9",
   },
   scrollContent: {
-    paddingVertical: 24,
+    paddingVertical: 60,
     paddingHorizontal: 20,
   },
   hero: {
     borderRadius: 16,
     padding: 24,
-    marginBottom: 24,
+    marginBottom: 40,
     overflow: "hidden",
   },
   heroTitle: {

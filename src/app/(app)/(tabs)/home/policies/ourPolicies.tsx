@@ -159,17 +159,16 @@ export default function OurPolicy() {
             style={styles.heroSection}
           >
             <View style={styles.heroContent}>
-              <Ionicons
-                name="shield-checkmark-outline"
-                size={50}
-                color="#FFD700"
-              />
+              <View style={{ marginTop: 20 }}>
+                <Ionicons
+                  name="shield-checkmark-outline"
+                  size={40}
+                  color="#FFD700"
+                />
+              </View>
               <Text style={styles.heroTitle}>
                 {policy?.title || translations.defaultTitle}
               </Text>
-              {policy?.subtitle && (
-                <Text style={styles.heroSubtitle}>{policy.subtitle}</Text>
-              )}
               <View style={styles.decorativeLine} />
             </View>
           </LinearGradient>
@@ -293,8 +292,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   heroSection: {
-    paddingTop: 100,
-    paddingBottom: 40,
+    paddingTop: 60,
+    paddingBottom: 20,
     paddingHorizontal: 20,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
@@ -304,18 +303,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   heroTitle: {
-    fontSize: moderateScale(28),
+    fontSize: moderateScale(22),
     fontWeight: "700",
     color: "#FFFFFF",
     textAlign: "center",
-    marginTop: 16,
+    marginTop: 12,
     marginBottom: 8,
-  },
-  heroSubtitle: {
-    fontSize: moderateScale(16),
-    color: "rgba(255, 255, 255, 0.8)",
-    textAlign: "center",
-    marginBottom: 20,
   },
   decorativeLine: {
     width: 60,
