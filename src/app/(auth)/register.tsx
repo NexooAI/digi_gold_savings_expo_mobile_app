@@ -313,7 +313,7 @@ export default function Register() {
       style={styles.backgroundImage}
     >
       <LinearGradient
-        colors={["rgba(0,0,0,0.7)", "rgba(0,0,0,0.5)", "rgba(0,0,0,0.7)"]}
+        colors={["rgba(32, 1, 1, 0.55)", "rgba(167, 0, 0, 0.3)", "rgba(118, 1, 1, 0.3)"]}
         style={styles.gradient}
       >
         {showError && (
@@ -333,133 +333,165 @@ export default function Register() {
 
           <View style={styles.formContainer}>
             <View style={styles.cardContainer}>
-              <Text style={styles.pageTitle}>Create Account</Text>
-              <Text style={styles.subtitle}>Join us to start your journey</Text>
+              {/* Base fog layer */}
+              <LinearGradient
+                colors={[
+                  "rgba(174, 0, 0, 0.1)",
+                  "rgba(34, 0, 0, 0.35)",
+                  "rgba(134, 1, 1, 0.4)",
+                ]}
+                style={StyleSheet.absoluteFill}
+              />
+              {/* Top fog highlight */}
+              <LinearGradient
+                colors={[
+                  "rgba(112, 0, 0, 0.38)",
+                  "rgba(130, 0, 0, 0.4)",
+                ]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 0.5 }}
+                style={StyleSheet.absoluteFill}
+              />
+              {/* Bottom fog highlight */}
+              <LinearGradient
+                colors={[
+                  "rgba(143, 0, 0, 0.29)",
+                  "rgba(122, 5, 5, 0.53)",
+                ]}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 0, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+              {/* Content */}
+              <View style={styles.cardContent}>
+                <Text style={styles.pageTitle}>Create Account</Text>
+                <Text style={styles.subtitle}>Join us to start your journey</Text>
 
-              {!otpSent ? (
-                <>
-                  <View style={styles.inputContainer}>
-                    <PhoneInput
-                      value={mobile}
-                      onChangeText={setMobile}
-                      loading={loading}
-                    />
-                  </View>
-                  <TouchableOpacity
-                    style={[
-                      styles.loginButton,
-                      loading && styles.loginButtonDisabled,
-                    ]}
-                    onPress={handleGetOtp}
-                    disabled={loading}
-                  >
-                    <LinearGradient
-                      colors={["#ffc90c", "#ffd700"]}
-                      style={styles.gradientButton}
-                    >
-                      <Text style={styles.loginButtonText}>
-                        {loading ? "Sending..." : "Get OTP"}
-                      </Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                  <View style={styles.registerContainer}>
-                    <Text style={styles.registerText}>
-                      Already have an account?{" "}
-                    </Text>
-                    <TouchableOpacity onPress={() => router.push("/login")}>
-                      <Text style={styles.registerLink}>Login</Text>
-                    </TouchableOpacity>
-                  </View>
-                </>
-              ) : (
-                <View style={styles.otpContainer}>
-                  <Text style={styles.otpTitle}>Enter OTP</Text>
-                  <Text style={styles.otpSentText}>
-                    OTP sent to{" "}
-                    {mobile.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3")}
-                  </Text>
-
-                  <View style={styles.otpInputsWrapper}>
-                    <View style={styles.otpInputsContainer}>
-                      {pins.map((pin, index) => (
-                        <TextInput
-                          key={index}
-                          ref={inputRefs[index]}
-                          style={styles.otpInput}
-                          keyboardType="numeric"
-                          maxLength={1}
-                          value={pin}
-                          onChangeText={(text) => handlePinChange(text, index)}
-                          onKeyPress={(e) => handleKeyPress(e, index)}
-                          secureTextEntry={!showOtp}
-                          textContentType="oneTimeCode"
-                          autoComplete="sms-otp"
-                        />
-                      ))}
+                {!otpSent ? (
+                  <>
+                    <View style={styles.inputContainer}>
+                      <PhoneInput
+                        value={mobile}
+                        onChangeText={setMobile}
+                        loading={loading}
+                      />
                     </View>
                     <TouchableOpacity
-                      onPress={() => setShowOtp((prev) => !prev)}
-                      style={styles.eyeButton}
+                      style={[
+                        styles.loginButton,
+                        loading && styles.loginButtonDisabled,
+                      ]}
+                      onPress={handleGetOtp}
+                      disabled={loading}
                     >
-                      <Feather
-                        name={showOtp ? "eye-off" : "eye"}
-                        size={24}
+                      <LinearGradient
+                        colors={["#ffc90c", "#ffd700"]}
+                        style={styles.gradientButton}
+                      >
+                        <Text style={styles.loginButtonText}>
+                          {loading ? "Sending..." : "Get OTP"}
+                        </Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                    <View style={styles.registerContainer}>
+                      <Text style={styles.registerText}>
+                        Already have an account?{" "}
+                      </Text>
+                      <TouchableOpacity onPress={() => router.push("/login")}>
+                        <Text style={styles.registerLink}>Login</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                ) : (
+                  <View style={styles.otpContainer}>
+                    <Text style={styles.otpTitle}>Enter OTP</Text>
+                    <Text style={styles.otpSentText}>
+                      OTP sent to{" "}
+                      {mobile.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3")}
+                    </Text>
+
+                    <View style={styles.otpInputsWrapper}>
+                      <View style={styles.otpInputsContainer}>
+                        {pins.map((pin, index) => (
+                          <TextInput
+                            key={index}
+                            ref={inputRefs[index]}
+                            style={styles.otpInput}
+                            keyboardType="numeric"
+                            maxLength={1}
+                            value={pin}
+                            onChangeText={(text) => handlePinChange(text, index)}
+                            onKeyPress={(e) => handleKeyPress(e, index)}
+                            secureTextEntry={!showOtp}
+                            textContentType="oneTimeCode"
+                            autoComplete="sms-otp"
+                          />
+                        ))}
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => setShowOtp((prev) => !prev)}
+                        style={styles.eyeButton}
+                      >
+                        <Feather
+                          name={showOtp ? "eye-off" : "eye"}
+                          size={24}
+                          color={theme.colors.white}
+                        />
+                      </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.timerContainer}>
+                      <Ionicons
+                        name="time-outline"
+                        size={20}
                         color={theme.colors.white}
                       />
-                    </TouchableOpacity>
-                  </View>
+                      <Text style={styles.timerText}>Resend in {timer}s</Text>
+                    </View>
 
-                  <View style={styles.timerContainer}>
-                    <Ionicons
-                      name="time-outline"
-                      size={20}
-                      color={theme.colors.white}
-                    />
-                    <Text style={styles.timerText}>Resend in {timer}s</Text>
-                  </View>
+                    {timer === 0 && resendCount > 0 && (
+                      <TouchableOpacity
+                        onPress={handleResendOtp}
+                        style={styles.resendButton}
+                      >
+                        <Text style={styles.resendText}>
+                          Resend OTP ({resendCount} left)
+                        </Text>
+                      </TouchableOpacity>
+                    )}
 
-                  {timer === 0 && resendCount > 0 && (
                     <TouchableOpacity
-                      onPress={handleResendOtp}
-                      style={styles.resendButton}
+                      style={[
+                        styles.loginButton,
+                        loading && styles.loginButtonDisabled,
+                      ]}
+                      onPress={handleVerifyOtp}
+                      disabled={loading || pins.includes("")}
                     >
-                      <Text style={styles.resendText}>
-                        Resend OTP ({resendCount} left)
-                      </Text>
+                      <LinearGradient
+                        colors={["#ffc90c", "#ffd700"]}
+                        style={styles.gradientButton}
+                      >
+                        <Text style={styles.loginButtonText}>
+                          {loading ? "Verifying..." : "Verify OTP"}
+                        </Text>
+                      </LinearGradient>
                     </TouchableOpacity>
-                  )}
+                  </View>
+                )}
 
-                  <TouchableOpacity
-                    style={[
-                      styles.loginButton,
-                      loading && styles.loginButtonDisabled,
-                    ]}
-                    onPress={handleVerifyOtp}
-                    disabled={loading || pins.includes("")}
-                  >
-                    <LinearGradient
-                      colors={["#ffc90c", "#ffd700"]}
-                      style={styles.gradientButton}
-                    >
-                      <Text style={styles.loginButtonText}>
-                        {loading ? "Verifying..." : "Verify OTP"}
-                      </Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              <TouchableOpacity
-                style={styles.backButton}
-                onPress={handleBackButton}
-              >
-                <Ionicons
-                  name="arrow-back"
-                  size={20}
-                  color={theme.colors.white}
-                />
-                <Text style={styles.backButtonText}>Back</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.backButton}
+                  onPress={handleBackButton}
+                >
+                  <Ionicons
+                    name="arrow-back"
+                    size={20}
+                    color={theme.colors.white}
+                  />
+                  <Text style={styles.backButtonText}>Back</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </KeyboardAvoidingView>
@@ -496,34 +528,44 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === "ios" ? 40 : 0,
   },
   cardContainer: {
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 20,
     padding: 20,
     width: "100%",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
+    borderColor: "rgba(255, 255, 255, 0.4)",
     marginBottom: Platform.OS === "ios" ? 20 : 10,
+    overflow: "hidden",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        backdropFilter: "blur(20px)",
       },
       android: {
-        elevation: 8,
+        elevation: 12,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
       },
     }),
+    position: "relative",
+  },
+  cardContent: {
+    position: "relative",
+    zIndex: 1,
   },
   pageTitle: {
-    color: theme.colors.textLight,
+    color: "#ffffff",
     fontSize: 28,
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
   },
   subtitle: {
-    color: theme.colors.textLight,
+    color: "#ffffff",
     fontSize: 16,
     marginBottom: 30,
     textAlign: "center",
@@ -531,14 +573,25 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     width: "100%",
-    marginBottom: 20,
+    marginBottom: 6,
   },
   loginButton: {
     width: "100%",
     height: 50,
     borderRadius: 25,
     overflow: "hidden",
-    marginTop: 20,
+    marginTop: 6,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   gradientButton: {
     flex: 1,
@@ -559,13 +612,13 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   otpTitle: {
-    color: theme.colors.textLight,
+    color: "#ffffff",
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 10,
   },
   otpSentText: {
-    color: theme.colors.textLight,
+    color: "#ffffff",
     fontSize: 16,
     marginBottom: 20,
     opacity: 0.8,
@@ -587,11 +640,11 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderWidth: 1,
-    borderColor: theme.colors.white,
+    borderColor: "rgba(0, 0, 0, 0.1)",
     borderRadius: 12,
-    color: theme.colors.white,
+    color: "#000000",
     fontSize: 24,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    backgroundColor: "#ffffff",
     textAlign: "center",
   },
   eyeButton: {
@@ -605,9 +658,10 @@ const styles = StyleSheet.create({
     marginTop: 15,
   },
   timerText: {
-    color: theme.colors.white,
+    color: "#ffffff",
     marginLeft: 8,
     fontSize: 16,
+    opacity: 0.8,
   },
   resendButton: {
     marginTop: 10,
@@ -626,11 +680,12 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   registerText: {
-    color: theme.colors.white,
+    color: "#ffffff",
     fontSize: 16,
+    opacity: 0.8,
   },
   registerLink: {
-    color: theme.colors.secondary,
+    color: "#ffffff",
     fontSize: 16,
     fontWeight: "bold",
     textDecorationLine: "underline",
@@ -642,9 +697,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   backButtonText: {
-    color: theme.colors.white,
+    color: "#ffffff",
     fontSize: 16,
     marginLeft: 5,
+    opacity: 0.8,
   },
   errorAlert: {
     position: "absolute",

@@ -55,7 +55,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({ value, onChangeText, loading })
         </View>
         <TextInput
           placeholder="Enter mobile number"
-          placeholderTextColor="rgba(255, 255, 255, 0.5)"
+          placeholderTextColor="rgba(0, 0, 0, 0.5)"
           value={value}
           onChangeText={validateMobile}
           onBlur={handleBlur}
@@ -84,7 +84,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({ value, onChangeText, loading })
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 4,
     width: "100%",
   },
   label: {
@@ -97,11 +97,11 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    backgroundColor: "#ffffff",
     borderRadius: 12,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
+    borderColor: "rgba(0, 0, 0, 0.1)",
     height: 50,
     shadowColor: "#000",
     shadowOffset: {
@@ -113,23 +113,23 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   errorContainer: {
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    backgroundColor: "#ffffff",
     borderColor: "#ff4444",
     borderWidth: 2,
   },
   countryCodeBox: {
     backgroundColor: "rgba(255, 215, 0, 0.1)",
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     paddingVertical: 0,
     borderRightWidth: 1,
-    borderRightColor: "rgba(255, 255, 255, 0.2)",
+    borderRightColor: "rgba(0, 0, 0, 0.1)",
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
     minWidth: 50,
   },
   countryCodeText: {
-    color: "#fff",
+    color: "#000000",
     fontSize: 16,
     fontWeight: "600",
   },
@@ -139,8 +139,8 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
     fontSize: 16,
     height: 50,
-    backgroundColor: "transparent",
-    color: "#fff",
+    backgroundColor: "#ffffff",
+    color: "#000000",
     fontWeight: "500",
     textAlignVertical: "center",
     includeFontPadding: false,
@@ -150,8 +150,8 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   inputError: {
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    color: "#fff",
+    backgroundColor: "#ffffff",
+    color: "#000000",
   },
   counterText: {
     textAlign: "right",

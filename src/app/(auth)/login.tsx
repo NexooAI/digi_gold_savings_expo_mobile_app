@@ -95,6 +95,44 @@ const ErrorAlert = ({
   );
 };
 
+const GlassmorphismCard = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <View style={styles.cardContainer}>
+      {/* Base fog layer */}
+      <LinearGradient
+        colors={[
+          "rgba(174, 0, 0, 0.1)",
+          "rgba(34, 0, 0, 0.35)",
+          "rgba(134, 1, 1, 0.4)",
+        ]}
+        style={StyleSheet.absoluteFill}
+      />
+      {/* Top fog highlight */}
+      <LinearGradient
+        colors={[
+          "rgba(112, 0, 0, 0.38)",
+          "rgba(130, 0, 0, 0.4)",
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 0.5 }}
+        style={StyleSheet.absoluteFill}
+      />
+      {/* Bottom fog highlight */}
+      <LinearGradient
+        colors={[
+          "rgba(143, 0, 0, 0.29)",
+          "rgba(122, 5, 5, 0.53)",
+        ]}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 0, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      {/* Content */}
+      <View style={styles.cardContent}>{children}</View>
+    </View>
+  );
+};
+
 export default function Login() {
   // State for mobile number and OTP
   const [mobile, setMobile] = useState("");
@@ -442,7 +480,7 @@ export default function Login() {
       style={styles.backgroundImage}
     >
       <LinearGradient
-        colors={["rgba(0,0,0,0.7)", "rgba(0,0,0,0.5)", "rgba(0,0,0,0.7)"]}
+        colors={["rgba(32, 1, 1, 0.55)", "rgba(167, 0, 0, 0.3)", "rgba(118, 1, 1, 0.3)"]}
         style={styles.gradient}
       >
         {showError && (
@@ -461,7 +499,7 @@ export default function Login() {
           </View>
 
           <View style={styles.formContainer}>
-            <View style={styles.cardContainer}>
+            <GlassmorphismCard>
               <Text style={styles.pageTitle}>Welcome Back!</Text>
               <Text style={styles.subtitle}>Sign in to continue</Text>
 
@@ -617,7 +655,7 @@ export default function Login() {
                 />
                 <Text style={styles.backButtonText}>Back</Text>
               </TouchableOpacity>
-            </View>
+            </GlassmorphismCard>
           </View>
         </KeyboardAvoidingView>
       </LinearGradient>
@@ -653,34 +691,45 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === "ios" ? 40 : 0,
   },
   cardContainer: {
-    backgroundColor: "rgb(2, 1, 6)",
+    backgroundColor: "rgba(255, 255, 255, 0.6)",
     borderRadius: 20,
     padding: 20,
     width: "100%",
     borderWidth: 1,
-    borderColor: "rgba(239, 251, 0, 0.97)",
+    borderColor: "rgba(255, 255, 255, 0.4)",
     marginBottom: Platform.OS === "ios" ? 20 : 10,
+    overflow: "hidden",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        backdropFilter: "blur(20px)",
       },
       android: {
-        elevation: 8,
+        elevation: 12,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
       },
     }),
+    position: "relative",
+  },
+  cardContent: {
+    position: "relative",
+    zIndex: 1,
   },
   pageTitle: {
-    color: theme.colors.textLight,
+    color: "#ffffff",
     fontSize: 28,
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
   },
   subtitle: {
-    color: theme.colors.textLight,
+    color: "#ffffff",
     fontSize: 16,
     marginBottom: 30,
     textAlign: "center",
@@ -688,14 +737,25 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     width: "100%",
-    marginBottom: 20,
+    marginBottom: 6,
   },
   loginButton: {
     width: "100%",
     height: 50,
     borderRadius: 25,
     overflow: "hidden",
-    marginTop: 20,
+    marginTop: 6,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   gradientButton: {
     flex: 1,
@@ -716,13 +776,13 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   otpTitle: {
-    color: theme.colors.textLight,
+    color: "#ffffff",
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 10,
   },
   otpSentText: {
-    color: theme.colors.textLight,
+    color: "#ffffff",
     fontSize: 16,
     marginBottom: 20,
     opacity: 0.8,
@@ -782,16 +842,17 @@ const styles = StyleSheet.create({
     marginTop: 15,
   },
   timerText: {
-    color: theme.colors.white,
+    color: "#ffffff",
     marginLeft: 8,
     fontSize: 16,
+    opacity: 0.8,
   },
   resendButton: {
     marginTop: 10,
     padding: 10,
   },
   resendText: {
-    color: theme.colors.secondary,
+    color: "#A70000",
     fontSize: 16,
     fontWeight: "bold",
     textDecorationLine: "underline",
@@ -803,11 +864,12 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   registerText: {
-    color: theme.colors.white,
+    color: "#ffffff",
     fontSize: 16,
+    opacity: 0.8,
   },
   registerLink: {
-    color: theme.colors.secondary,
+    color: "#ffffff",
     fontSize: 16,
     fontWeight: "bold",
     textDecorationLine: "underline",
@@ -819,9 +881,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   backButtonText: {
-    color: theme.colors.white,
+    color: "#ffffff",
     fontSize: 16,
     marginLeft: 5,
+    opacity: 0.8,
   },
   errorAlert: {
     position: "absolute",

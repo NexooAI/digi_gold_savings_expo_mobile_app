@@ -10,6 +10,7 @@ const theme = {
     border: "#cccccc",
     inputBackground: "rgba(255, 255, 255, 0.2)",
     error: "#ff4d4f",
+    success: "#4CAF50",
     link: "#ffc90c",
     textDark: "#2e0406",
     white: "#ffffff",
@@ -28,7 +29,7 @@ const theme = {
     adative_icon: require("../../assets/images/adaptive-icon.png"),
     transparentLogo: require("../../assets/images/logo_trans.png"),
     menu_bg: require("../../assets/images/menu_bg.png"),
-    bg_image: require("../../assets/images/bg.png"),
+    bg_image: require("../../assets/images/bg_login.jpg"),
     gold_image: require("../../assets/images/bar.png"),
     silver_image: require("../../assets/images/silver.png"),
     sliderImages: [
