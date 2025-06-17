@@ -1,18 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
-import io from 'socket.io-client';
-import { theme } from '@/constants/theme';
-import { PaymentSocket, PaymentStatusUpdate } from '@/app/(app)/(tabs)/home/types/payment.types';
-import { postPayment, postTransaction, updateInvestment } from '@/utils/paymentUtils';
+import { useEffect, useRef } from "react";
+import { io, Socket } from "socket.io-client";
+import { useRouter } from "expo-router";
+import { postPayment, postTransaction, updateInvestment } from "@/services/payment.service";
 import { Alert } from 'react-native';
+import { theme } from "@/constants/theme";
 
-// Add this type before the usePaymentSocket hook
-type SocketEvent = `payment_status_update${string}`;
-
-interface UsePaymentSocketProps {
-  onPaymentSuccess?: (data: PaymentStatusUpdate) => void;
-  onPaymentFailure?: (data: PaymentStatusUpdate) => void;
+interface PaymentSocketProps {
+  onPaymentSuccess?: (data: any) => void;
+  onPaymentFailure?: (data: any) => void;
   onPaymentError?: (error: any) => void;
   onPaymentExpired?: () => void;
+  parsedUserDetails: any;
+  router: ReturnType<typeof useRouter>;
+  orderId?: string;
 }
 
 export const usePaymentSocket = ({
@@ -21,9 +21,10 @@ export const usePaymentSocket = ({
   onPaymentError,
   onPaymentExpired,
   parsedUserDetails,
-  router
-}: UsePaymentSocketProps & { parsedUserDetails?: any, router?: any } = {} as UsePaymentSocketProps & { parsedUserDetails?: any, router?: any }) => {
-  const [socket, setSocket] = useState<PaymentSocket | null>(null);
+  router,
+  orderId,
+}: PaymentSocketProps) => {
+  const socketRef = useRef<Socket | null>(null);
   const isPaymentCompleted = useRef(false);
 
   const handleError = (error: any) => {
@@ -68,19 +69,59 @@ export const usePaymentSocket = ({
   };
 
   useEffect(() => {
-    const socketInstance = io(theme.baseUrl) as unknown as PaymentSocket;
-    setSocket(socketInstance);
+    // Initialize socket connection
+    const socketInstance = io(theme.baseUrl, {
+      transports: ["websocket"],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
 
-    const orderId = parsedUserDetails?.data?.data?.orderId || parsedUserDetails?.orderId;
-    socketInstance.on(`payment_status_update`, async (data: PaymentStatusUpdate) => {
-      console.log("------------------------->> ❤️ ❤️ ❤️ ", data);
-      console.log("------------------------->> ❤️ ❤️ ❤️ ", parsedUserDetails, router);
+    socketRef.current = socketInstance;
+
+    // Handle connection events
+    socketInstance.on("connect", () => {
+      console.log("Socket connected:", socketInstance.id);
+      console.log("check orderid", parsedUserDetails);
+      
+      // Join the order room if we have an order ID
+      const currentOrderId = orderId || parsedUserDetails?.orderId;
+      if (currentOrderId) {
+        socketInstance.emit("joinOrderRoom", currentOrderId);
+        console.log(`Joined room for order ${currentOrderId}`);
+      } else {
+        console.warn("No order ID available for socket room");
+      }
+    });
+
+    socketInstance.on("connect_error", (error) => {
+      console.error("Socket connection error:", error);
+      onPaymentError?.({
+        error: "Connection Error",
+        message: "Failed to connect to payment server",
+      });
+    });
+
+    socketInstance.on("disconnect", (reason) => {
+      console.log("Socket disconnected:", reason);
+      if (!isPaymentCompleted.current) {
+        onPaymentError?.({
+          error: "Disconnected",
+          message: "Lost connection to payment server",
+        });
+      }
+    });
+
+    // Listen for payment status updates
+    socketInstance.on("payment_status_update", async (data: any) => {
+      console.log("Payment status update received:", data);
       const txnStatus = data?.paymentResponse?.txn_detail?.status;
-      console.log(txnStatus, data?.paymentResponse);
+
       try {
         if (txnStatus === 'CHARGED') {
-          console.log('charged');
+          console.log('Payment charged successfully');
           isPaymentCompleted.current = true;
+          
           if (parsedUserDetails && router) {
             const paymentPayload = {
               investmentId: parsedUserDetails.data?.data?.id || parsedUserDetails.id || '',
@@ -94,6 +135,7 @@ export const usePaymentSocket = ({
               isManual: 'no',
               utr_reference_number: '',
             };
+
             const paymentResult = await postPayment(paymentPayload);
             const paymentId = paymentResult?.id || paymentResult?.paymentId || 1;
 
@@ -117,6 +159,7 @@ export const usePaymentSocket = ({
               isManual: 'no',
               utr_reference_number: '',
             };
+
             await postTransaction(transactionPayload);
 
             const investmentPayload = {
@@ -128,16 +171,21 @@ export const usePaymentSocket = ({
               paymentStatus: 'PAID',
               paymentAmount: data?.paymentResponse?.amount || '',
             };
-            await updateInvestment(parsedUserDetails.data?.data?.id || parsedUserDetails.id || '', investmentPayload);
+
+            await updateInvestment(
+              parsedUserDetails.data?.data?.id || parsedUserDetails.id || '',
+              investmentPayload
+            );
           }
+
           onPaymentSuccess?.(data);
-          console.log("------------------------->> end ", data)
           if (socketInstance && socketInstance.connected) {
             socketInstance.disconnect();
           }
         } else if (String(txnStatus) !== 'CHARGED') {
-          console.log('charged');
+          console.log('Payment not charged');
           isPaymentCompleted.current = true;
+
           if (parsedUserDetails && router) {
             const transactionPayload = {
               userId: parsedUserDetails.data?.data?.userId || parsedUserDetails.userId || '',
@@ -159,10 +207,14 @@ export const usePaymentSocket = ({
               isManual: 'no',
               utr_reference_number: '',
             };
+
             await postTransaction(transactionPayload);
             router.replace({
-              pathname: '/(tabs)/home/payment-failure', params: {
-                message: ((data?.paymentResponse?.txn_detail as any)?.error_message || (data?.paymentResponse?.txn_detail as any)?.response_message || 'Payment Failed'),
+              pathname: '/(tabs)/home/payment-failure',
+              params: {
+                message: ((data?.paymentResponse?.txn_detail as any)?.error_message || 
+                         (data?.paymentResponse?.txn_detail as any)?.response_message || 
+                         'Payment Failed'),
                 orderId: data?.paymentResponse?.order_id,
                 txnId: data?.paymentResponse?.txn_id,
                 amount: data?.paymentResponse?.amount,
@@ -170,70 +222,38 @@ export const usePaymentSocket = ({
               }
             });
           }
+
           onPaymentFailure?.(data);
-          if (socketInstance && socketInstance.connected) {
-            socketInstance.disconnect();
-          }
-        } else if (String(txnStatus) === 'CANCELLED' || (data as any)?.status === 'cancelled') {
-          console.log('charged');
-          if (router) {
-            router.replace({ pathname: '/(tabs)/home/payment-faliure', params: {} });
-          }
           if (socketInstance && socketInstance.connected) {
             socketInstance.disconnect();
           }
         }
       } catch (error) {
         console.error('Error in payment status update API sequence:', error);
-        handleError(error);
+        onPaymentError?.({
+          error: "API Error",
+          message: "Failed to process payment status",
+        });
       }
     });
 
-    (socketInstance as any).on('error', (error: any) => {
-      console.error('Socket error received:', error);
-      handleError(error);
-    });
-
-    (socketInstance as any).on('payment_error', (error: any) => {
-      console.error('Payment error received:', error);
-      handleError(error);
-    });
-
+    // Cleanup on unmount
     return () => {
-      if (socketInstance) {
+      if (socketInstance && socketInstance.connected) {
         socketInstance.disconnect();
       }
     };
-  }, []);
-
-  const emitPaymentEvent = (event: string, data: any) => {
-    console.log("------------------------->>", event, "❤️ ❤️ ❤️", data);
-    if (socket) {
-      (socket as any).emit(event, {
-        ...data,
-        timestamp: new Date().toISOString()
-      });
-    }
-  };
+  }, [parsedUserDetails, router, onPaymentSuccess, onPaymentFailure, onPaymentError, onPaymentExpired, orderId]);
 
   const handleCancel = () => {
-    if (router) {
-      router.replace({
-        pathname: "/(tabs)/home/payment",
-        params: {
-          amount: parsedUserDetails?.amount || "",
-          userDetails: JSON.stringify(parsedUserDetails),
-          error: "Payment Cancelled",
-          errorTimestamp: new Date().toISOString()
-        }
-      });
+    if (socketRef.current && socketRef.current.connected) {
+      socketRef.current.disconnect();
     }
+    router.replace({ pathname: '/(tabs)/home/payment-failure', params: {} });
   };
 
   return {
-    socket,
-    isPaymentCompleted: isPaymentCompleted.current,
-    emitPaymentEvent,
-    handleCancel
+    socket: socketRef.current,
+    handleCancel,
   };
 }; 

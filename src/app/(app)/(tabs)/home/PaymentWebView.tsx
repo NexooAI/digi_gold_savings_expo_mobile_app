@@ -8,7 +8,7 @@ import { usePaymentSocket } from "@/hooks/usePaymentSocket";
 export default function PaymentWebView() {
   const params = useLocalSearchParams();
   const router = useRouter();
-
+console.log('params',params)
   const { socket, handleCancel } = usePaymentSocket({
     onPaymentSuccess: (data) => {
       console.log("Payment Success:", data);
@@ -17,12 +17,12 @@ export default function PaymentWebView() {
         socket.disconnect();
       }
       router.replace({
-        pathname: '/(tabs)/home/payment-success',
+        pathname: "/(tabs)/home/payment-success",
         params: {
           txnId: data?.paymentResponse?.txn_id,
           orderId: data?.paymentResponse?.order_id,
           amount: data?.paymentResponse?.amount,
-        }
+        },
       });
     },
     onPaymentFailure: (data) => {
@@ -32,14 +32,17 @@ export default function PaymentWebView() {
         socket.disconnect();
       }
       router.replace({
-        pathname: '/(tabs)/home/payment-failure',
+        pathname: "/(tabs)/home/payment-failure",
         params: {
-          message: ((data?.paymentResponse?.txn_detail as any)?.error_message || (data?.paymentResponse?.txn_detail as any)?.response_message || 'Payment Failed'),
+          message:
+            (data?.paymentResponse?.txn_detail as any)?.error_message ||
+            (data?.paymentResponse?.txn_detail as any)?.response_message ||
+            "Payment Failed",
           orderId: data?.paymentResponse?.order_id,
           txnId: data?.paymentResponse?.txn_id,
           amount: data?.paymentResponse?.amount,
-          status: data?.paymentResponse?.txn_detail?.status
-        }
+          status: data?.paymentResponse?.txn_detail?.status,
+        },
       });
     },
     onPaymentError: (error) => {
@@ -49,11 +52,11 @@ export default function PaymentWebView() {
         socket.disconnect();
       }
       router.replace({
-        pathname: '/(tabs)/home/payment-failure',
+        pathname: "/(tabs)/home/payment-failure",
         params: {
-          message: error?.message || 'An error occurred during payment',
-          error: error?.error || 'Unknown error'
-        }
+          message: error?.message || "An error occurred during payment",
+          error: error?.error || "Unknown error",
+        },
       });
     },
     onPaymentExpired: () => {
@@ -63,16 +66,17 @@ export default function PaymentWebView() {
         socket.disconnect();
       }
       router.replace({
-        pathname: '/(tabs)/home/payment-failure',
+        pathname: "/(tabs)/home/payment-failure",
         params: {
-          message: 'Payment session expired. Please try again.'
-        }
+          message: "Payment session expired. Please try again.",
+        },
       });
     },
     parsedUserDetails: params.userDetails
       ? JSON.parse(params.userDetails as string)
       : null,
     router,
+    orderId: params.orderId as string,
   });
 
   // Cleanup socket on component unmount
@@ -91,13 +95,13 @@ export default function PaymentWebView() {
           source={{ uri: params.url as string }}
           style={{ flex: 1 }}
           onNavigationStateChange={(navState) => {
-            console.log('Payment Navigation State:', {
+            console.log("Payment Navigation State:", {
               url: navState.url,
               title: navState.title,
               loading: navState.loading,
-              canGoBack: navState.canGoBack
+              canGoBack: navState.canGoBack,
             });
-            
+
             const url = navState.url.toLowerCase();
             // Only trigger cancel if explicitly cancelled or failed
             if (
@@ -106,7 +110,7 @@ export default function PaymentWebView() {
               url.includes("/failed") ||
               (url.includes("payment") && url.includes("status=failed"))
             ) {
-              console.log('Payment cancelled/failed detected:', url);
+              console.log("Payment cancelled/failed detected:", url);
               // Disconnect socket before handling cancel
               if (socket && socket.connected) {
                 socket.disconnect();

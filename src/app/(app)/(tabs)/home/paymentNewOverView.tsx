@@ -78,13 +78,18 @@ export default function PaymentNewOverView() {
       console.log("initialpayment ======>", payload);
       const response = await paymentService.initiatePayment(payload);
       if (response?.session.payment_links.web) {
+        // Extract order ID from the payment response
+        const orderId =response?.session?.order_id;
+        
         router.push({
           pathname: "/(tabs)/home/paymentWebView",
           params: {
             url: response.session.payment_links.web,
+            orderId: orderId, // Add orderId to params
             userDetails: JSON.stringify({
               ...userDetails,
               amount: params.amount,
+              orderId: orderId, // Include orderId in userDetails
               investmentId: Array.isArray(params.investmentId)
                 ? params.investmentId[0]
                 : params.investmentId,
