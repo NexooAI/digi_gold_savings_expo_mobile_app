@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { View, Modal, StyleSheet } from "react-native";
+import { View, Modal, StyleSheet, Alert } from "react-native";
 import { WebView } from "react-native-webview";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { usePaymentSocket } from "@/hooks/usePaymentSocket";
@@ -51,13 +51,29 @@ console.log('params',params)
       if (socket && socket.connected) {
         socket.disconnect();
       }
-      router.replace({
-        pathname: "/(tabs)/home/payment-failure",
-        params: {
-          message: error?.message || "An error occurred during payment",
-          error: error?.error || "Unknown error",
-        },
-      });
+      Alert.alert(
+        "Payment Error",
+        error?.message || "An error occurred during payment processing. Please try again.",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              router.replace({
+                pathname: "/(tabs)/home/paymentNewOverView",
+                params: {
+                  userDetails: params.userDetails,
+                  amount: params.amount,
+                  schemeName: params.schemeName,
+                  schemeId: params.schemeId,
+                  chitId: params.chitId,
+                  paymentFrequency: params.paymentFrequency,
+                  schemeType: params.schemeType
+                }
+              });
+            }
+          }
+        ]
+      );
     },
     onPaymentExpired: () => {
       console.log("Payment Expired");
@@ -65,12 +81,29 @@ console.log('params',params)
       if (socket && socket.connected) {
         socket.disconnect();
       }
-      router.replace({
-        pathname: "/(tabs)/home/payment-failure",
-        params: {
-          message: "Payment session expired. Please try again.",
-        },
-      });
+      Alert.alert(
+        "Payment Expired",
+         "Your payment session has expired. Please try again to complete the transaction.",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              router.replace({
+                pathname: "/(tabs)/home/paymentNewOverView",
+                params: {
+                  userDetails: params.userDetails,
+                  amount: params.amount,
+                  schemeName: params.schemeName,
+                  schemeId: params.schemeId,
+                  chitId: params.chitId,
+                  paymentFrequency: params.paymentFrequency,
+                  schemeType: params.schemeType
+                }
+              });
+            }
+          }
+        ]
+      );
     },
     parsedUserDetails: params.userDetails
       ? JSON.parse(params.userDetails as string)
