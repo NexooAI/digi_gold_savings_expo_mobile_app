@@ -289,7 +289,7 @@ const SavingsDetail = () => {
 
       // Navigate to payment screen with minimal parameters
       router.push({
-        pathname: "/(tabs)/home/payment",
+        pathname: "/(tabs)/home/paymentNewOverView",
         params: {
           amount: params.emiAmount,
           sessionId: Date.now().toString(),

@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Dimensions,
+  Image,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useLocalSearchParams } from "expo-router";
@@ -17,6 +18,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 
 const { width } = Dimensions.get("window");
+const logoWidth = width * 0.3;
 
 // Error Alert Component (matching login page)
 const ErrorAlert = ({ message, onClose }: { message: string; onClose: () => void }) => {
@@ -37,6 +39,44 @@ const ErrorAlert = ({ message, onClose }: { message: string; onClose: () => void
       <TouchableOpacity onPress={onClose} style={styles.closeButton}>
         <Ionicons name="close" size={20} color="#fff" />
       </TouchableOpacity>
+    </View>
+  );
+};
+
+const GlassmorphismCard = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <View style={styles.cardContainer}>
+      {/* Base fog layer */}
+      <LinearGradient
+        colors={[
+          "rgba(174, 0, 0, 0.1)",
+          "rgba(34, 0, 0, 0.35)",
+          "rgba(134, 1, 1, 0.4)",
+        ]}
+        style={StyleSheet.absoluteFill}
+      />
+      {/* Top fog highlight */}
+      <LinearGradient
+        colors={[
+          "rgba(112, 0, 0, 0.38)",
+          "rgba(130, 0, 0, 0.4)",
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 0.5 }}
+        style={StyleSheet.absoluteFill}
+      />
+      {/* Bottom fog highlight */}
+      <LinearGradient
+        colors={[
+          "rgba(143, 0, 0, 0.29)",
+          "rgba(122, 5, 5, 0.53)",
+        ]}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 0, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      {/* Content */}
+      <View style={styles.cardContent}>{children}</View>
     </View>
   );
 };
@@ -154,7 +194,7 @@ export default function BasicDetailsForm() {
       style={styles.backgroundImage}
     >
       <LinearGradient
-        colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.7)']}
+        colors={["rgba(32, 1, 1, 0.55)", "rgba(167, 0, 0, 0.3)", "rgba(118, 1, 1, 0.3)"]}
         style={styles.gradient}
       >
         {showError && (
@@ -165,8 +205,16 @@ export default function BasicDetailsForm() {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.container}
         >
+          {/* <View style={styles.logoContainer}>
+            <Image
+              source={theme.image.transparentLogo}
+              style={[styles.logo, { width: logoWidth }]}
+              resizeMode="contain"
+            />
+          </View> */}
+
           <View style={styles.formContainer}>
-            <View style={styles.cardContainer}>
+            <GlassmorphismCard>
               <Text style={styles.pageTitle}>Almost There!</Text>
               <Text style={styles.subtitle}>Complete your registration details</Text>
 
@@ -174,7 +222,7 @@ export default function BasicDetailsForm() {
               <View style={styles.inputContainer}>
                 <View style={styles.inputWrapper}>
                   <View style={styles.inputIcon}>
-                    <Ionicons name="call" size={20} color={theme.colors.primary} />
+                    <Ionicons name="call" size={20} color={theme.colors.secondary} />
                   </View>
                   <View style={styles.inputContent}>
                     <Text style={styles.inputLabel}>Registered Mobile</Text>
@@ -182,7 +230,7 @@ export default function BasicDetailsForm() {
                       style={[styles.input, styles.disabledInput]}
                       value={mobileStr}
                       editable={false}
-                      placeholderTextColor="rgba(255,255,255,0.6)"
+                      placeholderTextColor="rgba(10, 1, 1, 0.6)"
                     />
                   </View>
                 </View>
@@ -192,14 +240,14 @@ export default function BasicDetailsForm() {
               <View style={styles.inputContainer}>
                 <View style={styles.inputWrapper}>
                   <View style={styles.inputIcon}>
-                    <Ionicons name="person-outline" size={20} color={theme.colors.primary} />
+                    <Ionicons name="person-outline" size={20} color={theme.colors.secondary} />
                   </View>
                   <View style={styles.inputContent}>
                     <Text style={styles.inputLabel}>Full Name *</Text>
                     <TextInput
                       style={styles.input}
                       placeholder="Enter your full name"
-                      placeholderTextColor="rgba(255,255,255,0.6)"
+                      placeholderTextColor="rgba(10, 1, 1, 0.6)"
                       value={name}
                       onChangeText={(text) => {
                         setName(text);
@@ -218,14 +266,14 @@ export default function BasicDetailsForm() {
               <View style={styles.inputContainer}>
                 <View style={styles.inputWrapper}>
                   <View style={styles.inputIcon}>
-                    <Ionicons name="mail-outline" size={20} color={theme.colors.primary} />
+                    <Ionicons name="mail-outline" size={20} color={theme.colors.secondary} />
                   </View>
                   <View style={styles.inputContent}>
                     <Text style={styles.inputLabel}>Email Address *</Text>
                     <TextInput
                       style={styles.input}
                       placeholder="Enter your email address"
-                      placeholderTextColor="rgba(255,255,255,0.6)"
+                      placeholderTextColor="rgba(10, 1, 1, 0.6)"
                       value={email}
                       onChangeText={(text) => {
                         setEmail(text);
@@ -253,7 +301,7 @@ export default function BasicDetailsForm() {
                     <TextInput
                       style={styles.input}
                       placeholder="6 alphanumeric characters"
-                      placeholderTextColor="rgba(255,255,255,0.6)"
+                      placeholderTextColor="rgba(10, 1, 1, 0.6)"
                       value={referralCode}
                       onChangeText={handleReferralCodeChange}
                       keyboardType="default"
@@ -275,24 +323,24 @@ export default function BasicDetailsForm() {
 
               {/* Submit Button */}
               <TouchableOpacity
-                style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+                style={[styles.loginButton, loading && styles.loginButtonDisabled]}
                 onPress={handleSubmit}
                 disabled={loading}
               >
                 <LinearGradient
-                  colors={['#ffc90c', '#ffd700']}
+                  colors={["#ffc90c", "#ffd700"]}
                   style={styles.gradientButton}
                 >
                   <View style={styles.buttonContent}>
                     {loading ? (
                       <>
                         <Ionicons name="hourglass" size={20} color={theme.colors.textDark} />
-                        <Text style={styles.submitButtonText}>Processing...</Text>
+                        <Text style={styles.loginButtonText}>Processing...</Text>
                       </>
                     ) : (
                       <>
                         <Ionicons name="arrow-forward" size={20} color={theme.colors.textDark} />
-                        <Text style={styles.submitButtonText}>Continue</Text>
+                        <Text style={styles.loginButtonText}>Continue</Text>
                       </>
                     )}
                   </View>
@@ -319,7 +367,7 @@ export default function BasicDetailsForm() {
                 <Ionicons name="arrow-back" size={20} color={theme.colors.white} />
                 <Text style={styles.backButtonText}>Back</Text>
               </TouchableOpacity>
-            </View>
+            </GlassmorphismCard>
           </View>
         </KeyboardAvoidingView>
       </LinearGradient>
@@ -328,66 +376,88 @@ export default function BasicDetailsForm() {
 }
 
 const styles = StyleSheet.create({
-  backgroundImage: { 
-    flex: 1, 
-    resizeMode: "cover" 
+  backgroundImage: {
+    flex: 1,
+    resizeMode: "cover",
   },
   gradient: {
     flex: 1,
   },
-  container: { 
+  container: {
     flex: 1,
-    paddingVertical: 20,
+    paddingBottom: Platform.OS === "ios" ? 40 : 20,
   },
-  formContainer: { 
+  logoContainer: {
+    width: "100%",
+    alignItems: "center",
+    paddingTop: Platform.OS === "ios" ? 60 : 40,
+    marginBottom: 0,
+  },
+  logo: {
+    aspectRatio: 0.8,
+  },
+  formContainer: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: 20,
+    paddingBottom: Platform.OS === "ios" ? 40 : 0,
   },
   cardContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.6)",
     borderRadius: 20,
     padding: 20,
-    width: '100%',
+    width: "100%",
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: "rgba(255, 255, 255, 0.4)",
+    marginBottom: Platform.OS === "ios" ? 20 : 10,
+    overflow: "hidden",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        backdropFilter: "blur(20px)",
       },
       android: {
-        elevation: 8,
+        elevation: 12,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
       },
     }),
+    position: "relative",
+  },
+  cardContent: {
+    position: "relative",
+    zIndex: 1,
   },
   pageTitle: {
-    color: theme.colors.textLight,
-    fontSize: 26,
+    color: "#ffffff",
+    fontSize: 28,
     fontWeight: "bold",
-    marginBottom: 8,
+    marginBottom: 10,
     textAlign: "center",
   },
   subtitle: {
-    color: theme.colors.textLight,
-    fontSize: 15,
-    marginBottom: 25,
+    color: "#ffffff",
+    fontSize: 16,
+    marginBottom: 30,
     textAlign: "center",
     opacity: 0.8,
   },
   inputContainer: {
-    width: '100%',
+    width: "100%",
     marginBottom: 15,
   },
   inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.91)",
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: "rgba(208, 38, 38, 0.65)",
     paddingHorizontal: 15,
     paddingVertical: 5,
   },
@@ -395,22 +465,22 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(208, 38, 38, 0.65)",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 15,
   },
   inputContent: {
     flex: 1,
   },
   inputLabel: {
-    color: theme.colors.textLight,
+    color: theme.colors.darkGrey,
     fontSize: 12,
     opacity: 0.8,
     marginBottom: 5,
   },
   input: {
-    color: theme.colors.textLight,
+    color: theme.colors.black,
     fontSize: 16,
     paddingVertical: 10,
     paddingHorizontal: 0,
@@ -419,43 +489,54 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   errorText: {
-    color: '#ff4444',
+    color: "#ff4444",
     fontSize: 12,
     marginTop: 5,
     marginLeft: 55,
   },
   successContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 5,
     marginLeft: 55,
   },
   successText: {
-    color: '#4CAF50',
+    color: "#4CAF50",
     fontSize: 12,
     marginLeft: 5,
   },
-  submitButton: {
+  loginButton: {
     width: "100%",
     height: 50,
     borderRadius: 25,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginTop: 15,
     marginBottom: 15,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   gradientButton: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
-  submitButtonDisabled: { 
-    opacity: 0.6 
+  loginButtonDisabled: {
+    opacity: 0.6,
   },
   buttonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
-  submitButtonText: {
+  loginButtonText: {
     color: theme.colors.textDark,
     fontSize: 18,
     fontWeight: "bold",
@@ -466,8 +547,8 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   infoItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 8,
   },
   infoText: {
@@ -477,29 +558,30 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 5,
+    marginTop: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   backButtonText: {
     color: theme.colors.white,
     fontSize: 16,
     marginLeft: 5,
+    opacity: 0.8,
   },
   errorAlert: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 30,
+    position: "absolute",
+    top: Platform.OS === "ios" ? 50 : 30,
     left: 20,
     right: 20,
-    backgroundColor: 'rgba(255, 68, 68, 0.95)',
+    backgroundColor: "rgba(255, 68, 68, 0.95)",
     borderRadius: 12,
     padding: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     zIndex: 1000,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -510,11 +592,11 @@ const styles = StyleSheet.create({
   },
   errorContent: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   errorMessage: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
     marginLeft: 10,
     flex: 1,

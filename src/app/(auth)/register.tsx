@@ -131,7 +131,7 @@ export default function Register() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/check-mobile`, {
+      const response = await fetch(`${theme.baseUrl}/auth/check-mobile`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -210,7 +210,7 @@ export default function Register() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/register/verify-otp`, {
+      const response = await fetch(`${theme.baseUrl}/register/verify-otp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

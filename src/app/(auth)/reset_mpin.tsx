@@ -26,9 +26,28 @@ import * as Crypto from "expo-crypto";
 import { theme } from "@/constants/theme";
 import { moderateScale } from "react-native-size-matters";
 
-const { width, height } = Dimensions.get("window");
-const logoWidth = width * 0.25;
+const { width } = Dimensions.get("window");
+const logoWidth = width * 0.3;
 const salt = "someRandomSaltValue";
+
+// Error Alert Component
+const ErrorAlert = ({
+  message,
+  onClose,
+}: {
+  message: string;
+  onClose: () => void;
+}) => (
+  <View style={styles.errorAlert}>
+    <View style={styles.errorContent}>
+      <Ionicons name="alert-circle" size={24} color="#fff" />
+      <Text style={styles.errorMessage}>{message}</Text>
+    </View>
+    <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+      <Ionicons name="close" size={24} color="#fff" />
+    </TouchableOpacity>
+  </View>
+);
 
 const hashMPIN = async (mpin: string) => {
   try {
@@ -126,6 +145,16 @@ export default function ResetMpin() {
   const isCreatingMPIN = mode === "create";
   const fromLogin = from === "login";
 
+  const hideErrorAlert = () => {
+    setShowError(false);
+  };
+
+  const showErrorAlert = (message: string) => {
+    setErrorMessage(message);
+    setShowError(true);
+    setTimeout(() => setShowError(false), 3000);
+  };
+
   useEffect(() => {
     if (mpin.length === 4 && confirmMpin.length === 4) {
       setError(mpin !== confirmMpin ? "MPIN mismatch" : "");
@@ -133,12 +162,6 @@ export default function ResetMpin() {
       setError("");
     }
   }, [mpin, confirmMpin]);
-
-  const showErrorAlert = (message: string) => {
-    setErrorMessage(message);
-    setShowError(true);
-    setTimeout(() => setShowError(false), 3000);
-  };
 
   const handleSubmit = async () => {
     if (mpin !== confirmMpin) {
@@ -168,46 +191,57 @@ export default function ResetMpin() {
         style={styles.backgroundImage}
       >
         <LinearGradient
-          colors={["rgba(0,0,0,0.7)", "rgba(0,0,0,0.5)", "rgba(0,0,0,0.7)"]}
+          colors={["rgba(32, 1, 1, 0.55)", "rgba(167, 0, 0, 0.3)", "rgba(118, 1, 1, 0.3)"]}
           style={styles.gradient}
         >
           {showError && (
-            <View style={styles.errorAlert}>
-              <View style={styles.errorContent}>
-                <Ionicons name="alert-circle" size={24} color="#fff" />
-                <Text style={styles.errorMessage}>{errorMessage}</Text>
-              </View>
-              <TouchableOpacity
-                onPress={() => setShowError(false)}
-                style={styles.closeButton}
-              >
-                <Ionicons name="close" size={20} color="#fff" />
-              </TouchableOpacity>
-            </View>
+            <ErrorAlert message={errorMessage} onClose={hideErrorAlert} />
           )}
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={styles.container}
           >
+            <View style={styles.logoContainer}>
+              <Image
+                source={theme.image.transparentLogo}
+                style={[styles.logo, { width: logoWidth }]}
+                resizeMode="contain"
+              />
+            </View>
+
             <View style={styles.formContainer}>
-              <View style={styles.contentContainer}>
-                <View style={styles.logoContainer}>
-                  <Image
-                    source={theme.image.transparentLogo}
-                    style={[styles.logo, { width: 100 }]}
-                    resizeMode="contain"
-                  />
-                  {/* {fromLogin ? (
-                    <TouchableOpacity onPress={() => router.back()}>
-                      <Ionicons name="arrow-back" size={24} color="black" />
-                    </TouchableOpacity>
-                  ) : (
-                    <TouchableOpacity onPress={() => router.push("/profile")}>
-                      <Ionicons name="arrow-back" size={24} color="black" />
-                    </TouchableOpacity>
-                  )} */}
-                </View>
-                <View style={styles.cardContainer}>
+              <View style={styles.cardContainer}>
+                {/* Base fog layer */}
+                <LinearGradient
+                  colors={[
+                    "rgba(174, 0, 0, 0.1)",
+                    "rgba(34, 0, 0, 0.35)",
+                    "rgba(134, 1, 1, 0.4)",
+                  ]}
+                  style={StyleSheet.absoluteFill}
+                />
+                {/* Top fog highlight */}
+                <LinearGradient
+                  colors={[
+                    "rgba(112, 0, 0, 0.38)",
+                    "rgba(130, 0, 0, 0.4)",
+                  ]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0, y: 0.5 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                {/* Bottom fog highlight */}
+                <LinearGradient
+                  colors={[
+                    "rgba(143, 0, 0, 0.29)",
+                    "rgba(122, 5, 5, 0.53)",
+                  ]}
+                  start={{ x: 0, y: 0.5 }}
+                  end={{ x: 0, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                {/* Content */}
+                <View style={styles.cardContent}>
                   <Text style={styles.pageTitle}>
                     {isCreatingMPIN ? "Create MPIN" : "Reset MPIN"}
                   </Text>
@@ -269,21 +303,23 @@ export default function ResetMpin() {
                       style={styles.gradientButton}
                     >
                       <Text style={styles.submitButtonText}>
-                        {loading ? "Processing..." : "Create MPIN"}
+                        {loading ? "Processing..." : isCreatingMPIN ?"Create MPIN" :"Reset MPIN"}
                       </Text>
                     </LinearGradient>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.backButtonBottom}
-                    onPress={() => router.back()}
-                  >
-                    <Ionicons
-                      name="arrow-back"
-                      size={20}
-                      color={theme.colors.white}
-                    />
-                    <Text style={styles.backButtonText}>Back</Text>
-                  </TouchableOpacity>
+                  {!isCreatingMPIN && (
+                    <TouchableOpacity
+                      style={styles.backButton}
+                      onPress={() => router.back()}
+                    >
+                      <Ionicons
+                        name="arrow-back"
+                        size={20}
+                        color={theme.colors.white}
+                      />
+                      <Text style={styles.backButtonText}>Back</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
             </View>
@@ -295,22 +331,22 @@ export default function ResetMpin() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   backgroundImage: {
     flex: 1,
-    width: "100%",
-    height: "100%",
+    resizeMode: "cover",
   },
   gradient: {
     flex: 1,
+  },
+  container: {
+    flex: 1,
+    paddingBottom: Platform.OS === "ios" ? 40 : 20,
   },
   logoContainer: {
     width: "100%",
     alignItems: "center",
     paddingTop: Platform.OS === "ios" ? 60 : 40,
-    marginBottom: 10,
+    marginBottom: 20,
   },
   logo: {
     aspectRatio: 1,
@@ -318,57 +354,120 @@ const styles = StyleSheet.create({
   formContainer: {
     flex: 1,
     justifyContent: "center",
-    alignItems: "center",
     paddingHorizontal: 20,
-    paddingBottom: 0,
-  },
-  contentContainer: {
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-    flex: 1,
+    paddingBottom: Platform.OS === "ios" ? 40 : 0,
   },
   cardContainer: {
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 20,
     padding: 20,
     width: "100%",
-    maxWidth: 400,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
-    marginBottom: 0,
-    alignItems: "center",
+    borderColor: "rgba(255, 255, 255, 0.4)",
+    marginBottom: Platform.OS === "ios" ? 20 : 10,
+    overflow: "hidden",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        backdropFilter: "blur(20px)",
       },
       android: {
-        elevation: 8,
+        elevation: 12,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
       },
     }),
+    position: "relative",
+  },
+  cardContent: {
+    position: "relative",
+    zIndex: 1,
   },
   pageTitle: {
-    color: theme.colors.textLight,
+    color: "#ffffff",
     fontSize: 28,
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
   },
   subtitle: {
-    color: theme.colors.textLight,
+    color: "#ffffff",
     fontSize: 16,
     marginBottom: 30,
     textAlign: "center",
     opacity: 0.8,
   },
   label: {
-    color: theme.colors.textLight,
+    color: "#ffffff",
     fontSize: 16,
     marginBottom: 15,
     alignSelf: "stretch",
+  },
+  mpinContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "70%",
+    alignSelf: "center",
+  },
+  inputWrapper: {
+    position: "relative",
+  },
+  mpinInput: {
+    width: 50,
+    height: 50,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    color: "#ffffff",
+    fontSize: 24,
+    textAlign: "center",
+  },
+  mpinInputEmpty: {
+    borderColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+  },
+  mpinInputFilled: {
+    borderColor: theme.colors.secondary,
+    backgroundColor: "rgba(255, 215, 0, 0.1)",
+  },
+  inputIndicator: {
+    position: "absolute",
+    bottom: 8,
+    left: "50%",
+    marginLeft: -3,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: theme.colors.secondary,
+  },
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 68, 68, 0.1)",
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  errorText: {
+    color: "#ff4444",
+    fontSize: 14,
+    marginLeft: 8,
+  },
+  eyeToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 20,
+    alignSelf: "center",
+  },
+  eyeText: {
+    color: theme.colors.secondary,
+    marginLeft: 10,
+    fontSize: 16,
   },
   submitButton: {
     width: "100%",
@@ -376,6 +475,17 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     overflow: "hidden",
     marginTop: 20,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   gradientButton: {
     flex: 1,
@@ -390,16 +500,16 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
-  eyeToggle: {
+  backButton: {
+    marginTop: 20,
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 20,
-    alignSelf: "center",
   },
-  eyeText: {
-    color: theme.colors.secondary,
-    marginLeft: 10,
+  backButtonText: {
+    color: "#ffffff",
     fontSize: 16,
+    marginLeft: 5,
+    opacity: 0.8,
   },
   errorAlert: {
     position: "absolute",
@@ -435,67 +545,5 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: 5,
-  },
-  errorContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255, 107, 107, 0.15)",
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 15,
-    borderLeftWidth: 3,
-    borderLeftColor: "#FF6B6B",
-  },
-  errorText: {
-    color: "#FF6B6B",
-    fontSize: 14,
-    marginLeft: 8,
-  },
-  backButtonBottom: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 18,
-  },
-  backButtonText: {
-    color: theme.colors.white,
-    fontSize: 16,
-    marginLeft: 5,
-  },
-  mpinContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-  },
-  inputWrapper: {
-    position: "relative",
-  },
-  mpinInput: {
-    width: 55,
-    height: 55,
-    borderWidth: 2,
-    borderRadius: 15,
-    fontSize: moderateScale(20),
-    fontWeight: "bold",
-    textAlign: "center",
-    color: "#FFFFFF",
-  },
-  mpinInputEmpty: {
-    borderColor: "rgba(255, 255, 255, 0.3)",
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
-  },
-  mpinInputFilled: {
-    borderColor: "#FFD700",
-    backgroundColor: "rgba(255, 215, 0, 0.1)",
-  },
-  inputIndicator: {
-    position: "absolute",
-    bottom: 8,
-    left: "50%",
-    marginLeft: -3,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#FFD700",
   },
 });

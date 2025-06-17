@@ -196,7 +196,7 @@ const ProfileScreen = () => {
   const handleChangeMPIN = () => {
     router.push({
       pathname: "/reset_mpin",
-      params: { mode: "create", from: "profile" },
+      params: { mode: "reset", from: "profile" },
     });
   };
 
@@ -446,7 +446,7 @@ const ProfileScreen = () => {
 
               <View style={styles.infoRow}>
                 <View style={styles.infoIcon}>
-                  <Icon name="star" size={20} color="#FFD700" />
+                  <Icon name="star" size={20} color={theme.colors.primary}/>
                 </View>
                 <Text style={styles.infoLabel}>{"Member Since"}</Text>
                 <Text style={styles.infoValue}>Jan 2023</Text>

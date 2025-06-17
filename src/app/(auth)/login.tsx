@@ -320,34 +320,75 @@ export default function Login() {
 
   const verifyOtp = (otp: string) => {
     setLoading(true);
-    api
-      .post("/auth/verify-otp", { mobile_number: mobile, otp })
-      .then(async (res) => {
-        console.log("OTP verification response:", res);
-        if (res.data.success) {
-          await SecureStore.setItemAsync("authToken", res.data.token);
-          await AsyncStorage.setItem("userData", JSON.stringify(res.data.user));
-          login(res.data.token, {
-            id: res.data.user.user_id,
-            name: res.data.user.name,
-            email: res.data.user.email,
-            mobile: res.data.user.mobile_number,
-            referralCode: res.data.user.referralCode,
+    fetch(`${theme.baseUrl}/auth/verify-otp`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ mobile_number: mobile, otp }),
+    })
+      .then(async (response) => {
+        const data = await response.json();
+        console.log("OTP verification response:", data);
+        if (data.success) {
+          await SecureStore.setItemAsync("authToken", data.token);
+          await AsyncStorage.setItem("userData", JSON.stringify(data.user));
+          login(data.token, {
+            id: data.user.user_id,
+            name: data.user.name,
+            email: data.user.email,
+            mobile: data.user.mobile_number,
+            referralCode: data.user.referralCode,
           });
 
           const storedHashedMPIN = await SecureStore.getItemAsync("user_mpin");
           router.push({
             pathname: storedHashedMPIN ? "/mpin_verify" : "/reset_mpin",
             params: {
-              mode: "create", // Indicates this is initial MPIN creation
-              from: "login", // Indicates coming from login flow
+              mode: "create",
+              from: "login",
             },
           });
           setIsShowOtp(false);
+        } else {
+          setPins(["", "", "", ""]);
+          Alert.alert(
+            "Error",
+            data.message || "Invalid OTP. Please try again.",
+            [{ text: "OK" }]
+          );
         }
       })
       .catch((error) => {
-        showErrorAlert(error.response?.data?.error || "Invalid OTP");
+        setPins(["", "", "", ""]);
+        if (error.response) {
+          if (error.response.status === 400) {
+            Alert.alert(
+              "Invalid OTP",
+              error.response.data.message || "Incorrect OTP. Try again.",
+              [{ text: "OK" }]
+            );
+          } else {
+            Alert.alert(
+              "Error",
+              error.response.data.message || "Something went wrong. Please try again.",
+              [{ text: "OK" }]
+            );
+          }
+        } else if (error.request) {
+          Alert.alert(
+            "Network Error",
+            "Please check your internet connection and try again.",
+            [{ text: "OK" }]
+          );
+        } else {
+          Alert.alert(
+            "Error",
+            "An unexpected error occurred. Please try again.",
+            [{ text: "OK" }]
+          );
+        }
       })
       .finally(() => setLoading(false));
   };

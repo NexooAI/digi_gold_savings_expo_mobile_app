@@ -12,6 +12,8 @@ import {
   Dimensions,
   ScrollView,
   TextInput,
+  NativeSyntheticEvent,
+  TextInputKeyPressEventData,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,7 +27,7 @@ const { width } = Dimensions.get("window");
 const logoWidth = width * 0.3;
 const salt = "someRandomSaltValue";
 
-const hashMPIN = async (mpin) => {
+const hashMPIN = async (mpin: string): Promise<void> => {
   try {
     // Concatenate salt and mpin then hash using SHA-256.
     const hashedMPIN = await Crypto.digestStringAsync(
@@ -40,31 +42,37 @@ const hashMPIN = async (mpin) => {
   }
 };
 
-const MpinInput = ({ length = 4, onComplete, secureTextEntry }) => {
-  const [values, setValues] = useState(Array(length).fill(""));
-  const inputs = useRef(Array(length).fill(null));
+interface MpinInputProps {
+  length?: number;
+  onComplete: (value: string) => void;
+  secureTextEntry?: boolean;
+}
 
-  const handleChange = (text, index) => {
+const MpinInput: React.FC<MpinInputProps> = ({ length = 4, onComplete, secureTextEntry }) => {
+  const [values, setValues] = useState<string[]>(Array(length).fill(""));
+  const inputs = useRef<Array<TextInput | null>>(Array(length).fill(null));
+
+  const handleChange = (text: string, index: number) => {
     const newValues = [...values];
     newValues[index] = text.slice(-1); // Only keep last character
 
     // Auto-focus next input if value entered
     if (text && index < length - 1) {
-      inputs.current[index + 1].focus();
+      inputs.current[index + 1]?.focus();
     }
 
     // Move focus back if deleted
     if (!text && index > 0) {
-      inputs.current[index - 1].focus();
+      inputs.current[index - 1]?.focus();
     }
 
     setValues(newValues);
     onComplete(newValues.join(""));
   };
 
-  const handleKeyPress = ({ nativeEvent }, index) => {
-    if (nativeEvent.key === "Backspace" && !values[index] && index > 0) {
-      inputs.current[index - 1].focus();
+  const handleKeyPress = (e: NativeSyntheticEvent<TextInputKeyPressEventData>, index: number) => {
+    if (e.nativeEvent.key === "Backspace" && !values[index] && index > 0) {
+      inputs.current[index - 1]?.focus();
     }
   };
 
@@ -73,7 +81,9 @@ const MpinInput = ({ length = 4, onComplete, secureTextEntry }) => {
       {values.map((value, index) => (
         <TextInput
           key={index}
-          ref={(ref) => (inputs.current[index] = ref)}
+          ref={(ref) => {
+            inputs.current[index] = ref;
+          }}
           style={styles.mpinInput}
           keyboardType="number-pad"
           maxLength={1}
@@ -113,7 +123,7 @@ export default function MpinSetup() {
 
     setLoading(true);
     try {
-      hashMPIN(mpin);
+      await hashMPIN(mpin);
 
       const response = await api.post("/register/complete", {
         name,
@@ -127,7 +137,7 @@ export default function MpinSetup() {
         Alert.alert("Success", "MPIN set successfully!");
         router.push({ pathname: "/(auth)/login", params: { mobile } });
       }
-    } catch (error) {
+    } catch (error: any) {
       Alert.alert(
         "Error",
         error.response?.data?.message || "Registration failed"
@@ -250,19 +260,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     alignItems: "center",
   },
+  logo: {
+    aspectRatio: 1,
+    marginTop: 90,
+    marginBottom: 20,
+  },
   cardContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 20,
     padding: 20,
     width: '100%',
-    backdropFilter: 'blur(10px)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  logo: {
-    aspectRatio: 1,
-    marginTop: 90,
-    marginBottom: 20,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 12,
+      },
+    }),
   },
   title: {
     color: theme.colors.textLight,
@@ -297,7 +317,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderWidth: 1,
-    borderColor: theme.colors.white,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 12,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     color: theme.colors.white,
