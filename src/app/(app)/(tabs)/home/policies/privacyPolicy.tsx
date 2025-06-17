@@ -17,7 +17,7 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from 'expo-linear-gradient';
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import AppHeader from "@/app/components/AppHeader";
 import { t } from "@/i18n";
@@ -42,15 +42,19 @@ export default function PrivacyPolicy() {
       try {
         setLoading(true);
         setError(null);
-        api.get("/policies/type/privacy_policy").then((response: any) => {
-          setPolicy(response.data.data);
-          console.log("Privacy Policy loaded successfully:", response.data.data);
-        }).catch((err: any) => {
-          console.error("Error fetching Privacy Policy:", err);
-          setError("Failed to load Privacy Policy.");
-        }).finally(() => {
-          setLoading(false);
-        });
+        api
+          .get("/policies/type/privacy_policy")
+          .then((response: any) => {
+            setPolicy(response.data.data);
+            //console.log("Privacy Policy loaded successfully:", response.data.data);
+          })
+          .catch((err: any) => {
+            console.error("Error fetching Privacy Policy:", err);
+            setError("Failed to load Privacy Policy.");
+          })
+          .finally(() => {
+            setLoading(false);
+          });
       } catch (err: any) {
         console.error("Error in fetchPolicy:", err);
         setError("Failed to load Privacy Policy.");
@@ -68,7 +72,7 @@ export default function PrivacyPolicy() {
       setError(null);
       const response = await api.get("/policies/type/privacy_policy");
       setPolicy(response.data.data);
-      console.log("Privacy Policy retried and loaded successfully:", response.data.data);
+      //console.log("Privacy Policy retried and loaded successfully:", response.data.data);
     } catch (err: any) {
       console.error("Error retrying Privacy Policy:", err);
       setError("Failed to load Privacy Policy.");
@@ -94,7 +98,7 @@ export default function PrivacyPolicy() {
       <SafeAreaView style={styles.loadingContainer}>
         <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
         <LinearGradient
-          colors={['#850111', '#5a000b']}
+          colors={["#850111", "#5a000b"]}
           style={styles.loadingGradient}
         >
           <ActivityIndicator size="large" color="#FFD700" />
@@ -109,13 +113,13 @@ export default function PrivacyPolicy() {
       <SafeAreaView style={styles.errorContainer}>
         <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
         <LinearGradient
-          colors={['#850111', '#5a000b']}
+          colors={["#850111", "#5a000b"]}
           style={styles.errorGradient}
         >
           <Ionicons name="alert-circle-outline" size={60} color="#FFD700" />
           <Text style={styles.errorTitle}>Oops! Something went wrong</Text>
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.retryButton}
             onPress={retryFetchPolicy}
           >
@@ -134,7 +138,7 @@ export default function PrivacyPolicy() {
     >
       <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
       <ImageBackground
-        source={require('../../../../../../assets/images/bg_new.jpg')}
+        source={require("../../../../../../assets/images/bg_new.jpg")}
         style={styles.backgroundImage}
         resizeMode="contain"
       >
@@ -146,7 +150,7 @@ export default function PrivacyPolicy() {
 
           {/* Hero Section */}
           <LinearGradient
-            colors={['#850111', '#5a000b']}
+            colors={["#850111", "#5a000b"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.heroSection}
@@ -157,9 +161,7 @@ export default function PrivacyPolicy() {
                 {policy?.title || translations.defaultTitle}
               </Text>
               {policy?.subtitle && (
-                <Text style={styles.heroSubtitle}>
-                  {policy.subtitle}
-                </Text>
+                <Text style={styles.heroSubtitle}>{policy.subtitle}</Text>
               )}
               <View style={styles.decorativeLine} />
             </View>
@@ -170,20 +172,25 @@ export default function PrivacyPolicy() {
             style={styles.scrollView}
             contentContainerStyle={[
               styles.scrollContent,
-              { paddingBottom: Math.max(insets.bottom, 20) + 80 } // Account for tab bar + extra padding
+              { paddingBottom: Math.max(insets.bottom, 20) + 80 }, // Account for tab bar + extra padding
             ]}
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.contentCard}>
               <LinearGradient
-                colors={['rgba(255, 255, 255, 0.95)', 'rgba(255, 255, 255, 0.85)']}
+                colors={[
+                  "rgba(255, 255, 255, 0.95)",
+                  "rgba(255, 255, 255, 0.85)",
+                ]}
                 style={styles.cardGradient}
               >
                 <View style={styles.contentHeader}>
                   <Ionicons name="lock-closed" size={24} color="#850111" />
-                  <Text style={styles.contentHeaderText}>Your Privacy Matters</Text>
+                  <Text style={styles.contentHeaderText}>
+                    Your Privacy Matters
+                  </Text>
                 </View>
-                
+
                 <Text style={styles.contentText}>
                   {translations.defaultPrivacyPolicyDiscription}
                 </Text>
@@ -191,29 +198,41 @@ export default function PrivacyPolicy() {
                 {/* Data Collection Section */}
                 <View style={styles.sectionContainer}>
                   <View style={styles.sectionHeader}>
-                    <Ionicons name="documents-outline" size={20} color="#850111" />
+                    <Ionicons
+                      name="documents-outline"
+                      size={20}
+                      color="#850111"
+                    />
                     <Text style={styles.sectionTitle}>Data Collection</Text>
                   </View>
                   <Text style={styles.sectionText}>
-                    We collect only the necessary information to provide you with the best digital gold investment experience while maintaining the highest standards of privacy.
+                    We collect only the necessary information to provide you
+                    with the best digital gold investment experience while
+                    maintaining the highest standards of privacy.
                   </Text>
                 </View>
 
                 {/* Security Section */}
                 <View style={styles.sectionContainer}>
                   <View style={styles.sectionHeader}>
-                    <Ionicons name="shield-checkmark-outline" size={20} color="#850111" />
+                    <Ionicons
+                      name="shield-checkmark-outline"
+                      size={20}
+                      color="#850111"
+                    />
                     <Text style={styles.sectionTitle}>Data Security</Text>
                   </View>
                   <Text style={styles.sectionText}>
-                    Your personal and financial information is protected with industry-leading encryption and security measures to ensure complete confidentiality.
+                    Your personal and financial information is protected with
+                    industry-leading encryption and security measures to ensure
+                    complete confidentiality.
                   </Text>
                 </View>
 
                 {/* Mid Section Title */}
                 <View style={styles.midTitleContainer}>
                   <LinearGradient
-                    colors={['rgba(133, 1, 17, 0.1)', 'rgba(133, 1, 17, 0.05)']}
+                    colors={["rgba(133, 1, 17, 0.1)", "rgba(133, 1, 17, 0.05)"]}
                     style={styles.midTitleGradient}
                   >
                     <Text style={styles.midTitle}>
@@ -229,11 +248,19 @@ export default function PrivacyPolicy() {
                 {/* Usage Section */}
                 <View style={styles.sectionContainer}>
                   <View style={styles.sectionHeader}>
-                    <Ionicons name="analytics-outline" size={20} color="#850111" />
-                    <Text style={styles.sectionTitle}>How We Use Your Data</Text>
+                    <Ionicons
+                      name="analytics-outline"
+                      size={20}
+                      color="#850111"
+                    />
+                    <Text style={styles.sectionTitle}>
+                      How We Use Your Data
+                    </Text>
                   </View>
                   <Text style={styles.sectionText}>
-                    Your data is used exclusively to enhance your gold investment experience, provide personalized services, and ensure compliance with financial regulations.
+                    Your data is used exclusively to enhance your gold
+                    investment experience, provide personalized services, and
+                    ensure compliance with financial regulations.
                   </Text>
                 </View>
 
@@ -244,19 +271,26 @@ export default function PrivacyPolicy() {
                     <Text style={styles.sectionTitle}>Your Rights</Text>
                   </View>
                   <Text style={styles.sectionText}>
-                    You have complete control over your personal data, including the right to access, modify, or delete your information at any time.
+                    You have complete control over your personal data, including
+                    the right to access, modify, or delete your information at
+                    any time.
                   </Text>
                 </View>
 
                 <View style={styles.contactSection}>
                   <LinearGradient
-                    colors={['#850111', '#5a000b']}
+                    colors={["#850111", "#5a000b"]}
                     style={styles.contactGradient}
                   >
-                    <Ionicons name="help-circle-outline" size={24} color="#FFD700" />
+                    <Ionicons
+                      name="help-circle-outline"
+                      size={24}
+                      color="#FFD700"
+                    />
                     <Text style={styles.contactTitle}>Privacy Questions?</Text>
                     <Text style={styles.contactText}>
-                      Contact our privacy team for any questions about how we protect your data
+                      Contact our privacy team for any questions about how we
+                      protect your data
                     </Text>
                   </LinearGradient>
                 </View>
@@ -275,20 +309,20 @@ const styles = StyleSheet.create({
   },
   backgroundImage: {
     flex: 1,
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   safeArea: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
   headerContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     zIndex: 20,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     paddingHorizontal: 16,
   },
   heroSection: {
@@ -300,26 +334,26 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   heroContent: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   heroTitle: {
     fontSize: moderateScale(28),
-    fontWeight: '700',
-    color: '#FFFFFF',
-    textAlign: 'center',
+    fontWeight: "700",
+    color: "#FFFFFF",
+    textAlign: "center",
     marginTop: 16,
     marginBottom: 8,
   },
   heroSubtitle: {
     fontSize: moderateScale(16),
-    color: 'rgba(255, 255, 255, 0.8)',
-    textAlign: 'center',
+    color: "rgba(255, 255, 255, 0.8)",
+    textAlign: "center",
     marginBottom: 20,
   },
   decorativeLine: {
     width: 60,
     height: 3,
-    backgroundColor: '#FFD700',
+    backgroundColor: "#FFD700",
     borderRadius: 2,
   },
   scrollView: {
@@ -330,9 +364,9 @@ const styles = StyleSheet.create({
   },
   contentCard: {
     borderRadius: 20,
-    overflow: 'hidden',
+    overflow: "hidden",
     elevation: 5,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -344,96 +378,96 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   contentHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(133, 1, 17, 0.2)',
+    borderBottomColor: "rgba(133, 1, 17, 0.2)",
   },
   contentHeaderText: {
     fontSize: moderateScale(20),
-    fontWeight: '600',
-    color: '#850111',
+    fontWeight: "600",
+    color: "#850111",
     marginLeft: 12,
   },
   contentText: {
     fontSize: moderateScale(16),
-    color: '#333333',
+    color: "#333333",
     lineHeight: moderateScale(24),
     marginBottom: 24,
   },
   sectionContainer: {
     marginBottom: 20,
     padding: 16,
-    backgroundColor: 'rgba(133, 1, 17, 0.05)',
+    backgroundColor: "rgba(133, 1, 17, 0.05)",
     borderRadius: 12,
     borderLeftWidth: 4,
-    borderLeftColor: '#850111',
+    borderLeftColor: "#850111",
   },
   sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 8,
   },
   sectionTitle: {
     fontSize: moderateScale(16),
-    fontWeight: '600',
-    color: '#850111',
+    fontWeight: "600",
+    color: "#850111",
     marginLeft: 8,
   },
   sectionText: {
     fontSize: moderateScale(14),
-    color: '#555555',
+    color: "#555555",
     lineHeight: moderateScale(20),
   },
   midTitleContainer: {
     marginVertical: 20,
     borderRadius: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   midTitleGradient: {
     padding: 16,
-    alignItems: 'center',
+    alignItems: "center",
   },
   midTitle: {
     fontSize: moderateScale(20),
-    fontWeight: '600',
-    color: '#850111',
-    textAlign: 'center',
+    fontWeight: "600",
+    color: "#850111",
+    textAlign: "center",
   },
   contactSection: {
     marginTop: 20,
     borderRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   contactGradient: {
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   contactTitle: {
     fontSize: moderateScale(18),
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontWeight: "600",
+    color: "#FFFFFF",
     marginTop: 8,
     marginBottom: 4,
   },
   contactText: {
     fontSize: moderateScale(14),
-    color: 'rgba(255, 255, 255, 0.8)',
-    textAlign: 'center',
+    color: "rgba(255, 255, 255, 0.8)",
+    textAlign: "center",
   },
   loadingContainer: {
     flex: 1,
   },
   loadingGradient: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
     fontSize: moderateScale(16),
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     marginTop: 16,
   },
   errorContainer: {
@@ -441,33 +475,33 @@ const styles = StyleSheet.create({
   },
   errorGradient: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 32,
   },
   errorTitle: {
     fontSize: moderateScale(20),
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontWeight: "600",
+    color: "#FFFFFF",
     marginTop: 16,
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   errorText: {
     fontSize: moderateScale(14),
-    color: 'rgba(255, 255, 255, 0.8)',
-    textAlign: 'center',
+    color: "rgba(255, 255, 255, 0.8)",
+    textAlign: "center",
     marginBottom: 24,
   },
   retryButton: {
-    backgroundColor: '#FFD700',
+    backgroundColor: "#FFD700",
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 25,
   },
   retryButtonText: {
     fontSize: moderateScale(16),
-    fontWeight: '600',
-    color: '#850111',
+    fontWeight: "600",
+    color: "#850111",
   },
 });

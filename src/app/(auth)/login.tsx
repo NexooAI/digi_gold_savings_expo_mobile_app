@@ -100,7 +100,7 @@ export default function Login() {
   const [mobile, setMobile] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  
+
   // OTP related state
   const [pins, setPins] = useState(["", "", "", ""]);
   const [timer, setTimer] = useState(120);
@@ -108,7 +108,7 @@ export default function Login() {
   const [isShowOtp, setIsShowOtp] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
-  
+
   // Refs for OTP inputs
   const inputRefs = [
     useRef<TextInput>(null),
@@ -116,13 +116,13 @@ export default function Login() {
     useRef<TextInput>(null),
     useRef<TextInput>(null),
   ];
-  
+
   // Global state and error handling
   const { login, isLoggedIn } = useGlobalStore();
   const [errorMessage, setErrorMessage] = useState("");
   const [showError, setShowError] = useState(false);
   const [mobileError, setMobileError] = useState("");
-  
+
   // Platform detection
   const isAndroid = Platform.OS === "android";
   const isIOS = Platform.OS === "ios";
@@ -143,23 +143,25 @@ export default function Login() {
 
   useEffect(() => {
     let subscription: any;
-    
+
     const startSmsListener = async () => {
       if (isAndroid) {
         const { status } = await SMSRetriever.requestPhoneNumber();
-        if (status === 'granted') {
-          subscription = SMSRetriever.addSMSListener(({ message }: { message: string }) => {
-            const otpMatch = /\b\d{4}\b/.exec(message);
-            if (otpMatch) {
-              handleOtpAutoFill(otpMatch[0]);
+        if (status === "granted") {
+          subscription = SMSRetriever.addSMSListener(
+            ({ message }: { message: string }) => {
+              const otpMatch = /\b\d{4}\b/.exec(message);
+              if (otpMatch) {
+                handleOtpAutoFill(otpMatch[0]);
+              }
             }
-          });
+          );
         }
       }
     };
-    
+
     startSmsListener();
-    
+
     return () => {
       if (subscription) {
         subscription.remove();
@@ -296,10 +298,13 @@ export default function Login() {
           });
 
           const storedHashedMPIN = await SecureStore.getItemAsync("user_mpin");
-          router.push({ pathname: storedHashedMPIN ? "/mpin_verify" : "/reset_mpin", params: { 
-            mode: 'create', // Indicates this is initial MPIN creation
-            from: 'login'   // Indicates coming from login flow
-          } });
+          router.push({
+            pathname: storedHashedMPIN ? "/mpin_verify" : "/reset_mpin",
+            params: {
+              mode: "create", // Indicates this is initial MPIN creation
+              from: "login", // Indicates coming from login flow
+            },
+          });
           setIsShowOtp(false);
         }
       })
@@ -325,12 +330,12 @@ export default function Login() {
 
     try {
       const response = await fetch(`${theme.baseUrl}/auth/check-mobile`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
-        body: JSON.stringify({ mobile_number: mobile })
+        body: JSON.stringify({ mobile_number: mobile }),
       });
 
       const data = await response.json();
@@ -342,7 +347,7 @@ export default function Login() {
         // Auto-focus first OTP input
         setTimeout(() => inputRefs[0]?.current?.focus(), 100);
       } else {
-        throw new Error(data?.error || 'Failed to send OTP');
+        throw new Error(data?.error || "Failed to send OTP");
       }
 
       // Start SMS listener for Android
@@ -380,33 +385,34 @@ export default function Login() {
   };
 
   const handleResendOtp = async () => {
-    if (resendAttempts   <= 0) return;
+    if (resendAttempts <= 0) return;
 
     setLoading(true);
     try {
       const response = await fetch(`${theme.baseUrl}/auth/check-mobile`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
-        body: JSON.stringify({ mobile_number: mobile })
+        body: JSON.stringify({ mobile_number: mobile }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        setResendAttempts(prev => prev - 1);
+        setResendAttempts((prev) => prev - 1);
         setTimer(INITIAL_TIMER);
         setPins(["", "", "", ""]);
         Alert.alert("Success", "OTP resent successfully");
         // Auto-focus first OTP input
         setTimeout(() => inputRefs[0]?.current?.focus(), 100);
       } else {
-        throw new Error(data?.error || 'Failed to resend OTP');
+        throw new Error(data?.error || "Failed to resend OTP");
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to resend OTP';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to resend OTP";
       showErrorAlert(errorMessage);
     } finally {
       setLoading(false);
@@ -432,7 +438,7 @@ export default function Login() {
 
   return (
     <ImageBackground
-      source={theme.image.gold_image}
+      source={theme.image.bg_image}
       style={styles.backgroundImage}
     >
       <LinearGradient
@@ -635,10 +641,10 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     paddingTop: Platform.OS === "ios" ? 60 : 40,
-    marginBottom: 20,
+    marginBottom: 0,
   },
   logo: {
-    aspectRatio: 1,
+    aspectRatio: 0.8,
   },
   formContainer: {
     flex: 1,
@@ -647,12 +653,12 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === "ios" ? 40 : 0,
   },
   cardContainer: {
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    backgroundColor: "rgb(2, 1, 6)",
     borderRadius: 20,
     padding: 20,
     width: "100%",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
+    borderColor: "rgba(239, 251, 0, 0.97)",
     marginBottom: Platform.OS === "ios" ? 20 : 10,
     ...Platform.select({
       ios: {
@@ -740,12 +746,12 @@ const styles = StyleSheet.create({
     height: 60,
     width: 50,
     marginHorizontal: 5,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
+    borderColor: "rgba(255, 255, 255, 0.5)",
     // Ensure these are not present:
     // pointerEvents: 'none',
     // opacity: 0.5,

@@ -17,7 +17,7 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from 'expo-linear-gradient';
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import AppHeader from "@/app/components/AppHeader";
 import { t } from "@/i18n";
@@ -48,7 +48,7 @@ export default function TermsAndConditions() {
           .get("/policies/type/terms_and_conditions")
           .then((response: any) => {
             setPolicy(response.data.data);
-            console.log("Terms and Conditions loaded successfully:", response.data.data);
+            //console.log("Terms and Conditions loaded successfully:", response.data.data);
           })
           .catch((err: any) => {
             console.error("Error fetching Terms and Conditions:", err);
@@ -74,7 +74,7 @@ export default function TermsAndConditions() {
       setError(null);
       const response = await api.get("/policies/type/terms_and_conditions");
       setPolicy(response.data.data);
-      console.log("Terms and Conditions retried and loaded successfully:", response.data.data);
+      //console.log("Terms and Conditions retried and loaded successfully:", response.data.data);
     } catch (err: any) {
       console.error("Error retrying Terms and Conditions:", err);
       setError(err);
@@ -98,7 +98,7 @@ export default function TermsAndConditions() {
       <SafeAreaView style={styles.loadingContainer}>
         <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
         <LinearGradient
-          colors={['#850111', '#5a000b']}
+          colors={["#850111", "#5a000b"]}
           style={styles.loadingGradient}
         >
           <ActivityIndicator size="large" color="#FFD700" />
@@ -113,7 +113,7 @@ export default function TermsAndConditions() {
       <SafeAreaView style={styles.errorContainer}>
         <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
         <LinearGradient
-          colors={['#850111', '#5a000b']}
+          colors={["#850111", "#5a000b"]}
           style={styles.errorGradient}
         >
           <Ionicons name="alert-circle-outline" size={60} color="#FFD700" />
@@ -121,7 +121,7 @@ export default function TermsAndConditions() {
           <Text style={styles.errorText}>
             Error loading policy: {error.message}
           </Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.retryButton}
             onPress={retryFetchPolicy}
           >
@@ -140,7 +140,7 @@ export default function TermsAndConditions() {
     >
       <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
       <ImageBackground
-        source={require('../../../../../../assets/images/bg_new.jpg')}
+        source={require("../../../../../../assets/images/bg_new.jpg")}
         style={styles.backgroundImage}
         resizeMode="contain"
       >
@@ -152,20 +152,22 @@ export default function TermsAndConditions() {
 
           {/* Hero Section */}
           <LinearGradient
-            colors={['#850111', '#5a000b']}
+            colors={["#850111", "#5a000b"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.heroSection}
           >
             <View style={styles.heroContent}>
-              <Ionicons name="document-text-outline" size={50} color="#FFD700" />
+              <Ionicons
+                name="document-text-outline"
+                size={50}
+                color="#FFD700"
+              />
               <Text style={styles.heroTitle}>
                 {policy?.title || translations.defaultTitle}
               </Text>
               {policy?.subtitle && (
-                <Text style={styles.heroSubtitle}>
-                  {policy.subtitle}
-                </Text>
+                <Text style={styles.heroSubtitle}>{policy.subtitle}</Text>
               )}
               <View style={styles.decorativeLine} />
             </View>
@@ -176,20 +178,25 @@ export default function TermsAndConditions() {
             style={styles.scrollView}
             contentContainerStyle={[
               styles.scrollContent,
-              { paddingBottom: Math.max(insets.bottom, 20) + 80 } // Account for tab bar + extra padding
+              { paddingBottom: Math.max(insets.bottom, 20) + 80 }, // Account for tab bar + extra padding
             ]}
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.contentCard}>
               <LinearGradient
-                colors={['rgba(255, 255, 255, 0.95)', 'rgba(255, 255, 255, 0.85)']}
+                colors={[
+                  "rgba(255, 255, 255, 0.95)",
+                  "rgba(255, 255, 255, 0.85)",
+                ]}
                 style={styles.cardGradient}
               >
                 <View style={styles.contentHeader}>
                   <Ionicons name="shield-checkmark" size={24} color="#850111" />
-                  <Text style={styles.contentHeaderText}>Our Commitment to You</Text>
+                  <Text style={styles.contentHeaderText}>
+                    Our Commitment to You
+                  </Text>
                 </View>
-                
+
                 <Text style={styles.contentText}>
                   {translations.defaultDiscription}
                 </Text>
@@ -201,7 +208,8 @@ export default function TermsAndConditions() {
                     <Text style={styles.sectionTitle}>User Agreement</Text>
                   </View>
                   <Text style={styles.sectionText}>
-                    By using our digital gold savings platform, you agree to these terms and conditions.
+                    By using our digital gold savings platform, you agree to
+                    these terms and conditions.
                   </Text>
                 </View>
 
@@ -211,23 +219,29 @@ export default function TermsAndConditions() {
                     <Text style={styles.sectionTitle}>Service Quality</Text>
                   </View>
                   <Text style={styles.sectionText}>
-                    We are committed to providing you with the highest quality digital gold investment services.
+                    We are committed to providing you with the highest quality
+                    digital gold investment services.
                   </Text>
                 </View>
 
                 <View style={styles.sectionContainer}>
                   <View style={styles.sectionHeader}>
-                    <Ionicons name="lock-closed-outline" size={20} color="#850111" />
+                    <Ionicons
+                      name="lock-closed-outline"
+                      size={20}
+                      color="#850111"
+                    />
                     <Text style={styles.sectionTitle}>Security & Privacy</Text>
                   </View>
                   <Text style={styles.sectionText}>
-                    Your financial information and personal data are protected with bank-level security.
+                    Your financial information and personal data are protected
+                    with bank-level security.
                   </Text>
                 </View>
 
                 <View style={styles.contactSection}>
                   <LinearGradient
-                    colors={['#850111', '#5a000b']}
+                    colors={["#850111", "#5a000b"]}
                     style={styles.contactGradient}
                   >
                     <Ionicons name="mail-outline" size={24} color="#FFD700" />
@@ -252,20 +266,20 @@ const styles = StyleSheet.create({
   },
   backgroundImage: {
     flex: 1,
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   safeArea: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
   headerContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     zIndex: 20,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     paddingHorizontal: 16,
   },
   heroSection: {
@@ -277,26 +291,26 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   heroContent: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   heroTitle: {
     fontSize: moderateScale(28),
-    fontWeight: '700',
-    color: '#FFFFFF',
-    textAlign: 'center',
+    fontWeight: "700",
+    color: "#FFFFFF",
+    textAlign: "center",
     marginTop: 16,
     marginBottom: 8,
   },
   heroSubtitle: {
     fontSize: moderateScale(16),
-    color: 'rgba(255, 255, 255, 0.8)',
-    textAlign: 'center',
+    color: "rgba(255, 255, 255, 0.8)",
+    textAlign: "center",
     marginBottom: 20,
   },
   decorativeLine: {
     width: 60,
     height: 3,
-    backgroundColor: '#FFD700',
+    backgroundColor: "#FFD700",
     borderRadius: 2,
   },
   scrollView: {
@@ -307,9 +321,9 @@ const styles = StyleSheet.create({
   },
   contentCard: {
     borderRadius: 20,
-    overflow: 'hidden',
+    overflow: "hidden",
     elevation: 5,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -321,81 +335,81 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   contentHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(133, 1, 17, 0.2)',
+    borderBottomColor: "rgba(133, 1, 17, 0.2)",
   },
   contentHeaderText: {
     fontSize: moderateScale(20),
-    fontWeight: '600',
-    color: '#850111',
+    fontWeight: "600",
+    color: "#850111",
     marginLeft: 12,
   },
   contentText: {
     fontSize: moderateScale(16),
-    color: '#333333',
+    color: "#333333",
     lineHeight: moderateScale(24),
     marginBottom: 24,
   },
   sectionContainer: {
     marginBottom: 20,
     padding: 16,
-    backgroundColor: 'rgba(133, 1, 17, 0.05)',
+    backgroundColor: "rgba(133, 1, 17, 0.05)",
     borderRadius: 12,
     borderLeftWidth: 4,
-    borderLeftColor: '#850111',
+    borderLeftColor: "#850111",
   },
   sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 8,
   },
   sectionTitle: {
     fontSize: moderateScale(16),
-    fontWeight: '600',
-    color: '#850111',
+    fontWeight: "600",
+    color: "#850111",
     marginLeft: 8,
   },
   sectionText: {
     fontSize: moderateScale(14),
-    color: '#555555',
+    color: "#555555",
     lineHeight: moderateScale(20),
   },
   contactSection: {
     marginTop: 20,
     borderRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   contactGradient: {
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   contactTitle: {
     fontSize: moderateScale(18),
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontWeight: "600",
+    color: "#FFFFFF",
     marginTop: 8,
     marginBottom: 4,
   },
   contactText: {
     fontSize: moderateScale(14),
-    color: 'rgba(255, 255, 255, 0.8)',
-    textAlign: 'center',
+    color: "rgba(255, 255, 255, 0.8)",
+    textAlign: "center",
   },
   loadingContainer: {
     flex: 1,
   },
   loadingGradient: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
     fontSize: moderateScale(16),
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     marginTop: 16,
   },
   errorContainer: {
@@ -403,33 +417,33 @@ const styles = StyleSheet.create({
   },
   errorGradient: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 32,
   },
   errorTitle: {
     fontSize: moderateScale(20),
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontWeight: "600",
+    color: "#FFFFFF",
     marginTop: 16,
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   errorText: {
     fontSize: moderateScale(14),
-    color: 'rgba(255, 255, 255, 0.8)',
-    textAlign: 'center',
+    color: "rgba(255, 255, 255, 0.8)",
+    textAlign: "center",
     marginBottom: 24,
   },
   retryButton: {
-    backgroundColor: '#FFD700',
+    backgroundColor: "#FFD700",
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 25,
   },
   retryButtonText: {
     fontSize: moderateScale(16),
-    fontWeight: '600',
-    color: '#850111',
+    fontWeight: "600",
+    color: "#850111",
   },
 });

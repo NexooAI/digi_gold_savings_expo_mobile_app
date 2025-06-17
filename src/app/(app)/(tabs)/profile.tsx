@@ -16,7 +16,10 @@ import {
   Share,
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import Icon from "@expo/vector-icons/MaterialIcons";
 import * as ImagePicker from "expo-image-picker";
 import AppHeader from "@/app/components/AppHeader";
@@ -99,7 +102,10 @@ const ProfileScreen = () => {
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
-      Alert.alert("Permission Required", "Please allow access to photo library");
+      Alert.alert(
+        "Permission Required",
+        "Please allow access to photo library"
+      );
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -155,30 +161,31 @@ const ProfileScreen = () => {
 
   const handleShareApp = async () => {
     try {
-      const playStoreLink = "https://play.google.com/store/apps/details?id=com.nexooai.dcjewellery&hl=en-US";
+      const playStoreLink =
+        "https://play.google.com/store/apps/details?id=com.nexooai.dcjewellery&hl=en-US";
       const message = `Join me on DC Jewellers Gold and Diamonds! Download the app from: ${playStoreLink}`;
-      
+
       const result = await Share.share({
         message: message,
         url: playStoreLink, // iOS
-        title: 'DC Jewellers Gold and Diamonds', // Android
+        title: "DC Jewellers Gold and Diamonds", // Android
       });
 
       if (result.action === Share.sharedAction) {
         if (result.activityType) {
           // shared with activity type of result.activityType
-          console.log('Shared with activity type:', result.activityType);
+          //console.log('Shared with activity type:', result.activityType);
         } else {
           // shared
-          console.log('Shared successfully');
+          //console.log('Shared successfully');
         }
       } else if (result.action === Share.dismissedAction) {
         // dismissed
-        console.log('Share dismissed');
+        //console.log('Share dismissed');
       }
     } catch (error) {
-      console.error('Error sharing:', error);
-      Alert.alert('Error', 'Failed to share the app link');
+      console.error("Error sharing:", error);
+      Alert.alert("Error", "Failed to share the app link");
     }
   };
 
@@ -187,7 +194,10 @@ const ProfileScreen = () => {
   };
 
   const handleChangeMPIN = () => {
-    router.push({ pathname: "/reset_mpin", params: { mode: "create", from: "profile" } });
+    router.push({
+      pathname: "/reset_mpin",
+      params: { mode: "create", from: "profile" },
+    });
   };
 
   // Interpolated wave animation
@@ -200,16 +210,25 @@ const ProfileScreen = () => {
     <SafeAreaView style={{ flex: 1, paddingTop: 0 }}>
       <View style={styles.backgroundImage}>
         <LinearGradient
-          colors={[theme.colors.primary + 'E6', theme.colors.support_container[1] + 'E6', theme.colors.support_container[2] + 'E6']}
+          colors={[
+            theme.colors.primary + "E6",
+            theme.colors.support_container[1] + "E6",
+            theme.colors.support_container[2] + "E6",
+          ]}
           style={StyleSheet.absoluteFill}
         />
-        
+
         <View className="absolute top-0 left-0 right-0 z-10 px-4">
           <AppHeader showBackButton={false} backRoute="index" />
         </View>
-        
-        <Animated.View style={[styles.waveEffect, { transform: [{ rotate: waveInterpolation }] }]} />
-        
+
+        <Animated.View
+          style={[
+            styles.waveEffect,
+            { transform: [{ rotate: waveInterpolation }] },
+          ]}
+        />
+
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
@@ -226,14 +245,14 @@ const ProfileScreen = () => {
               <View style={styles.editFormHeader}>
                 <Text style={styles.editFormTitle}>Edit Profile</Text>
                 <View style={styles.editFormActions}>
-                  <TouchableOpacity 
-                    style={styles.cancelButton} 
+                  <TouchableOpacity
+                    style={styles.cancelButton}
                     onPress={handleEditToggle}
                   >
                     <Icon name="close" size={20} color="#666" />
                   </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={styles.saveFormButton} 
+                  <TouchableOpacity
+                    style={styles.saveFormButton}
                     onPress={handleSave}
                   >
                     <Icon name="check" size={20} color="white" />
@@ -243,7 +262,10 @@ const ProfileScreen = () => {
 
               {/* Profile Image Edit */}
               <View style={styles.editImageSection}>
-                <TouchableOpacity onPress={handleImageUpload} style={styles.editImageContainer}>
+                <TouchableOpacity
+                  onPress={handleImageUpload}
+                  style={styles.editImageContainer}
+                >
                   {user?.profileImage ? (
                     <Image
                       source={{ uri: user.profileImage }}
@@ -291,7 +313,7 @@ const ProfileScreen = () => {
                   <TextInput
                     style={styles.formInput}
                     value={editData.name}
-                    onChangeText={(value) => updateEditField('name', value)}
+                    onChangeText={(value) => updateEditField("name", value)}
                     placeholder="Enter full name"
                     placeholderTextColor="#999"
                   />
@@ -313,7 +335,7 @@ const ProfileScreen = () => {
                   <TextInput
                     style={styles.formInput}
                     value={editData.email}
-                    onChangeText={(value) => updateEditField('email', value)}
+                    onChangeText={(value) => updateEditField("email", value)}
                     placeholder="Enter email address"
                     placeholderTextColor="#999"
                     keyboardType="email-address"
@@ -326,7 +348,7 @@ const ProfileScreen = () => {
                   <TextInput
                     style={styles.formInput}
                     value={editData.mobile}
-                    onChangeText={(value) => updateEditField('mobile', value)}
+                    onChangeText={(value) => updateEditField("mobile", value)}
                     placeholder="Enter mobile number"
                     placeholderTextColor="#999"
                     keyboardType="phone-pad"
@@ -334,14 +356,14 @@ const ProfileScreen = () => {
                 </View>
 
                 <View style={styles.formActions}>
-                  <TouchableOpacity 
-                    style={styles.cancelFormButton} 
+                  <TouchableOpacity
+                    style={styles.cancelFormButton}
                     onPress={handleEditToggle}
                   >
                     <Text style={styles.cancelFormButtonText}>Cancel</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={styles.saveMainButton} 
+                  <TouchableOpacity
+                    style={styles.saveMainButton}
                     onPress={handleSave}
                   >
                     <Text style={styles.saveMainButtonText}>Save</Text>
@@ -351,8 +373,11 @@ const ProfileScreen = () => {
             </View>
           ) : (
             // Normal Profile View
-            <Animated.View 
-              style={[styles.profileHeader, { transform: [{ scale: profileImageScale }] }]}
+            <Animated.View
+              style={[
+                styles.profileHeader,
+                { transform: [{ scale: profileImageScale }] },
+              ]}
             >
               <TouchableOpacity onPress={handleImageUpload} activeOpacity={0.8}>
                 <View style={styles.profileImageContainer}>
@@ -371,16 +396,21 @@ const ProfileScreen = () => {
                   </View>
                 </View>
               </TouchableOpacity>
-              
+
               <Text style={styles.userName}>{user?.name}</Text>
               <Text style={styles.userEmail}>{user?.email}</Text>
-              
+
               {/* Edit Button */}
-              <TouchableOpacity 
-                style={styles.editProfileButton} 
+              <TouchableOpacity
+                style={styles.editProfileButton}
                 onPress={handleEditToggle}
               >
-                <Icon name="edit" size={18} color="white" style={{ marginRight: 8 }} />
+                <Icon
+                  name="edit"
+                  size={18}
+                  color="white"
+                  style={{ marginRight: 8 }}
+                />
                 <Text style={styles.editProfileButtonText}>Edit Profile</Text>
               </TouchableOpacity>
             </Animated.View>
@@ -391,23 +421,29 @@ const ProfileScreen = () => {
             {/* Personal Info Card */}
             <View style={styles.card}>
               <View style={styles.cardHeader}>
-                <Icon name="person-outline" size={24} color={theme.colors.primary} />
+                <Icon
+                  name="person-outline"
+                  size={24}
+                  color={theme.colors.primary}
+                />
                 <Text style={styles.cardTitle}>{t("personal_info")}</Text>
                 <View style={styles.userIdBadge}>
                   <Text style={styles.userIdText}>ID: {user?.id}</Text>
                 </View>
               </View>
-              
+
               <View style={styles.infoRow}>
                 <View style={styles.infoIcon}>
                   <Icon name="phone" size={20} color={theme.colors.primary} />
                 </View>
                 <Text style={styles.infoLabel}>{t("mobile_number")}</Text>
-                <Text style={styles.infoValue}>{user?.mobile || "Not provided"}</Text>
+                <Text style={styles.infoValue}>
+                  {user?.mobile || "Not provided"}
+                </Text>
               </View>
-              
+
               <View style={styles.divider} />
-              
+
               <View style={styles.infoRow}>
                 <View style={styles.infoIcon}>
                   <Icon name="star" size={20} color="#FFD700" />
@@ -416,40 +452,64 @@ const ProfileScreen = () => {
                 <Text style={styles.infoValue}>Jan 2023</Text>
               </View>
             </View>
-            
+
             {/* Referral Card */}
             <View style={[styles.card, styles.referralCard]}>
               <LinearGradient
-                colors={['rgba(255, 201, 12, 0.1)', 'rgba(255, 201, 12, 0.05)', 'rgba(255, 255, 255, 0.9)']}
+                colors={[
+                  "rgba(255, 201, 12, 0.1)",
+                  "rgba(255, 201, 12, 0.05)",
+                  "rgba(255, 255, 255, 0.9)",
+                ]}
                 style={styles.referralCardGradient}
               >
                 <View style={styles.cardHeader}>
-                  <Icon name="card-giftcard" size={24} color={theme.colors.primary} />
+                  <Icon
+                    name="card-giftcard"
+                    size={24}
+                    color={theme.colors.primary}
+                  />
                   <Text style={styles.cardTitle}>{t("referral_rewards")}</Text>
                 </View>
-                
+
                 <View style={styles.referralContent}>
-                  <Text style={styles.referralText}>{t("your_referral_code")}</Text>
-                  <TouchableOpacity 
+                  <Text style={styles.referralText}>
+                    {t("your_referral_code")}
+                  </Text>
+                  <TouchableOpacity
                     style={styles.referralCodeContainer}
                     onPress={handleCopyReferralCode}
                     activeOpacity={0.7}
                   >
                     <View style={styles.referralCodeLeft}>
                       <Text style={styles.referralCodeLabel}>Your Code</Text>
-                      <Text style={styles.referralCode}>{user?.referralCode || "GOLD123"}</Text>
+                      <Text style={styles.referralCode}>
+                        {user?.referralCode || "GOLD123"}
+                      </Text>
                     </View>
                     <View style={styles.copyIconContainer}>
-                      <Icon name="content-copy" size={20} color={theme.colors.primary} />
+                      <Icon
+                        name="content-copy"
+                        size={20}
+                        color={theme.colors.primary}
+                      />
                     </View>
                   </TouchableOpacity>
-                  
+
                   <View style={styles.rewardsContainer}>
                     <View style={styles.rewardsLeft}>
-                      <Icon name="stars" size={28} color={theme.colors.secondary} />
+                      <Icon
+                        name="stars"
+                        size={28}
+                        color={theme.colors.secondary}
+                      />
                       <View style={styles.rewardsTextContainer}>
-                        <Text style={styles.rewardsLabel}>{t("total_rewards")}</Text>
-                        <Text style={styles.rewardsValue}>{user?.rewards || 0} Points</Text>
+                        <Text style={styles.rewardsLabel}>
+                          {t("total_rewards")}
+                        </Text>
+                        <Text style={styles.rewardsValue}>
+                          {user?.rewards || 0} Points
+                        </Text>
                       </View>
                     </View>
                     {/* <TouchableOpacity style={styles.rewardsButton}>
@@ -457,52 +517,73 @@ const ProfileScreen = () => {
                     </TouchableOpacity> */}
                   </View>
                 </View>
-                
-                <TouchableOpacity 
-                  style={styles.inviteButton} 
+
+                <TouchableOpacity
+                  style={styles.inviteButton}
                   activeOpacity={0.8}
                   onPress={handleShareApp}
                 >
-                  <Icon name="person-add" size={20} color="white" style={{ marginRight: 8 }} />
-                  <Text style={styles.inviteButtonText}>{"Invite Friends & Earn"}</Text>
+                  <Icon
+                    name="person-add"
+                    size={20}
+                    color="white"
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text style={styles.inviteButtonText}>
+                    {"Invite Friends & Earn"}
+                  </Text>
                 </TouchableOpacity>
               </LinearGradient>
             </View>
-            
+
             {/* Settings Card */}
             <View style={styles.card}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.settingItem}
                 onPress={handleChangeKYC}
               >
-                <View style={[styles.settingIcon, { backgroundColor: '#E3F2FD' }]}>
-                  <Icon name="verified-user" size={24} color={theme.colors.primary} />
+                <View
+                  style={[styles.settingIcon, { backgroundColor: "#E3F2FD" }]}
+                >
+                  <Icon
+                    name="verified-user"
+                    size={24}
+                    color={theme.colors.primary}
+                  />
                 </View>
                 <Text style={styles.settingText}>Change KYC</Text>
                 <Icon name="chevron-right" size={24} color="#9E9E9E" />
               </TouchableOpacity>
-              
+
               <View style={styles.divider} />
-              
-              <TouchableOpacity 
+
+              <TouchableOpacity
                 style={styles.settingItem}
                 onPress={handleChangeMPIN}
               >
-                <View style={[styles.settingIcon, { backgroundColor: '#E8F5E9' }]}>
+                <View
+                  style={[styles.settingIcon, { backgroundColor: "#E8F5E9" }]}
+                >
                   <Icon name="lock" size={24} color="#4CAF50" />
                 </View>
                 <Text style={styles.settingText}>Change MPIN</Text>
                 <Icon name="chevron-right" size={24} color="#9E9E9E" />
               </TouchableOpacity>
-              
+
               <View style={styles.divider} />
-              
-              <TouchableOpacity 
+
+              <TouchableOpacity
                 style={styles.settingItem}
                 onPress={toggleLanguage}
               >
-                <View style={[styles.settingIcon, { backgroundColor: '#FFF3E0' }]}>
-                  <Icon name="language" size={24} color={theme.colors.primary} />
+                <View
+                  style={[styles.settingIcon, { backgroundColor: "#FFF3E0" }]}
+                >
+                  <Icon
+                    name="language"
+                    size={24}
+                    color={theme.colors.primary}
+                  />
                 </View>
                 <Text style={styles.settingText}>{t("language")}</Text>
                 <Text style={styles.settingValue}>
@@ -510,17 +591,21 @@ const ProfileScreen = () => {
                 </Text>
                 <Icon name="chevron-right" size={24} color="#9E9E9E" />
               </TouchableOpacity>
-              
+
               <View style={styles.divider} />
-              
-              <TouchableOpacity 
+
+              <TouchableOpacity
                 style={styles.settingItem}
                 onPress={handleLogout}
               >
-                <View style={[styles.settingIcon, { backgroundColor: '#FFEBEE' }]}>
+                <View
+                  style={[styles.settingIcon, { backgroundColor: "#FFEBEE" }]}
+                >
                   <Icon name="logout" size={24} color="#F44336" />
                 </View>
-                <Text style={[styles.settingText, { color: '#F44336' }]}>{t("logout")}</Text>
+                <Text style={[styles.settingText, { color: "#F44336" }]}>
+                  {t("logout")}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -533,19 +618,19 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   backgroundImage: {
     flex: 1,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   waveEffect: {
-    position: 'absolute',
+    position: "absolute",
     top: -100,
     left: -50,
     right: -50,
     height: 200,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: "rgba(255,255,255,0.1)",
     borderRadius: 100,
   },
   profileHeader: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 30,
     paddingTop: 20,
   },
@@ -553,12 +638,12 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255,255,255,0.2)",
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 3,
-    borderColor: 'rgba(255,255,255,0.3)',
-    shadowColor: '#000',
+    borderColor: "rgba(255,255,255,0.3)",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
@@ -566,29 +651,29 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   profileImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     borderRadius: 60,
   },
   profileImagePlaceholder: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     borderRadius: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.2)",
   },
   editBadge: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     right: 0,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     width: 36,
     height: 36,
     borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -596,46 +681,46 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
     marginBottom: 4,
   },
   userEmail: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.8)',
+    color: "rgba(255,255,255,0.8)",
     marginBottom: 20,
   },
   userStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '80%',
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "80%",
+    backgroundColor: "rgba(255,255,255,0.15)",
     borderRadius: 20,
     paddingVertical: 12,
     paddingHorizontal: 20,
   },
   statItem: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   statValue: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
   },
   statLabel: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.8)',
+    color: "rgba(255,255,255,0.8)",
     marginTop: 4,
   },
   contentContainer: {
     paddingBottom: 30,
   },
   card: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
@@ -643,23 +728,23 @@ const styles = StyleSheet.create({
   },
   referralCard: {
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.88)',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderColor: "rgba(255, 255, 255, 0.88)",
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
   },
   cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 15,
   },
   cardTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginLeft: 10,
-    color: '#333',
+    color: "#333",
   },
   userIdBadge: {
-    marginLeft: 'auto',
-    backgroundColor: 'rgba(133, 1, 17, 0.15)',
+    marginLeft: "auto",
+    backgroundColor: "rgba(133, 1, 17, 0.15)",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -669,38 +754,38 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
   },
   infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 12,
   },
   infoIcon: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(133, 1, 17, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(133, 1, 17, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 12,
   },
   infoLabel: {
     flex: 1,
     fontSize: 14,
-    color: '#666',
+    color: "#666",
   },
   infoValueContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   infoValue: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: "500",
+    color: "#333",
     marginRight: 8,
   },
   editContainer: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   editInput: {
     flex: 1,
@@ -708,7 +793,7 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.primary,
     paddingVertical: 4,
     marginRight: 10,
-    color: '#333',
+    color: "#333",
   },
   saveButton: {
     backgroundColor: theme.colors.primary,
@@ -717,13 +802,13 @@ const styles = StyleSheet.create({
     borderRadius: 15,
   },
   saveButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   divider: {
     height: 1,
-    backgroundColor: '#EEE',
+    backgroundColor: "#EEE",
     marginVertical: 5,
   },
   referralContent: {
@@ -731,20 +816,20 @@ const styles = StyleSheet.create({
   },
   referralText: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginBottom: 8,
   },
   referralCodeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: 'white',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "white",
     padding: 15,
     borderRadius: 12,
     marginBottom: 15,
     borderWidth: 1,
-    borderColor: 'rgba(255, 201, 12, 0.4)',
-    shadowColor: '#000',
+    borderColor: "rgba(255, 201, 12, 0.4)",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -755,12 +840,12 @@ const styles = StyleSheet.create({
   },
   referralCodeLabel: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
     marginBottom: 4,
   },
   referralCode: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: theme.colors.primary,
     letterSpacing: 2,
   },
@@ -768,30 +853,30 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(133, 1, 17, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(133, 1, 17, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   rewardsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'white',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "white",
     padding: 15,
     borderRadius: 12,
   },
   rewardsLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   rewardsTextContainer: {
     marginLeft: 10,
   },
   rewardsLabel: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
   },
   rewardsValue: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: theme.colors.secondary,
   },
   rewardsButton: {
@@ -801,44 +886,44 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   rewardsButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   inviteButton: {
     backgroundColor: theme.colors.primary,
     padding: 15,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 15,
   },
   inviteButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 12,
   },
   settingIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(133, 1, 17, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(133, 1, 17, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 12,
   },
   settingText: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
+    color: "#333",
   },
   settingValue: {
     fontSize: 14,
-    color: '#9E9E9E',
+    color: "#9E9E9E",
     marginRight: 8,
   },
   referralCardGradient: {
@@ -846,30 +931,30 @@ const styles = StyleSheet.create({
     padding: 1,
   },
   editFormContainer: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 20,
     padding: 20,
     margin: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 5,
   },
   editFormHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 20,
   },
   editFormTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   editFormActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   cancelButton: {
     padding: 10,
@@ -880,50 +965,50 @@ const styles = StyleSheet.create({
     borderRadius: 15,
   },
   editImageSection: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 20,
   },
   editImageContainer: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    position: 'relative',
+    position: "relative",
   },
   editImagePlaceholder: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     borderRadius: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.2)",
   },
   editImageOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
     borderRadius: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   editProfileImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     borderRadius: 60,
   },
   editImageText: {
     marginTop: 10,
     fontSize: 14,
-    color: '#666',
+    color: "#666",
   },
   editFormFields: {
     flex: 1,
   },
   formRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 15,
   },
   formFieldHalf: {
@@ -934,23 +1019,23 @@ const styles = StyleSheet.create({
   },
   formLabel: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 8,
   },
   formInput: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: "#E0E0E0",
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 15,
-    backgroundColor: '#F9F9F9',
-    color: '#333',
+    backgroundColor: "#F9F9F9",
+    color: "#333",
     fontSize: 16,
   },
   formActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginTop: 30,
     paddingHorizontal: 20,
   },
@@ -959,14 +1044,14 @@ const styles = StyleSheet.create({
     marginRight: 10,
     paddingVertical: 12,
     paddingHorizontal: 20,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#F5F5F5",
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   cancelFormButtonText: {
-    color: '#666',
+    color: "#666",
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   saveMainButton: {
     flex: 1,
@@ -974,26 +1059,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     backgroundColor: theme.colors.primary,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   saveMainButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   editProfileButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 25,
     marginTop: 15,
   },
   editProfileButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
 

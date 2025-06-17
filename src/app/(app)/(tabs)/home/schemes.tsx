@@ -25,7 +25,7 @@ import api from "@/services/api";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import { rgbaColor } from "react-native-reanimated/lib/typescript/Colors";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
 const TAB_WIDTH = width / 4;
@@ -70,7 +70,9 @@ interface Scheme {
 const DEFAULT_SCHEME_TYPE = "Monthly";
 
 export default function SchemeList() {
-  const [activeTab, setActiveTab] = useState<"Daily" | "Weekly" | "Monthly" | "Flexi">("Monthly");
+  const [activeTab, setActiveTab] = useState<
+    "Daily" | "Weekly" | "Monthly" | "Flexi"
+  >("Monthly");
   const [schemes, setSchemes] = useState<Scheme[]>([]);
   const [loading, setLoading] = useState(true);
   const [allSchemes, setAllSchemes] = useState<Scheme[]>([]);
@@ -79,8 +81,15 @@ export default function SchemeList() {
   const { language } = useGlobalStore();
   const underlineAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
-  const [tabLayouts, setTabLayouts] = useState<{ [key: string]: { x: number, width: number } }>({});
-  const tabs: ("Daily" | "Weekly" | "Monthly" | "Flexi")[] = ["Monthly", "Weekly", "Daily", "Flexi"];
+  const [tabLayouts, setTabLayouts] = useState<{
+    [key: string]: { x: number; width: number };
+  }>({});
+  const tabs: ("Daily" | "Weekly" | "Monthly" | "Flexi")[] = [
+    "Monthly",
+    "Weekly",
+    "Daily",
+    "Flexi",
+  ];
   const flatListRef = useRef<FlatList>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const currentTabIndex = tabs.indexOf(activeTab);
@@ -94,36 +103,40 @@ export default function SchemeList() {
       daily: [],
       weekly: [],
       monthly: [],
-      flexi: []
+      flexi: [],
     };
 
     // Process all schemes and their chits
     allSchemes.forEach((scheme: Scheme) => {
-      if (scheme.ACTIVE !== 'Y') return;
+      if (scheme.ACTIVE !== "Y") return;
 
       // Get the relevant chits for the current frequency
-      const relevantChits = scheme.chits?.filter(chit => 
-        (chit.PAYMENT_FREQUENCY || '').toLowerCase() === activeTab.toLowerCase()
-      ) || [];
+      const relevantChits =
+        scheme.chits?.filter(
+          (chit) =>
+            (chit.PAYMENT_FREQUENCY || "").toLowerCase() ===
+            activeTab.toLowerCase()
+        ) || [];
 
       if (relevantChits.length > 0) {
         buckets[activeTab.toLowerCase()].push({
           SCHEMEID: scheme.SCHEMEID,
           SCHEMENAME: scheme.SCHEMENAME,
-          DESCRIPTION: scheme.DESCRIPTION || "Save gold with our flexible plan.",
+          DESCRIPTION:
+            scheme.DESCRIPTION || "Save gold with our flexible plan.",
           BENEFITS: scheme.BENEFITS || [
             "Competitive rates",
             "Flexible payments",
             "Zero making charges",
-            "Free locker facility"
+            "Free locker facility",
           ],
-          SCHEMETYPE: activeTab === 'Flexi' ? 'Flexi' : 'Fixed',
+          SCHEMETYPE: activeTab === "Flexi" ? "Flexi" : "Fixed",
           ACTIVE: scheme.ACTIVE,
           chits: relevantChits,
-          relevantChits: relevantChits.map(chit => ({
+          relevantChits: relevantChits.map((chit) => ({
             CHITID: chit.CHITID,
-            AMOUNT: parseFloat(chit.AMOUNT)
-          }))
+            AMOUNT: parseFloat(chit.AMOUNT),
+          })),
         });
       }
     });
@@ -142,23 +155,26 @@ export default function SchemeList() {
 
     const fetchAllSchemes = async () => {
       if (!isMounted) return;
-      
+
       setLoading(true);
       try {
         const response = await api.get(`/schemes`);
         if (isMounted) {
           if (response.data?.data) {
-            console.log('Fetched schemes:', response.data.data);
+            //console.log('Fetched schemes:', response.data.data);
             setAllSchemes(response.data.data);
           } else {
-            console.warn('No schemes data in response');
+            console.warn("No schemes data in response");
             setAllSchemes([]);
           }
         }
       } catch (error) {
         if (isMounted) {
           console.error("Error fetching schemes:", error);
-          Alert.alert("Error", "Failed to fetch schemes. Please try again later.");
+          Alert.alert(
+            "Error",
+            "Failed to fetch schemes. Please try again later."
+          );
           setAllSchemes([]);
         }
       } finally {
@@ -207,25 +223,31 @@ export default function SchemeList() {
 
   const handleJoinScheme = async (item: Scheme) => {
     try {
-      console.log('Storing scheme data:', item);
-      
+      //console.log('Storing scheme data:', item);
+
       // Store the complete scheme data
       const schemeDataToStore = {
         schemeId: item.SCHEMEID,
         name: item.SCHEMENAME,
         description: item.DESCRIPTION,
         type: item.SCHEMETYPE,
-        chits: item.chits.filter(chit => chit.PAYMENT_FREQUENCY === activeTab) || [],
-        schemeType: item.SCHEMETYPE.toLowerCase() === 'flexi' ? 'flexi' : 'fixed',
+        chits:
+          item.chits.filter((chit) => chit.PAYMENT_FREQUENCY === activeTab) ||
+          [],
+        schemeType:
+          item.SCHEMETYPE.toLowerCase() === "flexi" ? "flexi" : "fixed",
         activeTab: activeTab,
         benefits: item.BENEFITS,
         timestamp: new Date().toISOString(),
       };
 
-      await AsyncStorage.setItem('@current_scheme_data', JSON.stringify(schemeDataToStore));
-      
-      console.log('Scheme data stored successfully');
-      
+      await AsyncStorage.setItem(
+        "@current_scheme_data",
+        JSON.stringify(schemeDataToStore)
+      );
+
+      //console.log('Scheme data stored successfully');
+
       // Navigate with only the scheme ID
       router.push({
         pathname: "/home/join_savings",
@@ -234,8 +256,8 @@ export default function SchemeList() {
         },
       });
     } catch (error) {
-      console.error('Error storing scheme data:', error);
-      Alert.alert('Error', 'Failed to load scheme data. Please try again.');
+      console.error("Error storing scheme data:", error);
+      Alert.alert("Error", "Failed to load scheme data. Please try again.");
     }
   };
 
@@ -256,7 +278,7 @@ export default function SchemeList() {
   };
 
   const getTabColor = (title: string) => {
-    return '#FFC857';
+    return "#FFC857";
   };
 
   const getTabBackground = (title: string): string => {
@@ -265,18 +287,23 @@ export default function SchemeList() {
 
   const getCardGradient = (title: string): [string, string, ...string[]] => {
     switch (title) {
-      case "Daily": return ["rgba(56,0,0,0.6)", "rgba(56,0,0,0.8)"];
-      case "Weekly": return ["rgba(0,48,44,0.6)", "rgba(0,48,44,0.8)"];
-      case "Monthly": return ["rgba(44,0,66,0.6)", "rgba(44,0,66,0.8)"];
-      case "Flexi": return ["rgba(61,40,0,0.6)", "rgba(61,40,0,0.8)"];
-      default: return ["rgba(21,0,44,0.6)", "rgba(21,0,44,0.8)"];
+      case "Daily":
+        return ["rgba(56,0,0,0.6)", "rgba(56,0,0,0.8)"];
+      case "Weekly":
+        return ["rgba(0,48,44,0.6)", "rgba(0,48,44,0.8)"];
+      case "Monthly":
+        return ["rgba(44,0,66,0.6)", "rgba(44,0,66,0.8)"];
+      case "Flexi":
+        return ["rgba(61,40,0,0.6)", "rgba(61,40,0,0.8)"];
+      default:
+        return ["rgba(21,0,44,0.6)", "rgba(21,0,44,0.8)"];
     }
   };
 
   // Simplified image function - using one image per scheme type
   const getCardImage = (item: Scheme) => {
     // First check if the scheme has its own image
-    if (item.IMAGE && item.IMAGE.startsWith('/uploads/')) {
+    if (item.IMAGE && item.IMAGE.startsWith("/uploads/")) {
       // This could be a relative path that needs to be prepended with base URL
       // For now, we'll fallback to our local images
       return getDefaultImageByType(item.SCHEMETYPE || DEFAULT_SCHEME_TYPE);
@@ -287,35 +314,45 @@ export default function SchemeList() {
 
   const getDefaultImageByType = (type: string) => {
     switch (type) {
-      case "Daily": return require("../../../../../assets/images/scheme2.jpg");
-      case "Weekly": return require("../../../../../assets/images/scheme2.jpg");
-      case "Monthly": return require("../../../../../assets/images/scheme3.jpg");
-      case "Flexi": return require("../../../../../assets/images/scheme4.jpg");
-      default: return require("../../../../../assets/images/scheme1.jpg");
+      case "Daily":
+        return require("../../../../../assets/images/scheme2.jpg");
+      case "Weekly":
+        return require("../../../../../assets/images/scheme2.jpg");
+      case "Monthly":
+        return require("../../../../../assets/images/scheme3.jpg");
+      case "Flexi":
+        return require("../../../../../assets/images/scheme4.jpg");
+      default:
+        return require("../../../../../assets/images/scheme1.jpg");
     }
   };
 
   const getTabIcon = (title: string) => {
     switch (title) {
-      case "Daily": return "today-outline";
-      case "Weekly": return "calendar-outline";
-      case "Monthly": return "moon-outline";
-      case "Flexi": return "options-outline";
-      default: return "grid-outline";
+      case "Daily":
+        return "today-outline";
+      case "Weekly":
+        return "calendar-outline";
+      case "Monthly":
+        return "moon-outline";
+      case "Flexi":
+        return "options-outline";
+      default:
+        return "grid-outline";
     }
   };
 
   const renderTab = (title: "Daily" | "Weekly" | "Monthly" | "Flexi") => {
     const isActive = activeTab === title;
     const tabColor = getTabColor(title);
-    const tabBackground = isActive ? getTabBackground(title) : 'transparent';
+    const tabBackground = isActive ? getTabBackground(title) : "transparent";
 
     return (
       <View
         key={title}
         onLayout={(e) => {
           const { x, width } = e.nativeEvent.layout;
-          setTabLayouts(prev => ({ ...prev, [title]: { x, width } }));
+          setTabLayouts((prev) => ({ ...prev, [title]: { x, width } }));
         }}
         style={{ flex: 1 }}
       >
@@ -334,13 +371,15 @@ export default function SchemeList() {
             style={[
               styles.tabText,
               isActive && styles.activeTabText,
-              isActive && { color: tabColor }
+              isActive && { color: tabColor },
             ]}
           >
             {title}
           </Text>
           {isActive && (
-            <View style={[styles.activeTabIndicator, { backgroundColor: tabColor }]} />
+            <View
+              style={[styles.activeTabIndicator, { backgroundColor: tabColor }]}
+            />
           )}
         </TouchableOpacity>
       </View>
@@ -348,23 +387,21 @@ export default function SchemeList() {
   };
 
   const handleToggleExpand = (schemeId: number) => {
-    setExpandedCard(prev => (prev === schemeId ? null : schemeId));
+    setExpandedCard((prev) => (prev === schemeId ? null : schemeId));
   };
 
   const renderSchemeItem = ({ item }: { item: Scheme }) => {
     const scaleValue = new Animated.Value(1);
     const tabColor = getTabColor(item.SCHEMETYPE);
     const gradientColors = getCardGradient(item.SCHEMETYPE);
-    console.log(item);
+    //console.log(item);
     return (
       <Animated.View
         style={[
           styles.schemeCard,
           {
-            transform: [
-              { scale: scaleValue }
-            ],
-          }
+            transform: [{ scale: scaleValue }],
+          },
         ]}
       >
         <View style={styles.cardTouchable}>
@@ -382,10 +419,12 @@ export default function SchemeList() {
               <View style={styles.cardHeader}>
                 <View style={styles.headerTopRow}>
                   <View style={styles.schemeNameContainer}>
-                    <Text style={[
-                      styles.schemeName,
-                      item.SCHEMETYPE === 'Flexi' && styles.flexiSchemeName
-                    ]}>
+                    <Text
+                      style={[
+                        styles.schemeName,
+                        item.SCHEMETYPE === "Flexi" && styles.flexiSchemeName,
+                      ]}
+                    >
                       {item.SCHEMENAME}
                     </Text>
                     {item.SLOGAN && (
@@ -393,11 +432,13 @@ export default function SchemeList() {
                     )}
                   </View>
                   <View style={styles.typePill}>
-                    <Text style={[
-                      styles.typeText,
-                      item.SCHEMETYPE === 'Flexi' && styles.flexiTypeText
-                    ]}>
-                      {item.SCHEMETYPE === 'Flexi' ? 'Flexi' : 'Fixed'}
+                    <Text
+                      style={[
+                        styles.typeText,
+                        item.SCHEMETYPE === "Flexi" && styles.flexiTypeText,
+                      ]}
+                    >
+                      {item.SCHEMETYPE === "Flexi" ? "Flexi" : "Fixed"}
                     </Text>
                   </View>
                 </View>
@@ -412,9 +453,15 @@ export default function SchemeList() {
 
             <View style={styles.benefitsHeaderRow}>
               <Text style={styles.benefitsTitle}>Key Benefits</Text>
-              <TouchableOpacity onPress={() => handleToggleExpand(item.SCHEMEID)}>
+              <TouchableOpacity
+                onPress={() => handleToggleExpand(item.SCHEMEID)}
+              >
                 <Ionicons
-                  name={expandedCard === item.SCHEMEID ? "chevron-up" : "chevron-down"}
+                  name={
+                    expandedCard === item.SCHEMEID
+                      ? "chevron-up"
+                      : "chevron-down"
+                  }
                   size={20}
                   color="#888"
                 />
@@ -423,8 +470,16 @@ export default function SchemeList() {
             {expandedCard === item.SCHEMEID && (
               <View style={styles.benefitsContainer}>
                 {item.BENEFITS?.map((benefit, index) => (
-                  <View style={styles.benefitItem} key={`benefit-${item.SCHEMEID}-${index}`}>
-                    <View style={[styles.checkmarkCircle, { backgroundColor: tabColor }]}>
+                  <View
+                    style={styles.benefitItem}
+                    key={`benefit-${item.SCHEMEID}-${index}`}
+                  >
+                    <View
+                      style={[
+                        styles.checkmarkCircle,
+                        { backgroundColor: tabColor },
+                      ]}
+                    >
                       <Ionicons name="checkmark" size={12} color="#fff" />
                     </View>
                     <Text style={styles.benefitText}>{benefit}</Text>
@@ -436,7 +491,7 @@ export default function SchemeList() {
             <View style={styles.amountContainer}>
               <Text style={styles.amountLabel}>Available Plans:</Text>
               <View style={styles.amountChipsContainer}>
-                <Text style={[styles.amountChipText, { color: '#850111' }]}>
+                <Text style={[styles.amountChipText, { color: "#850111" }]}>
                   ₹100 to ₹10,000
                 </Text>
               </View>
@@ -447,7 +502,7 @@ export default function SchemeList() {
               activeOpacity={0.7}
             >
               <LinearGradient
-                colors={['#850111', '#850111']}
+                colors={["#850111", "#850111"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.joinButton}
@@ -470,7 +525,7 @@ export default function SchemeList() {
             key={`slider-${tab}`}
             style={[
               styles.tabSliderDot,
-              activeTab === tab && { backgroundColor: getTabColor(tab) }
+              activeTab === tab && { backgroundColor: getTabColor(tab) },
             ]}
           />
         ))}
@@ -482,8 +537,15 @@ export default function SchemeList() {
     <SafeAreaView style={styles.container} {...panResponder.panHandlers}>
       <View style={styles.mainBackground}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={getTabColor(activeTab)} />
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
+            <Ionicons
+              name="arrow-back"
+              size={24}
+              color={getTabColor(activeTab)}
+            />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: getTabColor(activeTab) }]}>
             {t("goldSchemes")}
@@ -499,7 +561,9 @@ export default function SchemeList() {
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={getTabColor(activeTab)} />
-              <Text style={[styles.loadingText, { color: getTabColor(activeTab) }]}>
+              <Text
+                style={[styles.loadingText, { color: getTabColor(activeTab) }]}
+              >
                 Loading {activeTab} Schemes...
               </Text>
             </View>
@@ -508,16 +572,18 @@ export default function SchemeList() {
               ref={flatListRef}
               data={schemes}
               renderItem={renderSchemeItem}
-              keyExtractor={item => item.SCHEMEID.toString()}
+              keyExtractor={(item) => item.SCHEMEID.toString()}
               contentContainerStyle={[
                 styles.listContainer,
-                schemes.length === 0 && styles.emptyListContainer
+                schemes.length === 0 && styles.emptyListContainer,
               ]}
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
                 <View style={styles.emptyContainer}>
                   <Ionicons name="sad-outline" size={40} color="#777" />
-                  <Text style={styles.emptyMessage}>No schemes available for {activeTab} category</Text>
+                  <Text style={styles.emptyMessage}>
+                    No schemes available for {activeTab} category
+                  </Text>
                 </View>
               }
             />
@@ -538,87 +604,91 @@ const mockSchemes: Scheme[] = [
   {
     SCHEMEID: 1,
     SCHEMENAME: "Daily Gold Saver",
-    DESCRIPTION: "Save a small amount daily to accumulate gold over time with guaranteed returns.",
+    DESCRIPTION:
+      "Save a small amount daily to accumulate gold over time with guaranteed returns.",
     BENEFITS: [
       "Low daily commitment",
       "Regular savings habit",
       "No lock-in period",
-      "Zero making charges"
+      "Zero making charges",
     ],
     SCHEMETYPE: "Fixed",
     ACTIVE: "Y",
     chits: [
       { CHITID: 101, AMOUNT: "500.00", PAYMENT_FREQUENCY: "Daily" },
-      { CHITID: 102, AMOUNT: "1000.00", PAYMENT_FREQUENCY: "Daily" }
+      { CHITID: 102, AMOUNT: "1000.00", PAYMENT_FREQUENCY: "Daily" },
     ],
     relevantChits: [
-      { CHITID: 101, AMOUNT: 500.00 },
-      { CHITID: 102, AMOUNT: 1000.00 }
-    ]
+      { CHITID: 101, AMOUNT: 500.0 },
+      { CHITID: 102, AMOUNT: 1000.0 },
+    ],
   },
   {
     SCHEMEID: 2,
     SCHEMENAME: "Weekly Gold Builder",
-    DESCRIPTION: "Weekly contribution plan for systematic gold investment with bonus at maturity.",
+    DESCRIPTION:
+      "Weekly contribution plan for systematic gold investment with bonus at maturity.",
     BENEFITS: [
       "Higher weekly returns",
       "Flexible withdrawal options",
       "24K purity guaranteed",
-      "Free gold certification"
+      "Free gold certification",
     ],
     SCHEMETYPE: "Fixed",
     ACTIVE: "Y",
     chits: [
       { CHITID: 201, AMOUNT: "2000.00", PAYMENT_FREQUENCY: "Weekly" },
-      { CHITID: 202, AMOUNT: "3000.00", PAYMENT_FREQUENCY: "Weekly" }
+      { CHITID: 202, AMOUNT: "3000.00", PAYMENT_FREQUENCY: "Weekly" },
     ],
     relevantChits: [
-      { CHITID: 201, AMOUNT: 2000.00 },
-      { CHITID: 202, AMOUNT: 3000.00 }
-    ]
+      { CHITID: 201, AMOUNT: 2000.0 },
+      { CHITID: 202, AMOUNT: 3000.0 },
+    ],
   },
   {
     SCHEMEID: 3,
     SCHEMENAME: "Gold Plus Monthly",
-    DESCRIPTION: "Premium monthly gold savings with additional benefits and higher returns.",
+    DESCRIPTION:
+      "Premium monthly gold savings with additional benefits and higher returns.",
     BENEFITS: [
       "Premium returns",
       "Lower making charges",
       "Free gold certificate",
-      "Priority customer service"
+      "Priority customer service",
     ],
     SCHEMETYPE: "Fixed",
     ACTIVE: "Y",
     chits: [
       { CHITID: 301, AMOUNT: "5000.00", PAYMENT_FREQUENCY: "Monthly" },
-      { CHITID: 302, AMOUNT: "10000.00", PAYMENT_FREQUENCY: "Monthly" }
+      { CHITID: 302, AMOUNT: "10000.00", PAYMENT_FREQUENCY: "Monthly" },
     ],
     relevantChits: [
-      { CHITID: 301, AMOUNT: 5000.00 },
-      { CHITID: 302, AMOUNT: 10000.00 }
-    ]
+      { CHITID: 301, AMOUNT: 5000.0 },
+      { CHITID: 302, AMOUNT: 10000.0 },
+    ],
   },
   {
     SCHEMEID: 4,
     SCHEMENAME: "Flexi Gold Saver",
-    DESCRIPTION: "Save gold whenever you want with our flexible plan with zero penalties.",
+    DESCRIPTION:
+      "Save gold whenever you want with our flexible plan with zero penalties.",
     BENEFITS: [
       "No fixed schedule",
       "Save as per convenience",
       "Competitive rates",
-      "Free locker facility"
+      "Free locker facility",
     ],
     SCHEMETYPE: "Flexi",
     ACTIVE: "Y",
     chits: [
       { CHITID: 401, AMOUNT: "1500.00", PAYMENT_FREQUENCY: "Flexi" },
-      { CHITID: 402, AMOUNT: "3500.00", PAYMENT_FREQUENCY: "Flexi" }
+      { CHITID: 402, AMOUNT: "3500.00", PAYMENT_FREQUENCY: "Flexi" },
     ],
     relevantChits: [
-      { CHITID: 401, AMOUNT: 1500.00 },
-      { CHITID: 402, AMOUNT: 3500.00 }
-    ]
-  }
+      { CHITID: 401, AMOUNT: 1500.0 },
+      { CHITID: 402, AMOUNT: 3500.0 },
+    ],
+  },
 ];
 
 const styles = StyleSheet.create({
@@ -628,8 +698,8 @@ const styles = StyleSheet.create({
   },
   mainBackground: {
     flex: 1,
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     backgroundColor: theme.colors.background,
   },
   header: {
@@ -724,7 +794,7 @@ const styles = StyleSheet.create({
       },
       android: {
         elevation: 12,
-        overflow: 'hidden',
+        overflow: "hidden",
       },
     }),
     backgroundColor: theme.colors.background,
@@ -733,10 +803,10 @@ const styles = StyleSheet.create({
   },
   cardTouchable: {
     borderRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   cardBackground: {
-    width: '100%',
+    width: "100%",
     height: 100,
   },
   backgroundImage: {
@@ -773,7 +843,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#fff",
     marginBottom: 2,
-    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowColor: "rgba(0,0,0,0.5)",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
@@ -781,18 +851,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     letterSpacing: 0.3,
     fontWeight: "700",
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   slogan: {
     fontSize: 11,
-    fontStyle: 'italic',
+    fontStyle: "italic",
     color: "rgba(255,255,255,0.8)",
-    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowColor: "rgba(0,0,0,0.5)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
   typePill: {
-    position: 'absolute',
+    position: "absolute",
     top: -4,
     right: -4,
     paddingVertical: 3,
@@ -807,7 +877,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "600",
     color: "#FFFFFF",
-    textTransform: 'capitalize',
+    textTransform: "capitalize",
   },
   flexiTypeText: {
     fontSize: 14,
@@ -826,9 +896,9 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   benefitsHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 4,
   },
   benefitsTitle: {
@@ -848,8 +918,8 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: theme.colors.primary,
   },
   benefitText: {
@@ -876,9 +946,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0)',
+    backgroundColor: "rgba(255,255,255,0)",
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: "rgba(255,255,255,0.1)",
   },
   amountChipText: {
     fontSize: 14,
@@ -900,8 +970,8 @@ const styles = StyleSheet.create({
   },
   emptyListContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   emptyContainer: {
     alignItems: "center",
@@ -916,42 +986,42 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     fontSize: 16,
     lineHeight: 24,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   tabSliderContainer: {
-    marginLeft: 'auto',
+    marginLeft: "auto",
     paddingRight: 8,
   },
   tabSliderTrack: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    flexDirection: "row",
+    backgroundColor: "rgba(255,255,255,0.15)",
     borderRadius: 10,
     padding: 3,
-    position: 'relative',
+    position: "relative",
   },
   tabSliderDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: "rgba(255,255,255,0.3)",
     marginHorizontal: 3,
   },
   floatingHint: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 20,
-    alignSelf: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    alignSelf: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
     paddingVertical: 6,
     paddingHorizontal: 16,
     borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: "rgba(255,255,255,0.2)",
   },
   floatingHintText: {
     color: theme.colors.textPrimary,
     fontSize: 12,
-  }
+  },
 });

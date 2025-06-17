@@ -1,5 +1,5 @@
 import apiService from './api';
-import { PaymentInitPayload, PaymentResponse, TransactionPayload, PaymentPayload } from '@/app/(app)/(tabs)/home/types/payment.types';
+import { PaymentInitPayload, PaymentResponse, TransactionPayload, PaymentPayload } from '@/types/payment.types';
 
 class PaymentService {
   async initiatePayment(payload: PaymentInitPayload): Promise<PaymentResponse> {

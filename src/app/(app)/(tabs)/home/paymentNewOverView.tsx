@@ -18,7 +18,7 @@ import { useRouter } from "expo-router";
 import { theme } from "@/constants/theme";
 import api from "@/services/api";
 import paymentService from "../../../../services/payment.service";
-import { PaymentInitPayload } from "./types/payment.types";
+import { PaymentInitPayload } from "@/types/payment.types";
 
 export default function PaymentNewOverView() {
   const params = useLocalSearchParams();
@@ -62,7 +62,7 @@ export default function PaymentNewOverView() {
       return;
     }
     try {
-      console.log("userDetails ======>", userDetails, params);
+      //console.log("userDetails ======>", userDetails, params);
       const payload: PaymentInitPayload = {
         userId: userDetails.userId,
         amount: Number(params.amount),
@@ -75,12 +75,12 @@ export default function PaymentNewOverView() {
         userName: userDetails.accountname,
         chitId: Array.isArray(params.chitId) ? params.chitId[0] : params.chitId,
       };
-      console.log("initialpayment ======>", payload);
+      //console.log("initialpayment ======>", payload);
       const response = await paymentService.initiatePayment(payload);
       if (response?.session.payment_links.web) {
         // Extract order ID from the payment response
-        const orderId =response?.session?.order_id;
-        
+        const orderId = response?.session?.order_id;
+
         router.push({
           pathname: "/(tabs)/home/paymentWebView",
           params: {

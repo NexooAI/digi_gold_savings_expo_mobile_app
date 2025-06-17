@@ -18,7 +18,7 @@ import { theme } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import { useOtpAutoFetch } from "@/hooks/useOtpAutoFetch";
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from "expo-secure-store";
 import { API_BASE_URL } from "@/config/api";
 
 const { width } = Dimensions.get("window");
@@ -27,7 +27,13 @@ const OTP_RESEND_LIMIT = 3;
 const INITIAL_TIMER = 120;
 
 // Error Alert Component (matching login)
-const ErrorAlert = ({ message, onClose }: { message: string; onClose: () => void }) => (
+const ErrorAlert = ({
+  message,
+  onClose,
+}: {
+  message: string;
+  onClose: () => void;
+}) => (
   <View style={styles.errorAlert}>
     <View style={styles.errorContent}>
       <Ionicons name="alert-circle" size={24} color="#fff" />
@@ -52,7 +58,12 @@ export default function Register() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
   const params = useLocalSearchParams();
-  const inputRefs = [useRef<TextInput>(null), useRef<TextInput>(null), useRef<TextInput>(null), useRef<TextInput>(null)];
+  const inputRefs = [
+    useRef<TextInput>(null),
+    useRef<TextInput>(null),
+    useRef<TextInput>(null),
+    useRef<TextInput>(null),
+  ];
 
   // Add useEffect to handle pre-filled mobile number
   useEffect(() => {
@@ -88,12 +99,12 @@ export default function Register() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/register/mobile`, {
-        method: 'POST',
+      const response = await fetch(`${theme.baseUrl}/register/mobile`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ mobile_number: mobile })
+        body: JSON.stringify({ mobile_number: mobile }),
       });
 
       const data = await response.json();
@@ -102,12 +113,13 @@ export default function Register() {
         setOtpSent(true);
         setResendCount(OTP_RESEND_LIMIT);
         startTimer();
-        Alert.alert("Success", data?.message || 'OTP sent successfully');
+        Alert.alert("Success", data?.message || "OTP sent successfully");
       } else {
-        throw new Error(data?.error || 'Failed to send OTP');
+        throw new Error(data?.error || "Failed to send OTP");
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to send OTP';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to send OTP";
       handleApiError(new Error(errorMessage));
     } finally {
       setLoading(false);
@@ -120,11 +132,11 @@ export default function Register() {
     setLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/auth/check-mobile`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ mobile_number: mobile })
+        body: JSON.stringify({ mobile_number: mobile }),
       });
 
       if (response.ok) {
@@ -134,10 +146,11 @@ export default function Register() {
         Alert.alert("Success", "OTP resent successfully");
       } else {
         const data = await response.json();
-        throw new Error(data?.error || 'Failed to resend OTP');
+        throw new Error(data?.error || "Failed to resend OTP");
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to resend OTP';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to resend OTP";
       handleApiError(new Error(errorMessage));
     } finally {
       setLoading(false);
@@ -146,17 +159,24 @@ export default function Register() {
 
   const handleApiError = (error: unknown) => {
     let message = "An error occurred";
-    
-    if (error && typeof error === 'object') {
-      if ('response' in error && error.response && typeof error.response === 'object' && 'error' in error.response) {
+
+    if (error && typeof error === "object") {
+      if (
+        "response" in error &&
+        error.response &&
+        typeof error.response === "object" &&
+        "error" in error.response
+      ) {
         message = String(error.response.error) || message;
-      } else if ('message' in error && error.message) {
+      } else if ("message" in error && error.message) {
         message = String(error.message);
       }
     }
-    
+
     if (message.toLowerCase().includes("already registered")) {
-      showErrorAlert("Mobile number already registered. Please go to login page.");
+      showErrorAlert(
+        "Mobile number already registered. Please go to login page."
+      );
       return;
     }
     showErrorAlert(message);
@@ -187,15 +207,15 @@ export default function Register() {
       showErrorAlert("Please enter complete 4-digit OTP");
       return;
     }
-    
+
     setLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/register/verify-otp`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ mobile_number: mobile, otp })
+        body: JSON.stringify({ mobile_number: mobile, otp }),
       });
 
       const data = await response.json();
@@ -203,15 +223,19 @@ export default function Register() {
       if (response.ok) {
         // Store the token if present in the response
         if (data.token) {
-          await SecureStore.setItemAsync('authToken', data.token);
+          await SecureStore.setItemAsync("authToken", data.token);
         }
-        router.push({ pathname: "/(auth)/userBasicDetails", params: { mobile } });
+        router.push({
+          pathname: "/(auth)/userBasicDetails",
+          params: { mobile },
+        });
         setPins(["", "", "", ""]);
       } else {
         throw new Error(data?.message || "Invalid OTP");
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to verify OTP';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to verify OTP";
       showErrorAlert(errorMessage);
     } finally {
       setLoading(false);
@@ -220,10 +244,10 @@ export default function Register() {
 
   // Auto-fetch OTP functionality
   const handleOtpAutoFill = (otp: string) => {
-    console.log('Auto-filling OTP in register:', otp);
-    const otpArray = otp.split('');
+    //console.log('Auto-filling OTP in register:', otp);
+    const otpArray = otp.split("");
     setPins(otpArray);
-    
+
     // Auto-verify if we get a complete 4-digit OTP
     if (otp.length === 4) {
       setTimeout(() => {
@@ -235,7 +259,7 @@ export default function Register() {
   const { startSmsListener, stopSmsListener } = useOtpAutoFetch({
     onOtpReceived: handleOtpAutoFill,
     isActive: otpSent, // Start listening when OTP is sent
-    senderName: 'Dc Jewellery', // Match your SMS sender
+    senderName: "Dc Jewellery", // Match your SMS sender
   });
 
   useFocusEffect(
@@ -289,7 +313,7 @@ export default function Register() {
       style={styles.backgroundImage}
     >
       <LinearGradient
-        colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.7)']}
+        colors={["rgba(0,0,0,0.7)", "rgba(0,0,0,0.5)", "rgba(0,0,0,0.7)"]}
         style={styles.gradient}
       >
         {showError && (
@@ -322,12 +346,15 @@ export default function Register() {
                     />
                   </View>
                   <TouchableOpacity
-                    style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+                    style={[
+                      styles.loginButton,
+                      loading && styles.loginButtonDisabled,
+                    ]}
                     onPress={handleGetOtp}
                     disabled={loading}
                   >
                     <LinearGradient
-                      colors={['#ffc90c', '#ffd700']}
+                      colors={["#ffc90c", "#ffd700"]}
                       style={styles.gradientButton}
                     >
                       <Text style={styles.loginButtonText}>
@@ -336,7 +363,9 @@ export default function Register() {
                     </LinearGradient>
                   </TouchableOpacity>
                   <View style={styles.registerContainer}>
-                    <Text style={styles.registerText}>Already have an account? </Text>
+                    <Text style={styles.registerText}>
+                      Already have an account?{" "}
+                    </Text>
                     <TouchableOpacity onPress={() => router.push("/login")}>
                       <Text style={styles.registerLink}>Login</Text>
                     </TouchableOpacity>
@@ -381,23 +410,35 @@ export default function Register() {
                   </View>
 
                   <View style={styles.timerContainer}>
-                    <Ionicons name="time-outline" size={20} color={theme.colors.white} />
+                    <Ionicons
+                      name="time-outline"
+                      size={20}
+                      color={theme.colors.white}
+                    />
                     <Text style={styles.timerText}>Resend in {timer}s</Text>
                   </View>
-                  
+
                   {timer === 0 && resendCount > 0 && (
-                    <TouchableOpacity onPress={handleResendOtp} style={styles.resendButton}>
-                      <Text style={styles.resendText}>Resend OTP ({resendCount} left)</Text>
+                    <TouchableOpacity
+                      onPress={handleResendOtp}
+                      style={styles.resendButton}
+                    >
+                      <Text style={styles.resendText}>
+                        Resend OTP ({resendCount} left)
+                      </Text>
                     </TouchableOpacity>
                   )}
-                  
+
                   <TouchableOpacity
-                    style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+                    style={[
+                      styles.loginButton,
+                      loading && styles.loginButtonDisabled,
+                    ]}
                     onPress={handleVerifyOtp}
                     disabled={loading || pins.includes("")}
                   >
                     <LinearGradient
-                      colors={['#ffc90c', '#ffd700']}
+                      colors={["#ffc90c", "#ffd700"]}
                       style={styles.gradientButton}
                     >
                       <Text style={styles.loginButtonText}>
@@ -412,7 +453,11 @@ export default function Register() {
                 style={styles.backButton}
                 onPress={handleBackButton}
               >
-                <Ionicons name="arrow-back" size={20} color={theme.colors.white} />
+                <Ionicons
+                  name="arrow-back"
+                  size={20}
+                  color={theme.colors.white}
+                />
                 <Text style={styles.backButtonText}>Back</Text>
               </TouchableOpacity>
             </View>
@@ -424,40 +469,40 @@ export default function Register() {
 }
 
 const styles = StyleSheet.create({
-  backgroundImage: { 
-    flex: 1, 
-    resizeMode: "cover" 
+  backgroundImage: {
+    flex: 1,
+    resizeMode: "cover",
   },
   gradient: {
     flex: 1,
   },
-  container: { 
+  container: {
     flex: 1,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 20,
+    paddingBottom: Platform.OS === "ios" ? 40 : 20,
   },
   logoContainer: {
-    width: '100%',
-    alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    width: "100%",
+    alignItems: "center",
+    paddingTop: Platform.OS === "ios" ? 60 : 40,
     marginBottom: 20,
   },
-  logo: { 
+  logo: {
     aspectRatio: 1,
   },
-  formContainer: { 
+  formContainer: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: 20,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 0,
+    paddingBottom: Platform.OS === "ios" ? 40 : 0,
   },
   cardContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 20,
     padding: 20,
-    width: '100%',
+    width: "100%",
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    marginBottom: Platform.OS === 'ios' ? 20 : 10,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+    marginBottom: Platform.OS === "ios" ? 20 : 10,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -485,23 +530,23 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   inputContainer: {
-    width: '100%',
+    width: "100%",
     marginBottom: 20,
   },
   loginButton: {
     width: "100%",
     height: 50,
     borderRadius: 25,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginTop: 20,
   },
   gradientButton: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
-  loginButtonDisabled: { 
-    opacity: 0.6 
+  loginButtonDisabled: {
+    opacity: 0.6,
   },
   loginButtonText: {
     color: theme.colors.textDark,
@@ -516,7 +561,7 @@ const styles = StyleSheet.create({
   otpTitle: {
     color: theme.colors.textLight,
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
   },
   otpSentText: {
@@ -546,7 +591,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     color: theme.colors.white,
     fontSize: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     textAlign: "center",
   },
   eyeButton: {
@@ -555,12 +600,12 @@ const styles = StyleSheet.create({
     top: 20,
   },
   timerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 15,
   },
-  timerText: { 
-    color: theme.colors.white, 
+  timerText: {
+    color: theme.colors.white,
     marginLeft: 8,
     fontSize: 16,
   },
@@ -575,9 +620,9 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
   registerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 20,
   },
   registerText: {
@@ -587,14 +632,14 @@ const styles = StyleSheet.create({
   registerLink: {
     color: theme.colors.secondary,
     fontSize: 16,
-    fontWeight: 'bold',
-    textDecorationLine: 'underline',
+    fontWeight: "bold",
+    textDecorationLine: "underline",
     marginLeft: 4,
   },
   backButton: {
     marginTop: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   backButtonText: {
     color: theme.colors.white,
@@ -602,18 +647,18 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
   errorAlert: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 30,
+    position: "absolute",
+    top: Platform.OS === "ios" ? 50 : 30,
     left: 20,
     right: 20,
-    backgroundColor: 'rgba(255, 68, 68, 0.95)',
+    backgroundColor: "rgba(255, 68, 68, 0.95)",
     borderRadius: 12,
     padding: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     zIndex: 1000,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -624,11 +669,11 @@ const styles = StyleSheet.create({
   },
   errorContent: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   errorMessage: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
     marginLeft: 10,
     flex: 1,

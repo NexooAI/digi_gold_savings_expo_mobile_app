@@ -13,6 +13,9 @@ import {
   ScrollView,
   TextInput,
   StatusBar,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Pressable,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -154,134 +157,140 @@ export default function ResetMpin() {
     }
   };
 
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+  };
+
   return (
-    <ImageBackground
-      source={theme.image.bg_image}
-      style={styles.backgroundImage}
-    >
-      <LinearGradient
-        colors={["rgba(0,0,0,0.7)", "rgba(0,0,0,0.5)", "rgba(0,0,0,0.7)"]}
-        style={styles.gradient}
+    <Pressable style={{ flex: 1 }} onPress={dismissKeyboard}>
+      <ImageBackground
+        source={theme.image.bg_image}
+        style={styles.backgroundImage}
       >
-        {showError && (
-          <View style={styles.errorAlert}>
-            <View style={styles.errorContent}>
-              <Ionicons name="alert-circle" size={24} color="#fff" />
-              <Text style={styles.errorMessage}>{errorMessage}</Text>
-            </View>
-            <TouchableOpacity
-              onPress={() => setShowError(false)}
-              style={styles.closeButton}
-            >
-              <Ionicons name="close" size={20} color="#fff" />
-            </TouchableOpacity>
-          </View>
-        )}
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.container}
+        <LinearGradient
+          colors={["rgba(0,0,0,0.7)", "rgba(0,0,0,0.5)", "rgba(0,0,0,0.7)"]}
+          style={styles.gradient}
         >
-          <View style={styles.formContainer}>
-            <View style={styles.contentContainer}>
-              <View style={styles.logoContainer}>
-                <Image
-                  source={theme.image.transparentLogo}
-                  style={[styles.logo, { width: 100 }]}
-                  resizeMode="contain"
-                />
-                {fromLogin ? (
-                  <TouchableOpacity onPress={() => router.back()}>
-                    <Ionicons name="arrow-back" size={24} color="black" />
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity onPress={() => router.push("/profile")}>
-                    <Ionicons name="arrow-back" size={24} color="black" />
-                  </TouchableOpacity>
-                )}
+          {showError && (
+            <View style={styles.errorAlert}>
+              <View style={styles.errorContent}>
+                <Ionicons name="alert-circle" size={24} color="#fff" />
+                <Text style={styles.errorMessage}>{errorMessage}</Text>
               </View>
-              <View style={styles.cardContainer}>
-                <Text style={styles.pageTitle}>
-                  {isCreatingMPIN ? "Create MPIN" : "Reset MPIN"}
-                </Text>
-                <Text style={styles.subtitle}>
-                  {isCreatingMPIN
-                    ? "Create a new 4-digit MPIN to secure your account"
-                    : "Enter your new MPIN to reset it"}
-                </Text>
-                <Text style={styles.label}>New MPIN</Text>
-                <MpinInput
-                  length={4}
-                  onComplete={setMpin}
-                  secureTextEntry={!showPin}
-                />
-                <Text style={styles.label}>Confirm MPIN</Text>
-                <MpinInput
-                  length={4}
-                  onComplete={setConfirmMpin}
-                  secureTextEntry={!showPin}
-                />
-                {error ? (
-                  <View style={styles.errorContainer}>
-                    <Ionicons name="alert-circle" size={16} color="#FF6B6B" />
-                    <Text style={styles.errorText}>{error}</Text>
-                  </View>
-                ) : null}
-                <TouchableOpacity
-                  style={styles.eyeToggle}
-                  onPress={() => setShowPin(!showPin)}
-                >
-                  <Ionicons
-                    name={showPin ? "eye-off" : "eye"}
-                    size={24}
-                    color={theme.colors.secondary}
+              <TouchableOpacity
+                onPress={() => setShowError(false)}
+                style={styles.closeButton}
+              >
+                <Ionicons name="close" size={20} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          )}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.container}
+          >
+            <View style={styles.formContainer}>
+              <View style={styles.contentContainer}>
+                <View style={styles.logoContainer}>
+                  <Image
+                    source={theme.image.transparentLogo}
+                    style={[styles.logo, { width: 100 }]}
+                    resizeMode="contain"
                   />
-                  <Text style={styles.eyeText}>
-                    {showPin ? "Hide MPIN" : "Show MPIN"}
+                  {/* {fromLogin ? (
+                    <TouchableOpacity onPress={() => router.back()}>
+                      <Ionicons name="arrow-back" size={24} color="black" />
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity onPress={() => router.push("/profile")}>
+                      <Ionicons name="arrow-back" size={24} color="black" />
+                    </TouchableOpacity>
+                  )} */}
+                </View>
+                <View style={styles.cardContainer}>
+                  <Text style={styles.pageTitle}>
+                    {isCreatingMPIN ? "Create MPIN" : "Reset MPIN"}
                   </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.submitButton,
-                    (error ||
+                  <Text style={styles.subtitle}>
+                    {isCreatingMPIN
+                      ? "Create a new 4-digit MPIN to secure your account"
+                      : "Enter your new MPIN to reset it"}
+                  </Text>
+                  <Text style={styles.label}>New MPIN</Text>
+                  <MpinInput
+                    length={4}
+                    onComplete={setMpin}
+                    secureTextEntry={!showPin}
+                  />
+                  <Text style={styles.label}>Confirm MPIN</Text>
+                  <MpinInput
+                    length={4}
+                    onComplete={setConfirmMpin}
+                    secureTextEntry={!showPin}
+                  />
+                  {error ? (
+                    <View style={styles.errorContainer}>
+                      <Ionicons name="alert-circle" size={16} color="#FF6B6B" />
+                      <Text style={styles.errorText}>{error}</Text>
+                    </View>
+                  ) : null}
+                  <TouchableOpacity
+                    style={styles.eyeToggle}
+                    onPress={() => setShowPin(!showPin)}
+                  >
+                    <Ionicons
+                      name={showPin ? "eye-off" : "eye"}
+                      size={24}
+                      color={theme.colors.secondary}
+                    />
+                    <Text style={styles.eyeText}>
+                      {showPin ? "Hide MPIN" : "Show MPIN"}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.submitButton,
+                      (error ||
+                        loading ||
+                        mpin.length < 4 ||
+                        confirmMpin.length < 4) &&
+                        styles.submitButtonDisabled,
+                    ]}
+                    onPress={handleSubmit}
+                    disabled={
+                      !!error ||
                       loading ||
                       mpin.length < 4 ||
-                      confirmMpin.length < 4) &&
-                      styles.submitButtonDisabled,
-                  ]}
-                  onPress={handleSubmit}
-                  disabled={
-                    !!error ||
-                    loading ||
-                    mpin.length < 4 ||
-                    confirmMpin.length < 4
-                  }
-                >
-                  <LinearGradient
-                    colors={["#ffc90c", "#ffd700"]}
-                    style={styles.gradientButton}
+                      confirmMpin.length < 4
+                    }
                   >
-                    <Text style={styles.submitButtonText}>
-                      {loading ? "Processing..." : "Reset MPIN"}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.backButtonBottom}
-                  onPress={() => router.back()}
-                >
-                  <Ionicons
-                    name="arrow-back"
-                    size={20}
-                    color={theme.colors.white}
-                  />
-                  <Text style={styles.backButtonText}>Back</Text>
-                </TouchableOpacity>
+                    <LinearGradient
+                      colors={["#ffc90c", "#ffd700"]}
+                      style={styles.gradientButton}
+                    >
+                      <Text style={styles.submitButtonText}>
+                        {loading ? "Processing..." : "Create MPIN"}
+                      </Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.backButtonBottom}
+                    onPress={() => router.back()}
+                  >
+                    <Ionicons
+                      name="arrow-back"
+                      size={20}
+                      color={theme.colors.white}
+                    />
+                    <Text style={styles.backButtonText}>Back</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
-          </View>
-        </KeyboardAvoidingView>
-      </LinearGradient>
-    </ImageBackground>
+          </KeyboardAvoidingView>
+        </LinearGradient>
+      </ImageBackground>
+    </Pressable>
   );
 }
 

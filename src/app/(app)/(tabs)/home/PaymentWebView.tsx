@@ -8,10 +8,10 @@ import { usePaymentSocket } from "@/hooks/usePaymentSocket";
 export default function PaymentWebView() {
   const params = useLocalSearchParams();
   const router = useRouter();
-console.log('params',params)
+  //console.log('params',params)
   const { socket, handleCancel } = usePaymentSocket({
     onPaymentSuccess: (data) => {
-      console.log("Payment Success:", data);
+      //console.log("Payment Success:", data);
       // Disconnect socket before navigation
       if (socket && socket.connected) {
         socket.disconnect();
@@ -26,7 +26,7 @@ console.log('params',params)
       });
     },
     onPaymentFailure: (data) => {
-      console.log("Payment Failed:", data);
+      //console.log("Payment Failed:", data);
       // Disconnect socket before navigation
       if (socket && socket.connected) {
         socket.disconnect();
@@ -53,7 +53,8 @@ console.log('params',params)
       }
       Alert.alert(
         "Payment Error",
-        error?.message || "An error occurred during payment processing. Please try again.",
+        error?.message ||
+          "An error occurred during payment processing. Please try again.",
         [
           {
             text: "OK",
@@ -67,23 +68,23 @@ console.log('params',params)
                   schemeId: params.schemeId,
                   chitId: params.chitId,
                   paymentFrequency: params.paymentFrequency,
-                  schemeType: params.schemeType
-                }
+                  schemeType: params.schemeType,
+                },
               });
-            }
-          }
+            },
+          },
         ]
       );
     },
     onPaymentExpired: () => {
-      console.log("Payment Expired");
+      //console.log("Payment Expired");
       // Disconnect socket before navigation
       if (socket && socket.connected) {
         socket.disconnect();
       }
       Alert.alert(
         "Payment Expired",
-         "Your payment session has expired. Please try again to complete the transaction.",
+        "Your payment session has expired. Please try again to complete the transaction.",
         [
           {
             text: "OK",
@@ -97,11 +98,11 @@ console.log('params',params)
                   schemeId: params.schemeId,
                   chitId: params.chitId,
                   paymentFrequency: params.paymentFrequency,
-                  schemeType: params.schemeType
-                }
+                  schemeType: params.schemeType,
+                },
               });
-            }
-          }
+            },
+          },
         ]
       );
     },
@@ -143,7 +144,7 @@ console.log('params',params)
               url.includes("/failed") ||
               (url.includes("payment") && url.includes("status=failed"))
             ) {
-              console.log("Payment cancelled/failed detected:", url);
+              //console.log("Payment cancelled/failed detected:", url);
               // Disconnect socket before handling cancel
               if (socket && socket.connected) {
                 socket.disconnect();

@@ -30,11 +30,11 @@ export const usePaymentSocket = ({
 
   const handlePaymentSuccess = async (data: any) => {
     try {
-      console.log("Processing successful payment:", data);
+      //console.log("Processing successful payment:", data);
 
       const paymentPayload = {
         "investmentId": parsedUserDetails.data?.data?.id || parsedUserDetails.id || '',
-        "userId":  parsedUserDetails.data?.data?.userId || parsedUserDetails.userId || '',
+        "userId": parsedUserDetails.data?.data?.userId || parsedUserDetails.userId || '',
         "paymentAmount": data.paymentResponse.amount,
         "paymentMethod": data.paymentResponse.txn_detail.txn_flow_type,
         "schemeId": parsedUserDetails.data?.data?.schemeId || parsedUserDetails.schemeId || '',
@@ -45,9 +45,9 @@ export const usePaymentSocket = ({
         "utr_reference_number": ""
       };
 
-      console.log("Payment payload:", paymentPayload);
+      //console.log("Payment payload:", paymentPayload);
       const paymentResult = await paymentService.createPayment(paymentPayload);
-      console.log("Payment result:", paymentResult);
+      //console.log("Payment result:", paymentResult);
 
       const paymentId = paymentResult?.data?.paymentId || 0;
 
@@ -69,7 +69,7 @@ export const usePaymentSocket = ({
         gatewayTransactionId: data?.paymentResponse?.txn_id || '',
       };
 
-      console.log("Transaction payload:", transactionPayload);
+      //console.log("Transaction payload:", transactionPayload);
       await paymentService.createTransaction(transactionPayload);
 
       // Update investment status
@@ -83,7 +83,7 @@ export const usePaymentSocket = ({
         paymentAmount: data?.paymentResponse?.amount || '',
       };
 
-      console.log("Investment payload:", investmentPayload);
+      //console.log("Investment payload:", investmentPayload);
       const investmentId = parsedUserDetails.data?.data?.id || parsedUserDetails.id || '';
       await api.put(`/investments/${investmentId}`, investmentPayload);
 
@@ -107,14 +107,14 @@ export const usePaymentSocket = ({
 
     // Handle connection events
     socketInstance.on("connect", () => {
-      console.log("Socket connected:", socketInstance.id);
-      console.log("check orderid", parsedUserDetails);
+      //console.log("Socket connected:", socketInstance.id);
+      //console.log("check orderid", parsedUserDetails);
 
       // Join the order room if we have an order ID
       const currentOrderId = orderId || parsedUserDetails?.orderId;
       if (currentOrderId) {
         socketInstance.emit("joinOrderRoom", currentOrderId);
-        console.log(`Joined room for order ${currentOrderId}`);
+        //console.log(`Joined room for order ${currentOrderId}`);
       } else {
         console.warn("No order ID available for socket room");
       }
@@ -129,7 +129,7 @@ export const usePaymentSocket = ({
     });
 
     socketInstance.on("disconnect", (reason) => {
-      console.log("Socket disconnected:", reason);
+      //console.log("Socket disconnected:", reason);
       if (!isPaymentCompleted.current) {
         onPaymentError?.({
           error: "Disconnected",
@@ -140,7 +140,7 @@ export const usePaymentSocket = ({
 
     // Listen for payment status updates
     socketInstance.on("payment_status_update", async (data: any) => {
-      console.log("Payment status update received:", data);
+      //console.log("Payment status update received:", data);
 
       // Check both the top-level status and the payment response status
       const isSuccess = data?.status === "success" ||
@@ -149,7 +149,7 @@ export const usePaymentSocket = ({
 
       try {
         if (isSuccess) {
-          console.log('Payment charged successfully');
+          //console.log('Payment charged successfully');
           isPaymentCompleted.current = true;
 
           if (parsedUserDetails && router) {
@@ -180,7 +180,7 @@ export const usePaymentSocket = ({
             socketInstance.disconnect();
           }
         } else {
-          console.log('Payment not charged');
+          //console.log('Payment not charged');
           isPaymentCompleted.current = true;
 
           if (parsedUserDetails && router) {

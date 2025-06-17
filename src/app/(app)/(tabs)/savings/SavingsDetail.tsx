@@ -26,10 +26,10 @@ import { moderateScale } from "react-native-size-matters";
 import SupportContactCard from "@/app/components/SupportContactCard";
 import CustomAlert from "@/app/components/Alert";
 import Icon from "react-native-vector-icons/AntDesign";
-import { LinearGradient } from 'expo-linear-gradient';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Clipboard from 'expo-clipboard';
-import { Socket } from 'socket.io-client';
+import { LinearGradient } from "expo-linear-gradient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Clipboard from "expo-clipboard";
+import { Socket } from "socket.io-client";
 
 type Transaction = {
   paymentId: number;
@@ -71,9 +71,9 @@ interface DetailRowProps {
 const HEADER_HEIGHT = Platform.OS === "ios" ? 44 : 56;
 
 // Payment data storage keys
-const PAYMENT_DATA_KEY = '@payment_data_retry';
-const INVESTMENT_DATA_KEY = '@investment_data_retry';
-const TRANSACTION_DATA_KEY = '@transaction_data_retry';
+const PAYMENT_DATA_KEY = "@payment_data_retry";
+const INVESTMENT_DATA_KEY = "@investment_data_retry";
+const TRANSACTION_DATA_KEY = "@transaction_data_retry";
 
 // PDF Generation function
 const generateInvoicePDF = async (transaction: Transaction) => {
@@ -104,11 +104,13 @@ Generated on: ${new Date().toLocaleDateString("en-GB")}
 
     // Copy to clipboard
     await Clipboard.setStringAsync(invoiceText);
-    Alert.alert('Success', 'Invoice details copied to clipboard. You can paste and share it anywhere.');
-
+    Alert.alert(
+      "Success",
+      "Invoice details copied to clipboard. You can paste and share it anywhere."
+    );
   } catch (error) {
-    console.error('Error generating invoice:', error);
-    Alert.alert('Error', 'Failed to generate invoice. Please try again.');
+    console.error("Error generating invoice:", error);
+    Alert.alert("Error", "Failed to generate invoice. Please try again.");
   }
 };
 
@@ -125,7 +127,8 @@ const SavingsDetail = () => {
   const { bottom } = useSafeAreaInsets();
   const bottomPadding = height * 0.1 + bottom;
   const [isNavigationReady, setIsNavigationReady] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null);
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState<"success" | "error" | "info">(
@@ -177,7 +180,7 @@ const SavingsDetail = () => {
     }),
     [params, user]
   );
-  
+
   const PaymentNow = async () => {
     if (!user) {
       setAlertMessage("User not found. Please log in again.");
@@ -213,7 +216,7 @@ const SavingsDetail = () => {
           userMobile: user.mobile?.toString() || "",
           userName: params.accountHolder,
         },
-        
+
         // Investment payload data
         investmentData: {
           userId: user.id || "",
@@ -224,7 +227,7 @@ const SavingsDetail = () => {
           paymentAmount: Number(params.emiAmount),
           investmentId: params.id,
         },
-        
+
         // Transaction payload data
         transactionData: {
           userId: user.id || "",
@@ -234,7 +237,7 @@ const SavingsDetail = () => {
           accountNumber: params.accNo,
           amount: Number(params.emiAmount),
         },
-        
+
         // UI/Display data
         displayData: {
           schemeName: params.schemeName,
@@ -247,14 +250,15 @@ const SavingsDetail = () => {
           maturityDate: params.maturityDate,
           paymentFrequency: params.paymentFrequency || "Monthly",
         },
-        
+
         // Timestamp for retry reference
         timestamp: new Date().toISOString(),
-        source: 'savings_detail',
+        source: "savings_detail",
       };
 
       // Store payment retry data in global store
-      const { storePaymentRetryData, storePaymentSession } = useGlobalStore.getState();
+      const { storePaymentRetryData, storePaymentSession } =
+        useGlobalStore.getState();
       storePaymentRetryData(paymentRetryData);
 
       // Store current payment session data
@@ -274,14 +278,14 @@ const SavingsDetail = () => {
           // Additional context
           isRetryAttempt: false,
           originalPaymentTimestamp: paymentRetryData.timestamp,
-          source: 'savings_detail',
+          source: "savings_detail",
         },
         timestamp: new Date().toISOString(),
       };
 
       storePaymentSession(currentPaymentSession);
-      
-      console.log("Payment data stored successfully in global store");
+
+      //console.log("Payment data stored successfully in global store");
 
       // Navigate to payment screen with minimal parameters
       router.push({
@@ -315,7 +319,7 @@ const SavingsDetail = () => {
     };
     fetchTransactions();
   }, [params.id]);
-  
+
   const DetailRow: React.FC<DetailRowProps> = ({
     label,
     value,
@@ -359,7 +363,7 @@ const SavingsDetail = () => {
       >
         {/* Summary Card */}
         <LinearGradient
-          colors={['#850111', '#5a000b', '#2e0406']}
+          colors={["#850111", "#5a000b", "#2e0406"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.summaryCard}
@@ -388,8 +392,12 @@ const SavingsDetail = () => {
                 <Ionicons name="wallet-outline" size={18} color="#fff" />
               </View>
               <View style={styles.statInfo}>
-                <Text style={styles.statLabel}>{translations.totalInvested}</Text>
-                <Text style={styles.statValue}>₹{Number(params.totalPaid).toLocaleString()}</Text>
+                <Text style={styles.statLabel}>
+                  {translations.totalInvested}
+                </Text>
+                <Text style={styles.statValue}>
+                  ₹{Number(params.totalPaid).toLocaleString()}
+                </Text>
               </View>
             </View>
             <View style={styles.statDivider} />
@@ -398,7 +406,9 @@ const SavingsDetail = () => {
                 <Ionicons name="diamond-outline" size={18} color="#fff" />
               </View>
               <View style={styles.statInfo}>
-                <Text style={styles.statLabel}>{translations.goldAccumulated}</Text>
+                <Text style={styles.statLabel}>
+                  {translations.goldAccumulated}
+                </Text>
                 <Text style={styles.statValue}>{params.goldWeight}g</Text>
               </View>
             </View>
@@ -406,46 +416,62 @@ const SavingsDetail = () => {
 
           <View style={styles.progressSection}>
             <View style={styles.progressHeader}>
-              <Text style={styles.progressLabel}>{translations.paymentProgress}</Text>
-              <Text style={styles.progressValue}>{params.monthsPaid}/{params.noOfIns} months</Text>
+              <Text style={styles.progressLabel}>
+                {translations.paymentProgress}
+              </Text>
+              <Text style={styles.progressValue}>
+                {params.monthsPaid}/{params.noOfIns} months
+              </Text>
             </View>
             <View style={styles.progressBar}>
-              <View 
+              <View
                 style={[
                   styles.progressFill,
-                  { width: `${(Number(params.monthsPaid) / Number(params.noOfIns)) * 100}%` }
-                ]} 
+                  {
+                    width: `${
+                      (Number(params.monthsPaid) / Number(params.noOfIns)) * 100
+                    }%`,
+                  },
+                ]}
               />
             </View>
           </View>
         </LinearGradient>
 
         {/* Details Section */}
-        <View style={[styles.detailsCard, { backgroundColor: '#FFF8DC' }]}>
+        <View style={[styles.detailsCard, { backgroundColor: "#FFF8DC" }]}>
           <Text style={styles.sectionTitle}>Account Details</Text>
           <View style={styles.detailsGrid}>
             <View style={styles.detailItem}>
               <Ionicons name="person-outline" size={20} color="#8B4513" />
-              <Text style={styles.detailLabel}>{translations.accountHolder}</Text>
+              <Text style={styles.detailLabel}>
+                {translations.accountHolder}
+              </Text>
               <Text style={styles.detailValue}>{params.accountHolder}</Text>
             </View>
             <View style={styles.detailItem}>
               <Ionicons name="calendar-outline" size={20} color="#8B4513" />
               <Text style={styles.detailLabel}>{translations.monthlyEMI}</Text>
-              <Text style={styles.detailValue}>₹{Number(params.emiAmount).toLocaleString()}</Text>
+              <Text style={styles.detailValue}>
+                ₹{Number(params.emiAmount).toLocaleString()}
+              </Text>
             </View>
             <View style={styles.detailItem}>
               <Ionicons name="time-outline" size={20} color="#8B4513" />
-              <Text style={styles.detailLabel}>{translations.maturityDate}</Text>
+              <Text style={styles.detailLabel}>
+                {translations.maturityDate}
+              </Text>
               <Text style={styles.detailValue}>{params.maturityDate}</Text>
             </View>
           </View>
         </View>
 
         {/* Transactions Section */}
-        <View style={[styles.transactionsCard, { backgroundColor: '#FFF8DC' }]}>
+        <View style={[styles.transactionsCard, { backgroundColor: "#FFF8DC" }]}>
           <View style={styles.transactionsHeader}>
-            <Text style={styles.sectionTitle}>{translations.transactionHistory}</Text>
+            <Text style={styles.sectionTitle}>
+              {translations.transactionHistory}
+            </Text>
             <TouchableOpacity style={styles.filterButton}>
               <Ionicons name="filter" size={20} color="#8B4513" />
             </TouchableOpacity>
@@ -458,37 +484,50 @@ const SavingsDetail = () => {
           ) : paymentHistrory.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Ionicons name="receipt-outline" size={48} color="#8B4513" />
-              <Text style={styles.emptyText}>{translations.noTransactionsFound}</Text>
+              <Text style={styles.emptyText}>
+                {translations.noTransactionsFound}
+              </Text>
             </View>
           ) : (
             <View style={styles.transactionsList}>
               {paymentHistrory.map((transaction, index) => (
-                <View key={transaction.paymentId?.toString() || index.toString()}>
+                <View
+                  key={transaction.paymentId?.toString() || index.toString()}
+                >
                   <TouchableOpacity
                     style={styles.transactionItem}
                     onPress={() => setSelectedTransaction(transaction)}
                   >
                     <View style={styles.transactionIcon}>
-                      <Ionicons name="checkmark-circle" size={24} color="#00cc44" />
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={24}
+                        color="#00cc44"
+                      />
                     </View>
                     <View style={styles.transactionInfo}>
                       <Text style={styles.transactionDate}>
-                        {new Date(transaction.paymentDate).toLocaleDateString("en-GB", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        })}
+                        {new Date(transaction.paymentDate).toLocaleDateString(
+                          "en-GB",
+                          {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          }
+                        )}
                       </Text>
-                      <Text style={styles.transactionId}>{transaction.transactionId}</Text>
+                      <Text style={styles.transactionId}>
+                        {transaction.transactionId}
+                      </Text>
                     </View>
                     <Text style={styles.transactionAmount}>
                       ₹{Number(transaction.amountPaid).toLocaleString()}
                     </Text>
                   </TouchableOpacity>
-                  
+
                   {/* Transaction Actions */}
                   <View style={styles.transactionActions}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.actionButton}
                       onPress={() => {
                         setSelectedTransaction(transaction);
@@ -497,12 +536,16 @@ const SavingsDetail = () => {
                       <Ionicons name="eye-outline" size={20} color="#8B4513" />
                       <Text style={styles.actionText}>View Invoice</Text>
                     </TouchableOpacity>
-                    
-                    <TouchableOpacity 
+
+                    <TouchableOpacity
                       style={styles.actionButton}
                       onPress={() => generateInvoicePDF(transaction)}
                     >
-                      <Ionicons name="download-outline" size={20} color="#8B4513" />
+                      <Ionicons
+                        name="download-outline"
+                        size={20}
+                        color="#8B4513"
+                      />
                       <Text style={styles.actionText}>Download</Text>
                     </TouchableOpacity>
                   </View>
@@ -513,13 +556,13 @@ const SavingsDetail = () => {
         </View>
 
         {/* Pay Now Button */}
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.payButton}
           onPress={PaymentNow}
           disabled={isLoading}
         >
           <LinearGradient
-            colors={['#850111', '#B8860B', '#DAA520']}
+            colors={["#850111", "#B8860B", "#DAA520"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.payButtonGradient}
@@ -553,7 +596,7 @@ const SavingsDetail = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <LinearGradient
-              colors={['#850111', '#B8860B', '#DAA520']}
+              colors={["#850111", "#B8860B", "#DAA520"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.modalHeader}
@@ -563,7 +606,7 @@ const SavingsDetail = () => {
                   <Ionicons name="receipt" size={24} color="#fff" />
                   <Text style={styles.modalTitle}>Transaction Details</Text>
                 </View>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.closeButton}
                   onPress={() => setSelectedTransaction(null)}
                 >
@@ -583,7 +626,9 @@ const SavingsDetail = () => {
               <View style={styles.amountContainer}>
                 <Text style={styles.amountLabel}>Amount Paid</Text>
                 <Text style={styles.amountValue}>
-                  ₹{selectedTransaction && Number(selectedTransaction.amountPaid).toLocaleString()}
+                  ₹
+                  {selectedTransaction &&
+                    Number(selectedTransaction.amountPaid).toLocaleString()}
                 </Text>
               </View>
 
@@ -591,16 +636,23 @@ const SavingsDetail = () => {
                 <View style={styles.detailCard}>
                   <View style={styles.detailRow}>
                     <View style={styles.detailIconContainer}>
-                      <Ionicons name="calendar-outline" size={20} color="#850111" />
+                      <Ionicons
+                        name="calendar-outline"
+                        size={20}
+                        color="#850111"
+                      />
                     </View>
                     <View style={styles.detailInfo}>
                       <Text style={styles.modalDetailLabel}>Date</Text>
                       <Text style={styles.modalDetailValue}>
-                        {selectedTransaction && new Date(selectedTransaction.paymentDate).toLocaleDateString("en-GB", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        })}
+                        {selectedTransaction &&
+                          new Date(
+                            selectedTransaction.paymentDate
+                          ).toLocaleDateString("en-GB", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })}
                       </Text>
                     </View>
                   </View>
@@ -610,19 +662,29 @@ const SavingsDetail = () => {
                       <Ionicons name="card-outline" size={20} color="#850111" />
                     </View>
                     <View style={styles.detailInfo}>
-                      <Text style={styles.modalDetailLabel}>Transaction ID</Text>
-                      <Text style={styles.modalDetailValue}>{selectedTransaction?.transactionId}</Text>
+                      <Text style={styles.modalDetailLabel}>
+                        Transaction ID
+                      </Text>
+                      <Text style={styles.modalDetailValue}>
+                        {selectedTransaction?.transactionId}
+                      </Text>
                     </View>
                   </View>
 
                   <View style={styles.detailRow}>
                     <View style={styles.detailIconContainer}>
-                      <Ionicons name="wallet-outline" size={20} color="#850111" />
+                      <Ionicons
+                        name="wallet-outline"
+                        size={20}
+                        color="#850111"
+                      />
                     </View>
                     <View style={styles.detailInfo}>
                       <Text style={styles.modalDetailLabel}>Payment Mode</Text>
                       <Text style={styles.modalDetailValue}>
-                        {(selectedTransaction?.paymentMode || "NB").toUpperCase()}
+                        {(
+                          selectedTransaction?.paymentMode || "NB"
+                        ).toUpperCase()}
                       </Text>
                     </View>
                   </View>
@@ -631,9 +693,11 @@ const SavingsDetail = () => {
             </View>
 
             <View style={styles.modalFooter}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.downloadButton}
-                onPress={() => selectedTransaction && generateInvoicePDF(selectedTransaction)}
+                onPress={() =>
+                  selectedTransaction && generateInvoicePDF(selectedTransaction)
+                }
               >
                 <Ionicons name="download-outline" size={20} color="#fff" />
                 <Text style={styles.downloadButtonText}>Copy Invoice</Text>
@@ -650,7 +714,7 @@ const styles = StyleSheet.create({
   payButton: {
     marginBottom: 20,
     borderRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -664,16 +728,16 @@ const styles = StyleSheet.create({
     }),
   },
   payButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     padding: 16,
     gap: 8,
   },
   payButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   summaryCard: {
     borderRadius: 16,
@@ -695,16 +759,16 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   schemeInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   schemeIconContainer: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255,255,255,0.15)",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 12,
   },
   schemeTextContainer: {
@@ -712,23 +776,23 @@ const styles = StyleSheet.create({
   },
   schemeName: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#fff',
+    fontWeight: "700",
+    color: "#fff",
     marginBottom: 3,
   },
   schemeDetails: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
   },
   schemeCode: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.8)',
+    color: "rgba(255,255,255,0.8)",
   },
   statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.15)",
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
@@ -738,32 +802,32 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#4caf50',
+    backgroundColor: "#4caf50",
   },
   statusText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   summaryStats: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    flexDirection: "row",
+    backgroundColor: "rgba(255,255,255,0.1)",
     borderRadius: 12,
     padding: 12,
     marginBottom: 14,
   },
   statItem: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   statIconContainer: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255,255,255,0.15)",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 10,
   },
   statInfo: {
@@ -771,52 +835,52 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 11,
-    color: 'rgba(255,255,255,0.8)',
+    color: "rgba(255,255,255,0.8)",
     marginBottom: 3,
   },
   statValue: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#fff',
+    fontWeight: "700",
+    color: "#fff",
   },
   statDivider: {
     width: 1,
     height: 32,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: "rgba(255,255,255,0.2)",
     marginHorizontal: 12,
   },
   progressSection: {
     marginTop: 14,
   },
   progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 6,
   },
   progressLabel: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: "600",
+    color: "#fff",
   },
   progressValue: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#fff',
+    fontWeight: "700",
+    color: "#fff",
   },
   progressBar: {
     height: 8,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: "rgba(255,255,255,0.2)",
     borderRadius: 4,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   progressFill: {
-    height: '100%',
-    backgroundColor: '#4caf50',
+    height: "100%",
+    backgroundColor: "#4caf50",
     borderRadius: 4,
   },
   detailsCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
@@ -834,35 +898,35 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#2C1810',
+    fontWeight: "700",
+    color: "#2C1810",
     marginBottom: 16,
   },
   detailsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 16,
   },
   detailItem: {
     flex: 1,
-    minWidth: '45%',
-    backgroundColor: '#F5DEB3',
+    minWidth: "45%",
+    backgroundColor: "#F5DEB3",
     padding: 16,
     borderRadius: 12,
   },
   detailLabel: {
     fontSize: 12,
-    color: '#8B4513',
+    color: "#8B4513",
     marginTop: 8,
     marginBottom: 4,
   },
   detailValue: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#2C1810',
+    fontWeight: "600",
+    color: "#2C1810",
   },
   transactionsCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
@@ -879,23 +943,23 @@ const styles = StyleSheet.create({
     }),
   },
   transactionsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
   filterButton: {
     padding: 8,
     borderRadius: 8,
-    backgroundColor: '#F5DEB3',
+    backgroundColor: "#F5DEB3",
   },
   transactionsList: {
     gap: 12,
   },
   transactionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5DEB3',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F5DEB3",
     padding: 16,
     borderRadius: 12,
   },
@@ -903,9 +967,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0,204,68,0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,204,68,0.1)",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 12,
   },
   transactionInfo: {
@@ -913,44 +977,44 @@ const styles = StyleSheet.create({
   },
   transactionDate: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#2C1810',
+    fontWeight: "600",
+    color: "#2C1810",
     marginBottom: 4,
   },
   transactionId: {
     fontSize: 12,
-    color: '#8B4513',
+    color: "#8B4513",
   },
   transactionAmount: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#2C1810',
+    fontWeight: "700",
+    color: "#2C1810",
   },
   loadingContainer: {
     padding: 40,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emptyContainer: {
     padding: 40,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emptyText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#8B4513',
-    textAlign: 'center',
+    color: "#8B4513",
+    textAlign: "center",
   },
   transactionActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    justifyContent: "flex-end",
     paddingHorizontal: 16,
     paddingBottom: 12,
     gap: 12,
   },
   actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5DEB3',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F5DEB3",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -969,20 +1033,20 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 12,
-    color: '#8B4513',
-    fontWeight: '600',
+    color: "#8B4513",
+    fontWeight: "600",
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContent: {
-    width: '90%',
-    backgroundColor: '#fff',
+    width: "90%",
+    backgroundColor: "#fff",
     borderRadius: 24,
-    overflow: 'hidden',
+    overflow: "hidden",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -999,68 +1063,68 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalHeaderContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   modalTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#fff',
+    fontWeight: "700",
+    color: "#fff",
   },
   closeButton: {
     padding: 4,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: "rgba(255,255,255,0.2)",
     borderRadius: 12,
   },
   modalBody: {
     padding: 20,
   },
   transactionStatus: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 24,
   },
   statusIconContainer: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(0,204,68,0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,204,68,0.1)",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 12,
   },
   modalStatusText: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#00cc44',
+    fontWeight: "600",
+    color: "#00cc44",
   },
   amountContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 24,
     padding: 16,
-    backgroundColor: '#FFF8DC',
+    backgroundColor: "#FFF8DC",
     borderRadius: 16,
   },
   amountLabel: {
     fontSize: 14,
-    color: '#8B4513',
+    color: "#8B4513",
     marginBottom: 4,
   },
   amountValue: {
     fontSize: 28,
-    fontWeight: '700',
-    color: '#850111',
+    fontWeight: "700",
+    color: "#850111",
   },
   detailsContainer: {
     marginBottom: 24,
   },
   detailCard: {
-    backgroundColor: '#FFF8DC',
+    backgroundColor: "#FFF8DC",
     borderRadius: 16,
     padding: 16,
     ...Platform.select({
@@ -1076,19 +1140,19 @@ const styles = StyleSheet.create({
     }),
   },
   detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: "#f0f0f0",
   },
   detailIconContainer: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F5DEB3',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#F5DEB3",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 12,
   },
   detailInfo: {
@@ -1096,33 +1160,33 @@ const styles = StyleSheet.create({
   },
   modalDetailLabel: {
     fontSize: 12,
-    color: '#8B4513',
+    color: "#8B4513",
     marginBottom: 2,
   },
   modalDetailValue: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#2C1810',
+    fontWeight: "600",
+    color: "#2C1810",
   },
   modalFooter: {
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    borderTopColor: "#f0f0f0",
   },
   downloadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#850111',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#850111",
     padding: 16,
     borderRadius: 12,
     gap: 8,
   },
   downloadButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 
-export default SavingsDetail; 
+export default SavingsDetail;

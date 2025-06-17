@@ -158,7 +158,7 @@ export default function KycForm() {
         if (res.data && res.data.data) {
           const kycData = res.data.data;
           setKycId(kycData.id?.toString() || null);
-          
+
           // Map the API response to form fields
           setFormData({
             doorno: kycData.doorno || "",
@@ -169,14 +169,16 @@ export default function KycForm() {
             state: kycData.state || "",
             country: kycData.country || "India",
             pincode: kycData.pincode || "",
-            dob: kycData.dob ? new Date(kycData.dob).toLocaleDateString("en-GB") : "",
+            dob: kycData.dob
+              ? new Date(kycData.dob).toLocaleDateString("en-GB")
+              : "",
             addressprooftype: kycData.addressproof || "",
             idNumber: kycData.enternumber || "",
             nominee_name: kycData.nominee_name || "",
             nominee_relationship: kycData.nominee_relationship || "",
           });
-          
-          console.log("Loaded KYC data:", kycData); // Add this for debugging
+
+          //console.log("Loaded KYC data:", kycData); // Add this for debugging
         }
       } catch (e) {
         console.error("Error fetching KYC:", e);
@@ -186,7 +188,12 @@ export default function KycForm() {
   }, [user?.id]);
 
   // Update the FormDatePicker component with proper types
-  const FormDatePicker: React.FC<FormDatePickerProps> = ({ label, value, onDateChange, error }) => {
+  const FormDatePicker: React.FC<FormDatePickerProps> = ({
+    label,
+    value,
+    onDateChange,
+    error,
+  }) => {
     const [showPicker, setShowPicker] = useState(false);
     const [selectedDate, setSelectedDate] = useState(
       value ? new Date(value.split("/").reverse().join("-")) : new Date()
@@ -419,7 +426,7 @@ export default function KycForm() {
   };
 
   const handleGoToSchemes = () => {
-    router.replace('/(tabs)/savings');
+    router.replace("/(tabs)/savings");
   };
 
   const handleRetryPayment = async () => {
@@ -434,7 +441,7 @@ export default function KycForm() {
         resizeMode="cover"
       >
         <LinearGradient
-          colors={['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.8)']}
+          colors={["rgba(0,0,0,0.6)", "rgba(0,0,0,0.8)"]}
           style={StyleSheet.absoluteFillObject}
         />
         <SafeAreaView style={styles.safeArea}>
@@ -459,7 +466,7 @@ export default function KycForm() {
               style={styles.scrollView}
               contentContainerStyle={[
                 styles.scrollViewContent,
-                { paddingBottom: keyboardVisible ? 200 : 100 }
+                { paddingBottom: keyboardVisible ? 200 : 100 },
               ]}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
@@ -468,7 +475,9 @@ export default function KycForm() {
               <View style={[styles.groupCard, styles.groupAddress]}>
                 <View style={styles.groupHeader}>
                   <Ionicons name="home-outline" size={24} color="#1976d2" />
-                  <Text style={[styles.groupTitle, { color: '#1976d2' }]}>Address Details</Text>
+                  <Text style={[styles.groupTitle, { color: "#1976d2" }]}>
+                    Address Details
+                  </Text>
                 </View>
                 <View style={styles.formContent}>
                   {/* Door Number */}
@@ -596,7 +605,9 @@ export default function KycForm() {
               <View style={[styles.groupCard, styles.groupIdProof]}>
                 <View style={styles.groupHeader}>
                   <Ionicons name="card-outline" size={24} color="#bfa14a" />
-                  <Text style={[styles.groupTitle, { color: '#bfa14a' }]}>ID Proof</Text>
+                  <Text style={[styles.groupTitle, { color: "#bfa14a" }]}>
+                    ID Proof
+                  </Text>
                 </View>
                 <View style={styles.formContent}>
                   <View style={styles.formGroup}>
@@ -611,7 +622,9 @@ export default function KycForm() {
                   <View style={styles.formGroup}>
                     <Text style={styles.label}>Address Proof Type</Text>
                     <RNPickerSelect
-                      onValueChange={(value) => handleChange("addressprooftype", value)}
+                      onValueChange={(value) =>
+                        handleChange("addressprooftype", value)
+                      }
                       onDonePress={() => {}}
                       placeholder={{ label: "Select your ID proof", value: "" }}
                       value={formData.addressprooftype}
@@ -623,7 +636,9 @@ export default function KycForm() {
                       useNativeAndroidPickerStyle={false}
                     />
                     {errors.addressprooftype && (
-                      <Text style={styles.errorText}>{errors.addressprooftype}</Text>
+                      <Text style={styles.errorText}>
+                        {errors.addressprooftype}
+                      </Text>
                     )}
                   </View>
                   <View style={styles.formGroup}>
@@ -631,7 +646,9 @@ export default function KycForm() {
                     <TextInput
                       style={styles.input}
                       placeholderTextColor="gray"
-                      placeholder={getPlaceholderText(formData.addressprooftype)}
+                      placeholder={getPlaceholderText(
+                        formData.addressprooftype
+                      )}
                       value={formData.idNumber}
                       onChangeText={(text) =>
                         handleChange(
@@ -640,10 +657,14 @@ export default function KycForm() {
                         )
                       }
                       autoCapitalize={
-                        formData.addressprooftype === "pan" ? "characters" : "none"
+                        formData.addressprooftype === "pan"
+                          ? "characters"
+                          : "none"
                       }
                       keyboardType={
-                        formData.addressprooftype === "pan" ? "default" : "number-pad"
+                        formData.addressprooftype === "pan"
+                          ? "default"
+                          : "number-pad"
                       }
                       maxLength={getMaxLength(formData.addressprooftype)}
                     />
@@ -658,7 +679,9 @@ export default function KycForm() {
               <View style={[styles.groupCard, styles.groupNominee]}>
                 <View style={styles.groupHeader}>
                   <Ionicons name="people-outline" size={24} color="#388e3c" />
-                  <Text style={[styles.groupTitle, { color: '#388e3c' }]}>Nominee Details</Text>
+                  <Text style={[styles.groupTitle, { color: "#388e3c" }]}>
+                    Nominee Details
+                  </Text>
                 </View>
                 <View style={styles.formContent}>
                   <View style={styles.formGroup}>
@@ -668,10 +691,14 @@ export default function KycForm() {
                       placeholder="Enter your nominee's full name"
                       placeholderTextColor="gray"
                       value={formData.nominee_name}
-                      onChangeText={(text) => handleChange("nominee_name", text)}
+                      onChangeText={(text) =>
+                        handleChange("nominee_name", text)
+                      }
                     />
                     {errors.nominee_name && (
-                      <Text style={styles.errorText}>{errors.nominee_name}</Text>
+                      <Text style={styles.errorText}>
+                        {errors.nominee_name}
+                      </Text>
                     )}
                   </View>
                   <View style={styles.formGroup}>
@@ -691,7 +718,9 @@ export default function KycForm() {
                       useNativeAndroidPickerStyle={false}
                     />
                     {errors.nominee_relationship && (
-                      <Text style={styles.errorText}>{errors.nominee_relationship}</Text>
+                      <Text style={styles.errorText}>
+                        {errors.nominee_relationship}
+                      </Text>
                     )}
                   </View>
                 </View>
@@ -705,7 +734,7 @@ export default function KycForm() {
                   activeOpacity={0.9}
                 >
                   <LinearGradient
-                    colors={['#850111', '#5a000b', '#2e0406']}
+                    colors={["#850111", "#5a000b", "#2e0406"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.gradientButton}
@@ -713,7 +742,12 @@ export default function KycForm() {
                     <Text style={styles.submitButtonText}>
                       {kycId ? "Update KYC" : "Submit KYC"}
                     </Text>
-                    <Ionicons name="arrow-forward" size={20} color="#FFC857" style={styles.buttonIcon} />
+                    <Ionicons
+                      name="arrow-forward"
+                      size={20}
+                      color="#FFC857"
+                      style={styles.buttonIcon}
+                    />
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
@@ -772,13 +806,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: 'rgba(133, 1, 17, 0.9)',
+    backgroundColor: "rgba(133, 1, 17, 0.9)",
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 200, 87, 0.3)',
+    borderBottomColor: "rgba(255, 200, 87, 0.3)",
   },
   backButton: {
     padding: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 8,
   },
   headerTitle: {
@@ -786,7 +820,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#FFC857",
     marginLeft: 12,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
@@ -800,24 +834,24 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     marginBottom: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    shadowColor: '#000',
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 4,
   },
   groupHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.1)',
+    borderBottomColor: "rgba(0,0,0,0.1)",
   },
   groupTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginLeft: 12,
   },
   formContent: {
@@ -854,11 +888,11 @@ const styles = StyleSheet.create({
   buttonContainer: {
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
     borderRadius: 24,
     marginTop: 16,
     marginBottom: 24,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
@@ -866,17 +900,17 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#850111',
+    overflow: "hidden",
+    shadowColor: "#850111",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
   },
   gradientButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 16,
     paddingHorizontal: 24,
   },
@@ -894,15 +928,15 @@ const styles = StyleSheet.create({
   },
   groupAddress: {
     borderLeftWidth: 4,
-    borderLeftColor: '#1976d2',
+    borderLeftColor: "#1976d2",
   },
   groupIdProof: {
     borderLeftWidth: 4,
-    borderLeftColor: '#bfa14a',
+    borderLeftColor: "#bfa14a",
   },
   groupNominee: {
     borderLeftWidth: 4,
-    borderLeftColor: '#388e3c',
+    borderLeftColor: "#388e3c",
   },
   dateInputWrapper: {
     flexDirection: "row",

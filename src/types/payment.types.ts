@@ -1,4 +1,4 @@
-import { Socket } from 'socket.io-client';
+import { Socket, DefaultEventsMap } from 'socket.io-client';
 
 export interface PaymentInitPayload {
   userId: string | number;

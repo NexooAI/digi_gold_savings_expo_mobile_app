@@ -1,5 +1,11 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+  useCallback,
+} from "react";
 import {
   View,
   ScrollView,
@@ -16,7 +22,7 @@ import {
   StatusBar,
   ActivityIndicator,
 } from "react-native";
-import { LinearGradient } from 'expo-linear-gradient';
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import LanguageSwitcher from "@/contexts/LanguageSwitcher";
 import LiveRateCard from "@/app/components/LiveRateCard";
@@ -32,11 +38,11 @@ import api, { schemes, rates, collections, posters } from "@/services/api";
 import NetInfo from "@react-native-community/netinfo";
 import { ScaledSheet, moderateScale } from "react-native-size-matters";
 import { theme } from "@/constants/theme";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import FlashBanner from '@/app/components/FlashBanner';
-import { Ionicons } from '@expo/vector-icons';
-import StatusView from '@/app/components/StatusView';
-import NotificationService from '@/services/NotificationService';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import FlashBanner from "@/app/components/FlashBanner";
+import { Ionicons } from "@expo/vector-icons";
+import StatusView from "@/app/components/StatusView";
+import NotificationService from "@/services/NotificationService";
 import { AppLocale } from "@/i18n";
 
 // Constants
@@ -51,31 +57,31 @@ const dummyData = {
     gold: {
       price: "7,315",
       purity: "24K",
-      image: require('../../../../../assets/images/gold.png'),
+      image: require("../../../../../assets/images/gold.png"),
     },
     silver: {
       price: "101.00",
       purity: "999",
-      image: require('../../../../../assets/images/silver.png'),
+      image: require("../../../../../assets/images/silver.png"),
     },
   },
   sliderImages: [
-    require('../../../../../assets/images/slider1.png'),
-    require('../../../../../assets/images/slider2.png'),
-    require('../../../../../assets/images/slider3.png'),
+    require("../../../../../assets/images/slider1.png"),
+    require("../../../../../assets/images/slider2.png"),
+    require("../../../../../assets/images/slider3.png"),
   ],
 };
 
 const banners: Banner[] = [
   {
     id: 2,
-    image: require('../../../../../assets/images/banner.png'),
-    schemeUrl: '/(app)/(tabs)/home/schemes',
+    image: require("../../../../../assets/images/banner.png"),
+    schemeUrl: "/(app)/(tabs)/home/schemes",
   },
   {
     id: 3,
-    image: require('../../../../../assets/images/banner2.png'),
-    schemeUrl: '/(app)/(tabs)/home/schemes',
+    image: require("../../../../../assets/images/banner2.png"),
+    schemeUrl: "/(app)/(tabs)/home/schemes",
   },
 ];
 
@@ -84,11 +90,11 @@ const defaultStatusImages: Collection[] = [
   {
     id: 1,
     name: "Gold Collection",
-    thumbnail: require('../../../../../assets/images/status1.jpg'),
+    thumbnail: require("../../../../../assets/images/status1.jpg"),
     status_images: [
-      require('../../../../../assets/images/status1.jpg'),
-      require('../../../../../assets/images/status2.jpg'),
-      require('../../../../../assets/images/status3.jpg'),
+      require("../../../../../assets/images/status1.jpg"),
+      require("../../../../../assets/images/status2.jpg"),
+      require("../../../../../assets/images/status3.jpg"),
     ],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -96,11 +102,11 @@ const defaultStatusImages: Collection[] = [
   {
     id: 2,
     name: "Silver Collection",
-    thumbnail: require('../../../../../assets/images/status2.jpg'),
+    thumbnail: require("../../../../../assets/images/status2.jpg"),
     status_images: [
-      require('../../../../../assets/images/status2.jpg'),
-      require('../../../../../assets/images/status3.jpg'),
-      require('../../../../../assets/images/status4.jpg'),
+      require("../../../../../assets/images/status2.jpg"),
+      require("../../../../../assets/images/status3.jpg"),
+      require("../../../../../assets/images/status4.jpg"),
     ],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -108,11 +114,11 @@ const defaultStatusImages: Collection[] = [
   {
     id: 3,
     name: "Diamond Collection",
-    thumbnail: require('../../../../../assets/images/status3.jpg'),
+    thumbnail: require("../../../../../assets/images/status3.jpg"),
     status_images: [
-      require('../../../../../assets/images/status3.jpg'),
-      require('../../../../../assets/images/status4.jpg'),
-      require('../../../../../assets/images/status5.jpg'),
+      require("../../../../../assets/images/status3.jpg"),
+      require("../../../../../assets/images/status4.jpg"),
+      require("../../../../../assets/images/status5.jpg"),
     ],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -120,11 +126,11 @@ const defaultStatusImages: Collection[] = [
   {
     id: 4,
     name: "Platinum Collection",
-    thumbnail: require('../../../../../assets/images/status4.jpg'),
+    thumbnail: require("../../../../../assets/images/status4.jpg"),
     status_images: [
-      require('../../../../../assets/images/status4.jpg'),
-      require('../../../../../assets/images/status5.jpg'),
-      require('../../../../../assets/images/status1.jpg'),
+      require("../../../../../assets/images/status4.jpg"),
+      require("../../../../../assets/images/status5.jpg"),
+      require("../../../../../assets/images/status1.jpg"),
     ],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -132,11 +138,11 @@ const defaultStatusImages: Collection[] = [
   {
     id: 5,
     name: "Exclusive Collection",
-    thumbnail: require('../../../../../assets/images/status5.jpg'),
+    thumbnail: require("../../../../../assets/images/status5.jpg"),
     status_images: [
-      require('../../../../../assets/images/status5.jpg'),
-      require('../../../../../assets/images/status1.jpg'),
-      require('../../../../../assets/images/status2.jpg'),
+      require("../../../../../assets/images/status5.jpg"),
+      require("../../../../../assets/images/status1.jpg"),
+      require("../../../../../assets/images/status2.jpg"),
     ],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -175,59 +181,58 @@ interface UserInfoCardProps {
 }
 
 // Components
-const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(({ 
-  userName, 
-  activeSchemesCount, 
-  onPress, 
-  totalGoldSavings = 0 
-}) => (
-  <TouchableOpacity 
-    style={styles.userInfoCard}
-    onPress={onPress}
-    activeOpacity={0.8}
-  >
-    <LinearGradient
-      colors={['#850111', '#5a000b']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.userInfoGradient}
+const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
+  ({ userName, activeSchemesCount, onPress, totalGoldSavings = 0 }) => (
+    <TouchableOpacity
+      style={styles.userInfoCard}
+      onPress={onPress}
+      activeOpacity={0.8}
     >
-      <View style={styles.userInfoTopRow}>
-        <View style={styles.welcomeContainer}>
-          <Text style={styles.welcomeText}>Welcome back,</Text>
-          <Text style={styles.userName}>{userName || 'Guest User'}</Text>
+      <LinearGradient
+        colors={["#850111", "#5a000b"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.userInfoGradient}
+      >
+        <View style={styles.userInfoTopRow}>
+          <View style={styles.welcomeContainer}>
+            <Text style={styles.welcomeText}>Welcome back,</Text>
+            <Text style={styles.userName}>{userName || "Guest User"}</Text>
+          </View>
+          <View style={styles.userAvatarContainer}>
+            <Ionicons name="person-circle" size={45} color="#FFD700" />
+          </View>
         </View>
-        <View style={styles.userAvatarContainer}>
-          <Ionicons name="person-circle" size={45} color="#FFD700" />
-        </View>
-      </View>
 
-      <View style={styles.statsRow}>
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Text style={styles.statLabel}>Active Schemes</Text>
-            <View style={styles.statValue}>
-              <Text style={styles.countText}>{activeSchemesCount || 0}</Text>
-              <Ionicons name="trending-up" size={16} color="#FFD700" />
+        <View style={styles.statsRow}>
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>Active Schemes</Text>
+              <View style={styles.statValue}>
+                <Text style={styles.countText}>{activeSchemesCount || 0}</Text>
+                <Ionicons name="trending-up" size={16} color="#FFD700" />
+              </View>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>Total Gold</Text>
+              <View style={styles.statValue}>
+                <Text style={styles.countText}>
+                  {totalGoldSavings.toFixed(3)}
+                </Text>
+                <Text style={styles.unitText}>g</Text>
+              </View>
             </View>
           </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statLabel}>Total Gold</Text>
-            <View style={styles.statValue}>
-              <Text style={styles.countText}>{totalGoldSavings.toFixed(3)}</Text>
-              <Text style={styles.unitText}>g</Text>
-            </View>
+          <View style={styles.viewMoreContainer}>
+            <Text style={styles.viewMoreText}>View Details</Text>
+            <Ionicons name="chevron-forward" size={20} color="#FFD700" />
           </View>
         </View>
-        <View style={styles.viewMoreContainer}>
-          <Text style={styles.viewMoreText}>View Details</Text>
-          <Ionicons name="chevron-forward" size={20} color="#FFD700" />
-        </View>
-      </View>
-    </LinearGradient>
-  </TouchableOpacity>
-));
+      </LinearGradient>
+    </TouchableOpacity>
+  )
+);
 
 export default function Home() {
   // State
@@ -239,7 +244,8 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const [showFlashBanner, setShowFlashBanner] = useState(false);
   const [activeSchemesCount, setActiveSchemesCount] = useState(0);
-  const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
+  const [selectedCollection, setSelectedCollection] =
+    useState<Collection | null>(null);
   const [showStatus, setShowStatus] = useState(false);
   const [collectionsData, setCollectionsData] = useState<Collection[]>([]);
   const [totalGoldSavings, setTotalGoldSavings] = useState(0);
@@ -272,66 +278,74 @@ export default function Home() {
   );
 
   // Utility functions
-  const formatDateToIndian = useCallback((isoString: string | null | undefined) => {
-    if (!isoString) return "N/A";
-    const date = new Date(isoString);
-    return date.toLocaleString("en-IN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true,
-    });
-  }, []);
+  const formatDateToIndian = useCallback(
+    (isoString: string | null | undefined) => {
+      if (!isoString) return "N/A";
+      const date = new Date(isoString);
+      return date.toLocaleString("en-IN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+      });
+    },
+    []
+  );
 
   const getFullImageUrl = useCallback((path: string) => {
-    if (!path) return '';
-    if (path.startsWith('http')) return path;
+    if (!path) return "";
+    if (path.startsWith("http")) return path;
     return `${theme.baseUrl}/${path}`;
   }, []);
 
   // Data fetching
   const fetchData = useCallback(async (isRefreshing = false) => {
     try {
-      console.log('Starting data fetch...');
+      //console.log('Starting data fetch...');
       isRefreshing ? setRefreshing(true) : setIsLoading(true);
 
-      const [schemesResponse, liveRatesResponse, collectionsResponse, postersResponse] = await Promise.all([
-        schemes.getSchemes().catch(error => {
-          console.error('Error fetching schemes:', error);
+      const [
+        schemesResponse,
+        liveRatesResponse,
+        collectionsResponse,
+        postersResponse,
+      ] = await Promise.all([
+        schemes.getSchemes().catch((error) => {
+          console.error("Error fetching schemes:", error);
           return { data: null };
         }),
-        rates.getLiveRates().catch(error => {
-          console.error('Error fetching rates:', error);
+        rates.getLiveRates().catch((error) => {
+          console.error("Error fetching rates:", error);
           return { data: null };
         }),
-        collections.getCollections().catch(error => {
-          console.error('Error fetching collections:', error);
+        collections.getCollections().catch((error) => {
+          console.error("Error fetching collections:", error);
           return { data: { data: [] } };
         }),
-        posters.getActivePosters().catch(error => {
-          console.error('Error fetching posters:', error);
+        posters.getActivePosters().catch((error) => {
+          console.error("Error fetching posters:", error);
           return { data: { data: [] } };
         }),
       ]);
 
-      console.log('Data fetch completed:', {
+      console.log("Data fetch completed:", {
         schemes: !!schemesResponse.data,
         rates: !!liveRatesResponse.data,
         collections: !!collectionsResponse.data,
-        posters: !!postersResponse.data
+        posters: !!postersResponse.data,
       });
 
       setSchemeData(schemesResponse.data);
       setRatesData(liveRatesResponse.data);
-      
+
       // Handle collections data with fallback
       if (collectionsResponse.data?.data?.length > 0) {
         setCollectionsData(collectionsResponse.data.data);
       } else {
-        console.log('No collections found, using default images');
+        //console.log('No collections found, using default images');
         setCollectionsData(defaultStatusImages);
       }
 
@@ -339,44 +353,53 @@ export default function Home() {
       if (postersResponse.data?.data?.length > 0) {
         const images = postersResponse.data.data.map((poster: any) => ({
           id: poster.id,
-          image: poster.image.startsWith('http') ? poster.image : `${theme.baseUrl}${poster.image}`,
+          image: poster.image.startsWith("http")
+            ? poster.image
+            : `${theme.baseUrl}${poster.image}`,
           title: poster.title,
         }));
-        console.log("=======================",images);
+        //console.log("=======================",images);
         setSliderImages(images);
       } else {
-        console.log('No posters found, using dummy images');
-        setSliderImages(dummyData.sliderImages.map((image, index) => ({
-          id: index,
-          image,
-          title: `Slider ${index + 1}`,
-        })));
+        //console.log('No posters found, using dummy images');
+        setSliderImages(
+          dummyData.sliderImages.map((image, index) => ({
+            id: index,
+            image,
+            title: `Slider ${index + 1}`,
+          }))
+        );
       }
 
       if (liveRatesResponse.data?.data?.gold_rate) {
-        await AsyncStorage.setItem('gold_rate', liveRatesResponse.data.data.gold_rate);
+        await AsyncStorage.setItem(
+          "gold_rate",
+          liveRatesResponse.data.data.gold_rate
+        );
       }
     } catch (error) {
       console.error("Error in fetchData:", error);
       // Set default data on error
       setCollectionsData(defaultStatusImages);
-      setSliderImages(dummyData.sliderImages.map((image, index) => ({
-        id: index,
-        image,
-        title: `Slider ${index + 1}`,
-      })));
+      setSliderImages(
+        dummyData.sliderImages.map((image, index) => ({
+          id: index,
+          image,
+          title: `Slider ${index + 1}`,
+        }))
+      );
       Alert.alert(
         "Error",
         "Failed to fetch data. Please check your internet connection and try again.",
         [
           {
             text: "Retry",
-            onPress: () => fetchData(true)
+            onPress: () => fetchData(true),
           },
           {
             text: "OK",
-            style: "cancel"
-          }
+            style: "cancel",
+          },
         ]
       );
     } finally {
@@ -388,7 +411,7 @@ export default function Home() {
   const FetchFlashNews = useCallback(async () => {
     const response = await api.get("flash-news/active");
     setFlashNews(response.data.data);
-    console.log(response.data.data);
+    //console.log(response.data.data);
   }, []);
 
   const fetchActiveSchemesCount = useCallback(async () => {
@@ -401,12 +424,14 @@ export default function Home() {
       const response = await api.get(`investments/user_investments/${user.id}`);
       const investments = response.data.data || [];
       setActiveSchemesCount(investments.length || 0);
-      
+
       const totalGold = investments.reduce((sum: number, investment: any) => {
-        const goldWeight = investment.totalgoldweight ? parseFloat(investment.totalgoldweight) : 0;
+        const goldWeight = investment.totalgoldweight
+          ? parseFloat(investment.totalgoldweight)
+          : 0;
         return sum + goldWeight;
       }, 0);
-      
+
       setTotalGoldSavings(totalGold);
     } catch (error) {
       console.error("Error fetching active schemes count:", error);
@@ -417,13 +442,13 @@ export default function Home() {
 
   // Effects
   useEffect(() => {
-    console.log('Initial data fetch...');
+    //console.log('Initial data fetch...');
     fetchData();
   }, [fetchData]);
 
   useEffect(() => {
     if (user) {
-      console.log('Fetching user data...');
+      //console.log('Fetching user data...');
       fetchActiveSchemesCount();
       FetchFlashNews();
     }
@@ -431,14 +456,14 @@ export default function Home() {
 
   useEffect(() => {
     if (user) {
-      console.log('Setting up notifications...');
+      //console.log('Setting up notifications...');
       NotificationService.sendTokenToApi();
     }
   }, [user]);
 
   useEffect(() => {
     const checkBanner = async () => {
-      const seen = await AsyncStorage.getItem('flashBannerSeen');
+      const seen = await AsyncStorage.getItem("flashBannerSeen");
       if (!seen) setShowFlashBanner(true);
     };
     checkBanner();
@@ -478,67 +503,78 @@ export default function Home() {
 
   const handleCloseBanner = useCallback(async () => {
     setShowFlashBanner(false);
-    await AsyncStorage.setItem('flashBannerSeen', 'true');
+    await AsyncStorage.setItem("flashBannerSeen", "true");
   }, []);
 
   // Render functions
-  const renderBanner = useCallback(({ item }: { item: Banner }) => (
-    <TouchableOpacity
-      style={styles.bannerItem}
-      onPress={() => router.push(item.schemeUrl)}
-      activeOpacity={0.9}
-    >
-      <Image
-        source={item.image}
-        style={styles.bannerImage}
-        resizeMode="cover"
-      />
-    </TouchableOpacity>
-  ), [router]);
+  const renderBanner = useCallback(
+    ({ item }: { item: Banner }) => (
+      <TouchableOpacity
+        style={styles.bannerItem}
+        onPress={() => router.push(item.schemeUrl)}
+        activeOpacity={0.9}
+      >
+        <Image
+          source={item.image}
+          style={styles.bannerImage}
+          resizeMode="cover"
+        />
+      </TouchableOpacity>
+    ),
+    [router]
+  );
 
-  const renderStatusItem = useCallback(({ item }: { item: Collection }) => (
-    <TouchableOpacity
-      style={styles.statusItem}
-      onPress={() => {
-        setSelectedCollection(item);
-        setShowStatus(true);
-      }}
-    >
-      <View style={styles.statusItemWrapper}>
-        <View style={styles.statusImageContainer}>
-          <Image
-            source={typeof item.thumbnail === 'string' ? { uri: getFullImageUrl(item.thumbnail) } : item.thumbnail}
-            style={styles.statusImage}
-            resizeMode="cover"
-          />
+  const renderStatusItem = useCallback(
+    ({ item }: { item: Collection }) => (
+      <TouchableOpacity
+        style={styles.statusItem}
+        onPress={() => {
+          setSelectedCollection(item);
+          setShowStatus(true);
+        }}
+      >
+        <View style={styles.statusItemWrapper}>
+          <View style={styles.statusImageContainer}>
+            <Image
+              source={
+                typeof item.thumbnail === "string"
+                  ? { uri: getFullImageUrl(item.thumbnail) }
+                  : item.thumbnail
+              }
+              style={styles.statusImage}
+              resizeMode="cover"
+            />
+          </View>
+          <Text style={styles.statusItemName} numberOfLines={1}>
+            {item.name}
+          </Text>
         </View>
-        <Text style={styles.statusItemName} numberOfLines={1}>
-          {item.name}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  ), [getFullImageUrl]);
+      </TouchableOpacity>
+    ),
+    [getFullImageUrl]
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar
-        backgroundColor="#5a000b"
-        barStyle="light-content"
-      />
+      <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
       <ImageBackground
-        source={require('../../../../../assets/images/bg_new.jpg')}
+        source={require("../../../../../assets/images/bg_new.jpg")}
         style={styles.backgroundImage}
         resizeMode="contain"
       >
         {showFlashBanner && (
           <FlashBanner
-            imageSource={require('../../../../../assets/images/flashbanner.png')}
+            imageSource={require("../../../../../assets/images/flashbanner.png")}
             onClose={handleCloseBanner}
           />
         )}
         <View style={styles.mainContainer}>
           <View style={styles.headerWrapper}>
-            <AppHeader showBackButton={false} backRoute="index" showLanguageSwitcher={true} />
+            <AppHeader
+              showBackButton={false}
+              backRoute="index"
+              showLanguageSwitcher={true}
+            />
           </View>
 
           <ScrollView
@@ -555,11 +591,20 @@ export default function Home() {
             <View style={styles.ratesContainer}>
               {ratesData?.data ? (
                 <>
-                  <View style={[styles.rateCard, !ratesData.data.silver_rate && styles.singleRateCard]}>
+                  <View
+                    style={[
+                      styles.rateCard,
+                      !ratesData.data.silver_rate && styles.singleRateCard,
+                    ]}
+                  >
                     <LiveRateCard
                       type={translations.gold}
-                      rate={ratesData.data.gold_rate || dummyData.rates.gold.price}
-                      lastupdated={formatDateToIndian(ratesData.data.updated_at)}
+                      rate={
+                        ratesData.data.gold_rate || dummyData.rates.gold.price
+                      }
+                      lastupdated={formatDateToIndian(
+                        ratesData.data.updated_at
+                      )}
                       image={dummyData.rates.gold.image}
                       isSingle={!ratesData.data.silver_rate}
                     />
@@ -569,7 +614,9 @@ export default function Home() {
                       <LiveRateCard
                         type={translations.silver}
                         rate={ratesData.data.silver_rate}
-                        lastupdated={formatDateToIndian(ratesData.data.updated_at)}
+                        lastupdated={formatDateToIndian(
+                          ratesData.data.updated_at
+                        )}
                         image={dummyData.rates.silver.image}
                       />
                     </View>
@@ -580,8 +627,12 @@ export default function Home() {
                   <View style={styles.rateWarningContent}>
                     <Ionicons name="warning" size={24} color="#FFD700" />
                     <View style={styles.rateWarningTextContainer}>
-                      <Text style={styles.rateWarningTitle}>Live Rates Unavailable</Text>
-                      <Text style={styles.rateWarningSubtitle}>Please try again later</Text>
+                      <Text style={styles.rateWarningTitle}>
+                        Live Rates Unavailable
+                      </Text>
+                      <Text style={styles.rateWarningSubtitle}>
+                        Please try again later
+                      </Text>
                     </View>
                   </View>
                   <View style={styles.rateWarningRates}>
@@ -591,7 +642,9 @@ export default function Home() {
                     </View>
                     <View style={styles.rateWarningDivider} />
                     <View style={styles.rateWarningRateItem}>
-                      <Text style={styles.rateWarningRateLabel}>Silver Rate</Text>
+                      <Text style={styles.rateWarningRateLabel}>
+                        Silver Rate
+                      </Text>
                       <Text style={styles.rateWarningRateValue}>0.00</Text>
                     </View>
                   </View>
@@ -630,11 +683,11 @@ export default function Home() {
                 duration={8000}
               />
 
-              <UserInfoCard 
+              <UserInfoCard
                 userName={user?.name}
                 activeSchemesCount={activeSchemesCount}
                 totalGoldSavings={totalGoldSavings}
-                onPress={() => router.push('/(tabs)/savings')}
+                onPress={() => router.push("/(tabs)/savings")}
               />
 
               <View style={styles.sectionHeader}>
@@ -643,7 +696,9 @@ export default function Home() {
                   <Text style={styles.sectionHeaderText}>Active Schemes</Text>
                   <View style={styles.sectionHeaderLine} />
                 </View>
-                <Text style={styles.sectionHeaderSubtext}>Explore our exclusive gold savings plans</Text>
+                <Text style={styles.sectionHeaderSubtext}>
+                  Explore our exclusive gold savings plans
+                </Text>
               </View>
 
               <View style={styles.bannerContainer}>
@@ -657,9 +712,7 @@ export default function Home() {
                 />
               </View>
 
-              
-                  <YouTubeVideo />
-                
+              <YouTubeVideo />
 
               <SupportContactCard />
               <View style={styles.spacer} />
@@ -669,7 +722,13 @@ export default function Home() {
           <StatusView
             collections={collectionsData}
             isVisible={showStatus}
-            initialCollectionIndex={selectedCollection ? collectionsData.findIndex(c => c.id === selectedCollection.id) : 0}
+            initialCollectionIndex={
+              selectedCollection
+                ? collectionsData.findIndex(
+                    (c) => c.id === selectedCollection.id
+                  )
+                : 0
+            }
             onClose={() => {
               setShowStatus(false);
               setSelectedCollection(null);
@@ -687,12 +746,12 @@ const styles = StyleSheet.create({
   },
   backgroundImage: {
     flex: 1,
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   mainContainer: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
   headerWrapper: {
     width: "100%",
@@ -743,7 +802,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   bannerContainer: {
-    width: '100%',
+    width: "100%",
     marginVertical: 10,
     paddingHorizontal: 10,
   },
@@ -754,20 +813,20 @@ const styles = StyleSheet.create({
   bannerItem: {
     marginHorizontal: 5,
     borderRadius: 8,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   bannerImage: {
     width: screenWidth - 35,
     height: 200,
-    borderRadius:20,
+    borderRadius: 20,
   },
   userInfoCard: {
-    width: '90%',
+    width: "90%",
     borderRadius: 16,
     marginVertical: 10,
-    overflow: 'hidden',
+    overflow: "hidden",
     elevation: 5,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -779,9 +838,9 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   userInfoTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
   welcomeContainer: {
@@ -789,79 +848,79 @@ const styles = StyleSheet.create({
   },
   welcomeText: {
     fontSize: moderateScale(12),
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: "rgba(255, 255, 255, 0.7)",
     marginBottom: 2,
   },
   userName: {
     fontSize: moderateScale(18),
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
   userAvatarContainer: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
     marginLeft: 10,
   },
   statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
     borderRadius: 10,
     padding: 10,
   },
   statsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 16,
     flex: 1,
   },
   statItem: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
   },
   statLabel: {
     fontSize: moderateScale(11),
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: "rgba(255, 255, 255, 0.7)",
     marginBottom: 2,
   },
   statValue: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   countText: {
     fontSize: moderateScale(16),
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontWeight: "bold",
+    color: "#FFFFFF",
   },
   unitText: {
     fontSize: moderateScale(12),
-    color: '#FFD700',
-    fontWeight: '600',
+    color: "#FFD700",
+    fontWeight: "600",
   },
   statDivider: {
     width: 1,
     height: 30,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
   },
   viewMoreContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
     marginLeft: 12,
   },
   viewMoreText: {
     fontSize: moderateScale(11),
-    color: '#FFD700',
-    fontWeight: '600',
+    color: "#FFD700",
+    fontWeight: "600",
   },
   statusContainer: {
-    width: '100%',
+    width: "100%",
     marginVertical: 10,
   },
   statusListContent: {
@@ -869,21 +928,21 @@ const styles = StyleSheet.create({
   },
   statusItem: {
     marginHorizontal: 5,
-    alignItems: 'center',
+    alignItems: "center",
   },
   statusItemWrapper: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   statusImageContainer: {
     width: STATUS_IMAGE_SIZE,
     height: STATUS_IMAGE_SIZE,
     borderRadius: STATUS_BORDER_RADIUS,
     borderWidth: 2,
-    borderColor: '#850111',
+    borderColor: "#850111",
     padding: 2,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     marginBottom: 6,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -893,28 +952,28 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   statusImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     borderRadius: STATUS_BORDER_RADIUS - 2,
   },
   statusItemName: {
     fontSize: 12,
-    color: '#850111',
-    textAlign: 'center',
+    color: "#850111",
+    textAlign: "center",
     width: STATUS_IMAGE_SIZE,
-    fontWeight: '600',
-    textShadowColor: 'rgba(255, 255, 255, 0.5)',
+    fontWeight: "600",
+    textShadowColor: "rgba(255, 255, 255, 0.5)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 1,
   },
   headerLanguageButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   languageIcon: {
     fontSize: 16,
@@ -922,83 +981,83 @@ const styles = StyleSheet.create({
   },
   headerLanguageText: {
     fontSize: 12,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontWeight: "bold",
+    color: "#FFFFFF",
   },
   sliderLoadingContainer: {
-    width: '100%',
+    width: "100%",
     height: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
     borderRadius: 8,
     marginVertical: 10,
   },
   sectionHeader: {
-    width: '100%',
+    width: "100%",
     paddingHorizontal: 10,
     marginTop: 20,
     marginBottom: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   sectionHeaderContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
   },
   sectionHeaderLine: {
     height: 1.5,
     width: 20,
-    backgroundColor: '#FFD700',
+    backgroundColor: "#FFD700",
     marginHorizontal: 5,
   },
   sectionHeaderText: {
     fontSize: moderateScale(16),
-    fontWeight: '700',
-    color: '#850111',
-    textTransform: 'uppercase',
+    fontWeight: "700",
+    color: "#850111",
+    textTransform: "uppercase",
     letterSpacing: 0.3,
-    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowColor: "rgba(0, 0, 0, 0.1)",
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 1,
   },
   sectionHeaderSubtext: {
     fontSize: moderateScale(11),
-    color: '#666',
+    color: "#666",
     marginTop: 4,
-    textAlign: 'center',
-    fontStyle: 'italic',
+    textAlign: "center",
+    fontStyle: "italic",
   },
   videoContainer: {
-    width: '100%',
+    width: "100%",
     paddingHorizontal: 10,
     marginVertical: 15,
   },
   videoHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 12,
     paddingHorizontal: 5,
   },
   videoTitle: {
     fontSize: moderateScale(16),
-    fontWeight: '700',
-    color: '#850111',
-    textTransform: 'uppercase',
+    fontWeight: "700",
+    color: "#850111",
+    textTransform: "uppercase",
     letterSpacing: 0.3,
     marginRight: 10,
   },
   videoHeaderLine: {
     flex: 1,
     height: 1.5,
-    backgroundColor: '#FFD700',
+    backgroundColor: "#FFD700",
   },
   videoWrapper: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 20,
     padding: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -1008,15 +1067,15 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   rateWarningContainer: {
-    width: '90%',
-    backgroundColor: 'rgba(133, 1, 17, 0.9)',
+    width: "90%",
+    backgroundColor: "rgba(133, 1, 17, 0.9)",
     borderRadius: 16,
     padding: 16,
     marginVertical: 10,
   },
   rateWarningContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 12,
   },
   rateWarningTextContainer: {
@@ -1025,40 +1084,40 @@ const styles = StyleSheet.create({
   },
   rateWarningTitle: {
     fontSize: moderateScale(16),
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: "700",
+    color: "#FFFFFF",
     marginBottom: 4,
   },
   rateWarningSubtitle: {
     fontSize: moderateScale(12),
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: "rgba(255, 255, 255, 0.7)",
   },
   rateWarningRates: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
     borderRadius: 12,
     padding: 12,
   },
   rateWarningRateItem: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
   },
   rateWarningRateLabel: {
     fontSize: moderateScale(12),
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: "rgba(255, 255, 255, 0.7)",
     marginBottom: 4,
   },
   rateWarningRateValue: {
     fontSize: moderateScale(18),
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontWeight: "bold",
+    color: "#FFFFFF",
   },
   rateWarningDivider: {
     width: 1,
     height: 30,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     marginHorizontal: 12,
   },
 });

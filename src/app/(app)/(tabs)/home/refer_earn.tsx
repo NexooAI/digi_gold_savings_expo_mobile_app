@@ -36,9 +36,9 @@ export default function ReferCodeScreen() {
         message: `Use my referral code ${code} to sign up and earn rewards! Download the app here: https://play.google.com/store/search?q=dcjewellers&c=apps`,
       });
       if (result.action === Share.sharedAction) {
-        console.log("Shared successfully");
+        //console.log("Shared successfully");
       } else if (result.action === Share.dismissedAction) {
-        console.log("Share dismissed");
+        //console.log("Share dismissed");
       }
     } catch (error: any) {
       Alert.alert("Error", error.message);

@@ -7,7 +7,7 @@ if (Platform.OS === 'android') {
   try {
     SmsRetriever = require('react-native-sms-retriever').default;
   } catch (error) {
-    console.log('SMS Retriever not available:', error);
+    //console.log('SMS Retriever not available:', error);
   }
 }
 
@@ -17,17 +17,17 @@ interface UseOtpAutoFetchProps {
   senderName?: string;
 }
 
-export const useOtpAutoFetch = ({ 
-  onOtpReceived, 
-  isActive, 
-  senderName = 'Dc Jewellery' 
+export const useOtpAutoFetch = ({
+  onOtpReceived,
+  isActive,
+  senderName = 'Dc Jewellery'
 }: UseOtpAutoFetchProps) => {
   const smsListenerRef = useRef<any>(null);
 
   // Extract OTP from message based on your SMS format
   const extractOtpFromMessage = (message: string): string | null => {
-    console.log('Received SMS message:', message);
-    
+    //console.log('Received SMS message:', message);
+
     // Multiple patterns to match different OTP formats
     const patterns = [
       // Pattern for "Your OTP for Dc Jewellery DigitalApp registration is 5799"
@@ -45,12 +45,12 @@ export const useOtpAutoFetch = ({
       const match = message.match(pattern);
       if (match) {
         const otp = match[1];
-        console.log('Extracted OTP:', otp);
+        //console.log('Extracted OTP:', otp);
         return otp;
       }
     }
 
-    console.log('No OTP pattern matched');
+    //console.log('No OTP pattern matched');
     return null;
   };
 
@@ -93,15 +93,15 @@ export const useOtpAutoFetch = ({
       ];
 
       const results = await PermissionsAndroid.requestMultiple(permissions);
-      
+
       // Check if all permissions are granted
       const allGranted = Object.values(results).every(
         result => result === PermissionsAndroid.RESULTS.GRANTED
       );
 
       if (!allGranted) {
-        console.log('SMS permissions not granted:', results);
-        
+        //console.log('SMS permissions not granted:', results);
+
         // Check if any permission is permanently denied
         const hasPermanentDenial = Object.values(results).some(
           result => result === 'never_ask_again'
@@ -110,7 +110,7 @@ export const useOtpAutoFetch = ({
         if (hasPermanentDenial) {
           showPermissionDeniedAlert();
         }
-        
+
         return false;
       }
 
@@ -124,23 +124,23 @@ export const useOtpAutoFetch = ({
   // Start SMS listening for Android
   const startSmsListener = async () => {
     if (Platform.OS !== 'android' || !SmsRetriever) {
-      console.log('SMS Retriever not available for this platform');
+      //console.log('SMS Retriever not available for this platform');
       return;
     }
 
     try {
       const hasPermission = await requestSmsPermission();
       if (!hasPermission) {
-        console.log('SMS permissions denied');
+        //console.log('SMS permissions denied');
         return;
       }
 
       // Start SMS listener
       await SmsRetriever.requestPhoneNumber();
-      
+
       smsListenerRef.current = SmsRetriever.addSmsListener((event: any) => {
-        console.log('SMS Listener Event:', event);
-        
+        //console.log('SMS Listener Event:', event);
+
         if (event && event.message) {
           // Check if SMS is from the expected sender
           const isFromExpectedSender = event.message
@@ -150,7 +150,7 @@ export const useOtpAutoFetch = ({
           if (isFromExpectedSender) {
             const otp = extractOtpFromMessage(event.message);
             if (otp) {
-              console.log('Auto-filled OTP:', otp);
+              //console.log('Auto-filled OTP:', otp);
               onOtpReceived(otp);
               stopSmsListener(); // Stop listening after successful OTP extraction
             }
@@ -158,7 +158,7 @@ export const useOtpAutoFetch = ({
         }
       });
 
-      console.log('SMS listener started successfully');
+      //console.log('SMS listener started successfully');
     } catch (error) {
       console.error('Error starting SMS listener:', error);
     }
@@ -172,7 +172,7 @@ export const useOtpAutoFetch = ({
           SmsRetriever.removeSmsListener();
         }
         smsListenerRef.current = null;
-        console.log('SMS listener stopped');
+        //console.log('SMS listener stopped');
       } catch (error) {
         console.error('Error stopping SMS listener:', error);
       }

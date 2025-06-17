@@ -58,7 +58,7 @@ export default function RootLayout() {
     const subscription = Notifications.addNotificationResponseReceivedListener(
       (response) => {
         // Handle notification tap
-        console.log("Notification tapped:", response);
+        // //console.log("Notification tapped:", response);
       }
     );
 
@@ -117,10 +117,7 @@ export default function RootLayout() {
         }
 
         // On main tabs, show exit confirmation
-        if (
-          currentRoute?.name === "(tabs)" ||
-          currentRoute?.name === "index"
-        ) {
+        if (currentRoute?.name === "(tabs)" || currentRoute?.name === "index") {
           Alert.alert(
             "Exit App",
             "Are you sure you want to exit?",
@@ -162,16 +159,28 @@ export default function RootLayout() {
           <LanguageProvider1>
             <GlobalLoadingProvider>
               <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="intro" options={{ gestureEnabled: false }} />
-                <Stack.Screen name="(app)" options={{ gestureEnabled: false }} />
-                <Stack.Screen name="(auth)" options={{ gestureEnabled: false }} />
-                <Stack.Screen name="login" options={{ gestureEnabled: false }} />
-                <Stack.Screen 
-                  name="[...missing]" 
-                  options={{ 
+                <Stack.Screen
+                  name="intro"
+                  options={{ gestureEnabled: false }}
+                />
+                <Stack.Screen
+                  name="(app)"
+                  options={{ gestureEnabled: false }}
+                />
+                <Stack.Screen
+                  name="(auth)"
+                  options={{ gestureEnabled: false }}
+                />
+                <Stack.Screen
+                  name="login"
+                  options={{ gestureEnabled: false }}
+                />
+                <Stack.Screen
+                  name="[...missing]"
+                  options={{
                     gestureEnabled: false,
-                    animation: 'fade',
-                  }} 
+                    animation: "fade",
+                  }}
                 />
               </Stack>
             </GlobalLoadingProvider>

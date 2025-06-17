@@ -113,9 +113,9 @@ export default function SavingsScreen() {
     setLoading(true);
     setError(null);
     try {
-      console.log("=== FETCHING SAVINGS LIST ===");
+      //console.log("=== FETCHING SAVINGS LIST ===");
       const response = await api.get(`investments/user_investments/${user.id}`);
-      console.log("Raw API Response:", JSON.stringify(response.data, null, 2));
+      //console.log("Raw API Response:", JSON.stringify(response.data, null, 2));
 
       const investments = response.data.data || [];
 
@@ -367,18 +367,18 @@ export default function SavingsScreen() {
         userId: user?.id,
         investmentId: item.id,
         schemeId: item.schemeCode,
-        chitId: item?.chitData?.chitId || "",
+        chitId: item?.chitData?.chitId,
         name: item.accountHolder,
         accNo: item.accNo,
         mobile: user?.mobile,
         email: user?.email,
-        paymentFrequency: item.paymentFrequency || "Monthly",
-        schemeName: item.schemeName || "",
+        paymentFrequency: item.paymentFrequency,
+        schemeName: item.schemeName,
         amount: item.emiAmount,
       };
 
       router.push({
-        pathname: "/(tabs)/home/payment",
+        pathname: "/(tabs)/home/paymentNewOverView",
         params: {
           amount: item.emiAmount?.toString() || "0",
           userDetails: JSON.stringify(userDetails),
