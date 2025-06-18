@@ -135,7 +135,7 @@ export default function SavingsScreen() {
             schemeId: "",
             schemeName: "",
             type: "gold",
-            schemeType: "weight",
+            schemeType: "weight", 
           };
           const chit = item.chits || {
             amount: "0",
@@ -302,10 +302,11 @@ export default function SavingsScreen() {
 
   // Enhanced Scheme Card Component
   const EnhancedSchemeCard = ({ item }: { item: Scheme }) => {
+    console.log(item)
     const bgColors: readonly [string, string, string] =
       item.metalType === "gold"
         ? ([
-            "rgba(133, 1, 17, 0.95)",
+            "rgba(1, 133, 69, 0.95)",
             "rgba(90, 0, 11, 0.95)",
             "rgba(46, 4, 6, 0.95)",
           ] as const)
@@ -338,6 +339,7 @@ export default function SavingsScreen() {
     };
 
     const handleNavigation = (item: Scheme) => {
+      console.log("schems datas ",item)
       if (!item) return;
       router.push({
         pathname: "/(tabs)/savings/SavingsDetail",
@@ -356,7 +358,7 @@ export default function SavingsScreen() {
           chitId: item?.chitData?.chitId || "",
           schemesData: JSON.stringify(item.schemesData || {}),
           transactions: JSON.stringify(item.transactions || []),
-          paymentFrequency: item.paymentFrequency || "Monthly",
+          paymentFrequency: item.paymentFrequency,
         },
       });
     };
@@ -395,14 +397,14 @@ export default function SavingsScreen() {
         <ImageBackground
           source={
             item.metalType === "gold"
-              ? require("../../../../../assets/images/gold.png")
+              ? require("../../../../../assets/images/gold_pattern.jpg")
               : require("../../../../../assets/images/silver.png")
           }
           style={styles.cardBackgroundImage}
           imageStyle={styles.cardBackgroundImageStyle}
           resizeMode="cover"
         >
-          <LinearGradient colors={bgColors} style={styles.cardContainer}>
+          {/* <LinearGradient colors={bgColors} style={styles.cardContainer}> */}
             <View style={styles.cardHeader}>
               <View style={styles.schemeInfo}>
                 <View
@@ -418,7 +420,7 @@ export default function SavingsScreen() {
                         : "cube-outline"
                     }
                     size={24}
-                    color="#FFFFFF"
+                    color="#000"
                   />
                 </View>
                 <View style={styles.schemeTitleContainer}>
@@ -442,9 +444,7 @@ export default function SavingsScreen() {
                       ]}
                     >
                       <Text style={styles.savingTypeText}>
-                        {item.schemesData?.schemeType === "flexi"
-                          ? "Flexi"
-                          : "Fixed"}
+                        {item.schemesData?.paymentFrequencyName === 'Flexi'? 'Flexi':'Fixed' }
                       </Text>
                     </View>
                   </View>
@@ -457,7 +457,7 @@ export default function SavingsScreen() {
                     {
                       backgroundColor:
                         item.status === "ACTIVE"
-                          ? "rgba(0, 255, 0, 0.2)"
+                          ? "rgba(8, 237, 8, 0.56)"
                           : "rgba(255, 0, 0, 0.2)",
                     },
                   ]}
@@ -466,7 +466,7 @@ export default function SavingsScreen() {
                     style={[
                       styles.statusText,
                       {
-                        color: item.status === "ACTIVE" ? "#00FF00" : "#FF0000",
+                        color: item.status === "ACTIVE" ? "#000" : "#FF0000",
                       },
                     ]}
                   >
@@ -505,7 +505,7 @@ export default function SavingsScreen() {
                   <Ionicons name="card-outline" size={16} color="#FFFFFF" />
                 </View>
                 <Text style={styles.accountLabel}>A/C No:</Text>
-                <Text style={styles.accountValue}>{item.accNo}</Text>
+                <Text style={styles.accountValue}>DCJ-{item.accNo}</Text>
               </View>
             </View>
 
@@ -654,7 +654,7 @@ export default function SavingsScreen() {
                 </LinearGradient>
               </TouchableOpacity>
             </Animated.View>
-          </LinearGradient>
+          {/* </LinearGradient> */}
         </ImageBackground>
       </TouchableOpacity>
     );
@@ -663,7 +663,7 @@ export default function SavingsScreen() {
   const ListHeader = () => (
     <View style={styles.headerContainer}>
       <LinearGradient
-        colors={["#850111", "#5a000b", "#2e0406"]}
+        colors={["#1a1a2e", "#16213e", "#0f3460"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.portfolioCard}
@@ -674,19 +674,19 @@ export default function SavingsScreen() {
               {translations.yourGoldPortfolio}
             </Text>
             <View style={styles.portfolioBadge}>
-              <Ionicons name="star" size={10} color="#fff" />
+              <Ionicons name="star" size={12} color="#ffd700" />
               <Text style={styles.portfolioBadgeText}>Premium</Text>
             </View>
           </View>
           <View style={styles.portfolioIconContainer}>
-            <Ionicons name="medal" size={24} color="#fff" />
+            <Ionicons name="albums" size={28} color="#ffd700" />
           </View>
         </View>
 
         <View style={styles.portfolioStats}>
           <View style={styles.statItem}>
             <View style={styles.statIconContainer}>
-              <Ionicons name="wallet-outline" size={18} color="#fff" />
+              <Ionicons name="wallet-outline" size={20} color="#ffd700" />
             </View>
             <View style={styles.statInfo}>
               <Text style={styles.statLabel}>{translations.totalInvested}</Text>
@@ -698,7 +698,7 @@ export default function SavingsScreen() {
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <View style={styles.statIconContainer}>
-              <Ionicons name="diamond-outline" size={18} color="#fff" />
+              <Ionicons name="diamond-outline" size={20} color="#ffd700" />
             </View>
             <View style={styles.statInfo}>
               <Text style={styles.statLabel}>{translations.gold}</Text>
@@ -709,11 +709,11 @@ export default function SavingsScreen() {
 
         <View style={styles.portfolioFooter}>
           <View style={styles.footerItem}>
-            <Ionicons name="trending-up" size={12} color="#fff" />
+            <Ionicons name="trending-up" size={14} color="#4ade80" />
             <Text style={styles.footerText}>Growing Portfolio</Text>
           </View>
           <View style={styles.footerItem}>
-            <Ionicons name="shield-checkmark" size={12} color="#fff" />
+            <Ionicons name="shield-checkmark" size={14} color="#60a5fa" />
             <Text style={styles.footerText}>Secure Investment</Text>
           </View>
         </View>
@@ -726,14 +726,14 @@ export default function SavingsScreen() {
     <View style={styles.emptyStateContainer}>
       <LinearGradient
         colors={[
-          "rgba(133, 1, 17, 0.1)",
-          "rgba(90, 0, 11, 0.1)",
-          "rgba(46, 4, 6, 0.1)",
+          "rgba(20, 20, 162, 0.9)",
+          "rgba(65, 6, 77, 0.7)",
+          "rgba(15, 96, 58, 0.9)",
         ]}
         style={styles.emptyStateCard}
       >
         <View style={styles.emptyStateIconContainer}>
-          <Ionicons name="trending-up" size={40} color="#850111" />
+          <Ionicons name="trending-up" size={40} color="#ffd700" />
         </View>
         <Image
           source={theme.image.no_data}
@@ -750,7 +750,7 @@ export default function SavingsScreen() {
           style={styles.emptyStateButton}
           onPress={() => router.push("/(tabs)/home/schemes")}
         >
-          <Ionicons name="add-circle-outline" size={20} color="#fff" />
+          <Ionicons name="add-circle-outline" size={20} color="#000" />
           <Text style={styles.emptyStateButtonText}>Start New Savings</Text>
         </TouchableOpacity>
       </LinearGradient>
@@ -806,7 +806,7 @@ export default function SavingsScreen() {
         resizeMode="cover"
       >
         <LinearGradient
-          colors={["rgba(0,0,0,0.0)", "rgba(0,0,0,0.0)"]}
+          colors={["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.02)", "rgba(0, 0, 0, 0.01)"]}
           style={StyleSheet.absoluteFillObject}
         />
 
@@ -837,22 +837,22 @@ export default function SavingsScreen() {
 
 const styles = StyleSheet.create({
   headerContainer: {
-    paddingBottom: 16,
+    paddingBottom: 20,
     paddingHorizontal: 16,
   },
   portfolioCard: {
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 20,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.12,
-        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.25,
+        shadowRadius: 12,
       },
       android: {
-        elevation: 4,
+        elevation: 8,
       },
     }),
   },
@@ -860,53 +860,59 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 16,
   },
   portfolioTitleContainer: {
     flex: 1,
   },
   portfolioTitle: {
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: 20,
+    fontWeight: "800",
     color: "#fff",
-    marginBottom: 4,
-    textShadowColor: "rgba(0, 0, 0, 0.2)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    marginBottom: 6,
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
     letterSpacing: 0.5,
   },
   portfolioBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.2)",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
+    backgroundColor: "rgba(255,215,0,0.2)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
     alignSelf: "flex-start",
+    borderWidth: 1,
+    borderColor: "rgba(255,215,0,0.3)",
   },
   portfolioBadgeText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "600",
-    marginLeft: 3,
+    color: "#ffd700",
+    fontSize: 11,
+    fontWeight: "700",
+    marginLeft: 4,
     letterSpacing: 0.5,
   },
   portfolioIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255,215,0,0.15)",
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,215,0,0.2)",
   },
   portfolioStats: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
   },
   statItem: {
     flex: 1,
@@ -914,42 +920,44 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   statIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,215,0,0.15)",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 10,
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,215,0,0.2)",
   },
   statInfo: {
     flex: 1,
   },
   statLabel: {
-    fontSize: 11,
-    color: "rgba(255,255,255,0.9)",
-    marginBottom: 3,
+    fontSize: 12,
+    color: "rgba(255,255,255,0.8)",
+    marginBottom: 4,
     fontWeight: "500",
     letterSpacing: 0.3,
   },
   statValue: {
-    fontSize: 15,
-    fontWeight: "700",
+    fontSize: 16,
+    fontWeight: "800",
     color: "#fff",
     letterSpacing: 0.5,
   },
   statDivider: {
     width: 1,
-    height: 32,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    marginHorizontal: 12,
+    height: 36,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    marginHorizontal: 16,
   },
   portfolioFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
     borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.2)",
-    paddingTop: 10,
+    borderTopColor: "rgba(255,255,255,0.15)",
+    paddingTop: 12,
   },
   footerItem: {
     flexDirection: "row",
@@ -957,42 +965,44 @@ const styles = StyleSheet.create({
   },
   footerText: {
     color: "rgba(255,255,255,0.9)",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
-    marginLeft: 4,
+    marginLeft: 6,
     letterSpacing: 0.3,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "800",
-    color: "#850111",
+    color: "rgba(0, 0, 0, 0.89)",
     textAlign: "center",
-    marginBottom: 16,
-    textShadowColor: "rgba(0,0,0,0.3)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+    marginBottom: 20,
+    textShadowColor: "rgba(34, 34, 209, 0.24)",
+    textShadowOffset: { width: 1, height: 2 },
+    textShadowRadius: 4,
+    letterSpacing: 0.5,
   },
   cardWrapper: {
     marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 20,
+    marginBottom: 20,
+    borderRadius: 24,
     overflow: "hidden",
-    elevation: 4,
+    elevation: 6,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
   },
   cardWrapperActive: {
     transform: [{ scale: 1.02 }],
-    elevation: 8,
-    shadowOpacity: 0.2,
+    elevation: 10,
+    shadowOpacity: 0.25,
   },
   cardBackgroundImage: {
-    width: "100%",
+    flex:1
   },
   cardBackgroundImageStyle: {
-    borderRadius: 20,
+    borderRadius: 24,
+    resizeMode: 'cover',
   },
   cardContainer: {
     padding: 16,
@@ -1001,7 +1011,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    // marginBottom: 12,
+    margin:10
   },
   schemeInfo: {
     flexDirection: "row",
@@ -1022,7 +1033,7 @@ const styles = StyleSheet.create({
   schemeTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#FFFFFF",
+    color: "#000",
     marginBottom: 4,
   },
   schemeSubtitleContainer: {
@@ -1037,7 +1048,7 @@ const styles = StyleSheet.create({
   metalTypeText: {
     fontSize: 12,
     fontWeight: "500",
-    color: "#FFFFFF",
+    color: "#000",
   },
   savingTypeBadge: {
     paddingHorizontal: 8,
@@ -1046,8 +1057,8 @@ const styles = StyleSheet.create({
   },
   savingTypeText: {
     fontSize: 12,
-    fontWeight: "500",
-    color: "#FFFFFF",
+    fontWeight: "700",
+    color: "#000",
   },
   headerRight: {
     flexDirection: "row",
@@ -1067,7 +1078,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: "rgba(110, 31, 31, 0.37)",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -1086,18 +1097,18 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "rgba(133, 1, 17, 0.1)",
+    backgroundColor: "rgba(228, 16, 41, 0.62)",
     justifyContent: "center",
     alignItems: "center",
   },
   accountLabel: {
     fontSize: 12,
-    color: "rgba(255, 255, 255, 0.8)",
+    color: "rgba(0, 0, 0, 0.8)",
   },
   accountValue: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "700",
+    color: "rgb(0, 0, 0)",
   },
   cardContent: {
     overflow: "hidden",
@@ -1113,33 +1124,33 @@ const styles = StyleSheet.create({
     minWidth: "45%",
     alignItems: "center",
     padding: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
+    backgroundColor: "rgba(255, 255, 255, 0)",
     borderRadius: 12,
   },
   infoIconContainer: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "rgba(133, 1, 17, 0.1)",
+    backgroundColor: "rgba(228, 16, 41, 0.62)",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
   },
   infoLabel: {
     fontSize: 12,
-    color: "rgba(255, 255, 255, 0.8)",
+    color: "rgba(7, 0, 0, 0.8)",
     marginBottom: 4,
   },
   infoValue: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#000",
   },
   dateContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
+    backgroundColor: "rgba(45, 22, 17, 0.78)",
     borderRadius: 12,
     padding: 12,
     marginBottom: 16,
@@ -1192,7 +1203,7 @@ const styles = StyleSheet.create({
   progressLabel: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#FFFFFF",
+    color: "#000",
   },
   progressStats: {
     flexDirection: "row",
@@ -1202,15 +1213,15 @@ const styles = StyleSheet.create({
   progressValue: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: "#000",
   },
   progressMonths: {
     fontSize: 12,
-    color: "rgba(255, 255, 255, 0.8)",
+    color: "rgba(14, 13, 13, 0.8)",
   },
   progressBar: {
     height: 8,
-    backgroundColor: "rgba(0, 0, 0, 0.1)",
+    backgroundColor: "rgba(255, 255, 255, 0.84)",
     borderRadius: 4,
     overflow: "hidden",
     marginBottom: 12,
@@ -1235,7 +1246,7 @@ const styles = StyleSheet.create({
   },
   monthLabel: {
     fontSize: 12,
-    color: "rgba(255, 255, 255, 0.8)",
+    color: "rgba(18, 18, 18, 0.8)",
   },
   monthValue: {
     fontSize: 12,
@@ -1269,21 +1280,21 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   emptyStateCard: {
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: 24,
+    padding: 32,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(133, 1, 17, 0.2)",
+    borderColor: "rgba(255,215,0,0.2)",
     backgroundColor: "rgba(255, 255, 255, 0.05)",
     ...Platform.select({
       ios: {
-        shadowColor: "#850111",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.25,
+        shadowRadius: 12,
       },
       android: {
-        elevation: 4,
+        elevation: 8,
       },
     }),
   },
@@ -1291,10 +1302,12 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "rgba(133, 1, 17, 0.1)",
+    backgroundColor: "rgba(255,215,0,0.15)",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,215,0,0.2)",
   },
   emptyStateImage: {
     width: 200,
@@ -1304,13 +1317,16 @@ const styles = StyleSheet.create({
   emptyStateTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "white",
+    color: "#fff",
     textAlign: "center",
     marginBottom: 8,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 1, height: 2 },
+    textShadowRadius: 4,
   },
   emptyStateSubtitle: {
     fontSize: 14,
-    color: "#666",
+    color: "rgba(255,255,255,0.8)",
     textAlign: "center",
     marginBottom: 24,
     lineHeight: 20,
@@ -1318,37 +1334,37 @@ const styles = StyleSheet.create({
   emptyStateButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#850111",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
+    backgroundColor: "#ffd700",
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    borderRadius: 16,
     ...Platform.select({
       ios: {
-        shadowColor: "#850111",
-        shadowOffset: { width: 0, height: 2 },
+        shadowColor: "#ffd700",
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
-        shadowRadius: 4,
+        shadowRadius: 8,
       },
       android: {
-        elevation: 4,
+        elevation: 6,
       },
     }),
   },
   emptyStateButtonText: {
-    color: "#fff",
+    color: "#1a1a2e",
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
     marginLeft: 8,
   },
   payNowButton: {
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: "rgba(255, 255, 255, 0.74)",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
     marginRight: 8,
   },
   payNowButtonText: {
-    color: "#FFFFFF",
+    color: "#000",
     fontSize: 12,
     fontWeight: "600",
   },

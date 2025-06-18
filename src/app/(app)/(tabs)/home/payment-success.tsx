@@ -65,7 +65,13 @@ export default function PaymentSuccess() {
       useNativeDriver: true
     }).start(() => router.replace('/(tabs)/home'));
   };
-
+  const handleSavingsPress = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true
+    }).start(() => router.replace('/(tabs)/savings'));
+  };
   const checkmarkScale = checkmarkAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 1]
@@ -146,6 +152,15 @@ export default function PaymentSuccess() {
             activeOpacity={0.9}
           >
             <Text style={styles.buttonText}>{t('backToHome')}</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity 
+            style={styles.button}
+            onPress={handleSavingsPress}
+            activeOpacity={0.9}
+          >
+            <Text style={styles.buttonText}>{t('backToSavings')}</Text>
           </TouchableOpacity>
         </View>
       </Animated.View>

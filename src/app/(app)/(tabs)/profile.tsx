@@ -128,6 +128,7 @@ const ProfileScreen = () => {
     });
     setEditing(false);
     Alert.alert(t("successTitle") || "Success", "Profile updated successfully");
+    
   };
 
   const handleEditToggle = () => {
@@ -352,6 +353,7 @@ const ProfileScreen = () => {
                     placeholder="Enter mobile number"
                     placeholderTextColor="#999"
                     keyboardType="phone-pad"
+                    editable={false}
                   />
                 </View>
 

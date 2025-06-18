@@ -204,86 +204,86 @@ const SavingsDetail = () => {
       }
 
       // Store comprehensive payment data for retry functionality using global store
-      const paymentRetryData = {
-        // Payment payload data
-        paymentData: {
-          amount: Number(params.emiAmount),
-          userId: user.id || "",
-          investmentId: params.id,
-          schemeId: params.schemeCode,
-          chitId: params.chitId,
-          userEmail: user.email || "",
-          userMobile: user.mobile?.toString() || "",
-          userName: params.accountHolder,
-        },
+      // const paymentRetryData = {
+      //   // Payment payload data
+      //   paymentData: {
+      //     amount: Number(params.emiAmount),
+      //     userId: user.id || "",
+      //     investmentId: params.id,
+      //     schemeId: params.schemeCode,
+      //     chitId: params.chitId,
+      //     userEmail: user.email || "",
+      //     userMobile: user.mobile?.toString() || "",
+      //     userName: params.accountHolder,
+      //   },
 
-        // Investment payload data
-        investmentData: {
-          userId: user.id || "",
-          schemeId: params.schemeCode,
-          chitId: params.chitId,
-          accountName: params.accountHolder,
-          accountNo: params.accNo,
-          paymentAmount: Number(params.emiAmount),
-          investmentId: params.id,
-        },
+      //   // Investment payload data
+      //   investmentData: {
+      //     userId: user.id || "",
+      //     schemeId: params.schemeCode,
+      //     chitId: params.chitId,
+      //     accountName: params.accountHolder,
+      //     accountNo: params.accNo,
+      //     paymentAmount: Number(params.emiAmount),
+      //     investmentId: params.id,
+      //   },
 
-        // Transaction payload data
-        transactionData: {
-          userId: user.id || "",
-          investmentId: params.id,
-          schemeId: params.schemeCode,
-          chitId: params.chitId,
-          accountNumber: params.accNo,
-          amount: Number(params.emiAmount),
-        },
+      //   // Transaction payload data
+      //   transactionData: {
+      //     userId: user.id || "",
+      //     investmentId: params.id,
+      //     schemeId: params.schemeCode,
+      //     chitId: params.chitId,
+      //     accountNumber: params.accNo,
+      //     amount: Number(params.emiAmount),
+      //   },
 
-        // UI/Display data
-        displayData: {
-          schemeName: params.schemeName,
-          accountHolder: params.accountHolder,
-          accNo: params.accNo,
-          totalPaid: params.totalPaid,
-          monthsPaid: params.monthsPaid,
-          noOfIns: params.noOfIns,
-          goldWeight: params.goldWeight,
-          maturityDate: params.maturityDate,
-          paymentFrequency: params.paymentFrequency || "Monthly",
-        },
+      //   // UI/Display data
+      //   displayData: {
+      //     schemeName: params.schemeName,
+      //     accountHolder: params.accountHolder,
+      //     accNo: params.accNo,
+      //     totalPaid: params.totalPaid,
+      //     monthsPaid: params.monthsPaid,
+      //     noOfIns: params.noOfIns,
+      //     goldWeight: params.goldWeight,
+      //     maturityDate: params.maturityDate,
+      //     paymentFrequency: params.paymentFrequency || "Monthly",
+      //   },
 
-        // Timestamp for retry reference
-        timestamp: new Date().toISOString(),
-        source: "savings_detail",
-      };
+      //   // Timestamp for retry reference
+      //   timestamp: new Date().toISOString(),
+      //   source: "savings_detail",
+      // };
 
-      // Store payment retry data in global store
-      const { storePaymentRetryData, storePaymentSession } =
-        useGlobalStore.getState();
-      storePaymentRetryData(paymentRetryData);
+      // // Store payment retry data in global store
+      // const { storePaymentRetryData, storePaymentSession } =
+      //   useGlobalStore.getState();
+      // storePaymentRetryData(paymentRetryData);
 
-      // Store current payment session data
-      const currentPaymentSession = {
-        amount: Number(params.emiAmount),
-        userDetails: {
-          accountname: params.accountHolder,
-          accNo: params.accNo,
-          name: params.accountHolder,
-          mobile: user.mobile?.toString() || "",
-          email: user.email || "",
-          userId: user.id || "",
-          investmentId: params.id,
-          chitId: params.chitId,
-          schemeId: params.schemeCode,
-          paymentFrequency: params.paymentFrequency || "Monthly",
-          // Additional context
-          isRetryAttempt: false,
-          originalPaymentTimestamp: paymentRetryData.timestamp,
-          source: "savings_detail",
-        },
-        timestamp: new Date().toISOString(),
-      };
+      // // Store current payment session data
+      // const currentPaymentSession = {
+      //   amount: Number(params.emiAmount),
+      //   userDetails: {
+      //     accountname: params.accountHolder,
+      //     accNo: params.accNo,
+      //     name: params.accountHolder,
+      //     mobile: user.mobile?.toString() || "",
+      //     email: user.email || "",
+      //     userId: user.id || "",
+      //     investmentId: params.id,
+      //     chitId: params.chitId,
+      //     schemeId: params.schemeCode,
+      //     paymentFrequency: params.paymentFrequency || "Monthly",
+      //     // Additional context
+      //     isRetryAttempt: false,
+      //     originalPaymentTimestamp: paymentRetryData.timestamp,
+      //     source: "savings_detail",
+      //   },
+      //   timestamp: new Date().toISOString(),
+      // };
 
-      storePaymentSession(currentPaymentSession);
+      // storePaymentSession(currentPaymentSession);
 
       //console.log("Payment data stored successfully in global store");
 
@@ -292,8 +292,22 @@ const SavingsDetail = () => {
         pathname: "/(tabs)/home/paymentNewOverView",
         params: {
           amount: params.emiAmount,
-          sessionId: Date.now().toString(),
-          paymentFrequency: params.paymentFrequency || "Monthly",
+          schemeName:params.schemeName,
+          schemeId: responce?.data.schemeId,
+          chitId: responce?.data?.chitId,
+          paymentFrequency: params.paymentFrequency,
+          schemeType:params.schemesData.schemeTypeName,
+          userDetails: JSON.stringify({
+            accountname: params.accountHolder,
+            accNo: params.accNo,
+            associated_branch: 1,
+            investmentId: responce?.data?.investmentId,
+            schemeId: responce?.data?.schemeId,
+            schemeType: params.schemesData.schemeTypeName,
+            schemeName: params?.schemeName, // Also inside userDetails for redundancy
+            paymentFrequency: params?.paymentFrequency,
+            chitId: responce?.data?.chitId,
+          }),
         },
       });
     } catch (error) {

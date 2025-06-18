@@ -405,8 +405,8 @@ const styles = StyleSheet.create({
     color: "#ffffff",
   },
   otpInputEmpty: {
-    borderColor: "rgba(255, 255, 255, 0.2)",
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: "rgba(174, 28, 28, 0.2)",
+    backgroundColor: "rgba(255, 255, 255, 0.52)",
   },
   otpInputFilled: {
     borderColor: theme.colors.secondary,

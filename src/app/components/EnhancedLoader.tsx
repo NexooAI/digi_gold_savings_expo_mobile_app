@@ -181,7 +181,7 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
           ]}
         >
           <LinearGradient
-            colors={['#FFD700', '#FFA500', '#FFD700']}
+            colors={['#de1836', '#FFA500', '#de1836']}
             style={styles.ringGradient}
           />
         </Animated.View>
@@ -211,7 +211,7 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
         >
           {/* DC Jewellers animated gold GIF */}
           <Image
-            source={require('../../../assets/images/gold_animate.gif')}
+            source={require('../../../assets/images/adaptive-icon.png')}
             style={[styles.logo, { width: logoSize, height: logoSize }]}
             resizeMode="contain"
           />
@@ -315,8 +315,8 @@ const styles = StyleSheet.create({
   },
   ringGradient: {
     flex: 1,
-    borderRadius: 1000,
-    borderWidth: 3,
+    borderRadius: 100,
+    borderWidth: 1,
     borderColor: 'transparent',
   },
   innerGlow: {

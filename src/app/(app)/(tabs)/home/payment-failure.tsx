@@ -66,6 +66,13 @@ export default function PaymentFailure() {
     }).start(() => router.replace('/(tabs)/home'));
   };
 
+  const handleRetry = ()=>{
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true
+    }).start(() => router.back());
+  }
   const iconScale = iconAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 1]
@@ -138,7 +145,15 @@ export default function PaymentFailure() {
             </View>
           </View>
         </View>
-
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity 
+            style={styles.button}
+            onPress={handleRetry}
+            activeOpacity={0.9}
+          >
+            <Text style={styles.buttonText}>{t('retry')}</Text>
+          </TouchableOpacity>
+        </View>
         <View style={styles.buttonContainer}>
           <TouchableOpacity 
             style={styles.button}

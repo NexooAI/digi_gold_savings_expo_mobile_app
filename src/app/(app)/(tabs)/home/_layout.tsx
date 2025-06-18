@@ -73,10 +73,6 @@ export default function HomeLayout() {
         name="refer_earn"
         options={{ title: "Refer & Earn", headerShown: false }}
       />
-      <Stack.Screen
-        name="payment"
-        options={{ title: "Payment Process", headerShown: false }}
-      />
        <Stack.Screen
         name="paymentNewOverView"
         options={{ title: "Payment Process", headerShown: false }}
@@ -91,10 +87,6 @@ export default function HomeLayout() {
       />
       <Stack.Screen
         name="payment-failure"
-        options={{ title: "Payment Failure", headerShown: false }}
-      />
-       <Stack.Screen
-        name="PaymentFailure"
         options={{ title: "Payment Failure", headerShown: false }}
       />
       {/* <Stack.Screen name="live-rates" options={{ title: "Live Rate", headerShown: false }} /> */}

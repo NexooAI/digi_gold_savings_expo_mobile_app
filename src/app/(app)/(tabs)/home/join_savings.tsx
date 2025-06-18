@@ -1165,13 +1165,15 @@ export default function JoinSavings() {
         Alert.alert("Error", "User not found. Please log in again.");
         return;
       }
+      console.log("formData ,selectedChit", formData ,selectedChit)
       const payload = {
         userId: user.id,
         schemeId: Number(schemeId),
         chitId: selectedChit ? selectedChit.CHITID : null,
         accountName: formData.accountname,
         associated_branch: formData.associated_branch,
-        payment_frequency_id: 4,
+        payment_frequency_id:  selectedChit && selectedChit.PAYMENT_FREQUENCY_ID
+        ,
       };
       //console.log(payload ,selectedChit );
       api

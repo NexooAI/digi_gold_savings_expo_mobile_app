@@ -28,6 +28,10 @@ export default function PaymentNewOverView() {
   const [isTermsAccepted, setIsTermsAccepted] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [termsContent, setTermsContent] = useState("test");
+  const [currentAmount, setCurrentAmount] = useState(Number(params.amount) || 0);
+  const [goldRate, setGoldRate] = useState(0);
+  const [weightPerGram, setWeightPerGram] = useState(0);
+
   // Parse user details only once when component mounts
   useEffect(() => {
     if (params.userDetails && !userDetails) {
@@ -39,6 +43,42 @@ export default function PaymentNewOverView() {
       }
     }
   }, []); // Empty dependency array to run only once
+
+  // Fetch gold rate
+  const fetchGoldRate = async () => {
+    try {
+      const response = await api.get("/rates/current");
+      console.log(response)
+      if (response?.data?.data?.gold_rate) {
+        setGoldRate(Number(response?.data?.data?.gold_rate));
+        calculateWeightPerGram(currentAmount, response.data.data.gold_rate);
+      }
+    } catch (error) {
+      console.error("Error fetching gold rate:", error);
+    }
+  };
+
+  // Calculate weight per gram based on amount and gold rate
+  const calculateWeightPerGram = (amount: number, rate: number) => {
+    if (rate > 0) {
+      const weight = amount / rate;
+      setWeightPerGram(weight);
+    }
+  };
+
+  // Handle amount adjustment
+  const adjustAmount = (increment: number) => {
+    const newAmount = currentAmount + increment;
+    if (newAmount >= 0) {
+      setCurrentAmount(newAmount);
+      calculateWeightPerGram(newAmount, goldRate);
+    }
+  };
+
+  useEffect(() => {
+    fetchGoldRate();
+  }, []);
+
   const fetchTermsAndConditions = async () => {
     const response = await api.get("/policies/type/terms_and_conditions");
     setTermsContent(response.data.data.description);
@@ -53,8 +93,12 @@ export default function PaymentNewOverView() {
       currency: "INR",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(Number(params.amount) || 0);
-  }, [params.amount]);
+    }).format(currentAmount);
+  }, [currentAmount]);
+
+  const formattedWeight = useMemo(() => {
+    return weightPerGram.toFixed(3);
+  }, [weightPerGram]);
 
   const handlePayment = async () => {
     if (!userDetails) {
@@ -65,7 +109,7 @@ export default function PaymentNewOverView() {
       //console.log("userDetails ======>", userDetails, params);
       const payload: PaymentInitPayload = {
         userId: userDetails.userId,
-        amount: Number(params.amount),
+        amount: currentAmount,
         investmentId: userDetails.investmentId,
         schemeId: Array.isArray(params.schemeId)
           ? params.schemeId[0]
@@ -88,7 +132,7 @@ export default function PaymentNewOverView() {
             orderId: orderId, // Add orderId to params
             userDetails: JSON.stringify({
               ...userDetails,
-              amount: params.amount,
+              amount: currentAmount,
               orderId: orderId, // Include orderId in userDetails
               investmentId: Array.isArray(params.investmentId)
                 ? params.investmentId[0]
@@ -184,7 +228,64 @@ export default function PaymentNewOverView() {
             />
             <Text style={styles.amountTitle}>{t("totalAmount")}</Text>
           </View>
-          <Text style={styles.amountValue}>{formattedAmount}</Text>
+          
+          <View style={styles.amountAdjustmentContainer}>
+            <TouchableOpacity
+              style={styles.arrowButton}
+              onPress={() => adjustAmount(-1000)}
+            >
+              <Ionicons
+                name="chevron-back"
+                size={24}
+                color={theme.colors.secondary}
+              />
+            </TouchableOpacity>
+            
+            <View style={styles.amountDisplay}>
+              <Text style={styles.amountValue}>{formattedAmount}</Text>
+              <Text style={styles.weightText}>
+                {formattedWeight} grams (₹{Number(goldRate).toFixed(2)}/gram)
+              </Text>
+            </View>
+            
+            <TouchableOpacity
+              style={styles.arrowButton}
+              onPress={() => adjustAmount(1000)}
+            >
+              <Ionicons
+                name="chevron-forward"
+                size={24}
+                color={theme.colors.secondary}
+              />
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.quickAdjustButtons}>
+            <TouchableOpacity
+              style={styles.quickButton}
+              onPress={() => adjustAmount(-500)}
+            >
+              <Text style={styles.quickButtonText}>-500</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.quickButton}
+              onPress={() => adjustAmount(-100)}
+            >
+              <Text style={styles.quickButtonText}>-100</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.quickButton}
+              onPress={() => adjustAmount(100)}
+            >
+              <Text style={styles.quickButtonText}>+100</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.quickButton}
+              onPress={() => adjustAmount(500)}
+            >
+              <Text style={styles.quickButtonText}>+500</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Scheme Details Card */}
@@ -199,15 +300,15 @@ export default function PaymentNewOverView() {
           </View>
           <View style={styles.detailsRow}>
             <Text style={styles.detailLabel}>{t("schemeName")}</Text>
-            <Text style={styles.detailValue}>{params.schemeName}</Text>
+            <Text style={styles.detailValue}>{params.schemeName?.toString().toUpperCase()}</Text>
           </View>
           <View style={styles.detailsRow}>
             <Text style={styles.detailLabel}>{t("schemeType")}</Text>
-            <Text style={styles.detailValue}>{params.schemeType}</Text>
+            <Text style={styles.detailValue}>{params.schemeType?.toString().toUpperCase()}</Text>
           </View>
           <View style={styles.detailsRow}>
             <Text style={styles.detailLabel}>{t("paymentFrequency")}</Text>
-            <Text style={styles.detailValue}>{params.paymentFrequency}</Text>
+            <Text style={styles.detailValue}>{params.paymentFrequency?.toString().toUpperCase()}</Text>
           </View>
         </View>
 
@@ -336,11 +437,48 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontWeight: "600",
   },
+  amountAdjustmentContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  arrowButton: {
+    padding: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 8,
+  },
+  amountDisplay: {
+    flex: 1,
+    alignItems: "center",
+  },
   amountValue: {
     fontSize: 32,
     fontWeight: "bold",
     color: theme.colors.secondary,
     textAlign: "center",
+  },
+  weightText: {
+    fontSize: 14,
+    color: theme.colors.secondary,
+    marginTop: 4,
+    opacity: 0.9,
+  },
+  quickAdjustButtons: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginTop: 12,
+  },
+  quickButton: {
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  quickButtonText: {
+    fontSize: 12,
+    color: theme.colors.secondary,
+    fontWeight: "600",
   },
   detailsCard: {
     backgroundColor: "#fff",

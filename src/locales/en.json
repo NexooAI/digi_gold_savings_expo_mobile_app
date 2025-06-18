@@ -214,5 +214,6 @@
   "paymentSuccessful": "Payment Successful",
   "paymentFailedMessage": "Your payment has failed. Please check your details and try again.",
   "paymentPending": "Payment Pending",
-  "paymentDetails": "Payment Details"
+  "paymentDetails": "Payment Details",
+  "backToSavings": "Back to Savings"
 }
