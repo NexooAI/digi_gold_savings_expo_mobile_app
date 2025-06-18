@@ -178,7 +178,6 @@ export default function KycForm() {
             nominee_relationship: kycData.nominee_relationship || "",
           });
 
-          //console.log("Loaded KYC data:", kycData); // Add this for debugging
         }
       } catch (e) {
         console.error("Error fetching KYC:", e);

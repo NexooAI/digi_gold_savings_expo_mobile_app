@@ -165,12 +165,12 @@ export const setupPaymentStatusListener = (socket, parsedUserDetails, router, pr
         );
 
         // Log payment success data before navigation
-        console.log('Payment Success Data:', {
-          amount: data?.paymentResponse?.amount,
-          txnId: data?.paymentResponse?.txn_id,
-          orderId: data?.paymentResponse?.order_id,
-          timestamp: new Date().toISOString()
-        });
+        // console.log('Payment Success Data:', {
+        //   amount: data?.paymentResponse?.amount,
+        //   txnId: data?.paymentResponse?.txn_id,
+        //   orderId: data?.paymentResponse?.order_id,
+        //   timestamp: new Date().toISOString()
+        // });
 
         router.push({
           pathname: "/(tabs)/home/payment-success",

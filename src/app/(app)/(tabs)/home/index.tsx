@@ -609,7 +609,7 @@ export default function Home() {
                       isSingle={!ratesData.data.silver_rate}
                     />
                   </View>
-                  {ratesData.data.silver_rate && (
+                  {/* {ratesData.data.silver_rate && (
                     <View style={styles.rateCard}>
                       <LiveRateCard
                         type={translations.silver}
@@ -620,7 +620,7 @@ export default function Home() {
                         image={dummyData.rates.silver.image}
                       />
                     </View>
-                  )}
+                  )} */}
                 </>
               ) : (
                 <View style={styles.rateWarningContainer}>

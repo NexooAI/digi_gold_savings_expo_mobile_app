@@ -7,12 +7,16 @@ import { t } from "@/i18n";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
 import { theme } from "@/constants/theme";
-import { View, StyleSheet, Animated, Text } from "react-native";
+import { View, StyleSheet, Animated, Text, TouchableOpacity } from "react-native";
 import { useEffect, useRef } from "react";
+import { useNavigation, useNavigationState } from "@react-navigation/native";
+import { CommonActions } from "@react-navigation/native";
 
 export default function TabLayout() {
   const { language, isTabVisible } = useGlobalStore();
   const tabBarAnimation = useRef(new Animated.Value(0)).current;
+  const navigation = useNavigation();
+  const state = useNavigationState(state => state);
 
   useEffect(() => {
     Animated.spring(tabBarAnimation, {
@@ -95,6 +99,30 @@ export default function TabLayout() {
           options={{
             title: t("savings"),
             headerShown: false,
+            tabBarButton: (props) => (
+              <TouchableOpacity
+                onPress={(event) => {
+                  const isFocused = state?.routes?.[state.index]?.name === "savings";
+                  
+                  if (isFocused) {
+                    navigation.dispatch(
+                      CommonActions.reset({
+                        index: 0,
+                        routes: [{ name: "savings" }],
+                      })
+                    );
+                  } else {
+                    props.onPress?.(event);
+                  }
+                }}
+                style={props.style}
+                accessibilityRole={props.accessibilityRole}
+                accessibilityState={props.accessibilityState}
+                accessibilityLabel={props.accessibilityLabel}
+              >
+                {props.children}
+              </TouchableOpacity>
+            ),
             tabBarIcon: ({ color, focused }) => (
               <Animated.View
                 style={[

@@ -15,10 +15,10 @@ const checkNetworkState = async () => {
   try {
     const netInfo = await NetInfo.fetch();
     if (!netInfo.isConnected) {
-      console.error('Network state: No internet connection');
+      // console.error('Network state: No internet connection');
       throw new Error('NO_INTERNET');
     }
-    console.log('Network state: Connected', netInfo.type);
+    // console.log('Network state: Connected', netInfo.type);
     return true;
   } catch (error) {
     console.error('Network state check failed:', error);
@@ -98,7 +98,7 @@ const handleLogout = async () => {
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
-      console.log('Making API request to:', config.url);
+      // console.log('Making API request to:', config.url);
       LoadingService.show('Loading...');
       
       await checkNetworkState();
@@ -129,7 +129,7 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response: AxiosResponse) => {
-    console.log('API response received:', response.config.url, response.status);
+    // console.log('API response received:', response.config.url, response.status);
     LoadingService.hide();
     
     if (response.config.method?.toUpperCase() !== 'GET') {

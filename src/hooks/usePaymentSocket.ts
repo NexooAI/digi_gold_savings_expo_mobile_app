@@ -31,9 +31,9 @@ export const usePaymentSocket = ({
   const handlePaymentSuccess = async (data: any) => {
     try {
       //console.log("Processing successful payment:", data);
-
-      const paymentPayload = {
-        "investmentId": parsedUserDetails.data?.data?.id || parsedUserDetails.id || '',
+      // console.log('parseduserDetails' ,parsedUserDetails)
+      const paymentPayload:any = {
+        "investmentId": parsedUserDetails.data?.data?.id || parsedUserDetails.id || parsedUserDetails.investmentId ||'',
         "userId": parsedUserDetails.data?.data?.userId || parsedUserDetails.userId || '',
         "paymentAmount": data.paymentResponse.amount,
         "paymentMethod": data.paymentResponse.txn_detail.txn_flow_type,
@@ -53,10 +53,10 @@ export const usePaymentSocket = ({
 
       const transactionPayload = {
         userId: parsedUserDetails.data?.data?.userId || parsedUserDetails.userId || '',
-        investmentId: parsedUserDetails.data?.data?.id || parsedUserDetails.id || '',
+        investmentId: parsedUserDetails.data?.data?.id || parsedUserDetails.id || parsedUserDetails.investmentId ||'',
         schemeId: parsedUserDetails.data?.data?.schemeId || parsedUserDetails.schemeId || '',
         chitId: parsedUserDetails.data?.data?.chitId || parsedUserDetails.chitId || '',
-        accountNumber: parsedUserDetails.data?.data?.accountNo || parsedUserDetails.accountNo || '',
+        accountNumber: parsedUserDetails.data?.data?.accountNo || parsedUserDetails.accountNo || parsedUserDetails.accNo ||'',
         paymentId,
         orderId: data?.paymentResponse?.order_id || '',
         amount: data?.paymentResponse?.amount || '',
@@ -67,6 +67,9 @@ export const usePaymentSocket = ({
         paymentDate: data?.paymentResponse?.date_created || '',
         status: data?.paymentResponse?.status || 'CHARGED',
         gatewayTransactionId: data?.paymentResponse?.txn_id || '',
+        "gatewayresponse": JSON.stringify(data?.paymentResponse),
+        "isManual":"no",
+        "utr_reference_number":""
       };
 
       //console.log("Transaction payload:", transactionPayload);
@@ -77,14 +80,14 @@ export const usePaymentSocket = ({
         userId: parsedUserDetails.data?.data?.userId || parsedUserDetails.userId || '',
         schemeId: parsedUserDetails.data?.data?.schemeId || parsedUserDetails.schemeId || '',
         chitId: parsedUserDetails.data?.data?.chitId || parsedUserDetails.chitId || '',
-        accountName: parsedUserDetails.data?.data?.accountName || parsedUserDetails.accountName || '',
-        accountNo: parsedUserDetails.data?.data?.accountNo || parsedUserDetails.accountNo || '',
+        accountName: parsedUserDetails?.data?.data?.accountName || parsedUserDetails.accountName || parsedUserDetails.accountname ||'',
+        accountNo: parsedUserDetails.data?.data?.accountNo || parsedUserDetails.accountNo || parsedUserDetails.accNo || '',
         paymentStatus: 'PAID',
         paymentAmount: data?.paymentResponse?.amount || '',
       };
 
       //console.log("Investment payload:", investmentPayload);
-      const investmentId = parsedUserDetails.data?.data?.id || parsedUserDetails.id || '';
+      const investmentId = parsedUserDetails.data?.data?.id || parsedUserDetails.id || parsedUserDetails.investmentId  || '';
       await api.put(`/investments/${investmentId}`, investmentPayload);
 
       return true;
@@ -186,10 +189,10 @@ export const usePaymentSocket = ({
           if (parsedUserDetails && router) {
             const transactionPayload = {
               userId: parsedUserDetails.data?.data?.userId || parsedUserDetails.userId || '',
-              investmentId: parsedUserDetails.data?.data?.id || parsedUserDetails.id || '',
+              investmentId: parsedUserDetails.data?.data?.id || parsedUserDetails.id || parsedUserDetails.investmentId ||'',
               schemeId: parsedUserDetails.data?.data?.schemeId || parsedUserDetails.schemeId || '',
               chitId: parsedUserDetails.data?.data?.chitId || parsedUserDetails.chitId || '',
-              accountNumber: parsedUserDetails.data?.data?.accountNo || parsedUserDetails.accountNo || '',
+              accountNumber: parsedUserDetails.data?.data?.accountNo || parsedUserDetails.accountNo || parsedUserDetails.accNo ||'',
               paymentId: 0,
               orderId: data?.paymentResponse?.order_id || '',
               amount: data?.paymentResponse?.amount || '',
@@ -200,6 +203,9 @@ export const usePaymentSocket = ({
               paymentDate: data?.paymentResponse?.date_created || '',
               status: data?.paymentResponse?.status || 'FAILED',
               gatewayTransactionId: data?.paymentResponse?.txn_id || '',
+              "gatewayresponse": JSON.stringify(data?.paymentResponse),
+              "isManual":"no",
+              "utr_reference_number":""
             };
 
             try {

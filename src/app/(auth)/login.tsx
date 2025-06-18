@@ -162,12 +162,12 @@ export default function Login() {
   const [mobileError, setMobileError] = useState("");
 
   // Platform detection
-  const isAndroid = Platform.OS === "android";
-  const isIOS = Platform.OS === "ios";
+  // const isAndroid = Platform.OS === "android";
+  // const isIOS = Platform.OS === "ios";
 
   // Auto-fetch OTP functionality
   const handleOtpAutoFill = (otp: string) => {
-    console.log("Auto-filling OTP:", otp);
+    // console.log("Auto-filling OTP:", otp);
     const otpArray = otp.split("");
     setPins(otpArray);
 
@@ -179,33 +179,33 @@ export default function Login() {
     }
   };
 
-  useEffect(() => {
-    let subscription: any;
+  // useEffect(() => {
+  //   let subscription: any;
 
-    const startSmsListener = async () => {
-      if (isAndroid) {
-        const { status } = await SMSRetriever.requestPhoneNumber();
-        if (status === "granted") {
-          subscription = SMSRetriever.addSMSListener(
-            ({ message }: { message: string }) => {
-              const otpMatch = /\b\d{4}\b/.exec(message);
-              if (otpMatch) {
-                handleOtpAutoFill(otpMatch[0]);
-              }
-            }
-          );
-        }
-      }
-    };
+  //   const startSmsListener = async () => {
+  //     if (isAndroid) {
+  //       const { status } = await SMSRetriever.requestPhoneNumber();
+  //       if (status === "granted") {
+  //         subscription = SMSRetriever.addSMSListener(
+  //           ({ message }: { message: string }) => {
+  //             const otpMatch = /\b\d{4}\b/.exec(message);
+  //             if (otpMatch) {
+  //               handleOtpAutoFill(otpMatch[0]);
+  //             }
+  //           }
+  //         );
+  //       }
+  //     }
+  //   };
 
-    startSmsListener();
+  //   startSmsListener();
 
-    return () => {
-      if (subscription) {
-        subscription.remove();
-      }
-    };
-  }, [isAndroid]);
+  //   return () => {
+  //     if (subscription) {
+  //       subscription.remove();
+  //     }
+  //   };
+  // }, [isAndroid]);
 
   useEffect(() => {
     checkTokenValidity();
@@ -330,7 +330,7 @@ export default function Login() {
     })
       .then(async (response) => {
         const data = await response.json();
-        console.log("OTP verification response:", data);
+        // console.log("OTP verification response:", data);
         if (data.success) {
           await SecureStore.setItemAsync("authToken", data.token);
           await AsyncStorage.setItem("userData", JSON.stringify(data.user));
@@ -430,9 +430,9 @@ export default function Login() {
       }
 
       // Start SMS listener for Android
-      if (isAndroid) {
-        startSmsListener();
-      }
+      // if (isAndroid) {
+      //   startSmsListener();
+      // }
       setLoading(false);
     } catch (error: any) {
       const errorMessage = error.message || "You are not registered.";
@@ -481,7 +481,7 @@ export default function Login() {
 
       if (response.ok) {
         setResendAttempts((prev) => prev - 1);
-        setTimer(INITIAL_TIMER);
+        // setTimer(INITIAL_TIMER);
         setPins(["", "", "", ""]);
         Alert.alert("Success", "OTP resent successfully");
         // Auto-focus first OTP input
@@ -506,7 +506,7 @@ export default function Login() {
       setTimer(120);
       setResendAttempts(0);
       // Stop SMS listener when going back to mobile input
-      stopSmsListener();
+      // stopSmsListener();
     } else {
       // If mobile input is showing, navigate back to previous route
       router.back();

@@ -102,6 +102,7 @@ export default function SavingsScreen() {
   const [savings, setSavings] = useState<Scheme[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState<'Fixed' | 'Flexi'>('Fixed');
   const { bottom } = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   // Increased bottomPadding multiplier from 0.1 to 0.2
@@ -143,16 +144,16 @@ export default function SavingsScreen() {
           };
 
           // Log each investment item for debugging
-          console.log("Processing investment item:", {
-            investmentId: item.investmentId,
-            schemeName: schemeObj.schemeName || item.schemeName,
-            emiAmount: chit.amount,
-            paymentFrequency: item.paymentFrequency,
-            schemeType: schemeObj.schemeType,
-            totalPaid: item.total_paid,
-            monthsPaid: item.lastInstallment,
-            noOfInstallments: chit.noOfInstallments,
-          });
+          // console.log("Processing investment item:", {
+          //   investmentId: item.investmentId,
+          //   schemeName: schemeObj.schemeName || item.schemeName,
+          //   emiAmount: chit.amount,
+          //   paymentFrequency: item.paymentFrequency,
+          //   schemeType: schemeObj.schemeType,
+          //   totalPaid: item.total_paid,
+          //   monthsPaid: item.lastInstallment,
+          //   noOfInstallments: chit.noOfInstallments,
+          // });
 
           // Parse dates with error handling
           const doj = item.start_date
@@ -263,10 +264,10 @@ export default function SavingsScreen() {
           };
         });
 
-      console.log(
-        "Transformed Savings List:",
-        JSON.stringify(transformedSavings, null, 2)
-      );
+      // console.log(
+      //   "Transformed Savings List:",
+      //   JSON.stringify(transformedSavings, null, 2)
+      // );
       setSavings(transformedSavings);
     } catch (err: any) {
       console.error("Error fetching data:", err);
@@ -300,9 +301,22 @@ export default function SavingsScreen() {
   const totalInvested = savings.reduce((acc, curr) => acc + curr.totalPaid, 0);
   const totalGold = savings.reduce((acc, curr) => acc + curr.goldWeight, 0);
 
+  // Filtered savings based on selectedType
+  const filteredSavings = useMemo(() => {
+    return savings.filter((item:any) => {
+      const schemeType = item.schemesData.paymentFrequencyName;
+      console.log(item, item.schemesData.paymentFrequencyName);
+      if (selectedType === 'Flexi') {
+        return schemeType === 'Flexi';
+      } else {
+        return schemeType !== 'Flexi';
+      }
+    });
+  }, [savings, selectedType]);
+
   // Enhanced Scheme Card Component
   const EnhancedSchemeCard = ({ item }: { item: Scheme }) => {
-    console.log(item)
+    // console.log(item)
     const bgColors: readonly [string, string, string] =
       item.metalType === "gold"
         ? ([
@@ -339,7 +353,7 @@ export default function SavingsScreen() {
     };
 
     const handleNavigation = (item: Scheme) => {
-      console.log("schems datas ",item)
+      // console.log("schems datas ",item)
       if (!item) return;
       router.push({
         pathname: "/(tabs)/savings/SavingsDetail",
@@ -413,7 +427,7 @@ export default function SavingsScreen() {
                     { backgroundColor: "rgba(255, 255, 255, 0.2)" },
                   ]}
                 >
-                  <Ionicons
+                  {/* <Ionicons
                     name={
                       item.metalType === "gold"
                         ? "diamond-outline"
@@ -421,7 +435,9 @@ export default function SavingsScreen() {
                     }
                     size={24}
                     color="#000"
-                  />
+                  /> */}
+              <Image source={require('../../../../../assets/images/gold.png')} style={{ width: 40, height: 40 }} />
+
                 </View>
                 <View style={styles.schemeTitleContainer}>
                   <Text style={styles.schemeTitle}>{item.schemeName}</Text>
@@ -507,7 +523,6 @@ export default function SavingsScreen() {
 
             {/* Action Buttons Container - Always Visible */}
             <View style={styles.actionButtonsContainer}>
-              
               <TouchableOpacity
                 style={styles.detailsButton}
                 onPress={() => handleNavigation(item)}
@@ -703,7 +718,7 @@ export default function SavingsScreen() {
         end={{ x: 1, y: 1 }}
         style={styles.portfolioCard}
       >
-        <View style={styles.portfolioHeader}>
+        {/* <View style={styles.portfolioHeader}>
           <View style={styles.portfolioTitleContainer}>
             <Text style={styles.portfolioTitle}>
               {translations.yourGoldPortfolio}
@@ -716,12 +731,14 @@ export default function SavingsScreen() {
           <View style={styles.portfolioIconContainer}>
             <Ionicons name="albums" size={28} color="#ffd700" />
           </View>
-        </View>
+        </View> */}
 
         <View style={styles.portfolioStats}>
           <View style={styles.statItem}>
             <View style={styles.statIconContainer}>
-              <Ionicons name="wallet-outline" size={20} color="#ffd700" />
+              {/* <Ionicons name="wallet-outline" size={20} color="#ffd700" /> */}
+              <Image source={require('../../../../../assets/images/saveasmoneyproduct.png')} style={{ width: 20, height: 20 }} />
+              {/* saveasmoneyproduct */}
             </View>
             <View style={styles.statInfo}>
               <Text style={styles.statLabel}>{translations.totalInvested}</Text>
@@ -733,7 +750,8 @@ export default function SavingsScreen() {
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <View style={styles.statIconContainer}>
-              <Ionicons name="diamond-outline" size={20} color="#ffd700" />
+              {/* <Ionicons name="cube-outline" size={20} color="#ffd700" /> */}
+              <Image source={require('../../../../../assets/images/savegold.png')} style={{ width: 20, height: 20 }} />
             </View>
             <View style={styles.statInfo}>
               <Text style={styles.statLabel}>{translations.gold}</Text>
@@ -742,7 +760,7 @@ export default function SavingsScreen() {
           </View>
         </View>
 
-        <View style={styles.portfolioFooter}>
+        {/* <View style={styles.portfolioFooter}>
           <View style={styles.footerItem}>
             <Ionicons name="trending-up" size={14} color="#4ade80" />
             <Text style={styles.footerText}>Growing Portfolio</Text>
@@ -751,9 +769,10 @@ export default function SavingsScreen() {
             <Ionicons name="shield-checkmark" size={14} color="#60a5fa" />
             <Text style={styles.footerText}>Secure Investment</Text>
           </View>
-        </View>
+        </View> */}
       </LinearGradient>
       <Text style={styles.sectionTitle}>{translations.activeSavingsPlans}</Text>
+      <FilterToggle />
     </View>
   );
 
@@ -816,6 +835,67 @@ export default function SavingsScreen() {
     </View>
   );
 
+  // Filter Toggle UI
+  const FilterToggle = () => (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignSelf: 'center',
+        backgroundColor: theme.colors.primary,
+        borderRadius: 30,
+        padding: 4,
+        marginBottom: 16,
+        width: 220,
+        height: 44,
+      }}
+    >
+      <TouchableOpacity
+        style={{
+          flex: 1,
+          backgroundColor: selectedType === 'Fixed' ? '#fff' : 'transparent',
+          borderRadius: 30,
+          justifyContent: 'center',
+          alignItems: 'center',
+          elevation: selectedType === 'Fixed' ? 2 : 0,
+        }}
+        onPress={() => setSelectedType('Fixed')}
+        activeOpacity={0.8}
+      >
+        <Text
+          style={{
+            color: selectedType === 'Fixed' ? theme.colors.primary : '#fff',
+            fontWeight: '700',
+            fontSize: 16,
+          }}
+        >
+          Fixed
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={{
+          flex: 1,
+          backgroundColor: selectedType === 'Flexi' ? '#fff' : 'transparent',
+          borderRadius: 30,
+          justifyContent: 'center',
+          alignItems: 'center',
+          elevation: selectedType === 'Flexi' ? 2 : 0,
+        }}
+        onPress={() => setSelectedType('Flexi')}
+        activeOpacity={0.8}
+      >
+        <Text
+          style={{
+            color: selectedType === 'Flexi' ? theme.colors.primary : '#fff',
+            fontWeight: '700',
+            fontSize: 16,
+          }}
+        >
+          Flexi
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   if (!user) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center bg-white">
@@ -851,7 +931,7 @@ export default function SavingsScreen() {
           </View>
 
           <FlatList
-            data={savings}
+            data={filteredSavings}
             keyExtractor={(item, index) =>
               item.id && item.id !== "" ? item.id : index.toString()
             }
@@ -872,12 +952,12 @@ export default function SavingsScreen() {
 
 const styles = StyleSheet.create({
   headerContainer: {
-    paddingBottom: 20,
-    paddingHorizontal: 16,
+    paddingBottom: 0,
+    paddingHorizontal: 10,
   },
   portfolioCard: {
     borderRadius: 24,
-    padding: 20,
+    padding: 0,
     marginBottom: 20,
     ...Platform.select({
       ios: {
@@ -942,12 +1022,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: theme.colors.primary,
     borderRadius: 16,
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 0,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: theme.colors.primary,
   },
   statItem: {
     flex: 1,

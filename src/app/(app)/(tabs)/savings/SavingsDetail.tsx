@@ -30,6 +30,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Clipboard from "expo-clipboard";
 import { Socket } from "socket.io-client";
+import { CommonActions, useNavigationState } from "@react-navigation/native";
 
 type Transaction = {
   paymentId: number;
@@ -152,12 +153,13 @@ const SavingsDetail = () => {
     }),
     [language]
   );
+  const state = useNavigationState(state => state);
 
   // Initialize socket connection
   useEffect(() => {
     const socketInstance = initializeSocket();
     setSocket(socketInstance);
-    socketInstance.on("connect", () => {});
+    socketInstance.on("connect", () => { });
     return () => {
       socketInstance.disconnect();
     };
@@ -203,111 +205,28 @@ const SavingsDetail = () => {
         return;
       }
 
-      // Store comprehensive payment data for retry functionality using global store
-      // const paymentRetryData = {
-      //   // Payment payload data
-      //   paymentData: {
-      //     amount: Number(params.emiAmount),
-      //     userId: user.id || "",
-      //     investmentId: params.id,
-      //     schemeId: params.schemeCode,
-      //     chitId: params.chitId,
-      //     userEmail: user.email || "",
-      //     userMobile: user.mobile?.toString() || "",
-      //     userName: params.accountHolder,
-      //   },
-
-      //   // Investment payload data
-      //   investmentData: {
-      //     userId: user.id || "",
-      //     schemeId: params.schemeCode,
-      //     chitId: params.chitId,
-      //     accountName: params.accountHolder,
-      //     accountNo: params.accNo,
-      //     paymentAmount: Number(params.emiAmount),
-      //     investmentId: params.id,
-      //   },
-
-      //   // Transaction payload data
-      //   transactionData: {
-      //     userId: user.id || "",
-      //     investmentId: params.id,
-      //     schemeId: params.schemeCode,
-      //     chitId: params.chitId,
-      //     accountNumber: params.accNo,
-      //     amount: Number(params.emiAmount),
-      //   },
-
-      //   // UI/Display data
-      //   displayData: {
-      //     schemeName: params.schemeName,
-      //     accountHolder: params.accountHolder,
-      //     accNo: params.accNo,
-      //     totalPaid: params.totalPaid,
-      //     monthsPaid: params.monthsPaid,
-      //     noOfIns: params.noOfIns,
-      //     goldWeight: params.goldWeight,
-      //     maturityDate: params.maturityDate,
-      //     paymentFrequency: params.paymentFrequency || "Monthly",
-      //   },
-
-      //   // Timestamp for retry reference
-      //   timestamp: new Date().toISOString(),
-      //   source: "savings_detail",
-      // };
-
-      // // Store payment retry data in global store
-      // const { storePaymentRetryData, storePaymentSession } =
-      //   useGlobalStore.getState();
-      // storePaymentRetryData(paymentRetryData);
-
-      // // Store current payment session data
-      // const currentPaymentSession = {
-      //   amount: Number(params.emiAmount),
-      //   userDetails: {
-      //     accountname: params.accountHolder,
-      //     accNo: params.accNo,
-      //     name: params.accountHolder,
-      //     mobile: user.mobile?.toString() || "",
-      //     email: user.email || "",
-      //     userId: user.id || "",
-      //     investmentId: params.id,
-      //     chitId: params.chitId,
-      //     schemeId: params.schemeCode,
-      //     paymentFrequency: params.paymentFrequency || "Monthly",
-      //     // Additional context
-      //     isRetryAttempt: false,
-      //     originalPaymentTimestamp: paymentRetryData.timestamp,
-      //     source: "savings_detail",
-      //   },
-      //   timestamp: new Date().toISOString(),
-      // };
-
-      // storePaymentSession(currentPaymentSession);
-
-      //console.log("Payment data stored successfully in global store");
-
-      // Navigate to payment screen with minimal parameters
-      console.log(params , responce.data)
+      const parseSchemes = JSON.parse(params.schemesData);
       router.push({
         pathname: "/(tabs)/home/paymentNewOverView",
         params: {
           amount: params.emiAmount,
-          schemeName:params.schemeName,
+          schemeName: params.schemeName,
           schemeId: responce?.data.data.schemeId,
           chitId: responce?.data.data?.chitId,
           paymentFrequency: params.paymentFrequency,
-          schemeType:params.schemesData.schemeTypeName,
+          schemeType: parseSchemes.schemeTypeName,
           userDetails: JSON.stringify({
+            amount: params.emiAmount,
             accountname: params.accountHolder,
             accNo: params.accNo,
             associated_branch: 1,
             investmentId: responce?.data.data?.investmentId,
             schemeId: responce?.data.data?.schemeId,
-            schemeType: params.schemesData.schemeTypeName,
+            schemeType: parseSchemes.schemeTypeName,
             schemeName: params?.schemeName, // Also inside userDetails for redundancy
             paymentFrequency: params?.paymentFrequency,
             chitId: responce?.data.data?.chitId,
+
           }),
         },
       });
@@ -443,9 +362,8 @@ const SavingsDetail = () => {
                 style={[
                   styles.progressFill,
                   {
-                    width: `${
-                      (Number(params.monthsPaid) / Number(params.noOfIns)) * 100
-                    }%`,
+                    width: `${(Number(params.monthsPaid) / Number(params.noOfIns)) * 100
+                      }%`,
                   },
                 ]}
               />
@@ -513,7 +431,11 @@ const SavingsDetail = () => {
                     style={styles.transactionItem}
                     onPress={() => setSelectedTransaction(transaction)}
                   >
+                    <View style={{ padding: 5 }}>
+                      <Text>{index + 1}</Text>
+                    </View>
                     <View style={styles.transactionIcon}>
+
                       <Ionicons
                         name="checkmark-circle"
                         size={24}

@@ -23,7 +23,7 @@ import { PaymentInitPayload } from "@/types/payment.types";
 export default function PaymentNewOverView() {
   const params = useLocalSearchParams();
   const router = useRouter();
-  const { language } = useGlobalStore();
+  const { language ,user } = useGlobalStore();
   const [userDetails, setUserDetails] = useState<any>(null);
   const [isTermsAccepted, setIsTermsAccepted] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -48,7 +48,6 @@ export default function PaymentNewOverView() {
   const fetchGoldRate = async () => {
     try {
       const response = await api.get("/rates/current");
-      console.log(response)
       if (response?.data?.data?.gold_rate) {
         setGoldRate(Number(response?.data?.data?.gold_rate));
         calculateWeightPerGram(currentAmount, response.data.data.gold_rate);
@@ -106,20 +105,17 @@ export default function PaymentNewOverView() {
       return;
     }
     try {
-      //console.log("userDetails ======>", userDetails, params);
       const payload: PaymentInitPayload = {
-        userId: userDetails.userId,
+        userId: userDetails.userId || user?.id,
         amount: currentAmount,
         investmentId: userDetails.investmentId,
-        schemeId: Array.isArray(params.schemeId)
-          ? params.schemeId[0]
-          : params.schemeId,
-        userEmail: userDetails.email,
-        userMobile: userDetails.mobile,
-        userName: userDetails.accountname,
+        schemeId: params?.schemeId,
+        userEmail: userDetails?.email || user?.email,
+        userMobile: userDetails?.mobile || user?.mobile,
+        userName: userDetails?.accountname,
         chitId: Array.isArray(params.chitId) ? params.chitId[0] : params.chitId,
       };
-      //console.log("initialpayment ======>", payload);
+      console.log("initialpayment ======>", payload);
       const response = await paymentService.initiatePayment(payload);
       if (response?.session.payment_links.web) {
         // Extract order ID from the payment response
@@ -132,17 +128,12 @@ export default function PaymentNewOverView() {
             orderId: orderId, // Add orderId to params
             userDetails: JSON.stringify({
               ...userDetails,
-              amount: currentAmount,
+              // amount: currentAmount,
               orderId: orderId, // Include orderId in userDetails
-              investmentId: Array.isArray(params.investmentId)
-                ? params.investmentId[0]
-                : params.investmentId,
-              schemeId: Array.isArray(params.schemeId)
-                ? params.schemeId[0]
-                : params.schemeId,
-              chitId: Array.isArray(params.chitId)
-                ? params.chitId[0]
-                : params.chitId,
+              // investmentId: params.investmentId,
+              // schemeId: params.schemeId,
+              // chitId:  params.chitId,
+              userId:userDetails.userId || user?.id
             }),
           },
         });
@@ -324,15 +315,15 @@ export default function PaymentNewOverView() {
           </View>
           <View style={styles.detailsRow}>
             <Text style={styles.detailLabel}>{t("accountName")}</Text>
-            <Text style={styles.detailValue}>{userDetails?.accountname}</Text>
+            <Text style={styles.detailValue}>{userDetails?.accountname || user?.name}</Text>
           </View>
           <View style={styles.detailsRow}>
             <Text style={styles.detailLabel}>{t("mobile")}</Text>
-            <Text style={styles.detailValue}>{userDetails?.mobile}</Text>
+            <Text style={styles.detailValue}>{userDetails?.mobile || user?.mobile}</Text>
           </View>
           <View style={styles.detailsRow}>
             <Text style={styles.detailLabel}>{t("email")}</Text>
-            <Text style={styles.detailValue}>{userDetails?.email}</Text>
+            <Text style={styles.detailValue}>{userDetails?.email || user?.email}</Text>
           </View>
         </View>
       </ScrollView>
@@ -484,7 +475,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 16,
     padding: 20,
-    marginBottom: 16,
+    marginBottom: 0,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -525,7 +516,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     position: "absolute",
-    bottom: 100,
+    bottom: 70,
     left: 0,
     right: 0,
     padding: 16,

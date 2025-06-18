@@ -139,51 +139,51 @@ const NotificationSection = React.memo(({
 // Main Component
 export default function NotificationsScreen() {
   const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: "1",
-      title: "Special Diwali Offer",
-      message: "Invest ₹1000 today and get ₹50 cashback on your first gold purchase!",
-      time: "Today, 09:00 AM",
-      date: "Today",
-      isRead: false,
-      category: 'offer'
-    },
-    {
-      id: "2",
-      title: "SIP Transaction Successful",
-      message: "Your monthly SIP of ₹5,000 has been processed successfully.",
-      time: "Today, 11:30 AM",
-      date: "Today",
-      isRead: false,
-      category: 'transaction'
-    },
-    {
-      id: "3",
-      title: "Scheme Maturity Reminder",
-      message: "Your Gold Fortune scheme will mature in 5 days. Plan your next investment!",
-      time: "Yesterday, 05:00 PM",
-      date: "Yesterday",
-      isRead: true,
-      category: 'reminder'
-    },
-    {
-      id: "4",
-      title: "Gold Rate Alert",
-      message: "Gold rates have increased by 2.5% today. Great time to check your portfolio!",
-      time: "Nov 26, 2023, 08:30 AM",
-      date: "Nov 26, 2023",
-      isRead: true,
-      category: 'alert'
-    },
-    {
-      id: "5",
-      title: "New Year Special Offer",
-      message: "Get 1% extra gold on investments above ₹10,000. Limited time offer!",
-      time: "Nov 25, 2023, 07:45 PM",
-      date: "Nov 25, 2023",
-      isRead: false,
-      category: 'offer'
-    }
+    // {
+    //   id: "1",
+    //   title: "Special Diwali Offer",
+    //   message: "Invest ₹1000 today and get ₹50 cashback on your first gold purchase!",
+    //   time: "Today, 09:00 AM",
+    //   date: "Today",
+    //   isRead: false,
+    //   category: 'offer'
+    // },
+    // {
+    //   id: "2",
+    //   title: "SIP Transaction Successful",
+    //   message: "Your monthly SIP of ₹5,000 has been processed successfully.",
+    //   time: "Today, 11:30 AM",
+    //   date: "Today",
+    //   isRead: false,
+    //   category: 'transaction'
+    // },
+    // {
+    //   id: "3",
+    //   title: "Scheme Maturity Reminder",
+    //   message: "Your Gold Fortune scheme will mature in 5 days. Plan your next investment!",
+    //   time: "Yesterday, 05:00 PM",
+    //   date: "Yesterday",
+    //   isRead: true,
+    //   category: 'reminder'
+    // },
+    // {
+    //   id: "4",
+    //   title: "Gold Rate Alert",
+    //   message: "Gold rates have increased by 2.5% today. Great time to check your portfolio!",
+    //   time: "Nov 26, 2023, 08:30 AM",
+    //   date: "Nov 26, 2023",
+    //   isRead: true,
+    //   category: 'alert'
+    // },
+    // {
+    //   id: "5",
+    //   title: "New Year Special Offer",
+    //   message: "Get 1% extra gold on investments above ₹10,000. Limited time offer!",
+    //   time: "Nov 25, 2023, 07:45 PM",
+    //   date: "Nov 25, 2023",
+    //   isRead: false,
+    //   category: 'offer'
+    // }
   ]);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
@@ -250,7 +250,7 @@ export default function NotificationsScreen() {
             <View>
               <View className="flex-row items-center">
                 <Text className="text-2xl font-bold text-gray-800">
-                  Notifications
+                  Notifications comming soon
                 </Text>
                 {unreadCount > 0 && (
                   <View className="ml-3 bg-red-500 rounded-full px-2.5 py-1">
@@ -260,16 +260,16 @@ export default function NotificationsScreen() {
                   </View>
                 )}
               </View>
-              <Text className="text-sm text-gray-500 mt-2">
+              {/* <Text className="text-sm text-gray-500 mt-2">
                 Stay updated with your Digi Gold activities
-              </Text>
+              </Text> */}
             </View>
-            <TouchableOpacity 
+            {/* <TouchableOpacity 
               onPress={markAllAsRead}
               className="bg-gray-100 px-5 py-2.5 rounded-md"
             >
               <Text className="text-gray-700 font-medium">Mark All as Read</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
 
           {/* Notification Sections */}

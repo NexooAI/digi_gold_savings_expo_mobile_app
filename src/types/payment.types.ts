@@ -4,11 +4,12 @@ export interface PaymentInitPayload {
   userId: string | number;
   amount: number;
   investmentId: string | number;
-  schemeId: string | number;
+  schemeId: string | number | any;
   userEmail: string;
   userMobile: string;
   userName: string;
   chitId: string | number;
+  
 }
 
 export interface PaymentResponse {

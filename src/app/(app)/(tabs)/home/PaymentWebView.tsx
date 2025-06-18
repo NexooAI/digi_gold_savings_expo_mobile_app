@@ -8,10 +8,8 @@ import { usePaymentSocket } from "@/hooks/usePaymentSocket";
 export default function PaymentWebView() {
   const params = useLocalSearchParams();
   const router = useRouter();
-  //console.log('params',params)
   const { socket, handleCancel } = usePaymentSocket({
     onPaymentSuccess: (data) => {
-      //console.log("Payment Success:", data);
       // Disconnect socket before navigation
       if (socket && socket.connected) {
         socket.disconnect();
@@ -26,7 +24,6 @@ export default function PaymentWebView() {
       });
     },
     onPaymentFailure: (data) => {
-      //console.log("Payment Failed:", data);
       // Disconnect socket before navigation
       if (socket && socket.connected) {
         socket.disconnect();
@@ -59,25 +56,25 @@ export default function PaymentWebView() {
           {
             text: "OK",
             onPress: () => {
-              router.replace({
-                pathname: "/(tabs)/home/paymentNewOverView",
-                params: {
-                  userDetails: params.userDetails,
-                  amount: params.amount,
-                  schemeName: params.schemeName,
-                  schemeId: params.schemeId,
-                  chitId: params.chitId,
-                  paymentFrequency: params.paymentFrequency,
-                  schemeType: params.schemeType,
-                },
-              });
+              router.back();
+              // router.replace({
+              //   pathname: "/(tabs)/home/paymentNewOverView",
+              //   params: {
+              //     userDetails: params.userDetails,
+              //     amount: params.amount,
+              //     schemeName: params.schemeName,
+              //     schemeId: params.schemeId,
+              //     chitId: params.chitId,
+              //     paymentFrequency: params.paymentFrequency,
+              //     schemeType: params.schemeType,
+              //   },
+              // });
             },
           },
         ]
       );
     },
     onPaymentExpired: () => {
-      //console.log("Payment Expired");
       // Disconnect socket before navigation
       if (socket && socket.connected) {
         socket.disconnect();
@@ -89,18 +86,19 @@ export default function PaymentWebView() {
           {
             text: "OK",
             onPress: () => {
-              router.replace({
-                pathname: "/(tabs)/home/paymentNewOverView",
-                params: {
-                  userDetails: params.userDetails,
-                  amount: params.amount,
-                  schemeName: params.schemeName,
-                  schemeId: params.schemeId,
-                  chitId: params.chitId,
-                  paymentFrequency: params.paymentFrequency,
-                  schemeType: params.schemeType,
-                },
-              });
+              router.back()
+              // router.replace({
+              //   pathname: "/(tabs)/home/paymentNewOverView",
+              //   params: {
+              //     userDetails: params.userDetails,
+              //     amount: params.amount,
+              //     schemeName: params.schemeName,
+              //     schemeId: params.schemeId,
+              //     chitId: params.chitId,
+              //     paymentFrequency: params.paymentFrequency,
+              //     schemeType: params.schemeType,
+              //   },
+              // });
             },
           },
         ]
