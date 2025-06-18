@@ -473,15 +473,6 @@ export default function SavingsScreen() {
                     {item.status || "INACTIVE"}
                   </Text>
                 </View>
-                <TouchableOpacity
-                  style={styles.payNowButton}
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    handlePayNow();
-                  }}
-                >
-                  <Text style={styles.payNowButtonText}>Pay Now</Text>
-                </TouchableOpacity>
                 <View style={styles.expandIcon}>
                   <Ionicons
                     name={isExpanded ? "chevron-up" : "chevron-down"}
@@ -492,20 +483,86 @@ export default function SavingsScreen() {
               </View>
             </View>
 
+            {/* Account Info - Before Action Buttons */}
             <View style={styles.accountInfo}>
-              <View style={styles.accountItem}>
-                <View style={styles.accountIconContainer}>
-                  <Ionicons name="person-outline" size={16} color="#FFFFFF" />
+              <View style={styles.accountLabelsRow}>
+                <View style={styles.accountLabelItem}>
+                  <View style={styles.accountIconContainer}>
+                    <Ionicons name="person-outline" size={16} color="#FFFFFF" />
+                  </View>
+                  <Text style={styles.accountLabel}>Account Holder:</Text>
                 </View>
-                <Text style={styles.accountLabel}>Account Holder:</Text>
-                <Text style={styles.accountValue}>{item.accountHolder}</Text>
+                <View style={styles.accountLabelItem}>
+                  <View style={styles.accountIconContainer}>
+                    <Ionicons name="card-outline" size={16} color="#FFFFFF" />
+                  </View>
+                  <Text style={styles.accountLabel}>A/C No:</Text>
+                </View>
               </View>
-              <View style={styles.accountItem}>
-                <View style={styles.accountIconContainer}>
-                  <Ionicons name="card-outline" size={16} color="#FFFFFF" />
-                </View>
-                <Text style={styles.accountLabel}>A/C No:</Text>
+              <View style={styles.accountValuesRow}>
+                <Text style={styles.accountValue}>{item.accountHolder?.toUpperCase()}</Text>
                 <Text style={styles.accountValue}>DCJ-{item.accNo}</Text>
+              </View>
+            </View>
+
+            {/* Action Buttons Container - Always Visible */}
+            <View style={styles.actionButtonsContainer}>
+              
+              <TouchableOpacity
+                style={styles.detailsButton}
+                onPress={() => handleNavigation(item)}
+              >
+                <LinearGradient
+                  colors={["#850111", "#B8860B", "#DAA520"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.detailsButtonGradient}
+                >
+                  <Text style={styles.detailsButtonText}>View Details</Text>
+                  <Ionicons name="chevron-forward" size={20} color="#fff" />
+                </LinearGradient>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.payNowButtonLarge}
+                onPress={handlePayNow}
+              >
+                <LinearGradient
+                  colors={["#4CAF50", "#45a049", "#3d8b40"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.payNowButtonGradient}
+                >
+                  <Text style={styles.payNowButtonTextLarge}>Pay Now</Text>
+                  <Ionicons name="card-outline" size={20} color="#fff" />
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+
+            {/* Payment Info Row - Always Visible */}
+            <View style={styles.paymentInfoRow}>
+              <View style={styles.paymentInfoItem}>
+                <View style={styles.paymentInfoIconContainer}>
+                  <Ionicons name="time-outline" size={16} color="#FFFFFF" />
+                </View>
+                <View style={styles.paymentInfoContent}>
+                  <Text style={styles.paymentInfoLabel}>Frequency</Text>
+                  <Text style={styles.paymentInfoValue}>
+                    {/* {item.paymentFrequency} */}
+                    {item.schemesData?.paymentFrequencyName === 'Flexi' ? 'Flexi':item.paymentFrequency}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.paymentInfoDivider} />
+              <View style={styles.paymentInfoItem}>
+                <View style={styles.paymentInfoIconContainer}>
+                  <Ionicons name="scale-outline" size={16} color="#FFFFFF" />
+                </View>
+                <View style={styles.paymentInfoContent}>
+                  <Text style={styles.paymentInfoLabel}>Total Weight</Text>
+                  <Text style={styles.paymentInfoValue}>
+                    {item.goldWeight.toFixed(2)} g
+                  </Text>
+                </View>
               </View>
             </View>
 
@@ -521,43 +578,36 @@ export default function SavingsScreen() {
               ]}
             >
               <View style={styles.infoGrid}>
-                <View style={styles.infoItem}>
-                  <View style={styles.infoIconContainer}>
-                    <Ionicons name="wallet-outline" size={20} color="#FFFFFF" />
+                <View style={styles.infoRow}>
+                  <View style={styles.infoItem}>
+                    <View style={styles.infoIconContainer}>
+                      <Ionicons name="wallet-outline" size={20} color="#FFFFFF" />
+                    </View>
+                    <Text style={styles.infoLabel}>Amount Paid</Text>
+                    <Text style={styles.infoValue}>
+                      ₹{item.totalPaid.toLocaleString()}
+                    </Text>
                   </View>
-                  <Text style={styles.infoLabel}>Amount Paid</Text>
-                  <Text style={styles.infoValue}>
-                    ₹{item.totalPaid.toLocaleString()}
-                  </Text>
-                </View>
-                <View style={styles.infoItem}>
-                  <View style={styles.infoIconContainer}>
-                    <Ionicons
-                      name="calendar-outline"
-                      size={20}
-                      color="#FFFFFF"
-                    />
+                  <View style={styles.infoItem}>
+                    <View style={styles.infoIconContainer}>
+                      <Ionicons
+                        name="calendar-outline"
+                        size={20}
+                        color="#FFFFFF"
+                      />
+                    </View>
+                    <Text style={styles.infoLabel}>Months Paid</Text>
+                    <Text style={styles.infoValue}>
+                      {item.monthsPaid} / {item.noOfIns}
+                    </Text>
                   </View>
-                  <Text style={styles.infoLabel}>Months Paid</Text>
-                  <Text style={styles.infoValue}>
-                    {item.monthsPaid} / {item.noOfIns}
-                  </Text>
-                </View>
-                <View style={styles.infoItem}>
-                  <View style={styles.infoIconContainer}>
-                    <Ionicons name="cash-outline" size={20} color="#FFFFFF" />
+                  <View style={styles.infoItem}>
+                    <View style={styles.infoIconContainer}>
+                      <Ionicons name="cash-outline" size={20} color="#FFFFFF" />
+                    </View>
+                    <Text style={styles.infoLabel}>Installment</Text>
+                    <Text style={styles.infoValue}>₹{item.emiAmount}</Text>
                   </View>
-                  <Text style={styles.infoLabel}>Installment</Text>
-                  <Text style={styles.infoValue}>₹{item.emiAmount}</Text>
-                </View>
-                <View style={styles.infoItem}>
-                  <View style={styles.infoIconContainer}>
-                    <Ionicons name="scale-outline" size={20} color="#FFFFFF" />
-                  </View>
-                  <Text style={styles.infoLabel}>Total Weight</Text>
-                  <Text style={styles.infoValue}>
-                    {item.goldWeight.toFixed(2)} g
-                  </Text>
                 </View>
               </View>
 
@@ -638,21 +688,6 @@ export default function SavingsScreen() {
                   </View>
                 </View>
               </View>
-
-              <TouchableOpacity
-                style={styles.detailsButton}
-                onPress={() => handleNavigation(item)}
-              >
-                <LinearGradient
-                  colors={["#850111", "#B8860B", "#DAA520"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.detailsButtonGradient}
-                >
-                  <Text style={styles.detailsButtonText}>View Details</Text>
-                  <Ionicons name="chevron-forward" size={20} color="#fff" />
-                </LinearGradient>
-              </TouchableOpacity>
             </Animated.View>
           {/* </LinearGradient> */}
         </ImageBackground>
@@ -986,19 +1021,19 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderRadius: 24,
     overflow: "hidden",
-    elevation: 6,
+    elevation: 8,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
   },
   cardWrapperActive: {
     transform: [{ scale: 1.02 }],
-    elevation: 10,
-    shadowOpacity: 0.25,
+    elevation: 12,
+    shadowOpacity: 0.3,
   },
   cardBackgroundImage: {
-    flex:1
+    flex: 1,
   },
   cardBackgroundImageStyle: {
     borderRadius: 24,
@@ -1011,8 +1046,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    // marginBottom: 12,
-    margin:10
+    margin: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
   },
   schemeInfo: {
     flexDirection: "row",
@@ -1020,40 +1060,52 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   schemeIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.25)",
+    borderWidth: 2,
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   schemeTitleContainer: {
     flex: 1,
   },
   schemeTitle: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "700",
     color: "#000",
-    marginBottom: 4,
+    marginBottom: 6,
+    textShadowColor: "rgba(255, 255, 255, 0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   schemeSubtitleContainer: {
     flexDirection: "row",
-    gap: 8,
+    gap: 10,
   },
   metalTypeBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.4)",
   },
   metalTypeText: {
     fontSize: 12,
-    fontWeight: "500",
+    fontWeight: "600",
     color: "#000",
   },
   savingTypeBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.4)",
   },
   savingTypeText: {
     fontSize: 12,
@@ -1063,35 +1115,53 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.4)",
   },
   statusText: {
     fontSize: 12,
-    fontWeight: "500",
+    fontWeight: "600",
+    color: "#000",
   },
   expandIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(110, 31, 31, 0.37)",
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(133, 1, 17, 0.4)",
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 2,
+    borderColor: "rgba(133, 1, 17, 0.6)",
   },
   accountInfo: {
+    flexDirection: "column",
+    marginBottom: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.4)",
+    borderRadius: 16,
+    marginHorizontal: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+  },
+  accountLabelsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 16,
-    paddingHorizontal: 8,
+    alignItems: "center",
+    marginBottom: 8,
   },
-  accountItem: {
+  accountLabelItem: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    flex: 1,
   },
   accountIconContainer: {
     width: 24,
@@ -1104,27 +1174,36 @@ const styles = StyleSheet.create({
   accountLabel: {
     fontSize: 12,
     color: "rgba(0, 0, 0, 0.8)",
+    fontWeight: "600",
+  },
+  accountValuesRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   accountValue: {
     fontSize: 18,
     fontWeight: "700",
     color: "rgb(0, 0, 0)",
+    flex: 1,
+    textAlign: "center",
   },
   cardContent: {
     overflow: "hidden",
   },
   infoGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 16,
     marginBottom: 16,
+  },
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 8,
   },
   infoItem: {
     flex: 1,
-    minWidth: "45%",
     alignItems: "center",
     padding: 12,
-    backgroundColor: "rgba(255, 255, 255, 0)",
+    backgroundColor: "rgba(255, 255, 255, 0.48)",
     borderRadius: 12,
   },
   infoIconContainer: {
@@ -1253,27 +1332,125 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#FFFFFF",
   },
+  actionButtonsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginHorizontal: 12,
+    marginBottom: 16,
+    gap: 12,
+  },
   detailsButton: {
-    borderRadius: 12,
+    flex: 1,
+    borderRadius: 16,
     overflow: "hidden",
-    elevation: 4,
+    elevation: 6,
     shadowColor: "#850111",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
   },
   detailsButtonGradient: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 12,
+    paddingVertical: 14,
     paddingHorizontal: 24,
   },
   detailsButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "700",
     color: "#fff",
     marginRight: 8,
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  payNowButtonLarge: {
+    flex: 1,
+    borderRadius: 16,
+    overflow: "hidden",
+    elevation: 6,
+    shadowColor: "#4CAF50",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+  },
+  payNowButtonGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+  },
+  payNowButtonTextLarge: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#fff",
+    marginRight: 8,
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  paymentInfoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.6)",
+    borderRadius: 16,
+    marginHorizontal: 12,
+    marginBottom: 16,
+    padding: 16,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  paymentInfoItem: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  paymentInfoIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(133, 1, 17, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+    borderWidth: 2,
+    borderColor: "rgba(133, 1, 17, 0.9)",
+  },
+  paymentInfoContent: {
+    flex: 1,
+  },
+  paymentInfoLabel: {
+    fontSize: 13,
+    color: "rgba(0, 0, 0, 0.7)",
+    marginBottom: 4,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  paymentInfoValue: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: "#000",
+    textShadowColor: "rgba(255, 255, 255, 0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  paymentInfoDivider: {
+    width: 2,
+    height: 50,
+    backgroundColor: "rgba(133, 1, 17, 0.3)",
+    marginHorizontal: 16,
+    borderRadius: 1,
   },
   emptyStateContainer: {
     padding: 16,
@@ -1355,17 +1532,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     marginLeft: 8,
-  },
-  payNowButton: {
-    backgroundColor: "rgba(255, 255, 255, 0.74)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    marginRight: 8,
-  },
-  payNowButtonText: {
-    color: "#000",
-    fontSize: 12,
-    fontWeight: "600",
   },
 });

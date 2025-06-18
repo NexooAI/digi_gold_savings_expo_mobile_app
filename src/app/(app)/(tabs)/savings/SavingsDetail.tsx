@@ -288,25 +288,26 @@ const SavingsDetail = () => {
       //console.log("Payment data stored successfully in global store");
 
       // Navigate to payment screen with minimal parameters
+      console.log(params , responce.data)
       router.push({
         pathname: "/(tabs)/home/paymentNewOverView",
         params: {
           amount: params.emiAmount,
           schemeName:params.schemeName,
-          schemeId: responce?.data.schemeId,
-          chitId: responce?.data?.chitId,
+          schemeId: responce?.data.data.schemeId,
+          chitId: responce?.data.data?.chitId,
           paymentFrequency: params.paymentFrequency,
           schemeType:params.schemesData.schemeTypeName,
           userDetails: JSON.stringify({
             accountname: params.accountHolder,
             accNo: params.accNo,
             associated_branch: 1,
-            investmentId: responce?.data?.investmentId,
-            schemeId: responce?.data?.schemeId,
+            investmentId: responce?.data.data?.investmentId,
+            schemeId: responce?.data.data?.schemeId,
             schemeType: params.schemesData.schemeTypeName,
             schemeName: params?.schemeName, // Also inside userDetails for redundancy
             paymentFrequency: params?.paymentFrequency,
-            chitId: responce?.data?.chitId,
+            chitId: responce?.data.data?.chitId,
           }),
         },
       });
