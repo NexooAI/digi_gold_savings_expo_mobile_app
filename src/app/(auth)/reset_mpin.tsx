@@ -201,13 +201,13 @@ export default function ResetMpin() {
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={styles.container}
           >
-            <View style={styles.logoContainer}>
+            {/* <View style={styles.logoContainer}>
               <Image
                 source={theme.image.transparentLogo}
                 style={[styles.logo, { width: logoWidth }]}
                 resizeMode="contain"
               />
-            </View>
+            </View> */}
 
             <View style={styles.formContainer}>
               <View style={styles.cardContainer}>

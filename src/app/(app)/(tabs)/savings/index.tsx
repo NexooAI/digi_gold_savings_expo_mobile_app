@@ -379,25 +379,27 @@ export default function SavingsScreen() {
 
     const handlePayNow = () => {
       if (!item) return;
-      const userDetails = {
-        userId: user?.id,
-        investmentId: item.id,
-        schemeId: item.schemeCode,
-        chitId: item?.chitData?.chitId,
-        name: item.accountHolder,
-        accNo: item.accNo,
-        mobile: user?.mobile,
-        email: user?.email,
-        paymentFrequency: item.paymentFrequency,
-        schemeName: item.schemeName,
-        amount: item.emiAmount,
-      };
-
+      console.log(item)
+      // return
       router.push({
-        pathname: "/(tabs)/home/paymentNewOverView",
+        pathname: "/(tabs)/savings/SavingsDetail",
         params: {
-          amount: item.emiAmount?.toString() || "0",
-          userDetails: JSON.stringify(userDetails),
+          schemeName: item.schemeName || "",
+          totalPaid: item.totalPaid?.toString() || "0",
+          monthsPaid: item.monthsPaid?.toString() || "0",
+          emiAmount: item.emiAmount?.toString() || "0",
+          maturityDate: item.maturityDate || "",
+          goldWeight: item.goldWeight?.toString() || "0.00",
+          accountHolder: item.accountHolder || "N/A",
+          accNo: item.accNo || "N/A",
+          schemeCode: item.schemeCode || "",
+          id: item.id || "",
+          noOfIns: item.noOfIns || 0,
+          chitId: item?.chitData?.chitId || "",
+          schemesData: JSON.stringify(item.schemesData || {}),
+          transactions: JSON.stringify(item.transactions || []),
+          paymentFrequency: item.schemesData.paymentFrequencyName,
+          autoPayNow: "1",
         },
       });
     };

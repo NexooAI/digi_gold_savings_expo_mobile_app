@@ -145,18 +145,17 @@ export default function PaymentSuccess() {
           </View>
         </View>
 
-        <View style={styles.buttonContainer}>
+        {/* Button Row: Back to Home (left) and Back to Savings (right) */}
+        <View style={styles.buttonRow}>
           <TouchableOpacity 
-            style={styles.button}
+            style={[styles.button, styles.buttonLeft]}
             onPress={handleHomePress}
             activeOpacity={0.9}
           >
             <Text style={styles.buttonText}>{t('backToHome')}</Text>
           </TouchableOpacity>
-        </View>
-        <View style={styles.buttonContainer}>
           <TouchableOpacity 
-            style={styles.button}
+            style={[styles.button, styles.buttonRight]}
             onPress={handleSavingsPress}
             activeOpacity={0.9}
           >
@@ -270,8 +269,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#edf2f7',
     marginVertical: 4,
   },
-  buttonContainer: {
+  buttonRow: {
     width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
   },
@@ -279,14 +280,21 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     paddingVertical: 18,
     borderRadius: 14,
-    width: '100%',
     alignItems: 'center',
     shadowColor: theme.colors.primary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 8,
-    marginBottom: 16,
+    marginBottom: 0,
+  },
+  buttonLeft: {
+    marginRight: 8,
+    flex: 1,
+  },
+  buttonRight: {
+    marginLeft: 8,
+    flex: 1,
   },
   buttonText: {
     color: '#ffffff',

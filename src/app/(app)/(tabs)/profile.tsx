@@ -448,10 +448,10 @@ const ProfileScreen = () => {
 
               <View style={styles.infoRow}>
                 <View style={styles.infoIcon}>
-                  <Icon name="star" size={20} color={theme.colors.primary}/>
+                  <Icon name="supervised-user-circle" size={20} color={theme.colors.primary}/>
                 </View>
-                <Text style={styles.infoLabel}>{"Member Since"}</Text>
-                <Text style={styles.infoValue}>Jan 2023</Text>
+                <Text style={styles.infoLabel}>{"User ID"}</Text>
+                <Text style={styles.infoValue}>{user?.id}</Text>
               </View>
             </View>
 

@@ -31,6 +31,7 @@ export default function PaymentNewOverView() {
   const [currentAmount, setCurrentAmount] = useState(Number(params.amount) || 0);
   const [goldRate, setGoldRate] = useState(0);
   const [weightPerGram, setWeightPerGram] = useState(0);
+  const isFlexi = params.paymentFrequency?.toString().toLowerCase() === "flexi";
 
   // Parse user details only once when component mounts
   useEffect(() => {
@@ -67,6 +68,7 @@ export default function PaymentNewOverView() {
 
   // Handle amount adjustment
   const adjustAmount = (increment: number) => {
+    if (!isFlexi) return; // Prevent adjustment if not flexi
     const newAmount = currentAmount + increment;
     if (newAmount >= 0) {
       setCurrentAmount(newAmount);
@@ -105,7 +107,7 @@ export default function PaymentNewOverView() {
       return;
     }
     try {
-      const payload: PaymentInitPayload = {
+      const payload: PaymentInitPayload | any = {
         userId: userDetails.userId || user?.id,
         amount: currentAmount,
         investmentId: userDetails.investmentId,
@@ -114,6 +116,7 @@ export default function PaymentNewOverView() {
         userMobile: userDetails?.mobile || user?.mobile,
         userName: userDetails?.accountname,
         chitId: Array.isArray(params.chitId) ? params.chitId[0] : params.chitId,
+        paymentFrequency: params.paymentFrequency,
       };
       console.log("initialpayment ======>", payload);
       const response = await paymentService.initiatePayment(payload);
@@ -133,7 +136,8 @@ export default function PaymentNewOverView() {
               // investmentId: params.investmentId,
               // schemeId: params.schemeId,
               // chitId:  params.chitId,
-              userId:userDetails.userId || user?.id
+              userId:userDetails.userId || user?.id,
+              paymentFrequency: params.paymentFrequency || "Monthly",
             }),
           },
         });
@@ -210,74 +214,93 @@ export default function PaymentNewOverView() {
         ]}
       >
         {/* Amount Card */}
-        <View style={styles.amountCard}>
-          <View style={styles.amountHeader}>
-            <MaterialCommunityIcons
-              name="gold"
-              size={24}
-              color={theme.colors.secondary}
-            />
-            <Text style={styles.amountTitle}>{t("totalAmount")}</Text>
-          </View>
-          
-          <View style={styles.amountAdjustmentContainer}>
-            <TouchableOpacity
-              style={styles.arrowButton}
-              onPress={() => adjustAmount(-1000)}
-            >
-              <Ionicons
-                name="chevron-back"
+        {isFlexi ? (
+          <View style={styles.amountCard}>
+            <View style={styles.amountHeader}>
+              <MaterialCommunityIcons
+                name="gold"
                 size={24}
                 color={theme.colors.secondary}
               />
-            </TouchableOpacity>
+              <Text style={styles.amountTitle}>{t("totalAmount")}</Text>
+            </View>
             
+            <View style={styles.amountAdjustmentContainer}>
+              <TouchableOpacity
+                style={styles.arrowButton}
+                onPress={() => adjustAmount(-1000)}
+              >
+                <Ionicons
+                  name="chevron-back"
+                  size={24}
+                  color={theme.colors.secondary}
+                />
+              </TouchableOpacity>
+              
+              <View style={styles.amountDisplay}>
+                <Text style={styles.amountValue}>{formattedAmount}</Text>
+                <Text style={styles.weightText}>
+                  {formattedWeight} grams (₹{Number(goldRate).toFixed(2)}/gram)
+                </Text>
+              </View>
+              
+              <TouchableOpacity
+                style={styles.arrowButton}
+                onPress={() => adjustAmount(1000)}
+              >
+                <Ionicons
+                  name="chevron-forward"
+                  size={24}
+                  color={theme.colors.secondary}
+                />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.quickAdjustButtons}>
+              <TouchableOpacity
+                style={styles.quickButton}
+                onPress={() => adjustAmount(-500)}
+              >
+                <Text style={styles.quickButtonText}>-500</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.quickButton}
+                onPress={() => adjustAmount(-100)}
+              >
+                <Text style={styles.quickButtonText}>-100</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.quickButton}
+                onPress={() => adjustAmount(100)}
+              >
+                <Text style={styles.quickButtonText}>+100</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.quickButton}
+                onPress={() => adjustAmount(500)}
+              >
+                <Text style={styles.quickButtonText}>+500</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.amountCard}>
+            <View style={styles.amountHeader}>
+              <MaterialCommunityIcons
+                name="gold"
+                size={24}
+                color={theme.colors.secondary}
+              />
+              <Text style={styles.amountTitle}>{t("totalAmount")}</Text>
+            </View>
             <View style={styles.amountDisplay}>
               <Text style={styles.amountValue}>{formattedAmount}</Text>
               <Text style={styles.weightText}>
                 {formattedWeight} grams (₹{Number(goldRate).toFixed(2)}/gram)
               </Text>
             </View>
-            
-            <TouchableOpacity
-              style={styles.arrowButton}
-              onPress={() => adjustAmount(1000)}
-            >
-              <Ionicons
-                name="chevron-forward"
-                size={24}
-                color={theme.colors.secondary}
-              />
-            </TouchableOpacity>
           </View>
-          
-          <View style={styles.quickAdjustButtons}>
-            <TouchableOpacity
-              style={styles.quickButton}
-              onPress={() => adjustAmount(-500)}
-            >
-              <Text style={styles.quickButtonText}>-500</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.quickButton}
-              onPress={() => adjustAmount(-100)}
-            >
-              <Text style={styles.quickButtonText}>-100</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.quickButton}
-              onPress={() => adjustAmount(100)}
-            >
-              <Text style={styles.quickButtonText}>+100</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.quickButton}
-              onPress={() => adjustAmount(500)}
-            >
-              <Text style={styles.quickButtonText}>+500</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        )}
 
         {/* Scheme Details Card */}
         <View style={styles.detailsCard}>

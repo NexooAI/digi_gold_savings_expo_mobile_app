@@ -145,21 +145,22 @@ export default function PaymentFailure() {
             </View>
           </View>
         </View>
-        <View style={styles.buttonContainer}>
+        <View style={styles.buttonRow}>
           <TouchableOpacity 
-            style={styles.button}
+            style={[styles.button, styles.buttonHalf, styles.buttonRetry]}
             onPress={handleRetry}
             activeOpacity={0.9}
           >
+            <Ionicons name="refresh" size={20} color="#fff" style={{marginRight: 8}} />
             <Text style={styles.buttonText}>{t('retry')}</Text>
           </TouchableOpacity>
-        </View>
-        <View style={styles.buttonContainer}>
+          <View style={{width: 16}} />
           <TouchableOpacity 
-            style={styles.button}
+            style={[styles.button, styles.buttonHalf, styles.buttonHome]}
             onPress={handleHomePress}
             activeOpacity={0.9}
           >
+            <Ionicons name="home" size={20} color="#fff" style={{marginRight: 8}} />
             <Text style={styles.buttonText}>{t('backToHome')}</Text>
           </TouchableOpacity>
         </View>
@@ -275,17 +276,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
+  buttonRow: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   button: {
     backgroundColor: theme.colors.error,
     paddingVertical: 18,
     borderRadius: 14,
-    width: '100%',
     alignItems: 'center',
     shadowColor: theme.colors.error,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 8,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  buttonHalf: {
+    flex: 1,
+    minWidth: 0,
+  },
+  buttonRetry: {
+    flex: 1,
+  },
+  buttonHome: {
+    flex: 1.3,
   },
   buttonText: {
     color: '#ffffff',

@@ -238,6 +238,14 @@ const SavingsDetail = () => {
     }
   };
 
+  // Auto-trigger PaymentNow if autoPayNow param is set
+  useEffect(() => {
+    if (params.autoPayNow === "1") {
+      PaymentNow();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
