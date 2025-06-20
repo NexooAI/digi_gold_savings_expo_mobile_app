@@ -25,7 +25,7 @@ import * as SecureStore from "expo-secure-store";
 import * as Crypto from "expo-crypto";
 import { theme } from "@/constants/theme";
 import { moderateScale } from "react-native-size-matters";
-import { registerStyles as styles } from "./registerStyles";
+import { registerStyles as styles } from "../../_styles/registerStyles";
 
 const { width } = Dimensions.get("window");
 const logoWidth = width * 0.3;
@@ -267,12 +267,14 @@ export default function ResetMpin() {
                       onComplete={setMpin}
                       secureTextEntry={!showPin}
                     />
+                    <View style={{ height: 16 }} />
                     <Text style={styles.label}>Confirm MPIN</Text>
                     <MpinInput
                       length={4}
                       onComplete={setConfirmMpin}
                       secureTextEntry={!showPin}
                     />
+                    <View style={{ height: 16 }} />
                     {error ? (
                       <View style={styles.errorContainer}>
                         <Ionicons name="alert-circle" size={16} color="#FF6B6B" />

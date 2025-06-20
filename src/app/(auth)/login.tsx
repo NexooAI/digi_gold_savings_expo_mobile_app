@@ -30,7 +30,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { t } from "@/i18n";
 import { useOtpAutoFetch } from "@/hooks/useOtpAutoFetch";
-import { registerStyles } from "./registerStyles";
+import { registerStyles } from "../../_styles/registerStyles";
 
 const { width } = Dimensions.get("window");
 const logoWidth = width * 0.3;

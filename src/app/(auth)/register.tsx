@@ -22,7 +22,7 @@ import { Ionicons, Feather } from "@expo/vector-icons";
 import { useOtpAutoFetch } from "@/hooks/useOtpAutoFetch";
 import * as SecureStore from "expo-secure-store";
 import { API_BASE_URL } from "@/config/api";
-import { registerStyles } from "./registerStyles";
+import { registerStyles } from "../../_styles/registerStyles";
 
 const OTP_RESEND_LIMIT = 3;
 const INITIAL_TIMER = 120;
