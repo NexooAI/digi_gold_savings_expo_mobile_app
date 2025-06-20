@@ -526,181 +526,187 @@ export default function Login() {
       {/* Dark overlay for background */}
       <View style={registerStyles.darkOverlay} />
       <LinearGradient
-        colors={["rgba(32, 1, 1, 0.55)", "rgba(167, 0, 0, 0.3)", "rgba(118, 1, 1, 0.3)"]}
+        colors={["rgba(32, 1, 1, 0.55)", "rgba(167, 0, 0, 0)", "rgba(118, 1, 1, 0)"]}
         style={registerStyles.gradient}
       >
         {showError && (
           <ErrorAlert message={errorMessage} onClose={hideErrorAlert} />
         )}
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-          <View style={registerStyles.logoContainer}>
-            <Image
-              source={theme.image.transparentLogo}
-              style={registerStyles.logo}
-              resizeMode="contain"
-            />
-          </View>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
+        >
+          <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+            <View style={registerStyles.logoContainer}>
+              <Image
+                source={theme.image.transparentLogo}
+                style={registerStyles.logo}
+                resizeMode="contain"
+              />
+            </View>
 
-          <View style={registerStyles.formContainer}>
-            <View style={registerStyles.cardContainer}>
-              {/* Base fog layer */}
-              <LinearGradient
-                colors={[
-                  "rgba(174, 0, 0, 0.1)",
-                  "rgba(34, 0, 0, 0.35)",
-                  "rgba(134, 1, 1, 0.4)",
-                ]}
-                style={StyleSheet.absoluteFill}
-              />
-              {/* Top fog highlight */}
-              <LinearGradient
-                colors={[
-                  "rgba(112, 0, 0, 0.38)",
-                  "rgba(130, 0, 0, 0.4)",
-                ]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 0.5 }}
-                style={StyleSheet.absoluteFill}
-              />
-              {/* Bottom fog highlight */}
-              <LinearGradient
-                colors={[
-                  "rgba(143, 0, 0, 0.29)",
-                  "rgba(122, 5, 5, 0.53)",
-                ]}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 0, y: 1 }}
-                style={StyleSheet.absoluteFill}
-              />
-              {/* Content */}
-              <View style={registerStyles.cardContent}>
-                <Text style={registerStyles.pageTitle}>Welcome Back!</Text>
-                <Text style={registerStyles.subtitle}>Sign in to continue</Text>
-                {!isShowOtp ? (
-                  <>
-                    <View style={registerStyles.inputContainer}>
-                      <PhoneInput
-                        value={mobile}
-                        onChangeText={(text) => {
-                          setMobile(text);
-                          setMobileError("");
-                        }}
-                        loading={loading}
-                      />
-                      {mobileError ? (
-                        <Text style={registerStyles.errorText}>{mobileError}</Text>
-                      ) : null}
-                    </View>
-                    <TouchableOpacity
-                      style={[
-                        registerStyles.loginButton,
-                        loading && registerStyles.loginButtonDisabled,
-                      ]}
-                      onPress={loginAxio}
-                      disabled={loading}
-                    >
-                      <LinearGradient
-                        colors={["#ffc90c", "#ffd700"]}
-                        style={registerStyles.gradientButton}
-                      >
-                        <Text style={registerStyles.loginButtonText}>
-                          {loading ? "Processing..." : "Get OTP"}
-                        </Text>
-                      </LinearGradient>
-                    </TouchableOpacity>
-                    <View style={registerStyles.registerContainer}>
-                      <Text style={registerStyles.registerText}>
-                        Don't have an account?{" "}
-                      </Text>
-                      <TouchableOpacity onPress={() => router.push("/register")}> 
-                        <Text style={registerStyles.registerLink}>Register</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </>
-                ) : (
-                  <View style={registerStyles.otpContainer}>
-                    <Text style={registerStyles.otpTitle}>Enter OTP</Text>
-                    <Text style={registerStyles.otpSentText}>
-                      OTP sent to{" "}
-                      {mobile.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3")}
-                    </Text>
-                    <View style={registerStyles.otpInputsWrapper}>
-                      <View style={registerStyles.otpInputsContainer}>
-                        {pins.map((pin, index) => (
-                          <TextInput
-                            key={index}
-                            ref={inputRefs[index]}
-                            style={registerStyles.otpInput}
-                            keyboardType="numeric"
-                            maxLength={1}
-                            value={pin}
-                            onChangeText={(text) => handlePinChange(text, index)}
-                            onKeyPress={(e) => handleKeyPress(e, index)}
-                            secureTextEntry={!showOtp}
-                            textContentType="oneTimeCode"
-                            autoComplete="sms-otp"
-                            editable={!loading}
-                          />
-                        ))}
+            <View style={registerStyles.formContainer}>
+              <View style={registerStyles.cardContainer}>
+                {/* Base fog layer */}
+                <LinearGradient
+                  colors={[
+                    "rgba(174, 0, 0, 0.1)",
+                    "rgba(34, 0, 0, 0.35)",
+                    "rgba(134, 1, 1, 0.4)",
+                  ]}
+                  style={StyleSheet.absoluteFill}
+                />
+                {/* Top fog highlight */}
+                <LinearGradient
+                  colors={[
+                    "rgba(112, 0, 0, 0.38)",
+                    "rgba(130, 0, 0, 0.4)",
+                  ]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0, y: 0.5 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                {/* Bottom fog highlight */}
+                <LinearGradient
+                  colors={[
+                    "rgba(143, 0, 0, 0.29)",
+                    "rgba(122, 5, 5, 0.53)",
+                  ]}
+                  start={{ x: 0, y: 0.5 }}
+                  end={{ x: 0, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                {/* Content */}
+                <View style={registerStyles.cardContent}>
+                  <Text style={registerStyles.pageTitle}>Welcome Back!</Text>
+                  <Text style={registerStyles.subtitle}>Sign in to continue</Text>
+                  {!isShowOtp ? (
+                    <>
+                      <View style={registerStyles.inputContainer}>
+                        <PhoneInput
+                          value={mobile}
+                          onChangeText={(text) => {
+                            setMobile(text);
+                            setMobileError("");
+                          }}
+                          loading={loading}
+                        />
+                        {mobileError ? (
+                          <Text style={registerStyles.errorText}>{mobileError}</Text>
+                        ) : null}
                       </View>
                       <TouchableOpacity
-                        onPress={() => setShowOtp((prev) => !prev)}
-                        style={registerStyles.eyeButton}
+                        style={[
+                          registerStyles.loginButton,
+                          loading && registerStyles.loginButtonDisabled,
+                        ]}
+                        onPress={loginAxio}
+                        disabled={loading}
                       >
-                        <Feather
-                          name={showOtp ? "eye-off" : "eye"}
-                          size={24}
+                        <LinearGradient
+                          colors={["#ffc90c", "#ffd700"]}
+                          style={registerStyles.gradientButton}
+                        >
+                          <Text style={registerStyles.loginButtonText}>
+                            {loading ? "Processing..." : "Get OTP"}
+                          </Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+                      <View style={registerStyles.registerContainer}>
+                        <Text style={registerStyles.registerText}>
+                          Don't have an account?{" "}
+                        </Text>
+                        <TouchableOpacity onPress={() => router.push("/register")}> 
+                          <Text style={registerStyles.registerLink}>Register</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </>
+                  ) : (
+                    <View style={registerStyles.otpContainer}>
+                      <Text style={registerStyles.otpTitle}>Enter OTP</Text>
+                      <Text style={registerStyles.otpSentText}>
+                        OTP sent to{" "}
+                        {mobile.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3")}
+                      </Text>
+                      <View style={registerStyles.otpInputsWrapper}>
+                        <View style={registerStyles.otpInputsContainer}>
+                          {pins.map((pin, index) => (
+                            <TextInput
+                              key={index}
+                              ref={inputRefs[index]}
+                              style={registerStyles.otpInput}
+                              keyboardType="numeric"
+                              maxLength={1}
+                              value={pin}
+                              onChangeText={(text) => handlePinChange(text, index)}
+                              onKeyPress={(e) => handleKeyPress(e, index)}
+                              secureTextEntry={!showOtp}
+                              textContentType="oneTimeCode"
+                              autoComplete="sms-otp"
+                              editable={!loading}
+                            />
+                          ))}
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => setShowOtp((prev) => !prev)}
+                          style={registerStyles.eyeButton}
+                        >
+                          <Feather
+                            name={showOtp ? "eye-off" : "eye"}
+                            size={24}
+                            color={theme.colors.white}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                      <View style={registerStyles.timerContainer}>
+                        <Ionicons
+                          name="time-outline"
+                          size={20}
                           color={theme.colors.white}
                         />
-                      </TouchableOpacity>
-                    </View>
-                    <View style={registerStyles.timerContainer}>
-                      <Ionicons
-                        name="time-outline"
-                        size={20}
-                        color={theme.colors.white}
-                      />
-                      <Text style={registerStyles.timerText}>Resend in {timer}s</Text>
-                    </View>
-                    {timer === 0 && resendAttempts < 3 && (
+                        <Text style={registerStyles.timerText}>Resend in {timer}s</Text>
+                      </View>
+                      {timer === 0 && resendAttempts < 3 && (
+                        <TouchableOpacity
+                          onPress={handleResendOtp}
+                          style={registerStyles.resendButton}
+                        >
+                          <Text style={registerStyles.resendText}>Resend OTP</Text>
+                        </TouchableOpacity>
+                      )}
                       <TouchableOpacity
-                        onPress={handleResendOtp}
-                        style={registerStyles.resendButton}
+                        style={[
+                          registerStyles.loginButton,
+                          (loading || !pins.every((pin) => pin.trim() !== "")) &&
+                            registerStyles.loginButtonDisabled,
+                        ]}
+                        onPress={() => verifyOtp(pins.join(""))}
+                        disabled={
+                          loading || !pins.every((pin) => pin.trim() !== "")
+                        }
                       >
-                        <Text style={registerStyles.resendText}>Resend OTP</Text>
+                        <LinearGradient
+                          colors={["#ffc90c", "#ffd700"]}
+                          style={registerStyles.gradientButton}
+                        >
+                          <Text style={registerStyles.loginButtonText}>
+                            {loading ? "Verifying..." : "Submit"}
+                          </Text>
+                        </LinearGradient>
                       </TouchableOpacity>
-                    )}
-                    <TouchableOpacity
-                      style={[
-                        registerStyles.loginButton,
-                        (loading || !pins.every((pin) => pin.trim() !== "")) &&
-                          registerStyles.loginButtonDisabled,
-                      ]}
-                      onPress={() => verifyOtp(pins.join(""))}
-                      disabled={
-                        loading || !pins.every((pin) => pin.trim() !== "")
-                      }
-                    >
-                      <LinearGradient
-                        colors={["#ffc90c", "#ffd700"]}
-                        style={registerStyles.gradientButton}
-                      >
-                        <Text style={registerStyles.loginButtonText}>
-                          {loading ? "Verifying..." : "Submit"}
-                        </Text>
-                      </LinearGradient>
-                    </TouchableOpacity>
-                  </View>
-                )}
+                    </View>
+                  )}
+                </View>
               </View>
             </View>
-          </View>
-          <View style={registerStyles.poweredByContainer}>
-            <Text style={registerStyles.poweredByText}>
-              Powered by <Text style={{textDecorationLine: 'underline', color: '#ffc90c'}} onPress={() => Linking.openURL('https://agnisofterp.com/')}>Agni Soft ERP</Text>
-            </Text>
-          </View>
-        </ScrollView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+        <View style={registerStyles.poweredByContainer}>
+          <Text style={registerStyles.poweredByText}>
+            Powered by <Text style={{textDecorationLine: 'underline', color: '#ffc90c'}} onPress={() => Linking.openURL('https://agnisofterp.com/')}>Agni Soft ERP</Text>
+          </Text>
+        </View>
       </LinearGradient>
     </ImageBackground>
   );

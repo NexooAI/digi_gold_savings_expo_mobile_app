@@ -25,6 +25,7 @@ import * as SecureStore from "expo-secure-store";
 import * as Crypto from "expo-crypto";
 import { theme } from "@/constants/theme";
 import { moderateScale } from "react-native-size-matters";
+import { registerStyles as styles } from "./registerStyles";
 
 const { width } = Dimensions.get("window");
 const logoWidth = width * 0.3;
@@ -190,8 +191,10 @@ export default function ResetMpin() {
         source={theme.image.bg_image}
         style={styles.backgroundImage}
       >
+        {/* Dark overlay for background, if needed for consistency */}
+        {/* <View style={styles.darkOverlay} /> */}
         <LinearGradient
-          colors={["rgba(32, 1, 1, 0.55)", "rgba(167, 0, 0, 0.3)", "rgba(118, 1, 1, 0.3)"]}
+          colors={["rgba(32, 1, 1, 0)", "rgba(167, 0, 0, 0)", "rgba(118, 1, 1, 0)"]}
           style={styles.gradient}
         >
           {showError && (
@@ -199,351 +202,142 @@ export default function ResetMpin() {
           )}
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={styles.container}
+            style={{ flex: 1 }}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
           >
-            {/* <View style={styles.logoContainer}>
-              <Image
-                source={theme.image.transparentLogo}
-                style={[styles.logo, { width: logoWidth }]}
-                resizeMode="contain"
-              />
-            </View> */}
-
-            <View style={styles.formContainer}>
-              <View style={styles.cardContainer}>
-                {/* Base fog layer */}
-                <LinearGradient
-                  colors={[
-                    "rgba(174, 0, 0, 0.1)",
-                    "rgba(34, 0, 0, 0.35)",
-                    "rgba(134, 1, 1, 0.4)",
-                  ]}
-                  style={StyleSheet.absoluteFill}
+            <ScrollView
+              contentContainerStyle={{
+                flexGrow: 1,
+                justifyContent: 'space-between',
+                paddingBottom: 24,
+              }}
+              keyboardShouldPersistTaps="handled"
+            >
+              <View style={styles.logoContainer}>
+                <Image
+                  source={theme.image.transparentLogo}
+                  style={styles.logo}
+                  resizeMode="contain"
                 />
-                {/* Top fog highlight */}
-                <LinearGradient
-                  colors={[
-                    "rgba(112, 0, 0, 0.38)",
-                    "rgba(130, 0, 0, 0.4)",
-                  ]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 0, y: 0.5 }}
-                  style={StyleSheet.absoluteFill}
-                />
-                {/* Bottom fog highlight */}
-                <LinearGradient
-                  colors={[
-                    "rgba(143, 0, 0, 0.29)",
-                    "rgba(122, 5, 5, 0.53)",
-                  ]}
-                  start={{ x: 0, y: 0.5 }}
-                  end={{ x: 0, y: 1 }}
-                  style={StyleSheet.absoluteFill}
-                />
-                {/* Content */}
-                <View style={styles.cardContent}>
-                  <Text style={styles.pageTitle}>
-                    {isCreatingMPIN ? "Create MPIN" : "Reset MPIN"}
-                  </Text>
-                  <Text style={styles.subtitle}>
-                    {isCreatingMPIN
-                      ? "Create a new 4-digit MPIN to secure your account"
-                      : "Enter your new MPIN to reset it"}
-                  </Text>
-                  <Text style={styles.label}>New MPIN</Text>
-                  <MpinInput
-                    length={4}
-                    onComplete={setMpin}
-                    secureTextEntry={!showPin}
-                  />
-                  <Text style={styles.label}>Confirm MPIN</Text>
-                  <MpinInput
-                    length={4}
-                    onComplete={setConfirmMpin}
-                    secureTextEntry={!showPin}
-                  />
-                  {error ? (
-                    <View style={styles.errorContainer}>
-                      <Ionicons name="alert-circle" size={16} color="#FF6B6B" />
-                      <Text style={styles.errorText}>{error}</Text>
-                    </View>
-                  ) : null}
-                  <TouchableOpacity
-                    style={styles.eyeToggle}
-                    onPress={() => setShowPin(!showPin)}
-                  >
-                    <Ionicons
-                      name={showPin ? "eye-off" : "eye"}
-                      size={24}
-                      color={theme.colors.secondary}
-                    />
-                    <Text style={styles.eyeText}>
-                      {showPin ? "Hide MPIN" : "Show MPIN"}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.submitButton,
-                      (error ||
-                        loading ||
-                        mpin.length < 4 ||
-                        confirmMpin.length < 4) &&
-                        styles.submitButtonDisabled,
+              </View>
+              <View style={styles.formContainer}>
+                <View style={styles.cardContainer}>
+                  {/* Base fog layer */}
+                  <LinearGradient
+                    colors={[
+                      "rgba(6, 2, 2, 0.78)",
+                      "rgba(34, 0, 0, 0.35)",
+                      "rgba(31, 3, 3, 0.54)",
                     ]}
-                    onPress={handleSubmit}
-                    disabled={
-                      !!error ||
-                      loading ||
-                      mpin.length < 4 ||
-                      confirmMpin.length < 4
-                    }
-                  >
-                    <LinearGradient
-                      colors={["#ffc90c", "#ffd700"]}
-                      style={styles.gradientButton}
-                    >
-                      <Text style={styles.submitButtonText}>
-                        {loading ? "Processing..." : isCreatingMPIN ?"Create MPIN" :"Reset MPIN"}
-                      </Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                  {!isCreatingMPIN && (
+                    style={StyleSheet.absoluteFill}
+                  />
+                  {/* Top fog highlight */}
+                  <LinearGradient
+                    colors={[
+                      "rgba(10, 2, 2, 0.38)",
+                      "rgba(76, 63, 63, 0.74)",
+                    ]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 0.5 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  {/* Bottom fog highlight */}
+                  <LinearGradient
+                    colors={[
+                      "rgba(0, 0, 0, 0.44)",
+                      "rgba(0, 0, 0, 0.28)",
+                    ]}
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 0, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  {/* Content */}
+                  <View style={styles.cardContent}>
+                    <Text style={styles.pageTitle}>
+                      {isCreatingMPIN ? "Create MPIN" : "Reset MPIN"}
+                    </Text>
+                    <Text style={styles.subtitle}>
+                      {isCreatingMPIN
+                        ? "Create a new 4-digit MPIN to secure your account"
+                        : "Enter your new MPIN to reset it"}
+                    </Text>
+                    <Text style={styles.label}>New MPIN</Text>
+                    <MpinInput
+                      length={4}
+                      onComplete={setMpin}
+                      secureTextEntry={!showPin}
+                    />
+                    <Text style={styles.label}>Confirm MPIN</Text>
+                    <MpinInput
+                      length={4}
+                      onComplete={setConfirmMpin}
+                      secureTextEntry={!showPin}
+                    />
+                    {error ? (
+                      <View style={styles.errorContainer}>
+                        <Ionicons name="alert-circle" size={16} color="#FF6B6B" />
+                        <Text style={styles.errorText}>{error}</Text>
+                      </View>
+                    ) : null}
                     <TouchableOpacity
-                      style={styles.backButton}
-                      onPress={() => router.back()}
+                      style={styles.eyeToggle}
+                      onPress={() => setShowPin(!showPin)}
                     >
                       <Ionicons
-                        name="arrow-back"
-                        size={20}
-                        color={theme.colors.white}
+                        name={showPin ? "eye-off" : "eye"}
+                        size={24}
+                        color={theme.colors.secondary}
                       />
-                      <Text style={styles.backButtonText}>Back</Text>
+                      <Text style={styles.eyeText}>
+                        {showPin ? "Hide MPIN" : "Show MPIN"}
+                      </Text>
                     </TouchableOpacity>
-                  )}
+                    <TouchableOpacity
+                      style={[
+                        styles.loginButton,
+                        (error ||
+                          loading ||
+                          mpin.length < 4 ||
+                          confirmMpin.length < 4) &&
+                          styles.loginButtonDisabled,
+                      ]}
+                      onPress={handleSubmit}
+                      disabled={
+                        !!error ||
+                        loading ||
+                        mpin.length < 4 ||
+                        confirmMpin.length < 4
+                      }
+                    >
+                      <LinearGradient
+                        colors={["#ffc90c", "#ffd700"]}
+                        style={styles.gradientButton}
+                      >
+                        <Text style={styles.loginButtonText}>
+                          {loading ? "Processing..." : isCreatingMPIN ?"Create MPIN" :"Reset MPIN"}
+                        </Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                    {!isCreatingMPIN && (
+                      <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={() => router.back()}
+                      >
+                        <Ionicons
+                          name="arrow-back"
+                          size={20}
+                          color={theme.colors.white}
+                        />
+                        <Text style={styles.backButtonText}>Back</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
               </View>
-            </View>
+            </ScrollView>
           </KeyboardAvoidingView>
         </LinearGradient>
       </ImageBackground>
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  backgroundImage: {
-    flex: 1,
-    resizeMode: "cover",
-  },
-  gradient: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    paddingBottom: Platform.OS === "ios" ? 40 : 20,
-  },
-  logoContainer: {
-    width: "100%",
-    alignItems: "center",
-    paddingTop: Platform.OS === "ios" ? 60 : 40,
-    marginBottom: 20,
-  },
-  logo: {
-    aspectRatio: 1,
-  },
-  formContainer: {
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 20,
-    paddingBottom: Platform.OS === "ios" ? 40 : 0,
-  },
-  cardContainer: {
-    borderRadius: 20,
-    padding: 20,
-    width: "100%",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.4)",
-    marginBottom: Platform.OS === "ios" ? 20 : 10,
-    overflow: "hidden",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
-        backdropFilter: "blur(20px)",
-      },
-      android: {
-        elevation: 12,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
-      },
-    }),
-    position: "relative",
-  },
-  cardContent: {
-    position: "relative",
-    zIndex: 1,
-  },
-  pageTitle: {
-    color: "#ffffff",
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  subtitle: {
-    color: "#ffffff",
-    fontSize: 16,
-    marginBottom: 30,
-    textAlign: "center",
-    opacity: 0.8,
-  },
-  label: {
-    color: "#ffffff",
-    fontSize: 16,
-    marginBottom: 15,
-    alignSelf: "stretch",
-  },
-  mpinContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "70%",
-    alignSelf: "center",
-  },
-  inputWrapper: {
-    position: "relative",
-  },
-  mpinInput: {
-    width: 50,
-    height: 50,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
-    borderRadius: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    color: "#ffffff",
-    fontSize: 24,
-    textAlign: "center",
-  },
-  mpinInputEmpty: {
-    borderColor: "rgba(255, 255, 255, 0.2)",
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-  },
-  mpinInputFilled: {
-    borderColor: theme.colors.secondary,
-    backgroundColor: "rgba(255, 215, 0, 0.1)",
-  },
-  inputIndicator: {
-    position: "absolute",
-    bottom: 8,
-    left: "50%",
-    marginLeft: -3,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: theme.colors.secondary,
-  },
-  errorContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255, 68, 68, 0.1)",
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 20,
-  },
-  errorText: {
-    color: "#ff4444",
-    fontSize: 14,
-    marginLeft: 8,
-  },
-  eyeToggle: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 20,
-    alignSelf: "center",
-  },
-  eyeText: {
-    color: theme.colors.secondary,
-    marginLeft: 10,
-    fontSize: 16,
-  },
-  submitButton: {
-    width: "100%",
-    height: 50,
-    borderRadius: 25,
-    overflow: "hidden",
-    marginTop: 20,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
-  },
-  gradientButton: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  submitButtonDisabled: {
-    opacity: 0.6,
-  },
-  submitButtonText: {
-    color: theme.colors.textDark,
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  backButton: {
-    marginTop: 20,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  backButtonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    marginLeft: 5,
-    opacity: 0.8,
-  },
-  errorAlert: {
-    position: "absolute",
-    top: Platform.OS === "ios" ? 50 : 30,
-    left: 20,
-    right: 20,
-    backgroundColor: "rgba(255, 68, 68, 0.95)",
-    borderRadius: 12,
-    padding: 15,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    zIndex: 1000,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  errorContent: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  errorMessage: {
-    color: "#fff",
-    fontSize: 16,
-    marginLeft: 10,
-    flex: 1,
-  },
-  closeButton: {
-    padding: 5,
-  },
-});

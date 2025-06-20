@@ -21,6 +21,7 @@ import {
   Image,
   StatusBar,
   ActivityIndicator,
+  Easing,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -233,6 +234,56 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
     </TouchableOpacity>
   )
 );
+
+// FloatingGoldRate component
+const FloatingGoldRate: React.FC<{ goldRate: string }> = ({ goldRate }) => {
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    let isMounted = true;
+    const flip = () => {
+      rotateAnim.setValue(0);
+      Animated.timing(rotateAnim, {
+        toValue: 1,
+        duration: 30000, // 30 seconds
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      }).start(() => {
+        if (isMounted) flip();
+      });
+    };
+    flip();
+    return () => {
+      isMounted = false;
+      rotateAnim.stopAnimation();
+    };
+  }, [rotateAnim]);
+
+  const flipX = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  });
+
+  return (
+    <Animated.View
+      style={[
+        styles.floatingGoldRateContainer,
+        { transform: [{ rotateX: flipX }] },
+      ]}
+    >
+      <LinearGradient
+        colors={["#FFD700", "#FFFACD", "#FFD700"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.goldPlate}
+      >
+        <Ionicons name="logo-bitcoin" size={22} color="#B8860B" style={{ marginRight: 4 }} />
+        <Text style={styles.goldRateText}>{goldRate}</Text>
+        <Text style={styles.goldRateUnit}>/g</Text>
+      </LinearGradient>
+    </Animated.View>
+  );
+};
 
 export default function Home() {
   // State
@@ -562,6 +613,12 @@ export default function Home() {
         style={styles.backgroundImage}
         resizeMode="contain"
       >
+        {/* Floating Gold Rate */}
+        <FloatingGoldRate
+          goldRate={
+            ratesData?.data?.gold_rate || dummyData.rates.gold.price
+          }
+        />
         {showFlashBanner && (
           <FlashBanner
             imageSource={require("../../../../../assets/images/flashbanner.png")}
@@ -591,7 +648,7 @@ export default function Home() {
             <View style={styles.ratesContainer}>
               {ratesData?.data ? (
                 <>
-                  <View
+                  {/* <View
                     style={[
                       styles.rateCard,
                       !ratesData.data.silver_rate && styles.singleRateCard,
@@ -608,7 +665,7 @@ export default function Home() {
                       image={dummyData.rates.gold.image}
                       isSingle={!ratesData.data.silver_rate}
                     />
-                  </View>
+                  </View> */}
                   {/* {ratesData.data.silver_rate && (
                     <View style={styles.rateCard}>
                       <LiveRateCard
@@ -758,7 +815,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    padding: 10,
+    padding: 0,
   },
   scrollContent: {
     flexGrow: 1,
@@ -1119,5 +1176,42 @@ const styles = StyleSheet.create({
     height: 30,
     backgroundColor: "rgba(255, 255, 255, 0.2)",
     marginHorizontal: 12,
+  },
+  floatingGoldRateContainer: {
+    position: "absolute",
+    top: 30,
+    right: 20,
+    zIndex: 20,
+    shadowColor: "#FFD700",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.7,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  goldPlate: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: "#B8860B",
+    backgroundColor: "#FFD700",
+    shadowColor: "#FFD700",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.6,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  goldRateText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#850111",
+    marginRight: 2,
+  },
+  goldRateUnit: {
+    fontSize: 13,
+    color: "#B8860B",
+    fontWeight: "600",
   },
 });

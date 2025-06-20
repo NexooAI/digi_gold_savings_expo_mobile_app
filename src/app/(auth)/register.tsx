@@ -316,7 +316,9 @@ export default function Register() {
       {/* Dark overlay for background */}
       <View style={registerStyles.darkOverlay} />
       <LinearGradient
-        colors={["rgba(32, 1, 1, 0.55)", "rgba(167, 0, 0, 0.3)", "rgba(118, 1, 1, 0.3)"]}
+        colors={["rgba(32, 1, 1, 0.55)",
+           "rgba(167, 0, 0, 0)", 
+           "rgba(118, 1, 1, 0)"]}
         style={registerStyles.gradient}
       >
         {showError && (

@@ -8,7 +8,7 @@ export const registerStyles = StyleSheet.create({
   },
   darkOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.63)', // Adjust opacity as needed
+    backgroundColor: 'rgba(0, 0, 0, 0)', // Adjust opacity as needed
     zIndex: 0,
   },
   gradient: {
@@ -23,6 +23,7 @@ export const registerStyles = StyleSheet.create({
     justifyContent: "flex-start",
     paddingHorizontal: 20,
     paddingBottom: 0,
+    marginTop: 60,
   },
   cardContainer: {
     borderRadius: 20,
@@ -267,5 +268,105 @@ export const registerStyles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
     marginLeft: 4,
+  },
+  mpinContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "70%",
+    alignSelf: "center",
+  },
+  inputWrapper: {
+    position: "relative",
+  },
+  mpinInput: {
+    width: 50,
+    height: 50,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    color: "#ffffff",
+    fontSize: 24,
+    textAlign: "center",
+  },
+  mpinInputEmpty: {
+    borderColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+  },
+  mpinInputFilled: {
+    borderColor: theme.colors.secondary,
+    backgroundColor: "rgba(255, 215, 0, 0.1)",
+  },
+  inputIndicator: {
+    position: "absolute",
+    bottom: 8,
+    left: "50%",
+    marginLeft: -3,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: theme.colors.secondary,
+  },
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 68, 68, 0.1)",
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  label: {
+    color: "#ffffff",
+    fontSize: 16,
+    marginBottom: 15,
+    alignSelf: "stretch",
+  },
+  eyeToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 20,
+    alignSelf: "center",
+  },
+  eyeText: {
+    color: theme.colors.secondary,
+    marginLeft: 10,
+    fontSize: 16,
+  },
+  submitButton: {
+    width: "100%",
+    height: 50,
+    borderRadius: 25,
+    overflow: "hidden",
+    marginTop: 20,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  submitButtonDisabled: {
+    opacity: 0.6,
+  },
+  submitButtonText: {
+    color: theme.colors.textDark,
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  backButton: {
+    marginTop: 20,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  backButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    marginLeft: 5,
+    opacity: 0.8,
   },
 }); 

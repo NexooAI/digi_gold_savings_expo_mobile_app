@@ -175,7 +175,7 @@ export default function MpinVerify() {
       style={styles.backgroundImage}
     >
       <LinearGradient
-        colors={["rgba(32, 1, 1, 0.55)", "rgba(167, 0, 0, 0.3)", "rgba(118, 1, 1, 0.3)"]}
+        colors={["rgba(32, 1, 1, 0)", "rgba(167, 0, 0, 0)", "rgba(118, 1, 1, 0.02)"]}
         style={styles.gradient}
       >
         <KeyboardAvoidingView
