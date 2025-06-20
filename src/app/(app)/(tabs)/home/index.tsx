@@ -219,7 +219,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
               <Text style={styles.statLabel}>Total Gold</Text>
               <View style={styles.statValue}>
                 <Text style={styles.countText}>
-                  {totalGoldSavings.toFixed(3)}
+                  {totalGoldSavings.toFixed(2)}
                 </Text>
                 <Text style={styles.unitText}>g</Text>
               </View>

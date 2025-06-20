@@ -14,6 +14,7 @@ import {
   ImageBackground,
   Image,
   Alert,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -93,6 +94,8 @@ export default function SchemeList() {
   const flatListRef = useRef<FlatList>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const currentTabIndex = tabs.indexOf(activeTab);
+  const [descModalVisible, setDescModalVisible] = useState(false);
+  const [descModalText, setDescModalText] = useState("");
 
   // Memoize the filtered schemes to prevent unnecessary recalculations
   const filteredSchemes = useMemo(() => {
@@ -390,6 +393,14 @@ export default function SchemeList() {
     setExpandedCard((prev) => (prev === schemeId ? null : schemeId));
   };
 
+  // Helper to get first 4 lines of a string
+  const getShortDescription = (desc: string) => {
+    if (!desc) return "";
+    const lines = desc.split(/\r?\n/);
+    if (lines.length <= 4) return desc;
+    return lines.slice(0, 4).join("\n") + "...";
+  };
+
   const renderSchemeItem = ({ item }: { item: Scheme }) => {
     const scaleValue = new Animated.Value(1);
     const tabColor = getTabColor(item.SCHEMETYPE);
@@ -447,7 +458,20 @@ export default function SchemeList() {
           </ImageBackground>
 
           <View style={styles.cardContent}>
-            <Text style={styles.schemeDescription}>{item.DESCRIPTION}</Text>
+            <Text style={styles.schemeDescription} numberOfLines={4} ellipsizeMode="tail">
+              {getShortDescription(item.DESCRIPTION)}
+            </Text>
+            {item.DESCRIPTION && item.DESCRIPTION.split(/\r?\n/).length > 4 && (
+              <TouchableOpacity
+                style={styles.readMoreBtn}
+                onPress={() => {
+                  setDescModalText(item.DESCRIPTION);
+                  setDescModalVisible(true);
+                }}
+              >
+                <Text style={styles.readMoreText}>Read More</Text>
+              </TouchableOpacity>
+            )}
 
             <View style={styles.divider} />
 
@@ -595,6 +619,26 @@ export default function SchemeList() {
           <Text style={styles.floatingHintText}>Swipe to switch plans</Text>
         </View>
       </View>
+      <Modal
+        visible={descModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDescModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Description</Text>
+              <TouchableOpacity onPress={() => setDescModalVisible(false)} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color={theme.colors.primary} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.modalBody}>
+              <Text style={styles.fullDescriptionText}>{descModalText}</Text>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1023,5 +1067,61 @@ const styles = StyleSheet.create({
   floatingHintText: {
     color: theme.colors.textPrimary,
     fontSize: 12,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    width: "90%",
+    maxHeight: "80%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e5e5",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: theme.colors.primary,
+  },
+  closeButton: {
+    padding: 4,
+  },
+  modalBody: {
+    padding: 16,
+    maxHeight: "70%",
+    backgroundColor: "#f5f5f5",
+  },
+  fullDescriptionText: {
+    fontSize: 15,
+    color: theme.colors.textSecondary,
+    lineHeight: 22,
+  },
+  readMoreBtn: {
+    alignSelf: "flex-start",
+    marginBottom: 8,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    backgroundColor: theme.colors.primary,
+  },
+  readMoreText: {
+    color: theme.colors.secondary,
+    fontSize: 13,
+    fontWeight: "600",
   },
 });

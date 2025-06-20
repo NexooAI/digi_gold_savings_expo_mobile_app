@@ -786,70 +786,67 @@ export default function JoinSavings() {
     <View style={styles.stepContainer}>
       <Text style={styles.sectionTitle}>Account Details</Text>
       <Text style={styles.label}>Account Holder Name</Text>
-      <View
-        style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}
+      <TextInput
+        style={[
+          styles.input,
+          errors.accountname ? styles.inputError : null,
+          { width: '100%', marginBottom: 4 },
+        ]}
+        placeholder="Enter your account name"
+        placeholderTextColor={"#999"}
+        value={formData.accountname}
+        onChangeText={(value) => handleChange("accountname", value)}
+        editable={!useLoginName}
+      />
+      <TouchableOpacity
+        style={styles.checkboxRow}
+        onPress={() => {
+          const checked = !useLoginName;
+          setUseLoginName(checked);
+          if (checked && user?.name) {
+            handleChange("accountname", user.name);
+          }
+        }}
+        activeOpacity={0.8}
       >
-        <TextInput
-          style={[
-            styles.input,
-            errors.accountname ? styles.inputError : null,
-            { flex: 1 },
-          ]}
-          placeholder="Enter your account name"
-          placeholderTextColor={"#999"}
-          value={formData.accountname}
-          onChangeText={(value) => handleChange("accountname", value)}
-          editable={!useLoginName}
-        />
-        <TouchableOpacity
-          style={{ flexDirection: "row", alignItems: "center", marginLeft: 8 }}
-          onPress={() => {
-            const checked = !useLoginName;
-            setUseLoginName(checked);
-            if (checked && user?.name) {
-              handleChange("accountname", user.name);
-            }
-          }}
-        >
-          <View
-            style={{
-              width: 20,
-              height: 20,
-              borderRadius: 4,
-              borderWidth: 1,
-              borderColor: "#FFC857",
-              backgroundColor: useLoginName ? "#FFC857" : "#fff",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 4,
-            }}
-          >
-            {useLoginName && (
-              <Ionicons name="checkmark" size={16} color="#1a237e" />
-            )}
-          </View>
-          <Text style={{ fontSize: 12, color: "#333" }}>Use my login name</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={[styles.checkboxBox, { backgroundColor: useLoginName ? '#FFC857' : '#fff' }]}>
+          {useLoginName && (
+            <Ionicons name="checkmark" size={16} color="#1a237e" />
+          )}
+        </View>
+        <Text style={styles.checkboxLabel}>Use my login name</Text>
+      </TouchableOpacity>
       {errors.accountname && (
         <Text style={styles.errorText}>{errors.accountname}</Text>
       )}
-      <Text style={styles.label}>Branch Name</Text>
-      <RNPickerSelect
-        onValueChange={(value) => handleChange("associated_branch", value)}
-        onDonePress={() => {}}
-        placeholder={{ label: "Select Branch", value: "" }}
-        value={formData.associated_branch}
-        items={branch.map((id) => ({
-          label: id.branch_name,
-          value: id.id,
-        }))}
-        style={pickerSelectStyles}
-        useNativeAndroidPickerStyle={false}
-      />
-      {errors.associated_branch && (
-        <Text style={styles.errorText}>{errors.associated_branch}</Text>
-      )}
+      <Text style={[styles.label, { marginTop: 12 }]}>Branch Name</Text>
+      <View style={{ marginBottom: errors.associated_branch ? 0 : 16 }}>
+        <RNPickerSelect
+          onValueChange={(value) => handleChange("associated_branch", value)}
+          onDonePress={() => {}}
+          placeholder={{ label: "Select Branch", value: "" }}
+          value={formData.associated_branch}
+          items={branch.map((id) => ({
+            label: id.branch_name,
+            value: id.id,
+          }))}
+          style={{
+            ...pickerSelectStyles,
+            inputIOS: [
+              pickerSelectStyles.inputIOS,
+              errors.associated_branch && { borderColor: '#dc2626' }
+            ],
+            inputAndroid: [
+              pickerSelectStyles.inputAndroid,
+              errors.associated_branch && { borderColor: '#dc2626' }
+            ]
+          }}
+          useNativeAndroidPickerStyle={false}
+        />
+        {errors.associated_branch && (
+          <Text style={[styles.errorText, { marginTop: 2 }]}>{errors.associated_branch}</Text>
+        )}
+      </View>
     </View>
   );
 
@@ -2249,5 +2246,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#333",
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    marginTop: 2,
+  },
+  checkboxBox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#FFC857',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 6,
+    ...(Platform.OS === 'web' ? { cursor: 'pointer' } : {}),
+  },
+  checkboxLabel: {
+    fontSize: 12,
+    color: '#333',
   },
 });
