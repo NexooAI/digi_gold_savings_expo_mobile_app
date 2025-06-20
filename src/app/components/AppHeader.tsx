@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Image,
@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Dimensions,
   SafeAreaView,
+  Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
@@ -16,14 +17,64 @@ import { AppLocale } from "@/i18n";
 
 const { width } = Dimensions.get("window");
 
-const AppHeader = ({ showBackButton = false, backRoute, showLanguageSwitcher = false }) => {
+interface RateInfo {
+  rate: string;
+  purity: string;
+}
+
+interface AppHeaderProps {
+  showBackButton?: boolean;
+  backRoute?: string;
+  showLanguageSwitcher?: boolean;
+  goldRateInfo?: RateInfo;
+  goldRateUpdatedAt?: string;
+}
+
+// Helper to format date as 'dd/MM/yyyy HH:mm'
+function formatDateTime(dateString?: string) {
+  if (!dateString) return '--/--/---- --:--';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '--/--/---- --:--';
+  const pad = (n: number) => n < 10 ? '0' + n : n;
+  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+const AppHeader: React.FC<AppHeaderProps> = ({ showBackButton = false, backRoute, showLanguageSwitcher = false, goldRateInfo, goldRateUpdatedAt }) => {
   const navigation = useNavigation();
   const { setLanguage, language } = useGlobalStore();
 
+  // Flipping card state
+  const [showGold, setShowGold] = useState(true);
+  const flipAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      Animated.timing(flipAnim, {
+        toValue: showGold ? 1 : 0,
+        duration: 400,
+        useNativeDriver: true,
+      }).start(() => setShowGold((prev) => !prev));
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [showGold]);
+
+  const frontInterpolate = flipAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+  const backInterpolate = flipAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['180deg', '360deg'],
+  });
+
   const handleBackPress = () => {
     if (backRoute) {
-      // Navigate to the specified back route
-      navigation.navigate(backRoute);
+      // Navigate to the specified back route (string format, bypass type error)
+      try {
+        navigation.navigate(backRoute as any);
+      } catch {
+        navigation.goBack();
+      }
     } else {
       // Default behavior: go back to the previous screen
       navigation.goBack();
@@ -70,6 +121,37 @@ const AppHeader = ({ showBackButton = false, backRoute, showLanguageSwitcher = f
             resizeMode="contain"
           />
         </View>
+        {goldRateInfo && (
+          <View style={styles.flipCardWrapper}>
+            <Animated.View
+              style={[styles.flipCard, { transform: [{ perspective: 1000 }, { rotateX: frontInterpolate }] }]}
+            >
+              {/* Gold Side 1 */}
+              <Image source={require('../../../assets/images/gold_pattern.jpg')} style={styles.plateBg} />
+              <View style={styles.plateContent}>
+                <View style={{ marginLeft: 6 }}>
+                  <Text style={styles.goldRateText}>Gold: ₹{goldRateInfo.rate}</Text>
+                  <Text style={styles.goldRatePurity}>22K</Text>
+                </View>
+              </View>
+            </Animated.View>
+            <Animated.View
+              style={[styles.flipCard, styles.flipCardBack, { transform: [{ perspective: 1000 }, { rotateX: backInterpolate }] }]}
+            >
+              {/* Gold Side 2 (flipped): Show updated date/time and LIVE */}
+              <Image source={require('../../../assets/images/gold_pattern.jpg')} style={styles.plateBg} />
+              <View style={[styles.plateContent, { flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }]}> 
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+                  <Ionicons name="time-outline" size={14} color="#7a5600" style={{ marginRight: 4 }} />
+                  <Text style={styles.updateText}>
+                    {formatDateTime(goldRateUpdatedAt)}
+                  </Text>
+                </View>
+                <Text style={styles.liveText}>LIVE</Text>
+              </View>
+            </Animated.View>
+          </View>
+        )}
         <View style={styles.rightContainer}>
           {showLanguageSwitcher && (
             <TouchableOpacity
@@ -159,6 +241,87 @@ const styles = StyleSheet.create({
     fontSize: 14, // Smaller text for better UX
     color: theme.theme.colors.white,
     marginLeft: 5,
+  },
+  flipCardWrapper: {
+    width: 120,
+    height: 40,
+    marginHorizontal: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  flipCard: {
+    position: 'absolute',
+    width: 120,
+    height: 40,
+    borderRadius: 16,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backfaceVisibility: 'hidden',
+  },
+  flipCardBack: {
+    position: 'absolute',
+    width: 120,
+    height: 40,
+    borderRadius: 16,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backfaceVisibility: 'hidden',
+  },
+  rateImage: {
+    width: 28,
+    height: 28,
+    resizeMode: 'contain',
+  },
+  goldRateText: {
+    color: '#7a5600',
+    fontWeight: 'bold',
+    fontSize: 15,
+    textShadowColor: 'rgba(255,255,255,0.7)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  goldRatePurity: {
+    color: '#5a3d00',
+    fontSize: 12,
+    fontWeight: '600',
+    opacity: 0.9,
+    textShadowColor: 'rgba(255,255,255,0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 1,
+  },
+  plateBg: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+    zIndex: 0,
+    borderRadius: 16,
+  },
+  plateContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+    width: '100%',
+    paddingLeft: 8,
+    paddingRight: 8,
+  },
+  updateText: {
+    color: '#7a5600',
+    fontSize: 12,
+    fontWeight: '600',
+    textShadowColor: 'rgba(255,255,255,0.7)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 1,
+  },
+  liveText: {
+    color: '#d32f2f',
+    fontWeight: 'bold',
+    fontSize: 13,
+    letterSpacing: 1,
+    marginTop: 2,
   },
 });
 

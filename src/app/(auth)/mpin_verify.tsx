@@ -197,17 +197,17 @@ export default function MpinVerify() {
                   {/* Base fog layer */}
                   <LinearGradient
                     colors={[
-                      "rgba(174, 0, 0, 0.1)",
+                      "rgba(6, 2, 2, 0.78)",
                       "rgba(34, 0, 0, 0.35)",
-                      "rgba(134, 1, 1, 0.4)",
+                      "rgba(31, 3, 3, 0.54)",
                     ]}
                     style={StyleSheet.absoluteFill}
                   />
                   {/* Top fog highlight */}
                   <LinearGradient
                     colors={[
-                      "rgba(112, 0, 0, 0.38)",
-                      "rgba(130, 0, 0, 0.4)",
+                      "rgba(10, 2, 2, 0.38)",
+                      "rgba(76, 63, 63, 0.74)",
                     ]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 0, y: 0.5 }}
@@ -216,8 +216,8 @@ export default function MpinVerify() {
                   {/* Bottom fog highlight */}
                   <LinearGradient
                     colors={[
-                      "rgba(143, 0, 0, 0.29)",
-                      "rgba(122, 5, 5, 0.53)",
+                      "rgba(0, 0, 0, 0.44)",
+                      "rgba(0, 0, 0, 0.28)",
                     ]}
                     start={{ x: 0, y: 0.5 }}
                     end={{ x: 0, y: 1 }}

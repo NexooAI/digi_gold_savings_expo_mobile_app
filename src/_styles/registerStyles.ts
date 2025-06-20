@@ -231,7 +231,7 @@ export const registerStyles = StyleSheet.create({
     marginBottom: 10,
   },
   poweredByText: {
-    color: '#fff',
+    color: '#000',
     fontSize: 14,
     opacity: 0.7,
     letterSpacing: 1,

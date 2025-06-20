@@ -16,6 +16,8 @@ import { useLocalSearchParams } from "expo-router";
 import { theme } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import api from "@/services/api";
+
 
 const { width } = Dimensions.get("window");
 const logoWidth = width * 0.3;
@@ -48,33 +50,33 @@ const GlassmorphismCard = ({ children }: { children: React.ReactNode }) => {
     <View style={styles.cardContainer}>
       {/* Base fog layer */}
       <LinearGradient
-        colors={[
-          "rgba(174, 0, 0, 0.1)",
-          "rgba(34, 0, 0, 0.35)",
-          "rgba(134, 1, 1, 0.4)",
-        ]}
-        style={StyleSheet.absoluteFill}
-      />
-      {/* Top fog highlight */}
-      <LinearGradient
-        colors={[
-          "rgba(112, 0, 0, 0.38)",
-          "rgba(130, 0, 0, 0.4)",
-        ]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 0.5 }}
-        style={StyleSheet.absoluteFill}
-      />
-      {/* Bottom fog highlight */}
-      <LinearGradient
-        colors={[
-          "rgba(143, 0, 0, 0.29)",
-          "rgba(122, 5, 5, 0.53)",
-        ]}
-        start={{ x: 0, y: 0.5 }}
-        end={{ x: 0, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
+                    colors={[
+                      "rgba(6, 2, 2, 0.78)",
+                      "rgba(34, 0, 0, 0.35)",
+                      "rgba(31, 3, 3, 0.54)",
+                    ]}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  {/* Top fog highlight */}
+                  <LinearGradient
+                    colors={[
+                      "rgba(10, 2, 2, 0.38)",
+                      "rgba(76, 63, 63, 0.74)",
+                    ]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 0.5 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  {/* Bottom fog highlight */}
+                  <LinearGradient
+                    colors={[
+                      "rgba(0, 0, 0, 0.44)",
+                      "rgba(0, 0, 0, 0.28)",
+                    ]}
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 0, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
       {/* Content */}
       <View style={styles.cardContent}>{children}</View>
     </View>
@@ -163,19 +165,39 @@ export default function BasicDetailsForm() {
     return isNameValid && isEmailValid && isReferralValid;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit =  () => {
     if (validateForm()) {
       setLoading(true);
-      setTimeout(() => {
-        router.push({
-          pathname: "/(auth)/setmpin",
-          params: {
-            name: name.trim(),
-            email: email.trim(),
-            mobile: mobile,
-            referral_code: referralCode.trim(),
-          },
-        });
+      setTimeout(async() => {
+
+        try {
+          const response = await api.post("/register/complete", {
+            name,
+            email,
+            mobile_number: mobile,
+            mpin: '1234',
+            password: 1234,
+            referral_code:referralCode.trim()
+          });
+          if (response.status === 200) {
+            router.replace({ pathname: "/(auth)/login", params: { mobile } });
+          } else {
+            showErrorAlert(response.data.message || "Registration failed");
+          }
+        } catch (error: any) {
+          showErrorAlert(error.response?.data?.message || "Registration failed");
+        } finally {
+          setLoading(false);
+        }
+        // router.push({
+        //   pathname: "/(auth)/setmpin",
+        //   params: {
+        //     name: name.trim(),
+        //     email: email.trim(),
+        //     mobile: mobile,
+        //     referral_code: referralCode.trim(),
+        //   },
+        // });
         setLoading(false);
       }, 500);
     }
@@ -465,7 +487,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(208, 38, 38, 0.65)",
+    backgroundColor: "rgba(43, 23, 23, 0.65)",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 15,

@@ -198,6 +198,7 @@ const SavingsDetail = () => {
 
     try {
       let responce = await api.post("investments/check-payment", payload);
+      console.log(responce.data)
       if (responce?.data?.success === false) {
         setAlertMessage(responce?.data.message || "Something went wrong");
         setAlertType("error");
