@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   detailTextContainer: {
-    flex: 1,
+    flex: 1, 
   },
   detailLabel: {
     fontSize: 14,
@@ -312,4 +312,4 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: 'Inter_700Bold',
   },
-}); 
+});

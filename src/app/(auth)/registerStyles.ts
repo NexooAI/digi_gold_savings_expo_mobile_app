@@ -1,0 +1,271 @@
+import { StyleSheet, Platform } from "react-native";
+import { theme } from "@/constants/theme";
+
+export const registerStyles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    resizeMode: "cover",
+  },
+  darkOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.63)', // Adjust opacity as needed
+    zIndex: 0,
+  },
+  gradient: {
+    flex: 1,
+  },
+  container: {
+    flex: 1,
+    paddingBottom: Platform.OS === "ios" ? 40 : 20,
+  },
+  formContainer: {
+    flex: 1,
+    justifyContent: "flex-start",
+    paddingHorizontal: 20,
+    paddingBottom: 0,
+  },
+  cardContainer: {
+    borderRadius: 20,
+    padding: 20,
+    paddingBottom: 40,
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.4)",
+    marginBottom: Platform.OS === "ios" ? 20 : 10,
+    overflow: "hidden",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        backdropFilter: "blur(20px)",
+      },
+      android: {
+        elevation: 12,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+      },
+    }),
+    position: "relative",
+  },
+  cardContent: {
+    position: "relative",
+    zIndex: 1,
+  },
+  pageTitle: {
+    color: "#ffffff",
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  subtitle: {
+    color: "#ffffff",
+    fontSize: 16,
+    marginBottom: 30,
+    textAlign: "center",
+    opacity: 0.8,
+  },
+  inputContainer: {
+    width: "100%",
+    marginBottom: 6,
+  },
+  loginButton: {
+    width: "100%",
+    height: 50,
+    borderRadius: 25,
+    overflow: "hidden",
+    marginTop: 6,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  gradientButton: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loginButtonDisabled: {
+    opacity: 0.6,
+  },
+  loginButtonText: {
+    color: theme.colors.textDark,
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  otpContainer: {
+    alignItems: "center",
+    marginVertical: 20,
+    width: "100%",
+  },
+  otpTitle: {
+    color: "#ffffff",
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  otpSentText: {
+    color: "#ffffff",
+    fontSize: 16,
+    marginBottom: 20,
+    opacity: 0.8,
+  },
+  otpInputsWrapper: {
+    position: "relative",
+    width: "70%",
+    alignSelf: "center",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  otpInputsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    marginTop: 10,
+  },
+  otpInput: {
+    width: 50,
+    height: 50,
+    borderWidth: 1,
+    borderColor: "rgba(0, 0, 0, 0.1)",
+    borderRadius: 12,
+    color: "#000000",
+    fontSize: 24,
+    backgroundColor: "#ffffff",
+    textAlign: "center",
+  },
+  eyeButton: {
+    position: "absolute",
+    right: -40,
+    top: 20,
+  },
+  timerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 15,
+  },
+  timerText: {
+    color: "#ffffff",
+    marginLeft: 8,
+    fontSize: 16,
+    opacity: 0.8,
+  },
+  resendButton: {
+    marginTop: 10,
+    padding: 10,
+  },
+  resendText: {
+    color: theme.colors.secondary,
+    fontSize: 16,
+    fontWeight: "bold",
+    textDecorationLine: "underline",
+  },
+  registerContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 20,
+  },
+  registerText: {
+    color: "#ffffff",
+    fontSize: 16,
+    opacity: 0.8,
+  },
+  registerLink: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "bold",
+    textDecorationLine: "underline",
+    marginLeft: 4,
+  },
+  errorAlert: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? 50 : 30,
+    left: 20,
+    right: 20,
+    backgroundColor: "rgba(255, 68, 68, 0.95)",
+    borderRadius: 12,
+    padding: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    zIndex: 1000,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  errorContent: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  errorMessage: {
+    color: "#fff",
+    fontSize: 16,
+    marginLeft: 10,
+    flex: 1,
+  },
+  closeButton: {
+    padding: 5,
+  },
+  poweredByContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  poweredByText: {
+    color: '#fff',
+    fontSize: 14,
+    opacity: 0.7,
+    letterSpacing: 1,
+  },
+  logoContainer: {
+    width: "100%",
+    alignItems: "center",
+    paddingTop: Platform.OS === "ios" ? 20 : 10,
+    marginBottom: 0,
+  },
+  logo: {
+    aspectRatio: 1,
+  },
+  footer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 20,
+  },
+  footerText: {
+    color: "#ffffff",
+    fontSize: 16,
+    opacity: 0.8,
+  },
+  footerLink: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "bold",
+    textDecorationLine: "underline",
+    marginLeft: 4,
+  },
+  errorText: {
+    color: "#ff4444",
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
+  },
+}); 

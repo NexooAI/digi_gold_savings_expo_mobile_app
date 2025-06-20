@@ -14,6 +14,8 @@ import {
   Animated,
   NativeSyntheticEvent,
   TextInputKeyPressEventData,
+  Linking,
+  ScrollView,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import NetInfo from "@react-native-community/netinfo";
@@ -28,6 +30,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { t } from "@/i18n";
 import { useOtpAutoFetch } from "@/hooks/useOtpAutoFetch";
+import { registerStyles } from "./registerStyles";
 
 const { width } = Dimensions.get("window");
 const logoWidth = width * 0.3;
@@ -77,18 +80,18 @@ const ErrorAlert = ({
   return (
     <Animated.View
       style={[
-        styles.errorAlert,
+        registerStyles.errorAlert,
         {
           transform: [{ translateY }],
           opacity,
         },
       ]}
     >
-      <View style={styles.errorContent}>
+      <View style={registerStyles.errorContent}>
         <Ionicons name="alert-circle" size={24} color="#fff" />
-        <Text style={styles.errorMessage}>{message}</Text>
+        <Text style={registerStyles.errorMessage}>{message}</Text>
       </View>
-      <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+      <TouchableOpacity onPress={onClose} style={registerStyles.closeButton}>
         <Ionicons name="close" size={20} color="#fff" />
       </TouchableOpacity>
     </Animated.View>
@@ -97,7 +100,7 @@ const ErrorAlert = ({
 
 const GlassmorphismCard = ({ children }: { children: React.ReactNode }) => {
   return (
-    <View style={styles.cardContainer}>
+    <View style={registerStyles.cardContainer}>
       {/* Base fog layer */}
       <LinearGradient
         colors={[
@@ -128,7 +131,7 @@ const GlassmorphismCard = ({ children }: { children: React.ReactNode }) => {
         style={StyleSheet.absoluteFill}
       />
       {/* Content */}
-      <View style={styles.cardContent}>{children}</View>
+      <View style={registerStyles.cardContent}>{children}</View>
     </View>
   );
 };
@@ -518,432 +521,188 @@ export default function Login() {
   return (
     <ImageBackground
       source={theme.image.bg_image}
-      style={styles.backgroundImage}
+      style={registerStyles.backgroundImage}
     >
+      {/* Dark overlay for background */}
+      <View style={registerStyles.darkOverlay} />
       <LinearGradient
         colors={["rgba(32, 1, 1, 0.55)", "rgba(167, 0, 0, 0.3)", "rgba(118, 1, 1, 0.3)"]}
-        style={styles.gradient}
+        style={registerStyles.gradient}
       >
         {showError && (
           <ErrorAlert message={errorMessage} onClose={hideErrorAlert} />
         )}
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.container}
-        >
-          <View style={styles.logoContainer}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+          <View style={registerStyles.logoContainer}>
             <Image
               source={theme.image.transparentLogo}
-              style={[styles.logo, { width: logoWidth }]}
+              style={registerStyles.logo}
               resizeMode="contain"
             />
           </View>
 
-          <View style={styles.formContainer}>
-            <GlassmorphismCard>
-              <Text style={styles.pageTitle}>Welcome Back!</Text>
-              <Text style={styles.subtitle}>Sign in to continue</Text>
-
-              {!isShowOtp ? (
-                <>
-                  <View style={styles.inputContainer}>
-                    <PhoneInput
-                      value={mobile}
-                      onChangeText={(text) => {
-                        setMobile(text);
-                        setMobileError("");
-                      }}
-                      loading={loading}
-                    />
-                    {mobileError ? (
-                      <Text style={styles.errorText}>{mobileError}</Text>
-                    ) : null}
-                  </View>
-                  <TouchableOpacity
-                    style={[
-                      styles.loginButton,
-                      loading && styles.loginButtonDisabled,
-                    ]}
-                    onPress={loginAxio}
-                    disabled={loading}
-                  >
-                    <LinearGradient
-                      colors={["#ffc90c", "#ffd700"]}
-                      style={styles.gradientButton}
+          <View style={registerStyles.formContainer}>
+            <View style={registerStyles.cardContainer}>
+              {/* Base fog layer */}
+              <LinearGradient
+                colors={[
+                  "rgba(174, 0, 0, 0.1)",
+                  "rgba(34, 0, 0, 0.35)",
+                  "rgba(134, 1, 1, 0.4)",
+                ]}
+                style={StyleSheet.absoluteFill}
+              />
+              {/* Top fog highlight */}
+              <LinearGradient
+                colors={[
+                  "rgba(112, 0, 0, 0.38)",
+                  "rgba(130, 0, 0, 0.4)",
+                ]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 0.5 }}
+                style={StyleSheet.absoluteFill}
+              />
+              {/* Bottom fog highlight */}
+              <LinearGradient
+                colors={[
+                  "rgba(143, 0, 0, 0.29)",
+                  "rgba(122, 5, 5, 0.53)",
+                ]}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 0, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+              {/* Content */}
+              <View style={registerStyles.cardContent}>
+                <Text style={registerStyles.pageTitle}>Welcome Back!</Text>
+                <Text style={registerStyles.subtitle}>Sign in to continue</Text>
+                {!isShowOtp ? (
+                  <>
+                    <View style={registerStyles.inputContainer}>
+                      <PhoneInput
+                        value={mobile}
+                        onChangeText={(text) => {
+                          setMobile(text);
+                          setMobileError("");
+                        }}
+                        loading={loading}
+                      />
+                      {mobileError ? (
+                        <Text style={registerStyles.errorText}>{mobileError}</Text>
+                      ) : null}
+                    </View>
+                    <TouchableOpacity
+                      style={[
+                        registerStyles.loginButton,
+                        loading && registerStyles.loginButtonDisabled,
+                      ]}
+                      onPress={loginAxio}
+                      disabled={loading}
                     >
-                      <Text style={styles.loginButtonText}>
-                        {loading ? "Processing..." : "Get OTP"}
-                      </Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                  <View style={styles.registerContainer}>
-                    <Text style={styles.registerText}>
-                      Don't have an account?{" "}
-                    </Text>
-                    <TouchableOpacity onPress={() => router.push("/register")}>
-                      <Text style={styles.registerLink}>Register</Text>
+                      <LinearGradient
+                        colors={["#ffc90c", "#ffd700"]}
+                        style={registerStyles.gradientButton}
+                      >
+                        <Text style={registerStyles.loginButtonText}>
+                          {loading ? "Processing..." : "Get OTP"}
+                        </Text>
+                      </LinearGradient>
                     </TouchableOpacity>
-                  </View>
-                </>
-              ) : (
-                <View style={styles.otpContainer}>
-                  <Text style={styles.otpTitle}>Enter OTP</Text>
-                  <Text style={styles.otpSentText}>
-                    OTP sent to{" "}
-                    {mobile.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3")}
-                  </Text>
-
-                  <View style={styles.otpInputsWrapper}>
-                    <View style={styles.otpInputsContainer}>
-                      {pins.map((pin, index) => (
-                        <View key={index} style={styles.otpInputWrapper}>
+                    <View style={registerStyles.registerContainer}>
+                      <Text style={registerStyles.registerText}>
+                        Don't have an account?{" "}
+                      </Text>
+                      <TouchableOpacity onPress={() => router.push("/register")}> 
+                        <Text style={registerStyles.registerLink}>Register</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                ) : (
+                  <View style={registerStyles.otpContainer}>
+                    <Text style={registerStyles.otpTitle}>Enter OTP</Text>
+                    <Text style={registerStyles.otpSentText}>
+                      OTP sent to{" "}
+                      {mobile.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3")}
+                    </Text>
+                    <View style={registerStyles.otpInputsWrapper}>
+                      <View style={registerStyles.otpInputsContainer}>
+                        {pins.map((pin, index) => (
                           <TextInput
+                            key={index}
                             ref={inputRefs[index]}
-                            style={[
-                              styles.otpInput,
-                              loading && styles.otpInputDisabled, // Only apply disabled style when loading
-                            ]}
-                            keyboardType="number-pad"
+                            style={registerStyles.otpInput}
+                            keyboardType="numeric"
                             maxLength={1}
                             value={pin}
-                            onChangeText={(text) =>
-                              handlePinChange(text, index)
-                            }
+                            onChangeText={(text) => handlePinChange(text, index)}
                             onKeyPress={(e) => handleKeyPress(e, index)}
                             secureTextEntry={!showOtp}
                             textContentType="oneTimeCode"
                             autoComplete="sms-otp"
-                            autoCorrect={false}
-                            autoCapitalize="none"
-                            importantForAutofill="yes"
-                            accessibilityLabel={`OTP digit ${index + 1}`}
-                            editable={!loading} // Only disable when loading
-                            selectTextOnFocus
-                            caretHidden={false}
-                            contextMenuHidden={true}
-                            onFocus={() => {
-                              if (pin) {
-                                const newPins = [...pins];
-                                newPins[index] = "";
-                                setPins(newPins);
-                              }
-                            }}
+                            editable={!loading}
                           />
-                        </View>
-                      ))}
+                        ))}
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => setShowOtp((prev) => !prev)}
+                        style={registerStyles.eyeButton}
+                      >
+                        <Feather
+                          name={showOtp ? "eye-off" : "eye"}
+                          size={24}
+                          color={theme.colors.white}
+                        />
+                      </TouchableOpacity>
                     </View>
-                    <TouchableOpacity
-                      onPress={() => setShowOtp((prev: boolean) => !prev)}
-                      style={styles.eyeButton}
-                    >
-                      <Feather
-                        name={showOtp ? "eye-off" : "eye"}
-                        size={24}
+                    <View style={registerStyles.timerContainer}>
+                      <Ionicons
+                        name="time-outline"
+                        size={20}
                         color={theme.colors.white}
                       />
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={styles.timerContainer}>
-                    <Ionicons
-                      name="time-outline"
-                      size={20}
-                      color={theme.colors.white}
-                    />
-                    <Text style={styles.timerText}>Resend in {timer}s</Text>
-                  </View>
-
-                  {timer === 0 && resendAttempts < 3 && (
+                      <Text style={registerStyles.timerText}>Resend in {timer}s</Text>
+                    </View>
+                    {timer === 0 && resendAttempts < 3 && (
+                      <TouchableOpacity
+                        onPress={handleResendOtp}
+                        style={registerStyles.resendButton}
+                      >
+                        <Text style={registerStyles.resendText}>Resend OTP</Text>
+                      </TouchableOpacity>
+                    )}
                     <TouchableOpacity
-                      onPress={handleResendOtp}
-                      style={styles.resendButton}
+                      style={[
+                        registerStyles.loginButton,
+                        (loading || !pins.every((pin) => pin.trim() !== "")) &&
+                          registerStyles.loginButtonDisabled,
+                      ]}
+                      onPress={() => verifyOtp(pins.join(""))}
+                      disabled={
+                        loading || !pins.every((pin) => pin.trim() !== "")
+                      }
                     >
-                      <Text style={styles.resendText}>Resend OTP</Text>
+                      <LinearGradient
+                        colors={["#ffc90c", "#ffd700"]}
+                        style={registerStyles.gradientButton}
+                      >
+                        <Text style={registerStyles.loginButtonText}>
+                          {loading ? "Verifying..." : "Submit"}
+                        </Text>
+                      </LinearGradient>
                     </TouchableOpacity>
-                  )}
-
-                  <TouchableOpacity
-                    style={[
-                      styles.loginButton,
-                      (loading || !pins.every((pin) => pin.trim() !== "")) &&
-                        styles.loginButtonDisabled,
-                    ]}
-                    onPress={() => verifyOtp(pins.join(""))}
-                    disabled={
-                      loading || !pins.every((pin) => pin.trim() !== "")
-                    }
-                  >
-                    <LinearGradient
-                      colors={["#ffc90c", "#ffd700"]}
-                      style={styles.gradientButton}
-                    >
-                      <Text style={styles.loginButtonText}>
-                        {loading ? "Verifying..." : "Submit"}
-                      </Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </GlassmorphismCard>
+                  </View>
+                )}
+              </View>
+            </View>
           </View>
-        </KeyboardAvoidingView>
+          <View style={registerStyles.poweredByContainer}>
+            <Text style={registerStyles.poweredByText}>
+              Powered by <Text style={{textDecorationLine: 'underline', color: '#ffc90c'}} onPress={() => Linking.openURL('https://agnisofterp.com/')}>Agni Soft ERP</Text>
+            </Text>
+          </View>
+        </ScrollView>
       </LinearGradient>
     </ImageBackground>
   );
 }
 
-const styles = StyleSheet.create({
-  backgroundImage: {
-    flex: 1,
-    resizeMode: "cover",
-  },
-  gradient: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    paddingBottom: Platform.OS === "ios" ? 40 : 20,
-  },
-  logoContainer: {
-    width: "100%",
-    alignItems: "center",
-    paddingTop: Platform.OS === "ios" ? 60 : 40,
-    marginBottom: 0,
-  },
-  logo: {
-    aspectRatio: 0.8,
-  },
-  formContainer: {
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 20,
-    paddingBottom: Platform.OS === "ios" ? 40 : 0,
-  },
-  cardContainer: {
-    backgroundColor: "rgba(255, 255, 255, 0.6)",
-    borderRadius: 20,
-    padding: 20,
-    paddingBottom: 40,
-    width: "100%",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.4)",
-    marginBottom: Platform.OS === "ios" ? 20 : 10,
-    overflow: "hidden",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
-        backdropFilter: "blur(20px)",
-      },
-      android: {
-        elevation: 12,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
-      },
-    }),
-    position: "relative",
-  },
-  cardContent: {
-    position: "relative",
-    zIndex: 1,
-  },
-  pageTitle: {
-    color: "#ffffff",
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  subtitle: {
-    color: "#ffffff",
-    fontSize: 16,
-    marginBottom: 30,
-    textAlign: "center",
-    opacity: 0.8,
-  },
-  inputContainer: {
-    width: "100%",
-    marginBottom: 6,
-  },
-  loginButton: {
-    width: "100%",
-    height: 50,
-    borderRadius: 25,
-    overflow: "hidden",
-    marginTop: 6,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
-  },
-  gradientButton: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loginButtonDisabled: {
-    opacity: 0.6,
-  },
-  loginButtonText: {
-    color: theme.colors.textDark,
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  otpContainer: {
-    alignItems: "center",
-    marginVertical: 20,
-    width: "100%",
-  },
-  otpTitle: {
-    color: "#ffffff",
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  otpSentText: {
-    color: "#ffffff",
-    fontSize: 16,
-    marginBottom: 20,
-    opacity: 0.8,
-  },
-  otpInputsWrapper: {
-    position: "relative",
-    width: "70%",
-    alignSelf: "center",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  otpInputsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    marginTop: 10,
-    gap: 10,
-  },
-  otpInputWrapper: {
-    flex: 1,
-    height: 60,
-    width: 50,
-    marginHorizontal: 5,
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.5)",
-    // Ensure these are not present:
-    // pointerEvents: 'none',
-    // opacity: 0.5,
-  },
-  otpInput: {
-    width: "100%",
-    height: "100%",
-    color: theme.colors.white,
-    fontSize: 24,
-    textAlign: "center",
-    backgroundColor: "transparent",
-    padding: 0,
-    margin: 0,
-    includeFontPadding: false,
-    textAlignVertical: "center",
-  },
-  otpInputDisabled: {
-    opacity: 0.6,
-  },
-  eyeButton: {
-    position: "absolute",
-    right: -40,
-    top: 20,
-  },
-  timerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 15,
-  },
-  timerText: {
-    color: "#ffffff",
-    marginLeft: 8,
-    fontSize: 16,
-    opacity: 0.8,
-  },
-  resendButton: {
-    marginTop: 10,
-    padding: 10,
-  },
-  resendText: {
-    color: "#A70000",
-    fontSize: 16,
-    fontWeight: "bold",
-    textDecorationLine: "underline",
-  },
-  registerContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 20,
-  },
-  registerText: {
-    color: "#ffffff",
-    fontSize: 16,
-    opacity: 0.8,
-  },
-  registerLink: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "bold",
-    textDecorationLine: "underline",
-    marginLeft: 4,
-  },
-  errorAlert: {
-    position: "absolute",
-    top: Platform.OS === "ios" ? 50 : 30,
-    left: 20,
-    right: 20,
-    backgroundColor: "rgba(255, 68, 68, 0.95)",
-    borderRadius: 12,
-    padding: 15,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    zIndex: 1000,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  errorContent: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  errorMessage: {
-    color: "#fff",
-    fontSize: 16,
-    marginLeft: 10,
-    flex: 1,
-  },
-  closeButton: {
-    padding: 5,
-  },
-  errorText: {
-    color: "#ff4444",
-    fontSize: 12,
-    marginTop: 4,
-    marginLeft: 4,
-  },
-});
