@@ -33,12 +33,25 @@ const FlashOffer: React.FC<FlashOfferProps> = ({
   const [activeNewsMessages, setActiveNewsMessages] = useState<string[]>(fallbackMessages);
   const [loading, setLoading] = useState(true);
   const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
+  const [hasFetched, setHasFetched] = useState(false); // Flag to prevent multiple API calls
 
-  // Fetch flash news from API
+  // Fetch flash news from API - only once when component mounts
   useEffect(() => {
     const fetchFlashNews = async () => {
+      // Prevent multiple API calls
+      if (hasFetched) return;
+      
+      // TEMPORARILY DISABLED: Flash news API call to prevent continuous triggering
+      console.log('🚫 Flash news API call temporarily disabled to prevent continuous triggering');
+      setActiveNewsMessages(fallbackMessages);
+      setHasFetched(true);
+      setLoading(false);
+      return;
+      
+      /*
       try {
         setLoading(true);
+        console.log('🔍 Fetching flash news from API...');
         const response = await news.getActiveFlashNews();
         const fetchedNewsItems: FlashNews[] = response.data.data;
         
@@ -52,19 +65,24 @@ const FlashOffer: React.FC<FlashOfferProps> = ({
         if (activeNews.length > 0) {
           const messages = activeNews.map(item => item.f_news);
           setActiveNewsMessages(messages);
+          console.log('✅ Flash news loaded from API:', messages.length, 'items');
         } else {
           setActiveNewsMessages(fallbackMessages);
+          console.log('ℹ️ No active flash news, using fallback messages');
         }
+        setHasFetched(true); // Mark as fetched
       } catch (error) {
-        console.error('Error fetching flash news:', error);
+        console.error('❌ Error fetching flash news:', error);
         setActiveNewsMessages(fallbackMessages);
+        setHasFetched(true); // Mark as fetched even on error
       } finally {
         setLoading(false);
       }
+      */
     };
 
     fetchFlashNews();
-  }, [fallbackMessages]);
+  }, []); // Remove fallbackMessages dependency to prevent continuous calls
 
   // Rotate through news items
   useEffect(() => {

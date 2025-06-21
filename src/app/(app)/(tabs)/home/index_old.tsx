@@ -34,7 +34,7 @@ import FlashOffer from "@/app/components/FlashOffer";
 import YouTubeVideo from "@/app/components/YouTubeVideo";
 import SupportContactCard from "@/app/components/SupportContactCard";
 import useGlobalStore from "@/store/global.store";
-import api from "@/services/api";
+import api, { schemes, rates, collections, posters } from "@/services/api";
 import NetInfo from "@react-native-community/netinfo";
 import { ScaledSheet, moderateScale } from "react-native-size-matters";
 import { theme } from "@/constants/theme";
@@ -44,16 +44,6 @@ import { Ionicons } from "@expo/vector-icons";
 import StatusView from "@/app/components/StatusView";
 import NotificationService from "@/services/NotificationService";
 import { AppLocale } from "@/i18n";
-// Import API logging utilities
-import { 
-  logApiSummary, 
-  logRecentApiCalls, 
-  getApiLogs, 
-  getFailedApiLogs,
-  apiLogManager,
-  monitorEndpoint,
-  checkForContinuousCalls
-} from "@/utils/apiLogger";
 
 // Constants
 const { width: screenWidth } = Dimensions.get("window");
@@ -160,31 +150,11 @@ const defaultStatusImages: Collection[] = [
 ];
 
 // Interfaces
-interface HomeApiResponse {
-  success: boolean;
+interface RatesData {
   data: {
-    currentRates: {
-      gold_rate: string;
-      silver_rate: string;
-      updated_at: string;
-    };
-    collections: Collection[];
-    posters: Poster[];
-    flashNews: FlashNews[];
-    introScreen: {
-      title: string | null;
-      image: string | null;
-      startDate: string | null;
-      endDate: string | null;
-    };
-    initialPopups: any[];
-    investments: {
-      error: boolean;
-      message: string;
-    } | {
-      data: any[];
-    };
-    videos: Video[];
+    gold_rate: string;
+    silver_rate: string;
+    updated_at: string;
   };
 }
 
@@ -201,32 +171,6 @@ interface Collection {
   status_images: string[] | any[];
   created_at?: string;
   updated_at?: string;
-}
-
-interface Poster {
-  id: number;
-  title: string;
-  image: string;
-  startDate: string;
-  endDate: string;
-  status: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface FlashNews {
-  id: number;
-  title: string;
-  status: string;
-  startDate: string;
-  endDate: string;
-}
-
-interface Video {
-  id: number;
-  title: string;
-  url: string | null;
-  created_at: string;
 }
 
 interface UserInfoCardProps {
@@ -290,11 +234,12 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
   )
 );
 
-export default function Home2() {
+export default function Home() {
   // State
   const { language, user } = useGlobalStore();
   const router = useRouter();
-  const [homeData, setHomeData] = useState<HomeApiResponse | null>(null);
+  const [schemeData, setSchemeData] = useState(null);
+  const [ratesData, setRatesData] = useState<RatesData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showFlashBanner, setShowFlashBanner] = useState(false);
@@ -304,7 +249,7 @@ export default function Home2() {
   const [showStatus, setShowStatus] = useState(false);
   const [collectionsData, setCollectionsData] = useState<Collection[]>([]);
   const [totalGoldSavings, setTotalGoldSavings] = useState(0);
-  const [flashNews, setFlashNews] = useState<FlashNews[]>([]);
+  const [flashNews, setFlashNews] = useState<any[]>([]);
   const [sliderImages, setSliderImages] = useState<any[]>([]);
   const [isSliderLoading, setIsSliderLoading] = useState(true);
 
@@ -356,82 +301,84 @@ export default function Home2() {
     return `${theme.baseUrl}/${path}`;
   }, []);
 
-  // Data fetching - Single API call
-  const fetchHomeData = useCallback(async (isRefreshing = false) => {
+  // Data fetching
+  const fetchData = useCallback(async (isRefreshing = false) => {
     try {
-      console.log('Starting single API data fetch...');
+      //console.log('Starting data fetch...');
       isRefreshing ? setRefreshing(true) : setIsLoading(true);
 
-      const userId = user?.id || 436; // Default to 436 if no user
-      const response = await api.get(`/home?userId=${userId}`);
-      
-      if (response.data.success) {
-        const data = response.data.data;
-        console.log("Home API response:", data);
-        
-        setHomeData(response.data);
-        
-        // Set collections data
-        if (data.collections && data.collections.length > 0) {
-          setCollectionsData(data.collections);
-        } else {
-          console.log('No collections found, using default images');
-          setCollectionsData(defaultStatusImages);
-        }
+      const [
+        schemesResponse,
+        liveRatesResponse,
+        collectionsResponse,
+        postersResponse,
+      ] = await Promise.all([
+        schemes.getSchemes().catch((error) => {
+          console.error("Error fetching schemes:", error);
+          return { data: null };
+        }),
+        rates.getLiveRates().catch((error) => {
+          console.error("Error fetching rates:", error);
+          return { data: null };
+        }),
+        collections.getCollections().catch((error) => {
+          console.error("Error fetching collections:", error);
+          return { data: { data: [] } };
+        }),
+        posters.getActivePosters().catch((error) => {
+          console.error("Error fetching posters:", error);
+          return { data: { data: [] } };
+        }),
+      ]);
 
-        // Set slider images from posters
-        if (data.posters && data.posters.length > 0) {
-          const images = data.posters.map((poster: Poster) => ({
-            id: poster.id,
-            image: poster.image.startsWith("http")
-              ? poster.image
-              : `${theme.baseUrl}${poster.image}`,
-            title: poster.title,
-          }));
-          setSliderImages(images);
-        } else {
-          console.log('No posters found, using dummy images');
-          setSliderImages(
-            dummyData.sliderImages.map((image, index) => ({
-              id: index,
-              image,
-              title: `Slider ${index + 1}`,
-            }))
-          );
-        }
+      console.log("Data fetch completed:", {
+        schemes: !!schemesResponse.data,
+        rates: !!liveRatesResponse.data,
+        collections: !!collectionsResponse.data,
+        posters: !!postersResponse.data,
+      });
 
-        // Set flash news
-        if (data.flashNews && data.flashNews.length > 0) {
-          setFlashNews(data.flashNews);
-        }
+      setSchemeData(schemesResponse.data);
+      setRatesData(liveRatesResponse.data);
 
-        // Handle investments data
-        if (data.investments && !data.investments.error) {
-          const investments = data.investments.data || [];
-          setActiveSchemesCount(investments.length || 0);
-
-          const totalGold = investments.reduce((sum: number, investment: any) => {
-            const goldWeight = investment.totalgoldweight
-              ? parseFloat(investment.totalgoldweight)
-              : 0;
-            return sum + goldWeight;
-          }, 0);
-
-          setTotalGoldSavings(totalGold);
-        } else {
-          setActiveSchemesCount(0);
-          setTotalGoldSavings(0);
-        }
-
-        // Store gold rate in AsyncStorage
-        if (data.currentRates?.gold_rate) {
-          await AsyncStorage.setItem("gold_rate", data.currentRates.gold_rate);
-        }
+      // Handle collections data with fallback
+      if (collectionsResponse.data?.data?.length > 0) {
+        setCollectionsData(collectionsResponse.data.data);
       } else {
-        throw new Error("API response indicates failure");
+        //console.log('No collections found, using default images');
+        setCollectionsData(defaultStatusImages);
+      }
+
+      // Handle slider images
+      if (postersResponse.data?.data?.length > 0) {
+        const images = postersResponse.data.data.map((poster: any) => ({
+          id: poster.id,
+          image: poster.image.startsWith("http")
+            ? poster.image
+            : `${theme.baseUrl}${poster.image}`,
+          title: poster.title,
+        }));
+        //console.log("=======================",images);
+        setSliderImages(images);
+      } else {
+        //console.log('No posters found, using dummy images');
+        setSliderImages(
+          dummyData.sliderImages.map((image, index) => ({
+            id: index,
+            image,
+            title: `Slider ${index + 1}`,
+          }))
+        );
+      }
+
+      if (liveRatesResponse.data?.data?.gold_rate) {
+        await AsyncStorage.setItem(
+          "gold_rate",
+          liveRatesResponse.data.data.gold_rate
+        );
       }
     } catch (error) {
-      console.error("Error in fetchHomeData:", error);
+      console.error("Error in fetchData:", error);
       // Set default data on error
       setCollectionsData(defaultStatusImages);
       setSliderImages(
@@ -441,15 +388,13 @@ export default function Home2() {
           title: `Slider ${index + 1}`,
         }))
       );
-      setActiveSchemesCount(0);
-      setTotalGoldSavings(0);
       Alert.alert(
         "Error",
         "Failed to fetch data. Please check your internet connection and try again.",
         [
           {
             text: "Retry",
-            onPress: () => fetchHomeData(true),
+            onPress: () => fetchData(true),
           },
           {
             text: "OK",
@@ -461,39 +406,60 @@ export default function Home2() {
       isRefreshing ? setRefreshing(false) : setIsLoading(false);
       setIsSliderLoading(false);
     }
+  }, []);
+
+  const FetchFlashNews = useCallback(async () => {
+    const response = await api.get("flash-news/active");
+    setFlashNews(response.data.data);
+    //console.log(response.data.data);
+  }, []);
+
+  const fetchActiveSchemesCount = useCallback(async () => {
+    try {
+      if (!user?.id) {
+        setActiveSchemesCount(0);
+        setTotalGoldSavings(0);
+        return;
+      }
+      const response = await api.get(`investments/user_investments/${user.id}`);
+      const investments = response.data.data || [];
+      setActiveSchemesCount(investments.length || 0);
+
+      const totalGold = investments.reduce((sum: number, investment: any) => {
+        const goldWeight = investment.totalgoldweight
+          ? parseFloat(investment.totalgoldweight)
+          : 0;
+        return sum + goldWeight;
+      }, 0);
+
+      setTotalGoldSavings(totalGold);
+    } catch (error) {
+      console.error("Error fetching active schemes count:", error);
+      setActiveSchemesCount(0);
+      setTotalGoldSavings(0);
+    }
   }, [user?.id]);
 
   // Effects
   useEffect(() => {
-    console.log('Initial home data fetch...');
-    fetchHomeData();
-  }, [fetchHomeData]);
+    //console.log('Initial data fetch...');
+    fetchData();
+  }, [fetchData]);
 
   useEffect(() => {
     if (user) {
-      console.log('Setting up notifications...');
+      //console.log('Fetching user data...');
+      fetchActiveSchemesCount();
+      FetchFlashNews();
+    }
+  }, [user, fetchActiveSchemesCount, FetchFlashNews]);
+
+  useEffect(() => {
+    if (user) {
+      //console.log('Setting up notifications...');
       NotificationService.sendTokenToApi();
     }
   }, [user]);
-
-  // Monitor flash-news endpoint for continuous calls
-  useEffect(() => {
-    console.log('🔍 Setting up flash-news endpoint monitoring...');
-    const monitoringInterval = monitorEndpoint('/flash-news/active', 10000); // Check every 10 seconds
-    
-    // Check for continuous calls every 30 seconds
-    const continuousCheckInterval = setInterval(() => {
-      const isContinuous = checkForContinuousCalls('/flash-news/active', 3, 1); // 3+ calls in 1 minute
-      if (isContinuous) {
-        console.log('🚨 WARNING: Continuous flash-news API calls detected!');
-      }
-    }, 30000);
-    
-    return () => {
-      clearInterval(monitoringInterval);
-      clearInterval(continuousCheckInterval);
-    };
-  }, []);
 
   useEffect(() => {
     const checkBanner = async () => {
@@ -533,65 +499,11 @@ export default function Home2() {
   }, []);
 
   // Event handlers
-  const handleRefresh = useCallback(() => fetchHomeData(true), [fetchHomeData]);
+  const handleRefresh = useCallback(() => fetchData(true), [fetchData]);
 
   const handleCloseBanner = useCallback(async () => {
     setShowFlashBanner(false);
     await AsyncStorage.setItem("flashBannerSeen", "true");
-  }, []);
-
-  // API Logging demonstration function
-  const demonstrateApiLogging = useCallback(() => {
-    console.log('🔍 DEMONSTRATING API LOGGING FUNCTIONALITY');
-    console.log('==========================================');
-    
-    // Log API summary
-    logApiSummary();
-    
-    // Log recent API calls
-    logRecentApiCalls(5);
-    
-    // Get all API logs
-    const allLogs = getApiLogs();
-    console.log(`📋 Total API logs collected: ${allLogs.length}`);
-    
-    // Get failed API logs
-    const failedLogs = getFailedApiLogs();
-    console.log(`❌ Failed API calls: ${failedLogs.length}`);
-    
-    // Get logs by service
-    const mainLogs = apiLogManager.getLogsByService('main');
-    const serviceLogs = apiLogManager.getLogsByService('apiService');
-    const paymentLogs = apiLogManager.getLogsByService('payment');
-    
-    console.log(`📊 Logs by service:`);
-    console.log(`  Main API: ${mainLogs.length}`);
-    console.log(`  API Service: ${serviceLogs.length}`);
-    console.log(`  Payment Service: ${paymentLogs.length}`);
-    
-    // Get slowest endpoints
-    const slowestEndpoints = apiLogManager.getSlowestEndpoints(3);
-    console.log('🐌 Slowest endpoints:', slowestEndpoints);
-    
-    // Get error-prone endpoints
-    const errorProneEndpoints = apiLogManager.getErrorProneEndpoints(3);
-    console.log('⚠️ Error-prone endpoints:', errorProneEndpoints);
-    
-    // Export logs (for debugging)
-    const exportedLogs = apiLogManager.exportLogs();
-    console.log('📤 Exported logs length:', exportedLogs.length);
-    
-    // Show alert with summary
-    const summary = apiLogManager.getApiSummary();
-    Alert.alert(
-      'API Logs Summary',
-      `Total Requests: ${summary.totalRequests}\n` +
-      `Successful: ${summary.successful}\n` +
-      `Failed: ${summary.failed}\n` +
-      `Avg Response Time: ${summary.averageResponseTime.toFixed(2)}ms\n\n` +
-      `Check console for detailed logs.`,
-      [{ text: 'OK' }]
-    );
   }, []);
 
   // Render functions
@@ -663,9 +575,9 @@ export default function Home2() {
               backRoute="index"
               showLanguageSwitcher={true}
               goldRateInfo={
-                homeData?.data?.currentRates?.gold_rate
+                ratesData?.data?.gold_rate
                   ? {
-                      rate: homeData.data.currentRates.gold_rate,
+                      rate: ratesData.data.gold_rate,
                       purity: "22K",
                     }
                   : {
@@ -673,17 +585,8 @@ export default function Home2() {
                       purity: "22K",
                     }
               }
-              goldRateUpdatedAt={homeData?.data?.currentRates?.updated_at}
+              goldRateUpdatedAt={ratesData?.data?.updated_at}
             />
-            {/* Debug button for API logging - remove in production */}
-            <TouchableOpacity
-              style={styles.debugButton}
-              onPress={demonstrateApiLogging}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="analytics" size={20} color="#FFD700" />
-              <Text style={styles.debugButtonText}>API Logs</Text>
-            </TouchableOpacity>
           </View>
 
           <ScrollView
@@ -698,33 +601,33 @@ export default function Home2() {
             }
           >
             <View style={styles.ratesContainer}>
-              {homeData?.data?.currentRates ? (
+              {ratesData?.data ? (
                 <>
                   {/* <View
                     style={[
                       styles.rateCard,
-                      !homeData.data.currentRates.silver_rate && styles.singleRateCard,
+                      !ratesData.data.silver_rate && styles.singleRateCard,
                     ]}
                   >
                     <LiveRateCard
                       type={translations.gold}
                       rate={
-                        homeData.data.currentRates.gold_rate || dummyData.rates.gold.price
+                        ratesData.data.gold_rate || dummyData.rates.gold.price
                       }
                       lastupdated={formatDateToIndian(
-                        homeData.data.currentRates.updated_at
+                        ratesData.data.updated_at
                       )}
                       image={dummyData.rates.gold.image}
-                      isSingle={!homeData.data.currentRates.silver_rate}
+                      isSingle={!ratesData.data.silver_rate}
                     />
                   </View> */}
-                  {/* {homeData.data.currentRates.silver_rate && (
+                  {/* {ratesData.data.silver_rate && (
                     <View style={styles.rateCard}>
                       <LiveRateCard
                         type={translations.silver}
-                        rate={homeData.data.currentRates.silver_rate}
+                        rate={ratesData.data.silver_rate}
                         lastupdated={formatDateToIndian(
-                          homeData.data.currentRates.updated_at
+                          ratesData.data.updated_at
                         )}
                         image={dummyData.rates.silver.image}
                       />
@@ -1229,19 +1132,4 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.2)",
     marginHorizontal: 12,
   },
-  debugButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
-  },
-  debugButtonText: {
-    fontSize: 12,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-    marginLeft: 4,
-  },
-}); 
+});

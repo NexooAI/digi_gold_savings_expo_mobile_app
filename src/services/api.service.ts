@@ -4,6 +4,139 @@ import { Alert } from 'react-native';
 import LoadingService from './loadingServices';
 import { theme } from '@/constants/theme';
 
+// API Logger for this service
+class ApiServiceLogger {
+  private logs: Array<{
+    timestamp: string;
+    method: string;
+    url: string;
+    status?: number;
+    duration?: number;
+    requestData?: any;
+    responseData?: any;
+    error?: any;
+  }> = [];
+
+  logRequest(config: InternalAxiosRequestConfig, startTime: number) {
+    // Safely parse request data using the utility function
+    const requestData = this.safeParseRequestData(config.data);
+
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      method: config.method?.toUpperCase() || 'UNKNOWN',
+      url: config.url || 'UNKNOWN',
+      requestData,
+      startTime,
+    };
+
+    console.log('🚀 API SERVICE REQUEST:', {
+      timestamp: logEntry.timestamp,
+      method: logEntry.method,
+      url: logEntry.url,
+      data: logEntry.requestData,
+    });
+
+    this.logs.push(logEntry);
+    return logEntry;
+  }
+
+  /**
+   * Safely parse request data with error handling
+   */
+  private safeParseRequestData(data: any): any {
+    if (!data) return undefined;
+    
+    try {
+      // If data is already an object, use it directly
+      if (typeof data === 'object') {
+        return data;
+      } else if (typeof data === 'string') {
+        // If it's a string, try to parse it as JSON
+        return JSON.parse(data);
+      } else {
+        // For other types, stringify for logging
+        return String(data);
+      }
+    } catch (parseError) {
+      // If JSON parsing fails, log the raw data as string
+      console.warn('Failed to parse request data as JSON:', parseError);
+      return String(data);
+    }
+  }
+
+  logResponse(response: AxiosResponse, startTime: number) {
+    const duration = Date.now() - startTime;
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      method: response.config.method?.toUpperCase() || 'UNKNOWN',
+      url: response.config.url || 'UNKNOWN',
+      status: response.status,
+      duration,
+      responseData: response.data,
+    };
+
+    console.log('✅ API SERVICE RESPONSE:', {
+      timestamp: logEntry.timestamp,
+      method: logEntry.method,
+      url: logEntry.url,
+      status: logEntry.status,
+      duration: `${duration}ms`,
+      data: logEntry.responseData,
+    });
+
+    // Update the last log entry
+    const lastLog = this.logs[this.logs.length - 1];
+    if (lastLog && lastLog.url === logEntry.url) {
+      Object.assign(lastLog, logEntry);
+    }
+
+    return logEntry;
+  }
+
+  logError(error: AxiosError, startTime: number) {
+    const duration = Date.now() - startTime;
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      method: error.config?.method?.toUpperCase() || 'UNKNOWN',
+      url: error.config?.url || 'UNKNOWN',
+      status: error.response?.status,
+      duration,
+      error: {
+        message: error.message,
+        code: error.code,
+        responseData: error.response?.data,
+      },
+    };
+
+    console.log('❌ API SERVICE ERROR:', {
+      timestamp: logEntry.timestamp,
+      method: logEntry.method,
+      url: logEntry.url,
+      status: logEntry.status,
+      duration: `${duration}ms`,
+      error: logEntry.error,
+    });
+
+    // Update the last log entry
+    const lastLog = this.logs[this.logs.length - 1];
+    if (lastLog && lastLog.url === logEntry.url) {
+      Object.assign(lastLog, logEntry);
+    }
+
+    return logEntry;
+  }
+
+  getLogs() {
+    return this.logs;
+  }
+
+  clearLogs() {
+    this.logs = [];
+  }
+}
+
+const apiServiceLogger = new ApiServiceLogger();
+
 const apiClient: AxiosInstance = axios.create({
   baseURL: theme.baseUrl, // Replace with your API base URL
   timeout: 10000, // 10 seconds timeout
@@ -12,6 +145,11 @@ const apiClient: AxiosInstance = axios.create({
 // Request interceptor: add auth tokens, start loading indicator, etc.
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> => {
+    const startTime = Date.now();
+    
+    // Log the request
+    apiServiceLogger.logRequest(config, startTime);
+    
     LoadingService.show();
     // Example: if you have an auth token, attach it
     // const token = await AsyncStorage.getItem('userToken');
@@ -21,6 +159,10 @@ apiClient.interceptors.request.use(
     //     Authorization: `Bearer ${token}`,
     //   };
     // }
+    
+    // Store start time for response logging
+    (config as any).startTime = startTime;
+    
     return config;
   },
   (error: AxiosError): Promise<AxiosError> => {
@@ -32,10 +174,20 @@ apiClient.interceptors.request.use(
 // Response interceptor: hide loading indicator and handle errors
 apiClient.interceptors.response.use(
   (response: AxiosResponse): AxiosResponse => {
+    const startTime = (response.config as any).startTime || Date.now();
+    
+    // Log the response
+    apiServiceLogger.logResponse(response, startTime);
+    
     LoadingService.hide();
     return response;
   },
   (error: AxiosError) => {
+    const startTime = (error.config as any)?.startTime || Date.now();
+    
+    // Log the error
+    apiServiceLogger.logError(error, startTime);
+    
     LoadingService.hide();
     if (error.response) {
       Alert.alert('Error', (error.response.data && (error.response.data as any).message) || 'Something went wrong!');
@@ -76,3 +228,6 @@ export default {
   getInvestmentsByUser,
   processPayment
 };
+
+// Export the logger for external access
+export { apiServiceLogger };

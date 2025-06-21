@@ -206,7 +206,19 @@ const SavingsDetail = () => {
         return;
       }
 
-      const parseSchemes = JSON.parse(params.schemesData);
+      // Safely parse schemes data
+      let parseSchemes;
+      try {
+        parseSchemes = JSON.parse(params.schemesData);
+      } catch (parseError) {
+        console.error("Error parsing schemes data:", parseError);
+        // Fallback to a default structure
+        parseSchemes = {
+          schemeTypeName: "Fixed",
+          paymentFrequencyName: params.paymentFrequency || "Monthly"
+        };
+      }
+
       router.push({
         pathname: "/(tabs)/home/paymentNewOverView",
         params: {

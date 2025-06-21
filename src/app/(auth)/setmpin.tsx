@@ -323,13 +323,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.3)',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
+    color: '#000000',
   },
   pinBoxActive: {
     borderColor: '#ffc90c',
-    backgroundColor: 'rgba(255, 201, 12, 0.1)',
+    backgroundColor: '#ffffff',
   },
   pinDot: {
     width: 12,

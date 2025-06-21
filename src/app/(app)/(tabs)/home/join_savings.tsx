@@ -71,7 +71,16 @@ export default function JoinSavings() {
         );
 
         if (storedSchemeData) {
-          const parsedData = JSON.parse(storedSchemeData);
+          let parsedData;
+          try {
+            parsedData = JSON.parse(storedSchemeData);
+          } catch (parseError) {
+            console.error("Error parsing stored scheme data:", parseError);
+            // Fallback: try to fetch from API
+            await fetchSchemeDataFromAPI();
+            return;
+          }
+          
           //console.log('Loaded scheme data from storage:', parsedData);
 
           // Verify that the stored data matches the current schemeId

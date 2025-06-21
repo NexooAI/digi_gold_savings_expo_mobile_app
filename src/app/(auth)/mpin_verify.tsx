@@ -402,15 +402,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     textAlign: "center",
     fontSize: 24,
-    color: "#ffffff",
+    color: "#000000",
+    backgroundColor: "#ffffff",
   },
   otpInputEmpty: {
     borderColor: "rgba(174, 28, 28, 0.2)",
-    backgroundColor: "rgba(255, 255, 255, 0.52)",
+    backgroundColor: "#ffffff",
+    color: "#000000",
   },
   otpInputFilled: {
     borderColor: theme.colors.secondary,
-    backgroundColor: "rgba(255, 215, 0, 0.1)",
+    backgroundColor: "#ffffff",
+    color: "#000000",
   },
   inputDot: {
     position: "absolute",
