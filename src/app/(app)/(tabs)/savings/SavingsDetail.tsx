@@ -191,6 +191,9 @@ const SavingsDetail = () => {
       return;
     }
 
+    // Set loading state
+    setIsLoading(true);
+
     let payload = {
       userId: user.id,
       investmentId: params.id,
@@ -248,13 +251,24 @@ const SavingsDetail = () => {
       setAlertMessage("An error occurred. Please try again.");
       setAlertType("error");
       setAlertVisible(true);
+    } finally {
+      // Clear loading state
+      setIsLoading(false);
     }
   };
 
   // Auto-trigger PaymentNow if autoPayNow param is set
   useEffect(() => {
     if (params.autoPayNow === "1") {
-      PaymentNow();
+      // Set loading state immediately
+      setIsLoading(true);
+      
+      // Add a small delay to show loading state
+      const timer = setTimeout(() => {
+        PaymentNow();
+      }, 500);
+      
+      return () => clearTimeout(timer);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

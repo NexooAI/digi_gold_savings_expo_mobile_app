@@ -234,11 +234,12 @@ interface UserInfoCardProps {
   activeSchemesCount: number;
   onPress: () => void;
   totalGoldSavings?: number;
+  totalAmount?: number;
 }
 
 // Components
 const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
-  ({ userName, activeSchemesCount, onPress, totalGoldSavings = 0 }) => (
+  ({ userName, activeSchemesCount, onPress, totalGoldSavings = 0, totalAmount = 0 }) => (
     <TouchableOpacity
       style={styles.userInfoCard}
       onPress={onPress}
@@ -253,7 +254,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
         <View style={styles.userInfoTopRow}>
           <View style={styles.welcomeContainer}>
             <Text style={styles.welcomeText}>Welcome back,</Text>
-            <Text style={styles.userName}>{userName || "Guest User"}</Text>
+            <Text style={styles.userName}>{userName?.toUpperCase()}</Text>
           </View>
           <View style={styles.userAvatarContainer}>
             <Ionicons name="person-circle" size={45} color="#FFD700" />
@@ -263,7 +264,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
         <View style={styles.statsRow}>
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Active Schemes</Text>
+              <Text style={styles.statLabel}>Active Investments</Text>
               <View style={styles.statValue}>
                 <Text style={styles.countText}>{activeSchemesCount || 0}</Text>
                 <Ionicons name="trending-up" size={16} color="#FFD700" />
@@ -279,11 +280,29 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
                 <Text style={styles.unitText}>g</Text>
               </View>
             </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>Total Amount</Text>
+              <View style={styles.statValue}>
+                <Text style={styles.countText}>
+                  ₹{totalAmount.toLocaleString()}
+                </Text>
+              </View>
+            </View>
           </View>
-          <View style={styles.viewMoreContainer}>
-            <Text style={styles.viewMoreText}>View Details</Text>
-            <Ionicons name="chevron-forward" size={20} color="#FFD700" />
-          </View>
+        </View>
+
+        <View style={styles.viewDetailsContainer}>
+          <LinearGradient
+            colors={["#FFD700", "#FFA500", "#FF8C00"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.viewDetailsGradient}
+          >
+            <Ionicons name="eye-outline" size={18} color="#850111" />
+            <Text style={styles.viewDetailsText}>View Investment Details</Text>
+            <Ionicons name="chevron-forward" size={18} color="#850111" />
+          </LinearGradient>
         </View>
       </LinearGradient>
     </TouchableOpacity>
@@ -304,6 +323,7 @@ export default function Home2() {
   const [showStatus, setShowStatus] = useState(false);
   const [collectionsData, setCollectionsData] = useState<Collection[]>([]);
   const [totalGoldSavings, setTotalGoldSavings] = useState(0);
+  const [totalAmount, setTotalAmount] = useState(0);
   const [flashNews, setFlashNews] = useState<FlashNews[]>([]);
   const [sliderImages, setSliderImages] = useState<any[]>([]);
   const [isSliderLoading, setIsSliderLoading] = useState(true);
@@ -356,6 +376,43 @@ export default function Home2() {
     return `${theme.baseUrl}/${path}`;
   }, []);
 
+  // Fetch investment data separately
+  const fetchInvestmentData = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      console.log('🔍 Fetching investment data for user:', user.id);
+      const response = await api.get(`investments/user_investments/${user.id}`);
+      console.log('Investment API response:', response.data);
+
+      const investments = response.data.data || [];
+      console.log('Total investments found:', investments.length);
+
+      setActiveSchemesCount(investments.length || 0);
+
+      const totalGold = investments.reduce((sum: number, investment: any) => {
+        const goldWeight = parseFloat(investment.totalgoldweight) || 0;
+        console.log(`Investment ${investment.investmentId} gold weight:`, goldWeight);
+        return sum + goldWeight;
+      }, 0);
+
+      const totalAmount = investments.reduce((sum: number, investment: any) => {
+        const amount = parseFloat(investment.total_paid) || 0;
+        console.log(`Investment ${investment.investmentId} total paid:`, amount);
+        return sum + amount;
+      }, 0);
+
+      console.log('Final calculations - Total Gold:', totalGold, 'Total Amount:', totalAmount);
+      setTotalGoldSavings(totalGold);
+      setTotalAmount(totalAmount);
+    } catch (error) {
+      console.error('Error fetching investment data:', error);
+      setActiveSchemesCount(0);
+      setTotalGoldSavings(0);
+      setTotalAmount(0);
+    }
+  }, [user]);
+
   // Data fetching - Single API call
   const fetchHomeData = useCallback(async (isRefreshing = false) => {
     try {
@@ -405,24 +462,6 @@ export default function Home2() {
           setFlashNews(data.flashNews);
         }
 
-        // Handle investments data
-        if (data.investments && !data.investments.error) {
-          const investments = data.investments.data || [];
-          setActiveSchemesCount(investments.length || 0);
-
-          const totalGold = investments.reduce((sum: number, investment: any) => {
-            const goldWeight = investment.totalgoldweight
-              ? parseFloat(investment.totalgoldweight)
-              : 0;
-            return sum + goldWeight;
-          }, 0);
-
-          setTotalGoldSavings(totalGold);
-        } else {
-          setActiveSchemesCount(0);
-          setTotalGoldSavings(0);
-        }
-
         // Store gold rate in AsyncStorage
         if (data.currentRates?.gold_rate) {
           await AsyncStorage.setItem("gold_rate", data.currentRates.gold_rate);
@@ -441,8 +480,6 @@ export default function Home2() {
           title: `Slider ${index + 1}`,
         }))
       );
-      setActiveSchemesCount(0);
-      setTotalGoldSavings(0);
       Alert.alert(
         "Error",
         "Failed to fetch data. Please check your internet connection and try again.",
@@ -467,7 +504,8 @@ export default function Home2() {
   useEffect(() => {
     console.log('Initial home data fetch...');
     fetchHomeData();
-  }, [fetchHomeData]);
+    fetchInvestmentData();
+  }, [fetchHomeData, fetchInvestmentData]);
 
   useEffect(() => {
     if (user) {
@@ -796,6 +834,7 @@ export default function Home2() {
                 userName={user?.name}
                 activeSchemesCount={activeSchemesCount}
                 totalGoldSavings={totalGoldSavings}
+                totalAmount={totalAmount}
                 onPress={() => router.push("/(tabs)/savings")}
               />
 
@@ -873,15 +912,15 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 20,
+    paddingVertical: 10,
   },
   ratesContainer: {
-    marginTop: moderateScale(50),
+    marginTop: moderateScale(20),
     paddingHorizontal: moderateScale(16),
     width: "100%",
     flexDirection: "row",
     justifyContent: "center",
-    marginVertical: 10,
+    marginVertical: 0,
   },
   rateCard: {
     flex: 1,
@@ -917,7 +956,7 @@ const styles = StyleSheet.create({
   },
   bannerListContent: {
     paddingHorizontal: 10,
-    paddingRight: 15,
+    paddingRight: 30,
   },
   bannerItem: {
     marginHorizontal: 5,
@@ -925,7 +964,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   bannerImage: {
-    width: screenWidth - 35,
+    width: screenWidth * 0.85,
     height: 200,
     borderRadius: 20,
   },
@@ -985,17 +1024,20 @@ const styles = StyleSheet.create({
   statsContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
+    gap: 12,
     flex: 1,
+    justifyContent: "space-between",
   },
   statItem: {
     flex: 1,
     alignItems: "center",
+    minWidth: 80,
   },
   statLabel: {
-    fontSize: moderateScale(11),
+    fontSize: moderateScale(10),
     color: "rgba(255, 255, 255, 0.7)",
     marginBottom: 2,
+    textAlign: "center",
   },
   statValue: {
     flexDirection: "row",
@@ -1003,7 +1045,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   countText: {
-    fontSize: moderateScale(16),
+    fontSize: moderateScale(14),
     fontWeight: "bold",
     color: "#FFFFFF",
   },
@@ -1031,6 +1073,7 @@ const styles = StyleSheet.create({
   statusContainer: {
     width: "100%",
     marginVertical: 10,
+    marginTop: 15,
   },
   statusListContent: {
     paddingHorizontal: 10,
@@ -1243,5 +1286,25 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#FFFFFF",
     marginLeft: 4,
+  },
+  viewDetailsContainer: {
+    marginTop: 12,
+    borderRadius: 12,
+    overflow: "hidden",
+    alignSelf: "flex-end",
+    width: "50%",
+  },
+  viewDetailsGradient: {
+    padding: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+  viewDetailsText: {
+    fontSize: moderateScale(10),
+    fontWeight: "bold",
+    color: "#850111",
+    textAlign: "center",
   },
 }); 

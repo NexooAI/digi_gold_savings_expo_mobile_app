@@ -909,7 +909,7 @@ export default function SavingsScreen() {
   if (error) {
     return (
       <SafeAreaView className="flex-1 bg-white">
-        <AppHeader showBackButton={false} backRoute={null} />
+        <AppHeader showBackButton={false} backRoute={undefined} />
         <ErrorState />
       </SafeAreaView>
     );
@@ -1535,12 +1535,12 @@ const styles = StyleSheet.create({
     borderRadius: 1,
   },
   emptyStateContainer: {
-    padding: 16,
-    marginTop: 20,
+    padding: 6,
+    marginTop: 2,
   },
   emptyStateCard: {
     borderRadius: 24,
-    padding: 32,
+    padding: 12,
     alignItems: "center",
     borderWidth: 1,
     borderColor: "rgba(255,215,0,0.2)",
@@ -1558,8 +1558,8 @@ const styles = StyleSheet.create({
     }),
   },
   emptyStateIconContainer: {
-    width: 80,
-    height: 80,
+    width: 60,
+    height: 60,
     borderRadius: 40,
     backgroundColor: "rgba(255,215,0,0.15)",
     justifyContent: "center",
@@ -1569,8 +1569,8 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,215,0,0.2)",
   },
   emptyStateImage: {
-    width: 200,
-    height: 200,
+    width: 150,
+    height: 150,
     marginBottom: 20,
   },
   emptyStateTitle: {

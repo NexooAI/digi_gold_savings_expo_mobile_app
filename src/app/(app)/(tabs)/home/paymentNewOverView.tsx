@@ -8,6 +8,7 @@ import {
   Modal,
   Pressable,
   Alert,
+  TextInput,
 } from "react-native";
 import { useEffect, useState, useMemo } from "react";
 import { t } from "@/i18n";
@@ -31,7 +32,10 @@ export default function PaymentNewOverView() {
   const [currentAmount, setCurrentAmount] = useState(Number(params.amount) || 0);
   const [goldRate, setGoldRate] = useState(0);
   const [weightPerGram, setWeightPerGram] = useState(0);
+  const [isEditingAmount, setIsEditingAmount] = useState(false);
+  const [amountError, setAmountError] = useState("");
   const isFlexi = params.paymentFrequency?.toString().toLowerCase() === "flexi";
+  const MAX_AMOUNT = 100000; // 1 lakh rupees
 
   // Parse user details only once when component mounts
   useEffect(() => {
@@ -70,10 +74,38 @@ export default function PaymentNewOverView() {
   const adjustAmount = (increment: number) => {
     if (!isFlexi) return; // Prevent adjustment if not flexi
     const newAmount = currentAmount + increment;
-    if (newAmount >= 0) {
+    if (newAmount >= 0 && newAmount <= MAX_AMOUNT) {
       setCurrentAmount(newAmount);
       calculateWeightPerGram(newAmount, goldRate);
+      setAmountError(""); // Clear any previous error
+    } else if (newAmount > MAX_AMOUNT) {
+      setCurrentAmount(MAX_AMOUNT);
+      calculateWeightPerGram(MAX_AMOUNT, goldRate);
+      setAmountError("Maximum amount allowed is ₹1,00,000");
     }
+  };
+
+  // Handle manual amount editing
+  const handleAmountEdit = (text: string) => {
+    // Remove any non-numeric characters except decimal point
+    const cleanText = text.replace(/[^0-9.]/g, '');
+    const amount = parseFloat(cleanText) || 0;
+    
+    if (amount > MAX_AMOUNT) {
+      setCurrentAmount(MAX_AMOUNT);
+      calculateWeightPerGram(MAX_AMOUNT, goldRate);
+      setAmountError("Maximum amount allowed is ₹1,00,000");
+    } else {
+      setCurrentAmount(amount);
+      calculateWeightPerGram(amount, goldRate);
+      setAmountError("");
+    }
+  };
+
+  // Handle edit mode toggle
+  const toggleEditMode = () => {
+    setIsEditingAmount(!isEditingAmount);
+    setAmountError(""); // Clear error when toggling edit mode
   };
 
   useEffect(() => {
@@ -106,6 +138,12 @@ export default function PaymentNewOverView() {
       Alert.alert("Error", "User details not available");
       return;
     }
+    
+    if (currentAmount > MAX_AMOUNT) {
+      Alert.alert("Invalid Amount", "Maximum amount allowed is ₹1,00,000");
+      return;
+    }
+    
     try {
       const payload: PaymentInitPayload | any = {
         userId: userDetails.userId || user?.id,
@@ -125,7 +163,7 @@ export default function PaymentNewOverView() {
         const orderId = response?.session?.order_id;
 
         router.push({
-          pathname: "/(tabs)/home/PaymentWebView",
+          pathname: "/(tabs)/home/paymentWebView",
           params: {
             url: response.session.payment_links.web,
             orderId: orderId, // Add orderId to params
@@ -223,35 +261,62 @@ export default function PaymentNewOverView() {
                 color={theme.colors.secondary}
               />
               <Text style={styles.amountTitle}>{t("totalAmount")}</Text>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={toggleEditMode}
+              >
+                <Ionicons
+                  name={isEditingAmount ? "checkmark" : "create"}
+                  size={20}
+                  color={theme.colors.secondary}
+                />
+              </TouchableOpacity>
             </View>
             
             <View style={styles.amountAdjustmentContainer}>
               <TouchableOpacity
                 style={styles.arrowButton}
                 onPress={() => adjustAmount(-1000)}
+                disabled={isEditingAmount}
               >
                 <Ionicons
                   name="chevron-back"
                   size={24}
-                  color={theme.colors.secondary}
+                  color={isEditingAmount ? theme.colors.secondary + "40" : theme.colors.secondary}
                 />
               </TouchableOpacity>
               
               <View style={styles.amountDisplay}>
-                <Text style={styles.amountValue}>{formattedAmount}</Text>
+                {isEditingAmount ? (
+                  <TextInput
+                    style={styles.amountInput}
+                    value={currentAmount.toString()}
+                    onChangeText={handleAmountEdit}
+                    keyboardType="numeric"
+                    placeholder="Enter amount"
+                    placeholderTextColor={theme.colors.secondary + "80"}
+                    autoFocus={true}
+                  />
+                ) : (
+                  <Text style={styles.amountValue}>{formattedAmount}</Text>
+                )}
                 <Text style={styles.weightText}>
                   {formattedWeight} grams (₹{Number(goldRate).toFixed(2)}/gram)
                 </Text>
+                {amountError ? (
+                  <Text style={styles.errorText}>{amountError}</Text>
+                ) : null}
               </View>
               
               <TouchableOpacity
                 style={styles.arrowButton}
                 onPress={() => adjustAmount(1000)}
+                disabled={isEditingAmount}
               >
                 <Ionicons
                   name="chevron-forward"
                   size={24}
-                  color={theme.colors.secondary}
+                  color={isEditingAmount ? theme.colors.secondary + "40" : theme.colors.secondary}
                 />
               </TouchableOpacity>
             </View>
@@ -260,26 +325,30 @@ export default function PaymentNewOverView() {
               <TouchableOpacity
                 style={styles.quickButton}
                 onPress={() => adjustAmount(-500)}
+                disabled={isEditingAmount}
               >
-                <Text style={styles.quickButtonText}>-500</Text>
+                <Text style={[styles.quickButtonText, isEditingAmount && styles.disabledText]}>-500</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.quickButton}
                 onPress={() => adjustAmount(-100)}
+                disabled={isEditingAmount}
               >
-                <Text style={styles.quickButtonText}>-100</Text>
+                <Text style={[styles.quickButtonText, isEditingAmount && styles.disabledText]}>-100</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.quickButton}
                 onPress={() => adjustAmount(100)}
+                disabled={isEditingAmount}
               >
-                <Text style={styles.quickButtonText}>+100</Text>
+                <Text style={[styles.quickButtonText, isEditingAmount && styles.disabledText]}>+100</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.quickButton}
                 onPress={() => adjustAmount(500)}
+                disabled={isEditingAmount}
               >
-                <Text style={styles.quickButtonText}>+500</Text>
+                <Text style={[styles.quickButtonText, isEditingAmount && styles.disabledText]}>+500</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -450,6 +519,7 @@ const styles = StyleSheet.create({
     color: theme.colors.secondary,
     marginLeft: 8,
     fontWeight: "600",
+    flex: 1,
   },
   amountAdjustmentContainer: {
     flexDirection: "row",
@@ -539,7 +609,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     position: "absolute",
-    bottom: 70,
+    bottom: 40,
     left: 0,
     right: 0,
     padding: 16,
@@ -649,5 +719,30 @@ const styles = StyleSheet.create({
     color: theme.colors.secondary,
     fontSize: 16,
     fontWeight: "600",
+  },
+  editButton: {
+    padding: 4,
+    marginLeft: 8,
+  },
+  amountInput: {
+    fontSize: 32,
+    fontWeight: "bold",
+    color: theme.colors.secondary,
+    textAlign: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minWidth: 200,
+  },
+  errorText: {
+    fontSize: 12,
+    color: "#ff4444",
+    marginTop: 4,
+    textAlign: "center",
+    fontWeight: "500",
+  },
+  disabledText: {
+    opacity: 0.4,
   },
 });

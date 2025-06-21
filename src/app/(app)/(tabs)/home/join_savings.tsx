@@ -5,6 +5,7 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   StyleSheet,
   Alert,
   KeyboardAvoidingView,
@@ -197,6 +198,7 @@ export default function JoinSavings() {
   // Slider animation value
   const sliderValue = useRef(new Animated.Value(0)).current;
   const sliderWidth = useRef(0);
+  const amountInputRef = useRef<TextInput>(null);
 
   // Add this above the component return
   const goldIconOpacity = useRef(new Animated.Value(1)).current;
@@ -672,121 +674,132 @@ export default function JoinSavings() {
         : [100, 500, 1000, 2000, 5000, 10000, 20000, 50000, 75000, 100000];
 
     return (
-      <View style={styles.stepContainer}>
-        <View style={styles.dualInputContainer}>
-          {/* Amount Input Side */}
-          <View style={[styles.inputSide, styles.amountCardLite]}>
-            <Image
-              source={require("../../../../../assets/images/rupee-bg.png")}
-              style={styles.amountCardBgImage}
-              resizeMode="contain"
-            />
-            <Text style={styles.label}>Amount in Rupees</Text>
-            <View style={styles.amountDisplayContainer}>
-              {isTyping ? (
-                <View style={styles.amountInputContainer}>
-                  <Text style={styles.currencySymbol}>₹</Text>
-                  <TextInput
-                    style={styles.amountInput}
-                    value={inputValue}
-                    onChangeText={handleAmountInput}
-                    keyboardType="numeric"
-                    onFocus={() => setIsTyping(true)}
-                    onBlur={() => {
-                      setIsTyping(false);
-                      handleAmountSubmit();
+      <TouchableWithoutFeedback onPress={handleOutsideClick}>
+        <View style={styles.stepContainer}>
+          <View style={styles.dualInputContainer}>
+            {/* Amount Input Side */}
+            <View style={[styles.inputSide, styles.amountCardLite]}>
+              <Image
+                source={require("../../../../../assets/images/rupee-bg.png")}
+                style={styles.amountCardBgImage}
+                resizeMode="contain"
+              />
+              <Text style={styles.label}>Amount in Rupees</Text>
+              <View style={styles.amountDisplayContainer}>
+                {isTyping ? (
+                  <View style={styles.amountInputContainer}>
+                    <Text style={styles.currencySymbol}>₹</Text>
+                    <TextInput
+                      style={styles.amountInput}
+                      value={inputValue}
+                      onChangeText={handleAmountInput}
+                      keyboardType="numeric"
+                      onFocus={() => setIsTyping(true)}
+                      onBlur={() => {
+                        setIsTyping(false);
+                        handleAmountSubmit();
+                      }}
+                      autoFocus
+                      maxLength={8}
+                      placeholder="0"
+                      placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                      ref={amountInputRef}
+                    />
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setIsTyping(true);
+                      setInputValue(String(amount));
                     }}
-                    autoFocus
-                    maxLength={8}
-                    placeholder="0"
-                    placeholderTextColor="rgba(255, 255, 255, 0.5)"
-                  />
-                </View>
-              ) : (
-                <TouchableOpacity
-                  onPress={() => {
-                    setIsTyping(true);
-                    setInputValue(String(amount));
-                  }}
-                  style={styles.amountValueContainer}
-                >
-                  <Text style={styles.amountValue}>{formatAmount(amount)}</Text>
-                  <Ionicons
-                    name="pencil"
-                    size={20}
-                    color="red"
-                    style={styles.editIcon}
-                  />
-                </TouchableOpacity>
-              )}
+                    style={styles.amountValueContainer}
+                  >
+                    <Text style={styles.amountValue}>{formatAmount(amount)}</Text>
+                    <Ionicons
+                      name="pencil"
+                      size={20}
+                      color="red"
+                      style={styles.editIcon}
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
-          </View>
 
-          {/* Divider */}
-          <View style={styles.calculationDivider}>
-            <Ionicons
-              name="swap-horizontal"
-              size={20}
-              color="#FFC857"
-              style={{ opacity: 0.9 }}
-            />
-          </View>
+            {/* Divider */}
+            <View style={styles.calculationDivider}>
+              <Ionicons
+                name="swap-horizontal"
+                size={20}
+                color="#FFC857"
+                style={{ opacity: 0.9 }}
+              />
+            </View>
 
-          {/* Gold Weight Input Side */}
-          <View style={[styles.inputSide, styles.goldCard]}>
-            <View style={styles.goldShine} />
-            <Text style={styles.goldLabel}>Gold Weight</Text>
-            <View style={styles.amountDisplayContainer}>
-              <View style={styles.goldInputContainer}>
-                <TextInput
-                  style={styles.goldInput}
-                  value={String(goldWeight)}
-                  onChangeText={handleGoldWeightInput}
-                  keyboardType="decimal-pad"
-                  maxLength={6}
-                  placeholder="0.000"
-                  placeholderTextColor="#99999980"
-                />
-                <Text style={styles.goldSymbol}>g</Text>
+            {/* Gold Weight Input Side */}
+            <View style={[styles.inputSide, styles.goldCard]}>
+              <View style={styles.goldShine} />
+              <Text style={styles.goldLabel}>Gold Weight</Text>
+              <View style={styles.amountDisplayContainer}>
+                <View style={styles.goldInputContainer}>
+                  <TextInput
+                    style={styles.goldInput}
+                    value={String(goldWeight)}
+                    onChangeText={handleGoldWeightInput}
+                    keyboardType="decimal-pad"
+                    maxLength={6}
+                    placeholder="0.000"
+                    placeholderTextColor="#99999980"
+                  />
+                  <Text style={styles.goldSymbol}>g</Text>
+                </View>
               </View>
             </View>
           </View>
-        </View>
 
-        <View style={styles.quickAmountContainer}>
-          <Text style={styles.quickAmountLabel}>Quick Select:</Text>
-          <View style={styles.quickAmountGrid}>
-            {quickAmounts.map((quickAmount) => (
-              <TouchableOpacity
-                key={quickAmount}
-                style={[
-                  styles.quickAmountButton,
-                  amount === quickAmount && styles.selectedQuickAmountButton,
-                ]}
-                onPress={() => {
-                  const newValue =
-                    (quickAmount - minAmount) / (maxAmount - minAmount);
-                  sliderValue.setValue(newValue);
-                  setAmount(quickAmount);
-                  setGoldWeight(calculateGoldWeight(quickAmount));
-                  handleChange("amount", String(quickAmount));
-                }}
-              >
-                <Text
-                  style={[
-                    styles.quickAmountText,
-                    amount === quickAmount && styles.selectedQuickAmountText,
-                  ]}
-                >
-                  ₹{quickAmount.toLocaleString("en-IN")}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          <View style={styles.quickAmountContainer}>
+            <Text style={styles.quickAmountLabel}>Quick Select:</Text>
+            <View style={styles.quickAmountGrid}>
+              {quickAmounts.map((quickAmount) => {
+                // Check if current amount is close to this quick amount (within 1 rupee tolerance)
+                const isSelected = Math.abs(amount - quickAmount) < 1;
+                
+                return (
+                  <TouchableOpacity
+                    key={quickAmount}
+                    style={[
+                      styles.quickAmountButton,
+                      isSelected && styles.selectedQuickAmountButton,
+                    ]}
+                    onPress={() => {
+                      const newValue =
+                        (quickAmount - minAmount) / (maxAmount - minAmount);
+                      sliderValue.setValue(newValue);
+                      setAmount(quickAmount);
+                      setGoldWeight(calculateGoldWeight(quickAmount));
+                      setInputValue(String(quickAmount));
+                      handleChange("amount", String(quickAmount));
+                      // Remove input focus when quick select is clicked
+                      handleOutsideClick();
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.quickAmountText,
+                        isSelected && styles.selectedQuickAmountText,
+                      ]}
+                    >
+                      ₹{quickAmount.toLocaleString("en-IN")}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
-        </View>
 
-        {errors.amount && <Text style={styles.errorText}>{errors.amount}</Text>}
-      </View>
+          {errors.amount && <Text style={styles.errorText}>{errors.amount}</Text>}
+        </View>
+      </TouchableWithoutFeedback>
     );
   };
 
@@ -1291,6 +1304,15 @@ export default function JoinSavings() {
       setSchemeType(frequency === "flexi" ? "flexi" : "fixed");
     }
   }, [selectedChit]);
+
+  // Function to handle outside clicks and remove focus
+  const handleOutsideClick = () => {
+    if (isTyping) {
+      setIsTyping(false);
+      handleAmountSubmit();
+      amountInputRef.current?.blur();
+    }
+  };
 
   // Show loading screen while scheme data is being loaded
   if (schemeDataLoading) {
@@ -2210,7 +2232,7 @@ const styles = StyleSheet.create({
   },
   summaryAmountModern: {
     fontSize: 22,
-    color: "#FFC857",
+    color: "#4CAF50",
     fontWeight: "bold",
   },
   kycRow: {
