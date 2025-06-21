@@ -99,7 +99,7 @@ const banners: Banner[] = [
 const defaultStatusImages: Collection[] = [
   {
     id: 1,
-    name: "Gold Collection",
+    name: t("goldCollection"),
     thumbnail: require("../../../../../assets/images/status1.jpg"),
     status_images: [
       require("../../../../../assets/images/status1.jpg"),
@@ -111,7 +111,7 @@ const defaultStatusImages: Collection[] = [
   },
   {
     id: 2,
-    name: "Silver Collection",
+    name: t("silverCollection"),
     thumbnail: require("../../../../../assets/images/status2.jpg"),
     status_images: [
       require("../../../../../assets/images/status2.jpg"),
@@ -123,7 +123,7 @@ const defaultStatusImages: Collection[] = [
   },
   {
     id: 3,
-    name: "Diamond Collection",
+    name: t("diamondCollection"),
     thumbnail: require("../../../../../assets/images/status3.jpg"),
     status_images: [
       require("../../../../../assets/images/status3.jpg"),
@@ -135,7 +135,7 @@ const defaultStatusImages: Collection[] = [
   },
   {
     id: 4,
-    name: "Platinum Collection",
+    name: t("platinumCollection"),
     thumbnail: require("../../../../../assets/images/status4.jpg"),
     status_images: [
       require("../../../../../assets/images/status4.jpg"),
@@ -147,7 +147,7 @@ const defaultStatusImages: Collection[] = [
   },
   {
     id: 5,
-    name: "Exclusive Collection",
+    name: t("exclusiveCollection"),
     thumbnail: require("../../../../../assets/images/status5.jpg"),
     status_images: [
       require("../../../../../assets/images/status5.jpg"),
@@ -253,7 +253,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
       >
         <View style={styles.userInfoTopRow}>
           <View style={styles.welcomeContainer}>
-            <Text style={styles.welcomeText}>Welcome back,</Text>
+            <Text style={styles.welcomeText}>{t('welcomeBack')}</Text>
             <Text style={styles.userName}>{userName?.toUpperCase()}</Text>
           </View>
           <View style={styles.userAvatarContainer}>
@@ -264,7 +264,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
         <View style={styles.statsRow}>
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Active Investments</Text>
+              <Text style={styles.statLabel}>{t('activeInvestments')}</Text>
               <View style={styles.statValue}>
                 <Text style={styles.countText}>{activeSchemesCount || 0}</Text>
                 <Ionicons name="trending-up" size={16} color="#FFD700" />
@@ -272,7 +272,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Total Gold</Text>
+              <Text style={styles.statLabel}>{t('totalGold')}</Text>
               <View style={styles.statValue}>
                 <Text style={styles.countText}>
                   {totalGoldSavings.toFixed(2)}
@@ -282,7 +282,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Total Amount</Text>
+              <Text style={styles.statLabel}>{t('totalAmount')}</Text>
               <View style={styles.statValue}>
                 <Text style={styles.countText}>
                   ₹{totalAmount.toLocaleString()}
@@ -300,7 +300,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
             style={styles.viewDetailsGradient}
           >
             <Ionicons name="eye-outline" size={18} color="#850111" />
-            <Text style={styles.viewDetailsText}>View Investment Details</Text>
+            <Text style={styles.viewDetailsText}>{t('viewInvestmentDetails')}</Text>
             <Ionicons name="chevron-forward" size={18} color="#850111" />
           </LinearGradient>
         </View>
@@ -347,7 +347,7 @@ export default function Home2() {
       saveasgold: t("saveasgold"),
       saveasmoney: t("saveasmoney"),
       futureplus: t("futureplus"),
-      goldSchemes: "Gold Schemes",
+      goldSchemes: t("goldSchemes"),
     }),
     [language]
   );
@@ -481,15 +481,15 @@ export default function Home2() {
         }))
       );
       Alert.alert(
-        "Error",
-        "Failed to fetch data. Please check your internet connection and try again.",
+        t("error"),
+        t("failedToFetchData"),
         [
           {
-            text: "Retry",
+            text: t("retry"),
             onPress: () => fetchHomeData(true),
           },
           {
-            text: "OK",
+            text: t("ok"),
             style: "cancel",
           },
         ]
@@ -622,13 +622,13 @@ export default function Home2() {
     // Show alert with summary
     const summary = apiLogManager.getApiSummary();
     Alert.alert(
-      'API Logs Summary',
-      `Total Requests: ${summary.totalRequests}\n` +
-      `Successful: ${summary.successful}\n` +
-      `Failed: ${summary.failed}\n` +
-      `Avg Response Time: ${summary.averageResponseTime.toFixed(2)}ms\n\n` +
-      `Check console for detailed logs.`,
-      [{ text: 'OK' }]
+      t("apiLogsSummary"),
+      `${t("totalRequests")}: ${summary.totalRequests}\n` +
+      `${t("successful")}: ${summary.successful}\n` +
+      `${t("failed")}: ${summary.failed}\n` +
+      `${t("avgResponseTime")}: ${summary.averageResponseTime.toFixed(2)}ms\n\n` +
+      `${t("checkConsoleForDetails")}`,
+      [{ text: t("ok") }]
     );
   }, []);
 
@@ -720,7 +720,7 @@ export default function Home2() {
               activeOpacity={0.7}
             >
               <Ionicons name="analytics" size={20} color="#FFD700" />
-              <Text style={styles.debugButtonText}>API Logs</Text>
+              <Text style={styles.debugButtonText}>{t('apiLogs')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -774,24 +774,18 @@ export default function Home2() {
                   <View style={styles.rateWarningContent}>
                     <Ionicons name="warning" size={24} color="#FFD700"/>
                     <View style={styles.rateWarningTextContainer}>
-                      <Text style={styles.rateWarningTitle}>
-                        Live Rates Unavailable
-                      </Text>
-                      <Text style={styles.rateWarningSubtitle}>
-                        Please try again later
-                      </Text>
+                      <Text style={styles.rateWarningTitle}>{t('liveRatesUnavailable')}</Text>
+                      <Text style={styles.rateWarningSubtitle}>{t('pleaseTryAgainLater')}</Text>
                     </View>
                   </View>
                   <View style={styles.rateWarningRates}>
                     <View style={styles.rateWarningRateItem}>
-                      <Text style={styles.rateWarningRateLabel}>Gold Rate</Text>
+                      <Text style={styles.rateWarningRateLabel}>{t('goldRate')}</Text>
                       <Text style={styles.rateWarningRateValue}>0.00</Text>
                     </View>
                     <View style={styles.rateWarningDivider} />
                     <View style={styles.rateWarningRateItem}>
-                      <Text style={styles.rateWarningRateLabel}>
-                        Silver Rate
-                      </Text>
+                      <Text style={styles.rateWarningRateLabel}>{t('silverRate')}</Text>
                       <Text style={styles.rateWarningRateValue}>0.00</Text>
                     </View>
                   </View>
@@ -841,12 +835,10 @@ export default function Home2() {
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionHeaderContent}>
                   <View style={styles.sectionHeaderLine} />
-                  <Text style={styles.sectionHeaderText}>Active Schemes</Text>
+                  <Text style={styles.sectionHeaderText}>{t('activeSchemes')}</Text>
                   <View style={styles.sectionHeaderLine} />
                 </View>
-                <Text style={styles.sectionHeaderSubtext}>
-                  Explore our exclusive gold savings plans
-                </Text>
+                <Text style={styles.sectionHeaderSubtext}>{t('exploreGoldSavingsPlans')}</Text>
               </View>
 
               <View style={styles.bannerContainer}>

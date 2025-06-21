@@ -7,24 +7,48 @@ import {
   StyleSheet,
   View,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import YoutubePlayer from "react-native-youtube-iframe";
 import api from "@/services/api";
 import { theme } from "@/constants/theme";
 import { Ionicons } from '@expo/vector-icons';
 import { moderateScale } from "react-native-size-matters";
+import { t } from "@/i18n";
+import { LinearGradient } from "expo-linear-gradient";
+
+interface Video {
+  id: number;
+  title: string;
+  video_url: string;
+  created_at: string;
+}
 
 const YouTubeVideo: React.FC = () => {
   const screenWidth = Dimensions.get("window").width;
   const [playing, setPlaying] = useState(false);
   const [videoId, setVideoId] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
+  const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const onStateChange = useCallback((state: string) => {
     if (state === "ended") {
       setPlaying(false);
+      // Auto-play next video if available
+      if (videos.length > 1) {
+        const nextIndex = (currentIndex + 1) % videos.length;
+        setCurrentIndex(nextIndex);
+        const nextVideo = videos[nextIndex];
+        const nextVideoId = extractYouTubeVideoId(nextVideo.video_url);
+        setVideoId(nextVideoId);
+        setCurrentVideo(nextVideo);
+        setPlaying(true);
+      }
     }
-  }, []);
+  }, [videos, currentIndex]);
 
   // Function to extract video ID from various YouTube URL formats.
   const extractYouTubeVideoId = (url: string): string => {
@@ -34,43 +58,108 @@ const YouTubeVideo: React.FC = () => {
     return match ? match[1] : "";
   };
 
-  useEffect(() => {
-    const fetchVideoUrl = async () => {
-      const fallbackUrl = theme.youtubeUrl; // Fallback URL
-      try {
-        const response = await api.get("videos/active");
-        let videoUrl = response.data.data[0].video_url;
-        if (!videoUrl) {
-          console.error(
-            "API response does not contain a valid video URL:",
-            response
-          );
-          videoUrl = fallbackUrl;
-        }
-        let id = extractYouTubeVideoId(videoUrl);
-        if (!id) {
-          console.error("Failed to extract video ID from the URL:", videoUrl);
-          id = extractYouTubeVideoId(fallbackUrl);
-        }
-        setVideoId(id);
-      } catch (error) {
-        console.error("Error fetching video URL:", error);
-        // Use fallback video ID when API call fails.
-        setVideoId(extractYouTubeVideoId(fallbackUrl));
-      } finally {
-        setLoading(false);
+  const fetchVideos = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      
+      const response = await api.get("videos/active");
+      const videoData = response.data.data || [];
+      
+      if (videoData.length === 0) {
+        setError("noVideosAvailable");
+        return;
       }
-    };
 
-    fetchVideoUrl();
+      setVideos(videoData);
+      const firstVideo = videoData[0];
+      const videoId = extractYouTubeVideoId(firstVideo.video_url);
+      
+      if (!videoId) {
+        setError("videoLoadingError");
+        return;
+      }
+
+      setVideoId(videoId);
+      setCurrentVideo(firstVideo);
+      setCurrentIndex(0);
+    } catch (error) {
+      console.error("Error fetching videos:", error);
+      setError("videoLoadingError");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchVideos();
   }, []);
 
+  const handlePlayPause = () => {
+    setPlaying(!playing);
+  };
+
+  const handleNextVideo = () => {
+    if (videos.length > 1) {
+      const nextIndex = (currentIndex + 1) % videos.length;
+      setCurrentIndex(nextIndex);
+      const nextVideo = videos[nextIndex];
+      const nextVideoId = extractYouTubeVideoId(nextVideo.video_url);
+      setVideoId(nextVideoId);
+      setCurrentVideo(nextVideo);
+      setPlaying(true);
+    }
+  };
+
+  const handlePreviousVideo = () => {
+    if (videos.length > 1) {
+      const prevIndex = currentIndex === 0 ? videos.length - 1 : currentIndex - 1;
+      setCurrentIndex(prevIndex);
+      const prevVideo = videos[prevIndex];
+      const prevVideoId = extractYouTubeVideoId(prevVideo.video_url);
+      setVideoId(prevVideoId);
+      setCurrentVideo(prevVideo);
+      setPlaying(true);
+    }
+  };
+
   if (loading) {
-    return <ActivityIndicator size="large" color="#0000ff" />;
+    return (
+      <View style={styles.container}>
+        <View style={styles.headerContainer}>
+          <View style={styles.headerContent}>
+            <Ionicons name="play-circle" size={24} color="#850111" />
+            <Text style={styles.headerText}>{t("featuredVideo")}</Text>
+          </View>
+          <View style={styles.headerLine} />
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#850111" />
+          <Text style={styles.loadingText}>Loading videos...</Text>
+        </View>
+      </View>
+    );
   }
 
-  if (!videoId) {
-    return <Text>Error loading video.</Text>;
+  if (error || !videoId) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.headerContainer}>
+          <View style={styles.headerContent}>
+            <Ionicons name="play-circle" size={24} color="#850111" />
+            <Text style={styles.headerText}>{t("featuredVideo")}</Text>
+          </View>
+          <View style={styles.headerLine} />
+        </View>
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle" size={48} color="#850111" />
+          <Text style={styles.errorText}>{t(error || "videoLoadingError")}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={fetchVideos}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
   }
 
   return (
@@ -78,7 +167,7 @@ const YouTubeVideo: React.FC = () => {
       <View style={styles.headerContainer}>
         <View style={styles.headerContent}>
           <Ionicons name="play-circle" size={24} color="#850111" />
-          <Text style={styles.headerText}>Featured Video</Text>
+          <Text style={styles.headerText}>{t("featuredVideo")}</Text>
         </View>
         <View style={styles.headerLine} />
       </View>
@@ -95,9 +184,52 @@ const YouTubeVideo: React.FC = () => {
               controls: true,
               modestbranding: true,
               rel: 0,
+              showinfo: 0,
             }}
           />
         </View>
+        
+        {/* Video Controls */}
+        {videos.length > 1 && (
+          <View style={styles.controlsContainer}>
+            <TouchableOpacity 
+              style={styles.controlButton} 
+              onPress={handlePreviousVideo}
+            >
+              <Ionicons name="play-skip-back" size={20} color="#850111" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.controlButton} 
+              onPress={handlePlayPause}
+            >
+              <Ionicons 
+                name={playing ? "pause" : "play"} 
+                size={24} 
+                color="#850111" 
+              />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.controlButton} 
+              onPress={handleNextVideo}
+            >
+              <Ionicons name="play-skip-forward" size={20} color="#850111" />
+            </TouchableOpacity>
+          </View>
+        )}
+        
+        {/* Video Info */}
+        {currentVideo && (
+          <View style={styles.videoInfoContainer}>
+            <Text style={styles.videoTitle} numberOfLines={2}>
+              {currentVideo.title}
+            </Text>
+            <Text style={styles.videoDate}>
+              {new Date(currentVideo.created_at).toLocaleDateString()}
+            </Text>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -148,6 +280,62 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     overflow: 'hidden',
     backgroundColor: '#000',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    fontSize: moderateScale(16),
+    fontWeight: '700',
+    color: '#850111',
+    marginLeft: 10,
+  },
+  errorContainer: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: moderateScale(16),
+    fontWeight: '700',
+    color: '#850111',
+    marginBottom: 20,
+  },
+  retryButton: {
+    padding: 10,
+    backgroundColor: '#850111',
+    borderRadius: 5,
+  },
+  retryButtonText: {
+    fontSize: moderateScale(16),
+    fontWeight: '700',
+    color: '#fff',
+  },
+  controlsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 10,
+  },
+  controlButton: {
+    padding: 10,
+  },
+  videoInfoContainer: {
+    padding: 10,
+  },
+  videoTitle: {
+    fontSize: moderateScale(16),
+    fontWeight: '700',
+    color: '#850111',
+    marginBottom: 5,
+  },
+  videoDate: {
+    fontSize: moderateScale(14),
+    color: '#850111',
   },
 });
 

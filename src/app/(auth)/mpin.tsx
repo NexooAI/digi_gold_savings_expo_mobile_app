@@ -22,6 +22,7 @@ import * as SecureStore from "expo-secure-store";
 import * as Crypto from "expo-crypto";
 import { theme } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
+import { t } from "@/i18n";
 
 const { width } = Dimensions.get("window");
 const logoWidth = width * 0.3;
@@ -117,7 +118,7 @@ export default function MpinSetup() {
 
   const handleSubmit = async () => {
     if (mpin !== confirmMpin) {
-      Alert.alert("Error", "MPINs do not match!");
+      Alert.alert(t("error"), t("mpinMismatchError"));
       return;
     }
 
@@ -134,13 +135,13 @@ export default function MpinSetup() {
       });
 
       if (response.status === 200) {
-        Alert.alert("Success", "MPIN set successfully!");
+        Alert.alert(t("success"), t("mpinSetSuccess"));
         router.push({ pathname: "/(auth)/login", params: { mobile } });
       }
     } catch (error: any) {
       Alert.alert(
-        "Error",
-        error.response?.data?.message || "Registration failed"
+        t("error"),
+        error.response?.data?.message || t("registrationFailed")
       );
     } finally {
       setLoading(false);
@@ -173,11 +174,11 @@ export default function MpinSetup() {
               />
 
               <View style={styles.cardContainer}>
-                <Text style={styles.title}>Set MPIN</Text>
-                <Text style={styles.subtitle}>Create a secure MPIN for your account</Text>
+                <Text style={styles.title}>{t("setMpinTitle")}</Text>
+                <Text style={styles.subtitle}>{t("setMpinSubtitle")}</Text>
 
                 <View style={styles.inputSection}>
-                  <Text style={styles.label}>Enter MPIN</Text>
+                  <Text style={styles.label}>{t("createMpinLabel")}</Text>
                   <MpinInput
                     length={4}
                     onComplete={setMpin}
@@ -186,7 +187,7 @@ export default function MpinSetup() {
                 </View>
 
                 <View style={styles.inputSection}>
-                  <Text style={styles.label}>Confirm MPIN</Text>
+                  <Text style={styles.label}>{t("confirmMpinLabel")}</Text>
                   <MpinInput
                     length={4}
                     onComplete={setConfirmMpin}
@@ -211,7 +212,7 @@ export default function MpinSetup() {
                     color={theme.colors.secondary}
                   />
                   <Text style={styles.eyeText}>
-                    {showPin ? "Hide MPIN" : "Show MPIN"}
+                    {showPin ? t("hideMpinLabel") : t("showMpinLabel")}
                   </Text>
                 </TouchableOpacity>
 
@@ -228,7 +229,7 @@ export default function MpinSetup() {
                     style={styles.gradientButton}
                   >
                     <Text style={styles.buttonText}>
-                      {loading ? "Processing..." : "Set MPIN"}
+                      {loading ? t("processing") : t("setMpinButton")}
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>

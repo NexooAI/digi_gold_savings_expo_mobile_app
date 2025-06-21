@@ -10,6 +10,10 @@ import {
   Platform,
   Dimensions,
   Alert,
+  Image,
+  Animated,
+  NativeSyntheticEvent,
+  TextInputKeyPressEventData,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { theme } from "@/constants/theme";
@@ -18,6 +22,8 @@ import { Ionicons } from "@expo/vector-icons";
 import api from "@/services/api";
 import * as SecureStore from "expo-secure-store";
 import * as Crypto from "expo-crypto";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { t } from "@/i18n";
 
 const { width } = Dimensions.get("window");
 const salt = "someRandomSaltValue";
@@ -107,11 +113,11 @@ export default function SetMpinPage() {
 
   const handleSubmit = async () => {
     if (!mpinValid || !confirmValid) {
-      showErrorAlert("Please enter 4-digit MPIN in both fields");
+      showErrorAlert(t("mpinValidationError"));
       return;
     }
     if (mpinValue !== confirmValue) {
-      showErrorAlert("MPIN and Confirm MPIN do not match");
+      showErrorAlert(t("mpinMismatchError"));
       return;
     }
     setLoading(true);
@@ -128,10 +134,10 @@ export default function SetMpinPage() {
       if (response.status === 200) {
         router.replace({ pathname: "/(auth)/login", params: { mobile } });
       } else {
-        showErrorAlert(response.data.message || "Registration failed");
+        showErrorAlert(response.data.message || t("registrationFailed"));
       }
     } catch (error: any) {
-      showErrorAlert(error.response?.data?.message || "Registration failed");
+      showErrorAlert(error.response?.data?.message || t("registrationFailed"));
     } finally {
       setLoading(false);
     }
@@ -163,10 +169,10 @@ export default function SetMpinPage() {
         >
           <View style={styles.formContainer}>
             <View style={styles.cardContainer}>
-              <Text style={styles.pageTitle}>Set MPIN</Text>
-              <Text style={styles.subtitle}>Create a 4-digit MPIN to secure your account</Text>
+              <Text style={styles.pageTitle}>{t("setMpinTitle")}</Text>
+              <Text style={styles.subtitle}>{t("setMpinSubtitle")}</Text>
               {/* MPIN Input Boxes */}
-              <Text style={styles.label}>Create MPIN</Text>
+              <Text style={styles.label}>{t("createMpinLabel")}</Text>
               <View style={styles.pinContainer}>
                 {mpin.map((digit, index) => (
                   <PinInput
@@ -181,7 +187,7 @@ export default function SetMpinPage() {
                   />
                 ))}
               </View>
-              <Text style={styles.label}>Confirm MPIN</Text>
+              <Text style={styles.label}>{t("confirmMpinLabel")}</Text>
               <View style={styles.pinContainer}>
                 {confirmMpin.map((digit, index) => (
                   <PinInput
@@ -207,13 +213,13 @@ export default function SetMpinPage() {
                   color={theme.colors.secondary}
                 />
                 <Text style={styles.eyeText}>
-                  {showPin ? "Hide MPIN" : "Show MPIN"}
+                  {showPin ? t("hideMpinLabel") : t("showMpinLabel")}
                 </Text>
               </TouchableOpacity>
               {matchError && (
                 <View style={styles.errorContainer}>
                   <Ionicons name="alert-circle" size={20} color="#ff4444" />
-                  <Text style={styles.errorText}>MPIN and Confirm MPIN do not match</Text>
+                  <Text style={styles.errorText}>{t("mpinMismatchError")}</Text>
                 </View>
               )}
               {/* Submit Button */}
@@ -230,12 +236,12 @@ export default function SetMpinPage() {
                     {loading ? (
                       <>
                         <Ionicons name="hourglass" size={20} color={theme.colors.textDark} />
-                        <Text style={styles.submitButtonText}>Processing...</Text>
+                        <Text style={styles.submitButtonText}>{t("processing")}</Text>
                       </>
                     ) : (
                       <>
                         <Ionicons name="checkmark-circle" size={20} color={theme.colors.textDark} />
-                        <Text style={styles.submitButtonText}>Set MPIN</Text>
+                        <Text style={styles.submitButtonText}>{t("setMpinButton")}</Text>
                       </>
                     )}
                   </View>
@@ -247,7 +253,7 @@ export default function SetMpinPage() {
                 onPress={() => router.back()}
               >
                 <Ionicons name="arrow-back" size={20} color={theme.colors.white} />
-                <Text style={styles.backButtonText}>Back</Text>
+                <Text style={styles.backButtonText}>{t("backButton")}</Text>
               </TouchableOpacity>
             </View>
           </View>

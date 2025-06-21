@@ -155,7 +155,7 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
       ) : null}
       
       <LinearGradient
-        colors={['rgba(133, 1, 17, 0.9)', 'rgba(90, 0, 11, 0.9)']}
+        colors={['rgba(0, 0, 0, 0.95)', 'rgba(20, 20, 20, 0.95)', 'rgba(0, 0, 0, 0.95)']}
         style={[styles.gradientBackground, overlay && StyleSheet.absoluteFill]}
       />
 
@@ -181,7 +181,7 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
           ]}
         >
           <LinearGradient
-            colors={['#de1836', '#FFA500', '#de1836']}
+            colors={['#000000', '#ffd700', '#000000', '#ffd700']}
             style={styles.ringGradient}
           />
         </Animated.View>
@@ -209,17 +209,12 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
             },
           ]}
         >
-          {/* DC Jewellers animated gold GIF */}
+          {/* DC Jewellers logo */}
           <Image
             source={require('../../../assets/images/adaptive-icon.png')}
             style={[styles.logo, { width: logoSize, height: logoSize }]}
             resizeMode="contain"
           />
-          
-          {/* Crown effect overlay */}
-          <View style={styles.crownOverlay}>
-            <Text style={styles.crownText}>👑</Text>
-          </View>
         </Animated.View>
 
         {/* Sparkle effects */}
@@ -301,7 +296,7 @@ const styles = StyleSheet.create({
     zIndex: 9999,
   },
   gradientBackground: {
-    borderRadius: 20,
+    borderRadius: 25,
   },
   loaderContainer: {
     justifyContent: 'center',
@@ -321,40 +316,16 @@ const styles = StyleSheet.create({
   },
   innerGlow: {
     position: 'absolute',
-    backgroundColor: 'rgba(255, 215, 0, 0.2)',
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
     borderRadius: 1000,
   },
   logoContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 1000,
     position: 'relative',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#FFD700',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
   },
   logo: {
-    borderRadius: 1000,
-  },
-  crownOverlay: {
-    position: 'absolute',
-    top: -15,
-    right: -5,
-  },
-  crownText: {
-    fontSize: 20,
-    textShadowColor: 'rgba(255, 215, 0, 0.8)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
+    borderRadius: 0,
   },
   sparkleContainer: {
     position: 'absolute',

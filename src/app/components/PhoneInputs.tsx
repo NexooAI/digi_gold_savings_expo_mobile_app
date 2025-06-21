@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Keyboard,
 } from "react-native";
+import { t } from "@/i18n";
 
 interface PhoneInputProps {
   value: string;
@@ -31,14 +32,14 @@ const PhoneInput: React.FC<PhoneInputProps> = ({ value, onChangeText, loading })
 
   const handleBlur = () => {
     if (!value) {
-      setError("Mobile number is required");
-      Alert.alert("Error", "Please enter your mobile number");
+      setError(t("pleaseEnterMobile"));
+      Alert.alert(t("error"), t("pleaseEnterMobile"));
       return;
     }
 
     if (value.length !== 10) {
-      setError("Please enter a valid 10-digit mobile number");
-      Alert.alert("Error", "Please enter a valid 10-digit mobile number");
+      setError(t("validMobileNumber"));
+      Alert.alert(t("error"), t("validMobileNumber"));
       return;
     }
 
@@ -47,14 +48,14 @@ const PhoneInput: React.FC<PhoneInputProps> = ({ value, onChangeText, loading })
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Mobile Number:</Text>
+      <Text style={styles.label}>{t("mobileNumber")}:</Text>
 
       <View style={[styles.inputContainer, error && styles.errorContainer]}>
         <View style={styles.countryCodeBox}>
           <Text style={styles.countryCodeText}>+91</Text>
         </View>
         <TextInput
-          placeholder="Enter mobile number"
+          placeholder={t("enterMobileNumber")}
           placeholderTextColor="rgba(0, 0, 0, 0.5)"
           value={value}
           onChangeText={validateMobile}

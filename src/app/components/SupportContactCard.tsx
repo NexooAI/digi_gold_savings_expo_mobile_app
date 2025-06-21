@@ -1,3 +1,4 @@
+import React, { useEffect, useRef, useState } from 'react';
 import { LinearGradient } from "expo-linear-gradient";
 import {
   TouchableOpacity,
@@ -14,7 +15,7 @@ import { moderateScale } from "react-native-size-matters";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
 import { theme } from "@/constants/theme";
-import { useEffect, useRef, useState } from "react";
+import { t } from '@/i18n';
 
 const { width } = Dimensions.get("window");
 
@@ -251,24 +252,24 @@ const SupportContactCard = () => {
 
   const handleCall = () => {
     Linking.openURL(`tel:+919061803999`).catch((err) =>
-      Alert.alert("Error", "Could not open dialer")
+      Alert.alert(t("error"), t("couldNotOpenDialer"))
     );
   };
 
   const handleEmail = () => {
     Linking.openURL("mailto:dcjewellerstcr@gmail.com").catch((err) =>
-      Alert.alert("Error", "Could not open email client")
+      Alert.alert(t("error"), t("couldNotOpenEmail"))
     );
   };
 
   const handleWhatsApp = () => {
     Linking.openURL("https://wa.me/919061803999").catch((err) =>
-      Alert.alert("Error", "Could not open WhatsApp")
+      Alert.alert(t("error"), t("couldNotOpenWhatsApp"))
     );
   };
 
   const handleLiveChat = () => {
-    Alert.alert("Live Chat", "Live chat feature coming soon!");
+    Alert.alert(t("liveChat"), t("liveChatComingSoon"));
   };
 
   const headerGlowOpacity = headerGlowAnim.interpolate({
@@ -319,8 +320,8 @@ const SupportContactCard = () => {
             </LinearGradient>
             
             <View style={styles.headerTextContainer}>
-              <Text style={styles.mainTitle}>24/7 Gold Support</Text>
-              <Text style={styles.mainSubtitle}>We're always here to help you</Text>
+              <Text style={styles.mainTitle}>{t("supportTitle")}</Text>
+              <Text style={styles.mainSubtitle}>{t("supportSubtitle")}</Text>
             </View>
             
             <TouchableOpacity
@@ -356,7 +357,7 @@ const SupportContactCard = () => {
           <ContactOption
             icon="call"
             title="+91 9061803999"
-            subtitle="Instant Phone Support"
+            subtitle={t("instantPhoneSupport")}
             onPress={handleCall}
             gradient={['#4CAF50', '#45A049']}
             delay={200}
@@ -365,7 +366,7 @@ const SupportContactCard = () => {
           <ContactOption
             icon="mail"
             title="dcjewellerstcr@gmail.com"
-            subtitle="Email Us Anytime"
+            subtitle={t("emailUsAnytime")}
             onPress={handleEmail}
             gradient={['#2196F3', '#1976D2']}
             delay={400}
@@ -377,8 +378,8 @@ const SupportContactCard = () => {
           <Animated.View style={styles.extendedOptions}>
             <ContactOption
               icon="logo-whatsapp"
-              title="WhatsApp Support"
-              subtitle="Chat with us instantly"
+              title={t("whatsAppSupport")}
+              subtitle={t("chatWithUsInstantly")}
               onPress={handleWhatsApp}
               gradient={['#25D366', '#20BA5A']}
               delay={100}
@@ -386,8 +387,8 @@ const SupportContactCard = () => {
             
             <ContactOption
               icon="chatbubble-ellipses"
-              title="Live Chat"
-              subtitle="Real-time assistance"
+              title={t("liveChat")}
+              subtitle={t("realtimeAssistance")}
               onPress={handleLiveChat}
               gradient={['#FF6B6B', '#FF5252']}
               delay={200}
@@ -399,9 +400,9 @@ const SupportContactCard = () => {
         <View style={styles.footerContainer}>
           <View style={styles.availabilityBadge}>
             <View style={styles.onlineIndicator} />
-            <Text style={styles.availabilityText}>Online Now</Text>
+            <Text style={styles.availabilityText}>{t("onlineNow")}</Text>
           </View>
-          <Text style={styles.responseTime}>Average response: 2 minutes</Text>
+          <Text style={styles.responseTime}>{t("averageResponse")}</Text>
         </View>
       </LinearGradient>
     </Animated.View>

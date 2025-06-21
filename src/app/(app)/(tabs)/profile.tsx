@@ -244,7 +244,7 @@ const ProfileScreen = () => {
             // Edit Profile Form
             <View style={styles.editFormContainer}>
               <View style={styles.editFormHeader}>
-                <Text style={styles.editFormTitle}>Edit Profile</Text>
+                <Text style={styles.editFormTitle}>{t('editProfile')}</Text>
                 <View style={styles.editFormActions}>
                   <TouchableOpacity
                     style={styles.cancelButton}
@@ -281,7 +281,7 @@ const ProfileScreen = () => {
                     <Icon name="camera-alt" size={20} color="white" />
                   </View>
                 </TouchableOpacity>
-                <Text style={styles.editImageText}>Tap to change photo</Text>
+                <Text style={styles.editImageText}>{t('tapToChangePhoto')}</Text>
               </View>
 
               {/* Edit Form Fields */}
@@ -310,12 +310,12 @@ const ProfileScreen = () => {
                 </View> */}
 
                 <View style={styles.formField}>
-                  <Text style={styles.formLabel}>Full Name</Text>
+                  <Text style={styles.formLabel}>{t('fullName')}</Text>
                   <TextInput
                     style={styles.formInput}
                     value={editData.name}
                     onChangeText={(value) => updateEditField("name", value)}
-                    placeholder="Enter full name"
+                    placeholder={t('enterFullName')}
                     placeholderTextColor="#999"
                   />
                 </View>
@@ -332,12 +332,12 @@ const ProfileScreen = () => {
                 </View> */}
 
                 <View style={styles.formField}>
-                  <Text style={styles.formLabel}>Email Address</Text>
+                  <Text style={styles.formLabel}>{t('emailAddress')}</Text>
                   <TextInput
                     style={styles.formInput}
                     value={editData.email}
                     onChangeText={(value) => updateEditField("email", value)}
-                    placeholder="Enter email address"
+                    placeholder={t('enterEmailAddress')}
                     placeholderTextColor="#999"
                     keyboardType="email-address"
                     autoCapitalize="none"
@@ -345,12 +345,12 @@ const ProfileScreen = () => {
                 </View>
 
                 <View style={styles.formField}>
-                  <Text style={styles.formLabel}>Mobile Number</Text>
+                  <Text style={styles.formLabel}>{t('mobileNumber')}</Text>
                   <TextInput
                     style={styles.formInput}
                     value={editData.mobile}
                     onChangeText={(value) => updateEditField("mobile", value)}
-                    placeholder="Enter mobile number"
+                    placeholder={t('enterMobileNumber')}
                     placeholderTextColor="#999"
                     keyboardType="phone-pad"
                     editable={false}
@@ -362,13 +362,13 @@ const ProfileScreen = () => {
                     style={styles.cancelFormButton}
                     onPress={handleEditToggle}
                   >
-                    <Text style={styles.cancelFormButtonText}>Cancel</Text>
+                    <Text style={styles.cancelFormButtonText}>{t('cancel')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.saveMainButton}
                     onPress={handleSave}
                   >
-                    <Text style={styles.saveMainButtonText}>Save</Text>
+                    <Text style={styles.saveMainButtonText}>{t('save')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -413,7 +413,7 @@ const ProfileScreen = () => {
                   color="white"
                   style={{ marginRight: 8 }}
                 />
-                <Text style={styles.editProfileButtonText}>Edit Profile</Text>
+                <Text style={styles.editProfileButtonText}>{t('editProfile')}</Text>
               </TouchableOpacity>
             </Animated.View>
           )}
@@ -430,7 +430,7 @@ const ProfileScreen = () => {
                 />
                 <Text style={styles.cardTitle}>{t("personal_info")}</Text>
                 <View style={styles.userIdBadge}>
-                  <Text style={styles.userIdText}>ID: {user?.id}</Text>
+                  <Text style={styles.userIdText}>{t('userId') + ": "}{user?.id}</Text>
                 </View>
               </View>
 
@@ -440,7 +440,7 @@ const ProfileScreen = () => {
                 </View>
                 <Text style={styles.infoLabel}>{t("mobile_number")}</Text>
                 <Text style={styles.infoValue}>
-                  {user?.mobile || "Not provided"}
+                  {user?.mobile || t('notProvided')}
                 </Text>
               </View>
 
@@ -450,7 +450,7 @@ const ProfileScreen = () => {
                 <View style={styles.infoIcon}>
                   <Icon name="supervised-user-circle" size={20} color={theme.colors.primary}/>
                 </View>
-                <Text style={styles.infoLabel}>{"User ID"}</Text>
+                <Text style={styles.infoLabel}>{t('userId')}</Text>
                 <Text style={styles.infoValue}>{user?.id}</Text>
               </View>
             </View>
@@ -484,7 +484,7 @@ const ProfileScreen = () => {
                     activeOpacity={0.7}
                   >
                     <View style={styles.referralCodeLeft}>
-                      <Text style={styles.referralCodeLabel}>Your Code</Text>
+                      <Text style={styles.referralCodeLabel}>{t('yourCode')}</Text>
                       <Text style={styles.referralCode}>
                         {user?.referralCode || "GOLD123"}
                       </Text>
@@ -510,7 +510,7 @@ const ProfileScreen = () => {
                           {t("total_rewards")}
                         </Text>
                         <Text style={styles.rewardsValue}>
-                          {user?.rewards || 0} Points
+                          {user?.rewards || 0} {t('points')}
                         </Text>
                       </View>
                     </View>
@@ -532,7 +532,7 @@ const ProfileScreen = () => {
                     style={{ marginRight: 8 }}
                   />
                   <Text style={styles.inviteButtonText}>
-                    {"Invite Friends & Earn"}
+                    {t('inviteFriendsEarn')}
                   </Text>
                 </TouchableOpacity>
               </LinearGradient>
@@ -553,7 +553,7 @@ const ProfileScreen = () => {
                     color={theme.colors.primary}
                   />
                 </View>
-                <Text style={styles.settingText}>Change KYC</Text>
+                <Text style={styles.settingText}>{t('changeKYC')}</Text>
                 <Icon name="chevron-right" size={24} color="#9E9E9E" />
               </TouchableOpacity>
 
@@ -568,7 +568,7 @@ const ProfileScreen = () => {
                 >
                   <Icon name="lock" size={24} color="#4CAF50" />
                 </View>
-                <Text style={styles.settingText}>Change MPIN</Text>
+                <Text style={styles.settingText}>{t('changeMPIN')}</Text>
                 <Icon name="chevron-right" size={24} color="#9E9E9E" />
               </TouchableOpacity>
 
@@ -589,7 +589,7 @@ const ProfileScreen = () => {
                 </View>
                 <Text style={styles.settingText}>{t("language")}</Text>
                 <Text style={styles.settingValue}>
-                  {language === "en" ? "English" : "മലയാളം"}
+                  {language === "en" ? t('english') : t('malayalam')}
                 </Text>
                 <Icon name="chevron-right" size={24} color="#9E9E9E" />
               </TouchableOpacity>

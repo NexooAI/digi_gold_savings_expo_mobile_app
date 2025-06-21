@@ -26,6 +26,10 @@ import * as Crypto from "expo-crypto";
 import { theme } from "@/constants/theme";
 import { moderateScale } from "react-native-size-matters";
 import { registerStyles as styles } from "../../_styles/registerStyles";
+import { t } from "@/i18n";
+import { AppLocale } from "@/i18n";
+import useGlobalStore from "@/store/global.store";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 const logoWidth = width * 0.3;
@@ -132,6 +136,64 @@ const MpinInput: React.FC<MpinInputProps> = ({
   );
 };
 
+// Simple Language Switcher Component
+const SimpleLanguageSwitcher = () => {
+  const { language, setLanguage } = useGlobalStore();
+  
+  const handleLanguageChange = () => {
+    let newLang: AppLocale;
+    switch (language) {
+      case 'en':
+        newLang = 'mal';
+        break;
+      case 'mal':
+        newLang = 'en';
+        break;
+      default:
+        newLang = 'en';
+    }
+    setLanguage(newLang);
+  };
+
+  const getLanguageDisplayName = () => {
+    switch (language) {
+      case 'en':
+        return 'മലയാളം';
+      case 'mal':
+        return 'English';
+      default:
+        return 'മലയാളം';
+    }
+  };
+
+  return (
+    <TouchableOpacity
+      onPress={handleLanguageChange}
+      style={{
+        position: 'absolute',
+        top: Platform.OS === 'ios' ? 60 : 40,
+        right: 20,
+        zIndex: 1000,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        padding: 12,
+        borderRadius: 25,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.3)',
+      }}
+    >
+      <Image
+        source={theme.image.translate}
+        style={{ width: 20, height: 20, marginRight: 8, tintColor: '#ffffff' }}
+      />
+      <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: 'bold' }}>
+        {getLanguageDisplayName()}
+      </Text>
+    </TouchableOpacity>
+  );
+};
+
 export default function ResetMpin() {
   const { name, email, mobile, mode, from } = useLocalSearchParams();
 
@@ -145,6 +207,7 @@ export default function ResetMpin() {
   const [errorMessage, setErrorMessage] = useState("");
   const isCreatingMPIN = mode === "create";
   const fromLogin = from === "login";
+  const { language } = useGlobalStore();
 
   const hideErrorAlert = () => {
     setShowError(false);
@@ -158,24 +221,24 @@ export default function ResetMpin() {
 
   useEffect(() => {
     if (mpin.length === 4 && confirmMpin.length === 4) {
-      setError(mpin !== confirmMpin ? "MPIN mismatch" : "");
+      setError(mpin !== confirmMpin ? t("mpinMismatch") : "");
     } else {
       setError("");
     }
-  }, [mpin, confirmMpin]);
+  }, [mpin, confirmMpin, language]);
 
   const handleSubmit = async () => {
     if (mpin !== confirmMpin) {
-      showErrorAlert("MPINs do not match!");
+      showErrorAlert(t("mpinsDoNotMatch"));
       return;
     }
     setLoading(true);
     try {
       await hashMPIN(mpin);
-      showErrorAlert("MPIN reset successfully!");
+      showErrorAlert(t("mpinResetSuccess"));
       setTimeout(() => router.replace("/(tabs)/home"), 1000);
     } catch (error: any) {
-      showErrorAlert(error.response?.data?.message || "Reset failed");
+      showErrorAlert(error.response?.data?.message || t("resetFailed"));
     } finally {
       setLoading(false);
     }
@@ -186,31 +249,28 @@ export default function ResetMpin() {
   };
 
   return (
-    <Pressable style={{ flex: 1 }} onPress={dismissKeyboard}>
+    <SafeAreaView style={styles.container}>
       <ImageBackground
         source={theme.image.bg_image}
         style={styles.backgroundImage}
       >
-        {/* Dark overlay for background, if needed for consistency */}
-        {/* <View style={styles.darkOverlay} /> */}
+        {/* Dark overlay for background */}
+        <View style={styles.darkOverlay} />
         <LinearGradient
-          colors={["rgba(32, 1, 1, 0)", "rgba(167, 0, 0, 0)", "rgba(118, 1, 1, 0)"]}
+          colors={["rgba(32, 1, 1, 0.55)", "rgba(167, 0, 0, 0)", "rgba(118, 1, 1, 0)"]}
           style={styles.gradient}
         >
+          <SimpleLanguageSwitcher />
           {showError && (
             <ErrorAlert message={errorMessage} onClose={hideErrorAlert} />
           )}
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={{ flex: 1 }}
+            style={styles.keyboardAvoidingView}
             keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
           >
             <ScrollView
-              contentContainerStyle={{
-                flexGrow: 1,
-                justifyContent: 'space-between',
-                paddingBottom: 24,
-              }}
+              contentContainerStyle={styles.scrollViewContent}
               keyboardShouldPersistTaps="handled"
             >
               <View style={styles.logoContainer}>
@@ -254,21 +314,21 @@ export default function ResetMpin() {
                   {/* Content */}
                   <View style={styles.cardContent}>
                     <Text style={styles.pageTitle}>
-                      {isCreatingMPIN ? "Create MPIN" : "Reset MPIN"}
+                      {isCreatingMPIN ? t("createMpin") : t("resetMpin")}
                     </Text>
                     <Text style={styles.subtitle}>
                       {isCreatingMPIN
-                        ? "Create a new 4-digit MPIN to secure your account"
-                        : "Enter your new MPIN to reset it"}
+                        ? t("createMpinSubtitle")
+                        : t("resetMpinSubtitle")}
                     </Text>
-                    <Text style={styles.label}>New MPIN</Text>
+                    <Text style={styles.label}>{t("newMpin")}</Text>
                     <MpinInput
                       length={4}
                       onComplete={setMpin}
                       secureTextEntry={!showPin}
                     />
                     <View style={{ height: 16 }} />
-                    <Text style={styles.label}>Confirm MPIN</Text>
+                    <Text style={styles.label}>{t("confirmMpin")}</Text>
                     <MpinInput
                       length={4}
                       onComplete={setConfirmMpin}
@@ -291,7 +351,7 @@ export default function ResetMpin() {
                         color={theme.colors.secondary}
                       />
                       <Text style={styles.eyeText}>
-                        {showPin ? "Hide MPIN" : "Show MPIN"}
+                        {showPin ? t("hideMpin") : t("showMpin")}
                       </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -316,7 +376,7 @@ export default function ResetMpin() {
                         style={styles.gradientButton}
                       >
                         <Text style={styles.loginButtonText}>
-                          {loading ? "Processing..." : isCreatingMPIN ?"Create MPIN" :"Reset MPIN"}
+                          {loading ? t("processing") : isCreatingMPIN ? t("createMpin") : t("resetMpin")}
                         </Text>
                       </LinearGradient>
                     </TouchableOpacity>
@@ -330,7 +390,7 @@ export default function ResetMpin() {
                           size={20}
                           color={theme.colors.white}
                         />
-                        <Text style={styles.backButtonText}>Back</Text>
+                        <Text style={styles.backButtonText}>{t("back")}</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -340,6 +400,6 @@ export default function ResetMpin() {
           </KeyboardAvoidingView>
         </LinearGradient>
       </ImageBackground>
-    </Pressable>
+    </SafeAreaView>
   );
 }

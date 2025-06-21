@@ -12,6 +12,8 @@ import {
 import { router } from "expo-router";
 import { useFirstLaunch } from "@/common/hooks/useFirstLaunch";
 import { LinearGradient } from 'expo-linear-gradient';
+import { t } from "@/i18n";
+import useGlobalStore from "@/store/global.store";
 
 const { width, height } = Dimensions.get("window");
 
@@ -52,6 +54,7 @@ export default function Intro() {
   const flatListRef = useRef<FlatList>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
   const [slides, setSlides] = useState(staticSlides);
+  const { language } = useGlobalStore(); // To re-render on language change
 
   // TODO: Uncomment when API is ready
   // useEffect(() => {
@@ -133,14 +136,14 @@ export default function Intro() {
                 });
               }}
             >
-              <Text style={styles.buttonText}>Next</Text>
+              <Text style={styles.buttonText}>{t('next')}</Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
               style={[styles.button, styles.getStartedButton]}
               onPress={handleGetStarted}
             >
-              <Text style={styles.buttonText}>Get Started</Text>
+              <Text style={styles.buttonText}>{t('get_started')}</Text>
             </TouchableOpacity>
           )}
         </View>

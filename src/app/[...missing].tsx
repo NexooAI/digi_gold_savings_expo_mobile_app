@@ -2,10 +2,13 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { theme } from '@/constants/theme';
+import { t } from '@/i18n';
+import useGlobalStore from '@/store/global.store';
 
 export default function NotFoundScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { language } = useGlobalStore();
   const missingPath = Array.isArray(params.missing) 
     ? `/${params.missing.join('/')}`
     : params.missing 
@@ -20,13 +23,14 @@ export default function NotFoundScreen() {
         resizeMode="contain"
       />
       
-      <Text style={styles.title}>Page Not Found</Text>
+      <Text style={styles.title}>{t('not_found_title')}</Text>
       <Text style={styles.message}>
-        Oops! The page you're looking for doesn't exist or has been moved.
+        {t('not_found_message')}
       </Text>
       {missingPath && (
         <Text style={styles.missingPath}>
-          You tried to access: <Text style={styles.pathText}>{missingPath}</Text>
+          {t('not_found_tried_access')} {' '}
+          <Text style={styles.pathText}>{missingPath}</Text>
         </Text>
       )}
 
@@ -34,7 +38,7 @@ export default function NotFoundScreen() {
         style={styles.button}
         onPress={() => router.replace('/(tabs)/home')}
       >
-        <Text style={styles.buttonText}>Go to Home</Text>
+        <Text style={styles.buttonText}>{t('not_found_go_home')}</Text>
       </TouchableOpacity>
     </View>
   );

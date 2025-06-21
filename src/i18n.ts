@@ -4,11 +4,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Import translations
 import en from './locales/en.json';
-// import ta from './locales/ta.json';
+import ta from './locales/ta.json';
 import mal from './locales/mal.json';
 
-export type AppLocale = 'en' | 'mal';
-const translations = { en, mal } as const;
+export type AppLocale = 'en' | 'mal' | 'ta';
+const translations = { en, mal, ta } as const;
 
 const i18n = new I18n(translations);
 i18n.enableFallback = true;
@@ -16,8 +16,15 @@ i18n.enableFallback = true;
 // Initialize with saved locale or device locale
 export const initializeAppLocale = async () => {
   const saved = await AsyncStorage.getItem('user-locale');
-  const deviceLocale = (Localization.locale?.split('-')[0] as AppLocale) || 'en';
-  const initialLocale = (saved as AppLocale) || deviceLocale;
+  const deviceLocale = Localization.locale?.split('-')[0];
+  
+  // Only use device locale if it's one of our supported locales
+  const supportedLocales: AppLocale[] = ['en', 'mal', 'ta'];
+  const validDeviceLocale = supportedLocales.includes(deviceLocale as AppLocale) 
+    ? (deviceLocale as AppLocale) 
+    : 'en';
+  
+  const initialLocale = (saved as AppLocale) || validDeviceLocale;
   
   i18n.locale = initialLocale;
   return initialLocale;
@@ -30,4 +37,5 @@ export const changeLocale = async (locale: AppLocale) => {
 };
 
 export const t = (key: string) => i18n.t(key);
+
 export default i18n;

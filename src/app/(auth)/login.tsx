@@ -31,6 +31,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { t } from "@/i18n";
 import { useOtpAutoFetch } from "@/hooks/useOtpAutoFetch";
 import { registerStyles } from "../../_styles/registerStyles";
+import { useAuth } from "@/contexts/AuthContext";
+import LanguageSwitcher from "@/contexts/LanguageSwitcher";
+import { AppLocale } from "@/i18n";
 
 const { width } = Dimensions.get("window");
 const logoWidth = width * 0.3;
@@ -133,6 +136,69 @@ const GlassmorphismCard = ({ children }: { children: React.ReactNode }) => {
       {/* Content */}
       <View style={registerStyles.cardContent}>{children}</View>
     </View>
+  );
+};
+
+// Simple Language Switcher Component
+const SimpleLanguageSwitcher = () => {
+  const { language, setLanguage } = useGlobalStore();
+  
+  const handleLanguageChange = () => {
+    let newLang: AppLocale;
+    switch (language) {
+      case 'en':
+        newLang = 'mal';
+        break;
+      case 'mal':
+        newLang = 'en';
+        break;
+      // case 'ta':
+      //   newLang = 'en';
+      //   break;
+      default:
+        newLang = 'en';
+    }
+    setLanguage(newLang);
+  };
+
+  const getLanguageDisplayName = () => {
+    switch (language) {
+      case 'en':
+        return 'മലയാളം';
+      // case 'mal':
+      //   return 'தமிழ்';
+      case 'mal':
+        return 'English';
+      default:
+        return 'മലയാളം';
+    }
+  };
+
+  return (
+    <TouchableOpacity
+      onPress={handleLanguageChange}
+      style={{
+        position: 'absolute',
+        top: Platform.OS === 'ios' ? 60 : 40,
+        right: 20,
+        zIndex: 1000,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        padding: 12,
+        borderRadius: 25,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.3)',
+      }}
+    >
+      <Image
+        source={theme.image.translate}
+        style={{ width: 20, height: 20, marginRight: 8, tintColor: '#ffffff' }}
+      />
+      <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: 'bold' }}>
+        {getLanguageDisplayName()}
+      </Text>
+    </TouchableOpacity>
   );
 };
 
@@ -248,9 +314,9 @@ export default function Login() {
   };
 
   const showNetworkAlert = () => {
-    Alert.alert("No Internet", "Please check your internet connection.", [
+    Alert.alert(t("noInternetTitle"), t("noInternetMessage"), [
       {
-        text: "Retry",
+        text: t("retry"),
         onPress: async () => {
           const netState = await NetInfo.fetch();
           if (!netState.isConnected) showNetworkAlert();
@@ -357,9 +423,9 @@ export default function Login() {
         } else {
           setPins(["", "", "", ""]);
           Alert.alert(
-            "Error",
-            data.message || "Invalid OTP. Please try again.",
-            [{ text: "OK" }]
+            t("error"),
+            data.message || data.error,
+            [{ text: t("ok") }]
           );
         }
       })
@@ -368,28 +434,28 @@ export default function Login() {
         if (error.response) {
           if (error.response.status === 400) {
             Alert.alert(
-              "Invalid OTP",
-              error.response.data.message || "Incorrect OTP. Try again.",
-              [{ text: "OK" }]
+              t("invalidOtp"),
+              error.response.data.message || t("invalidOtpMessage"),
+              [{ text: t("ok") }]
             );
           } else {
             Alert.alert(
-              "Error",
-              error.response.data.message || "Something went wrong. Please try again.",
-              [{ text: "OK" }]
+              t("error"),
+              error.response.data.message || t("somethingWentWrong"),
+              [{ text: t("ok") }]
             );
           }
         } else if (error.request) {
           Alert.alert(
-            "Network Error",
-            "Please check your internet connection and try again.",
-            [{ text: "OK" }]
+            t("networkError"),
+            t("checkInternetConnection"),
+            [{ text: t("ok") }]
           );
         } else {
           Alert.alert(
-            "Error",
-            "An unexpected error occurred. Please try again.",
-            [{ text: "OK" }]
+            t("error"),
+            t("anUnexpectedError"),
+            [{ text: t("ok") }]
           );
         }
       })
@@ -399,11 +465,11 @@ export default function Login() {
   const loginAxio = async () => {
     const indianMobilePattern = /^[6-9]\d{9}$/;
     if (!mobile) {
-      setMobileError("Please enter mobile number");
+      setMobileError(t("pleaseEnterMobile"));
       return;
     }
     if (!indianMobilePattern.test(mobile)) {
-      setMobileError("Please enter a valid 10-digit Indian mobile number");
+      setMobileError(t("valid10DigitIndianMobile"));
       return;
     }
 
@@ -429,7 +495,7 @@ export default function Login() {
         // Auto-focus first OTP input
         setTimeout(() => inputRefs[0]?.current?.focus(), 100);
       } else {
-        throw new Error(data?.error || "Failed to send OTP");
+        throw new Error(data?.error || t("failedToSendOtp"));
       }
 
       // Start SMS listener for Android
@@ -438,19 +504,19 @@ export default function Login() {
       // }
       setLoading(false);
     } catch (error: any) {
-      const errorMessage = error.message || "You are not registered.";
-      if (errorMessage.toLowerCase().includes("invalid mobile number")) {
+      const errorMessage = error.response?.data?.error || error.message || t("youAreNotRegistered");
+      if (errorMessage.toLowerCase().includes(t("invalidMobileNumber"))) {
         Alert.alert(
-          "Invalid Mobile Number",
-          "This mobile number is not registered. Would you like to create an account?",
+          t("invalidMobile"),
+          t("createNewAccountMessage"),
           [
             {
-              text: "Cancel",
+              text: t("cancel"),
               style: "cancel",
               onPress: () => setLoading(false),
             },
             {
-              text: "Create Account",
+              text: t("createAccount"),
               onPress: () => {
                 // Handle create account navigation
                 router.push(`/register?mobile=${mobile}`);
@@ -486,15 +552,15 @@ export default function Login() {
         setResendAttempts((prev) => prev - 1);
         // setTimer(INITIAL_TIMER);
         setPins(["", "", "", ""]);
-        Alert.alert("Success", "OTP resent successfully");
+        Alert.alert(t("success"), t("otpResentSuccess"));
         // Auto-focus first OTP input
         setTimeout(() => inputRefs[0]?.current?.focus(), 100);
       } else {
-        throw new Error(data?.error || "Failed to resend OTP");
+        throw new Error(data?.error || t("failedToResendOtp"));
       }
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to resend OTP";
+        error instanceof Error ? error.message : t("failedToResendOtp");
       showErrorAlert(errorMessage);
     } finally {
       setLoading(false);
@@ -519,196 +585,199 @@ export default function Login() {
   if (isLoggedIn) return null;
 
   return (
-    <ImageBackground
-      source={theme.image.bg_image}
-      style={registerStyles.backgroundImage}
-    >
-      {/* Dark overlay for background */}
-      <View style={registerStyles.darkOverlay} />
-      <LinearGradient
-        colors={["rgba(32, 1, 1, 0.55)", "rgba(167, 0, 0, 0)", "rgba(118, 1, 1, 0)"]}
-        style={registerStyles.gradient}
+    <SafeAreaView style={registerStyles.container}>
+      <ImageBackground
+        source={theme.image.bg_image}
+        style={registerStyles.backgroundImage}
       >
-        {showError && (
-          <ErrorAlert message={errorMessage} onClose={hideErrorAlert} />
-        )}
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={{ flex: 1 }}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
+        {/* Dark overlay for background */}
+        <View style={registerStyles.darkOverlay} />
+        <LinearGradient
+          colors={["rgba(32, 1, 1, 0.55)", "rgba(167, 0, 0, 0)", "rgba(118, 1, 1, 0)"]}
+          style={registerStyles.gradient}
         >
-          <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-            <View style={registerStyles.logoContainer}>
-              <Image
-                source={theme.image.transparentLogo}
-                style={registerStyles.logo}
-                resizeMode="contain"
-              />
-            </View>
+          <SimpleLanguageSwitcher />
+          {showError && (
+            <ErrorAlert message={errorMessage} onClose={hideErrorAlert} />
+          )}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={registerStyles.keyboardAvoidingView}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
+          >
+            <ScrollView contentContainerStyle={registerStyles.scrollViewContent} keyboardShouldPersistTaps="handled">
+              <View style={registerStyles.logoContainer}>
+                <Image
+                  source={theme.image.transparentLogo}
+                  style={registerStyles.logo}
+                  resizeMode="contain"
+                />
+              </View>
 
-            <View style={registerStyles.formContainer}>
-              <View style={registerStyles.cardContainer}>
-                {/* Base fog layer */}
-                <LinearGradient
-                    colors={[
-                      "rgba(6, 2, 2, 0.78)",
-                      "rgba(34, 0, 0, 0.35)",
-                      "rgba(31, 3, 3, 0.54)",
-                    ]}
-                    style={StyleSheet.absoluteFill}
-                  />
-                  {/* Top fog highlight */}
+              <View style={registerStyles.formContainer}>
+                <View style={registerStyles.cardContainer}>
+                  {/* Base fog layer */}
                   <LinearGradient
-                    colors={[
-                      "rgba(10, 2, 2, 0.38)",
-                      "rgba(76, 63, 63, 0.74)",
-                    ]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 0, y: 0.5 }}
-                    style={StyleSheet.absoluteFill}
-                  />
-                  {/* Bottom fog highlight */}
-                  <LinearGradient
-                    colors={[
-                      "rgba(0, 0, 0, 0.44)",
-                      "rgba(0, 0, 0, 0.28)",
-                    ]}
-                    start={{ x: 0, y: 0.5 }}
-                    end={{ x: 0, y: 1 }}
-                    style={StyleSheet.absoluteFill}
-                  />
-                {/* Content */}
-                <View style={registerStyles.cardContent}>
-                  <Text style={registerStyles.pageTitle}>Welcome Back!</Text>
-                  <Text style={registerStyles.subtitle}>Sign in to continue</Text>
-                  {!isShowOtp ? (
-                    <>
-                      <View style={registerStyles.inputContainer}>
-                        <PhoneInput
-                          value={mobile}
-                          onChangeText={(text) => {
-                            setMobile(text);
-                            setMobileError("");
-                          }}
-                          loading={loading}
-                        />
-                        {mobileError ? (
-                          <Text style={registerStyles.errorText}>{mobileError}</Text>
-                        ) : null}
-                      </View>
-                      <TouchableOpacity
-                        style={[
-                          registerStyles.loginButton,
-                          loading && registerStyles.loginButtonDisabled,
-                        ]}
-                        onPress={loginAxio}
-                        disabled={loading}
-                      >
-                        <LinearGradient
-                          colors={["#ffc90c", "#ffd700"]}
-                          style={registerStyles.gradientButton}
-                        >
-                          <Text style={registerStyles.loginButtonText}>
-                            {loading ? "Processing..." : "Get OTP"}
-                          </Text>
-                        </LinearGradient>
-                      </TouchableOpacity>
-                      <View style={registerStyles.registerContainer}>
-                        <Text style={registerStyles.registerText}>
-                          Don't have an account?{" "}
-                        </Text>
-                        <TouchableOpacity onPress={() => router.push("/register")}> 
-                          <Text style={registerStyles.registerLink}>Register</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </>
-                  ) : (
-                    <View style={registerStyles.otpContainer}>
-                      <Text style={registerStyles.otpTitle}>Enter OTP</Text>
-                      <Text style={registerStyles.otpSentText}>
-                        OTP sent to{" "}
-                        {mobile.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3")}
-                      </Text>
-                      <View style={registerStyles.otpInputsWrapper}>
-                        <View style={registerStyles.otpInputsContainer}>
-                          {pins.map((pin, index) => (
-                            <TextInput
-                              key={index}
-                              ref={inputRefs[index]}
-                              style={registerStyles.otpInput}
-                              keyboardType="numeric"
-                              maxLength={1}
-                              value={pin}
-                              onChangeText={(text) => handlePinChange(text, index)}
-                              onKeyPress={(e) => handleKeyPress(e, index)}
-                              secureTextEntry={!showOtp}
-                              textContentType="oneTimeCode"
-                              autoComplete="sms-otp"
-                              editable={!loading}
-                            />
-                          ))}
+                      colors={[
+                        "rgba(6, 2, 2, 0.78)",
+                        "rgba(34, 0, 0, 0.35)",
+                        "rgba(31, 3, 3, 0.54)",
+                      ]}
+                      style={StyleSheet.absoluteFill}
+                    />
+                    {/* Top fog highlight */}
+                    <LinearGradient
+                      colors={[
+                        "rgba(10, 2, 2, 0.38)",
+                        "rgba(76, 63, 63, 0.74)",
+                      ]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 0, y: 0.5 }}
+                      style={StyleSheet.absoluteFill}
+                    />
+                    {/* Bottom fog highlight */}
+                    <LinearGradient
+                      colors={[
+                        "rgba(0, 0, 0, 0.44)",
+                        "rgba(0, 0, 0, 0.28)",
+                      ]}
+                      start={{ x: 0, y: 0.5 }}
+                      end={{ x: 0, y: 1 }}
+                      style={StyleSheet.absoluteFill}
+                    />
+                  {/* Content */}
+                  <View style={registerStyles.cardContent}>
+                    <Text style={registerStyles.pageTitle}>{t("welcomeBack")}!</Text>
+                    <Text style={registerStyles.subtitle}>{t("signInToContinue")}</Text>
+                    {!isShowOtp ? (
+                      <>
+                        <View style={registerStyles.inputContainer}>
+                          <PhoneInput
+                            value={mobile}
+                            onChangeText={(text) => {
+                              setMobile(text);
+                              setMobileError("");
+                            }}
+                            loading={loading}
+                          />
+                          {mobileError ? (
+                            <Text style={registerStyles.errorText}>{mobileError}</Text>
+                          ) : null}
                         </View>
                         <TouchableOpacity
-                          onPress={() => setShowOtp((prev) => !prev)}
-                          style={registerStyles.eyeButton}
+                          style={[
+                            registerStyles.loginButton,
+                            loading && registerStyles.loginButtonDisabled,
+                          ]}
+                          onPress={loginAxio}
+                          disabled={loading}
                         >
-                          <Feather
-                            name={showOtp ? "eye-off" : "eye"}
-                            size={24}
+                          <LinearGradient
+                            colors={["#ffc90c", "#ffd700"]}
+                            style={registerStyles.gradientButton}
+                          >
+                            <Text style={registerStyles.loginButtonText}>
+                              {loading ? t("processing") : t("getOtp")}
+                            </Text>
+                          </LinearGradient>
+                        </TouchableOpacity>
+                        <View style={registerStyles.registerContainer}>
+                          <Text style={registerStyles.registerText}>
+                            {t("dontHaveAccount")}{" "}
+                          </Text>
+                          <TouchableOpacity onPress={() => router.push("/register")}> 
+                            <Text style={registerStyles.registerLink}>{t("register")}</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </>
+                    ) : (
+                      <View style={registerStyles.otpContainer}>
+                        <Text style={registerStyles.otpTitle}>{t("enterOTP")}</Text>
+                        <Text style={registerStyles.otpSentText}>
+                          {t("otpSentTo")}
+                          {mobile.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3")}
+                        </Text>
+                        <View style={registerStyles.otpInputsWrapper}>
+                          <View style={registerStyles.otpInputsContainer}>
+                            {pins.map((pin, index) => (
+                              <TextInput
+                                key={index}
+                                ref={inputRefs[index]}
+                                style={registerStyles.otpInput}
+                                keyboardType="numeric"
+                                maxLength={1}
+                                value={pin}
+                                onChangeText={(text) => handlePinChange(text, index)}
+                                onKeyPress={(e) => handleKeyPress(e, index)}
+                                secureTextEntry={!showOtp}
+                                textContentType="oneTimeCode"
+                                autoComplete="sms-otp"
+                                editable={!loading}
+                              />
+                            ))}
+                          </View>
+                          <TouchableOpacity
+                            onPress={() => setShowOtp((prev) => !prev)}
+                            style={registerStyles.eyeButton}
+                          >
+                            <Feather
+                              name={showOtp ? "eye-off" : "eye"}
+                              size={24}
+                              color={theme.colors.white}
+                            />
+                          </TouchableOpacity>
+                        </View>
+                        <View style={registerStyles.timerContainer}>
+                          <Ionicons
+                            name="time-outline"
+                            size={20}
                             color={theme.colors.white}
                           />
-                        </TouchableOpacity>
-                      </View>
-                      <View style={registerStyles.timerContainer}>
-                        <Ionicons
-                          name="time-outline"
-                          size={20}
-                          color={theme.colors.white}
-                        />
-                        <Text style={registerStyles.timerText}>Resend in {timer}s</Text>
-                      </View>
-                      {timer === 0 && resendAttempts < 3 && (
+                          <Text style={registerStyles.timerText}>{t("resendIn")} {timer}s</Text>
+                        </View>
+                        {timer === 0 && resendAttempts < 3 && (
+                          <TouchableOpacity
+                            onPress={handleResendOtp}
+                            style={registerStyles.resendButton}
+                          >
+                            <Text style={registerStyles.resendText}>{t("resendOTP")}</Text>
+                          </TouchableOpacity>
+                        )}
                         <TouchableOpacity
-                          onPress={handleResendOtp}
-                          style={registerStyles.resendButton}
+                          style={[
+                            registerStyles.loginButton,
+                            (loading || !pins.every((pin) => pin.trim() !== "")) &&
+                              registerStyles.loginButtonDisabled,
+                          ]}
+                          onPress={() => verifyOtp(pins.join(""))}
+                          disabled={
+                            loading || !pins.every((pin) => pin.trim() !== "")
+                          }
                         >
-                          <Text style={registerStyles.resendText}>Resend OTP</Text>
+                          <LinearGradient
+                            colors={["#ffc90c", "#ffd700"]}
+                            style={registerStyles.gradientButton}
+                          >
+                            <Text style={registerStyles.loginButtonText}>
+                              {loading ? t("verifying") : t("submit")}
+                            </Text>
+                          </LinearGradient>
                         </TouchableOpacity>
-                      )}
-                      <TouchableOpacity
-                        style={[
-                          registerStyles.loginButton,
-                          (loading || !pins.every((pin) => pin.trim() !== "")) &&
-                            registerStyles.loginButtonDisabled,
-                        ]}
-                        onPress={() => verifyOtp(pins.join(""))}
-                        disabled={
-                          loading || !pins.every((pin) => pin.trim() !== "")
-                        }
-                      >
-                        <LinearGradient
-                          colors={["#ffc90c", "#ffd700"]}
-                          style={registerStyles.gradientButton}
-                        >
-                          <Text style={registerStyles.loginButtonText}>
-                            {loading ? "Verifying..." : "Submit"}
-                          </Text>
-                        </LinearGradient>
-                      </TouchableOpacity>
-                    </View>
-                  )}
+                      </View>
+                    )}
+                  </View>
                 </View>
               </View>
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-        <View style={registerStyles.poweredByContainer}>
-          <Text style={registerStyles.poweredByText}>
-            Powered by <Text style={{textDecorationLine: 'underline', color: '#fff'}} onPress={() => Linking.openURL('https://agnisofterp.com/')}>Agni Soft ERP</Text>
-          </Text>
-        </View>
-      </LinearGradient>
-    </ImageBackground>
+            </ScrollView>
+          </KeyboardAvoidingView>
+          <View style={registerStyles.poweredByContainer}>
+            <Text style={registerStyles.poweredByText}>
+              {t("poweredBy")} <Text style={{textDecorationLine: 'underline', color: theme.colors.textLight}} onPress={() => Linking.openURL('https://agnisofterp.com/')}>Agni Soft ERP</Text>
+            </Text>
+          </View>
+        </LinearGradient>
+      </ImageBackground>
+    </SafeAreaView>
   );
 }
 

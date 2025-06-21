@@ -13,7 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
 import theme from "src/constants/theme";
 import useGlobalStore from "@/store/global.store";
-import { AppLocale } from "@/i18n";
+import { AppLocale, t } from "@/i18n";
 
 const { width } = Dimensions.get("window");
 
@@ -111,7 +111,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ showBackButton = false, backRoute
               size={20}
               color={theme.theme.colors.white}
             />
-            <Text style={styles.backButtonText}>Back</Text>
+            <Text style={styles.backButtonText}>{t('back')}</Text>
           </TouchableOpacity>
         )}
         <View style={styles.logoContainer}>
@@ -147,7 +147,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ showBackButton = false, backRoute
                     {formatDateTime(goldRateUpdatedAt)}
                   </Text>
                 </View>
-                <Text style={styles.liveText}>LIVE</Text>
+                <Text style={styles.liveText}>{t('live')}</Text>
               </View>
             </Animated.View>
           </View>

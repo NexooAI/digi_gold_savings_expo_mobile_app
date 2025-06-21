@@ -14,6 +14,8 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import useGlobalStore from "@/store/global.store";
 import { theme } from "@/constants/theme";
+import { t } from "../../../i18n";
+import { useAuth } from "../../../../contexts/AuthContext";
 
 const { width } = Dimensions.get("window");
 
@@ -51,7 +53,7 @@ export function CustomDrawerContent(props) {
         try {
           router.push(route);
         } catch (error) {
-          Alert.alert("Navigation Error", "Failed to navigate");
+          Alert.alert(t("navigationError"), t("failedToNavigate"));
         } finally {
           setIsNavigating(false);
         }
@@ -64,12 +66,12 @@ export function CustomDrawerContent(props) {
     if (isNavigating) return;
 
     Alert.alert(
-      "Confirm Logout",
-      "Are you sure you want to logout?",
+      t("logout_confirmation_title"),
+      t("logout_confirmation_message"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("cancel"), style: "cancel" },
         {
-          text: "Logout",
+          text: t("logout"),
           onPress: async () => {
             setIsNavigating(true);
             try {
@@ -77,7 +79,7 @@ export function CustomDrawerContent(props) {
               logout();
               router.replace("/(auth)/login");
             } catch (error) {
-              Alert.alert("Logout Error", "Failed to logout");
+              Alert.alert(t("logoutError"), t("failedToLogout"));
             } finally {
               setIsNavigating(false);
             }
@@ -107,7 +109,7 @@ export function CustomDrawerContent(props) {
         {/* User Account Section */}
         {/* <Text style={styles.sectionHeader}>User Account</Text> */}
         <DrawerMenuItem
-          label="Profile"
+          label={t("profile")}
           iconName="person-outline"
           onPress={() => handleNavigation("/(tabs)/profile")}
           disabled={isNavigating}
@@ -116,13 +118,13 @@ export function CustomDrawerContent(props) {
         {/* Explore & Benefits Section */}
         {/* <Text style={styles.sectionHeader}>Explore & Benefits</Text> */}
         <DrawerMenuItem
-          label="Offers"
+          label={t("offers")}
           iconName="flash-outline"
           onPress={() => handleNavigation("/(tabs)/home/offers")}
           disabled={isNavigating}
         />
         <DrawerMenuItem
-          label="Refer & Earn"
+          label={t("referAndEarn")}
           iconName="gift-outline"
           onPress={() => handleNavigation("/(tabs)/home/refer_earn")}
           disabled={isNavigating}
@@ -131,31 +133,31 @@ export function CustomDrawerContent(props) {
         {/* Store Information Section */}
         {/* <Text style={styles.sectionHeader}>Store Information</Text> */}
         <DrawerMenuItem
-          label="Our Stores"
+          label={t("ourStores")}
           iconName="location-outline"
           onPress={() => handleNavigation("/(tabs)/home/our_stores")}
           disabled={isNavigating}
         />
-        {/* <DrawerMenuItem
-          label="Store Locator"
+        <DrawerMenuItem
+          label={t("storeLocator")}
           iconName="location-outline"
           onPress={() => handleNavigation("/(tabs)/home/StoreLocator")}
           disabled={isNavigating}
-        /> */}
+        />
         <DrawerMenuItem
-          label="Contact Us"
+          label={t("contactUs")}
           iconName="call-outline"
           onPress={() => handleNavigation("/(tabs)/home/contact_us")}
           disabled={isNavigating}
         />
         <DrawerMenuItem
-          label="About Us"
+          label={t("aboutUs")}
           iconName="information-circle-outline"
           onPress={() => handleNavigation("/(tabs)/home/about_us")}
           disabled={isNavigating}
         />
         <DrawerMenuItem
-          label="FAQ & Help"
+          label={t("faqAndHelp")}
           iconName="help-circle-outline"
           onPress={() => handleNavigation("/(tabs)/home/faq")}
           disabled={isNavigating}
@@ -164,13 +166,13 @@ export function CustomDrawerContent(props) {
         {/* Legal & Policies Section */}
         {/* <Text style={styles.sectionHeader}>Legal & Policies</Text> */}
         <DrawerMenuItem
-          label="Our Policies"
+          label={t("ourPolicies")}
           iconName="shield-checkmark-outline"
           onPress={() => handleNavigation("/(tabs)/home/policies/ourPolicies")}
           disabled={isNavigating}
         />
         <DrawerMenuItem
-          label="Privacy Policy"
+          label={t("privacyPolicy")}
           iconName="lock-closed-outline"
           onPress={() =>
             handleNavigation("/(tabs)/home/policies/privacyPolicy")
@@ -178,7 +180,7 @@ export function CustomDrawerContent(props) {
           disabled={isNavigating}
         />
         <DrawerMenuItem
-          label="Terms & Conditions"
+          label={t("termsAndConditions")}
           iconName="newspaper-outline"
           onPress={() =>
             handleNavigation("/(tabs)/home/policies/termsAndConditionsPolicies")
@@ -203,7 +205,7 @@ export function CustomDrawerContent(props) {
           <Text
             style={[styles.logoutText, isNavigating && styles.disabledText]}
           >
-            Logout
+            {t("logout")}
           </Text>
         </TouchableOpacity>
       </View>

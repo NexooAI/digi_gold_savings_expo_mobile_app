@@ -36,7 +36,7 @@ export default function RootLayout() {
     const initLanguage = async () => {
       try {
         const locale = await initializeAppLocale();
-        setLanguage(locale as "en" | "ml");
+        setLanguage(locale as "en" | "mal" | "ta");
       } catch (error) {
         console.error("Failed to initialize language:", error);
         setLanguage("en"); // fallback

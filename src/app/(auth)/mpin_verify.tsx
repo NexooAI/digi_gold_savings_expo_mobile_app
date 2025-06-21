@@ -27,6 +27,66 @@ import { theme } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import Icon from "@expo/vector-icons/MaterialIcons";
+import { t } from "@/i18n";
+import { AppLocale } from "@/i18n";
+
+// Simple Language Switcher Component
+const SimpleLanguageSwitcher = () => {
+  const { language, setLanguage } = useGlobalStore();
+  
+  const handleLanguageChange = () => {
+    let newLang: AppLocale;
+    switch (language) {
+      case 'en':
+        newLang = 'mal';
+        break;
+      case 'mal':
+        newLang = 'en';
+        break;
+      default:
+        newLang = 'en';
+    }
+    setLanguage(newLang);
+  };
+
+  const getLanguageDisplayName = () => {
+    switch (language) {
+      case 'en':
+        return 'മലയാളം';
+      case 'mal':
+        return 'English';
+      default:
+        return 'മലയാളം';
+    }
+  };
+
+  return (
+    <TouchableOpacity
+      onPress={handleLanguageChange}
+      style={{
+        position: 'absolute',
+        top: Platform.OS === 'ios' ? 60 : 40,
+        right: 20,
+        zIndex: 1000,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        padding: 12,
+        borderRadius: 25,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.3)',
+      }}
+    >
+      <Image
+        source={theme.image.translate}
+        style={{ width: 20, height: 20, marginRight: 8, tintColor: '#ffffff' }}
+      />
+      <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: 'bold' }}>
+        {getLanguageDisplayName()}
+      </Text>
+    </TouchableOpacity>
+  );
+};
 
 export default function MpinVerify() {
   const [mpinPins, setMpinPins] = useState(["", "", "", ""]);
@@ -136,12 +196,12 @@ export default function MpinVerify() {
         }
       } else {
         shakeError();
-        Alert.alert("Error", "Incorrect MPIN. Please try again.");
+        Alert.alert(t("error"), t("incorrectMpin"));
         setMpinPins(["", "", "", ""]);
       }
     } catch (error) {
       console.error("Error verifying MPIN:", error);
-      Alert.alert("Error", "Failed to verify MPIN. Please try again.");
+      Alert.alert(t("error"), t("failedToVerifyMpin"));
     } finally {
       setLoading(false);
     }
@@ -225,9 +285,9 @@ export default function MpinVerify() {
                   />
                   {/* Content */}
                   <View style={styles.cardContent}>
-                    <Text style={styles.mpinTitle}>Enter MPIN</Text>
+                    <Text style={styles.mpinTitle}>{t("enterMpinTitle")}</Text>
                     <Text style={styles.mpinSubtitle}>
-                      Enter your 4-digit MPIN to access your account
+                      {t("enterMpinSubtitle")}
                     </Text>
 
                     <Animated.View 
@@ -280,7 +340,7 @@ export default function MpinVerify() {
                           style={styles.buttonGradient}
                         >
                           <Text style={styles.loginButtonText}>
-                            {loading ? "Processing..." : "Login"}
+                            {loading ? t("processing") : t("login")}
                           </Text>
                         </LinearGradient>
                       </TouchableOpacity>
@@ -298,7 +358,7 @@ export default function MpinVerify() {
                     >
                       <Icon name="help-outline" size={20} color={theme.colors.secondary} />
                       <Text style={styles.loginLink}>
-                        Forgot MPIN? Login with Mobile Number
+                        {t("forgotMpinText")}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -308,6 +368,7 @@ export default function MpinVerify() {
           </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
       </LinearGradient>
+      <SimpleLanguageSwitcher />
     </ImageBackground>
   );
 }
