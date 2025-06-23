@@ -21,6 +21,7 @@ import {
   Image,
   StatusBar,
   ActivityIndicator,
+  Easing,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -309,6 +310,72 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
   )
 );
 
+// AnimatedGoldRate: Decorative gold rate label with theme color, 22KT, live dot, and last updated timestamp
+const AnimatedGoldRate: React.FC<{ goldRate: string; updatedAt?: string }> = ({ goldRate, updatedAt }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(scaleAnim, {
+          toValue: 1.08,
+          duration: 700,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 700,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [scaleAnim]);
+
+  // Format timestamp
+  const formatDateToIndian = (isoString: string | undefined) => {
+    if (!isoString) return "-";
+    const date = new Date(isoString);
+    return date.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  return (
+    <View style={styles.goldRateLabelContainer} accessibilityLabel="Gold Rate Label">
+      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        <LinearGradient
+          colors={['#850111', '#2e0406']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.goldRateLabel}
+        >
+          <Text style={styles.goldRateTitle}>Gold Rate</Text>
+          <View style={styles.goldRateRow}>
+            <Ionicons name="star" size={18} color="#FFD700" style={{ marginRight: 4 }} />
+            <Text style={styles.goldRatePrice}>₹{goldRate}/-</Text>
+            <Text style={styles.goldRatePurity}>22KT</Text>
+            <View style={styles.liveDot} />
+          </View>
+          {updatedAt && (
+            <Text style={styles.goldRateUpdatedAt}>
+              Last updated: {formatDateToIndian(updatedAt)}
+            </Text>
+          )}
+        </LinearGradient>
+      </Animated.View>
+    </View>
+  );
+};
+
 export default function Home2() {
   // State
   const { language, user } = useGlobalStore();
@@ -430,7 +497,7 @@ export default function Home2() {
 
         // Set collections data
         if (data.collections && data.collections.length > 0) {
-          // setCollectionsData(data.collections);
+          setCollectionsData(data.collections);
         } else {
           console.log('No collections found, using default images');
           setCollectionsData(defaultStatusImages);
@@ -825,6 +892,14 @@ export default function Home2() {
                 onPress={() => console.log("Flash news tapped")}
                 textColor="#ffffff"
               />
+
+              {/* Gold Rate Widget (inline, below FlashOffer) */}
+              {homeData?.data?.currentRates?.gold_rate && (
+                <AnimatedGoldRate 
+                  goldRate={homeData.data.currentRates.gold_rate}
+                  updatedAt={homeData.data.currentRates.updated_at}
+                />
+              )}
 
               <UserInfoCard
                 userName={user?.name}
@@ -1300,5 +1375,70 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#850111",
     textAlign: "center",
+  },
+  goldRateLabelContainer: {
+    width: '90%',
+    alignSelf: 'center',
+  },
+  goldRateLabel: {
+    borderRadius: 10,
+    borderWidth: 3,
+    borderColor: theme.colors.secondary,
+    paddingVertical: 2,
+    paddingHorizontal: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.10,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  goldRatePurity: {
+    color: '#FFF8E1',
+    fontWeight: 'bold',
+    fontSize: 14,
+    textAlign: 'center',
+    letterSpacing: 1,
+    marginLeft: 8,
+    marginRight: 2,
+  },
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#2ecc40',
+    borderWidth: 1,
+    borderColor: '#fff',
+  },
+  goldRateTitle: {
+    color: '#FFF8E1',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 2,
+    marginBottom: 0,
+    textAlign: 'center',
+    letterSpacing: 0.5,
+  },
+  goldRateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+    marginBottom: 0,
+  },
+  goldRatePrice: {
+    color: '#FFF8E1',
+    fontWeight: '700',
+    fontSize: 18,
+    textAlign: 'center',
+    letterSpacing: 0.5,
+  },
+  goldRateUpdatedAt: {
+    color: '#FFF8E1BB',
+    fontSize: 10,
+    marginTop: 2,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 }); 
