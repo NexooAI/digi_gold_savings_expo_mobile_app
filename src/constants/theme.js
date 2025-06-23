@@ -46,7 +46,7 @@ const theme = {
     no_data: require("../../assets/images/no-data.png"),
     savings_bg: require("../../assets/images/savingsbg.jpg"),
     digigoldproduct: require("../../assets/images/digigoldproduct.png"),
-    translate: require("../../assets/images/translate.png"),
+    translate: require("../../assets/images/translate/mal.png"),
   },
   constants: {
     customerName: "DC Jewellers",

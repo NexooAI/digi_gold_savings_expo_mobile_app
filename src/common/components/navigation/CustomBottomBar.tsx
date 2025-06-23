@@ -20,7 +20,7 @@ export default function CustomBottomBar() {
   const router = useRouter();
   const segments = useSegments();
   const { language } = useGlobalStore();
-  const { badgeCount } = useNotificationBadge();
+  // const { badgeCount } = useNotificationBadge();
   const current = segments.at(2) || "home";
   
   // Animation refs for each tab
@@ -45,7 +45,8 @@ export default function CustomBottomBar() {
       label: "bottom_nav_notifications",
       icon: "notifications-outline",
       iconActive: "notifications",
-      badge: badgeCount > 0 ? badgeCount : null,
+      // badge: badgeCount > 0 ? badgeCount : null,
+      badge:3
     },
     {
       name: "profile",
@@ -88,13 +89,13 @@ export default function CustomBottomBar() {
   };
 
   // Animate badges on mount or when badge count changes
-  useEffect(() => {
-    tabs.forEach((tab, index) => {
-      if (tab.badge && tab.badge > 0) {
-        setTimeout(() => animateBadge(index), index * 100);
-      }
-    });
-  }, [badgeCount]);
+  // useEffect(() => {
+  //   tabs.forEach((tab, index) => {
+  //     if (tab.badge && tab.badge > 0) {
+  //       setTimeout(() => animateBadge(index), index * 100);
+  //     }
+  //   });
+  // }, [badgeCount]);
 
   const handleTabPress = (tab: Tab, index: number) => {
     animateTabPress(index);
@@ -228,14 +229,16 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
   },
-  activeIndicator: {
-    position: "absolute",
-    bottom: -2,
-    left: "50%",
-    marginLeft: -15,
-    width: 30,
-    height: 3,
-    backgroundColor: theme.colors.primary,
-    borderRadius: 2,
-  },
+  // activeIndicator: {
+  //   position: "absolute",
+  //   bottom: -2,
+  //   left: 0,
+  //   right: 0,
+  //   width: 'auto',
+  //   height: 3,
+  //   backgroundColor: theme.colors.primary,
+  //   borderRadius: 2,
+  //   marginLeft: 'auto',
+  //   marginRight: 'auto',
+  // },
 }); 

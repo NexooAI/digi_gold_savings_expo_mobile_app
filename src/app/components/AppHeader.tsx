@@ -93,6 +93,14 @@ const AppHeader: React.FC<AppHeaderProps> = ({ showBackButton = false, backRoute
     await setLanguage(newLocale);
   };
 
+  const getLanguageDisplayName = () => {
+    if (language === "en") {
+      return "മലയാളം"; // Malayalam in Malayalam script
+    } else {
+      return "English";
+    }
+  };
+
   const getLanguageImage = () => {
     if (language === "en") {
       return require('../../../assets/images/translate/mal.png'); // Show Malayalam flag to switch to Malayalam
@@ -164,6 +172,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ showBackButton = false, backRoute
                 style={styles.languageImage}
                 resizeMode="contain"
               />
+              <Text style={styles.languageText}>{getLanguageDisplayName()}</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity
@@ -207,26 +216,30 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   languageButton: {
-    padding: 6,
-    marginRight: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    width: 36,
-    height: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderColor: "rgba(255, 255, 255, 0.3)",
+    marginRight: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 4,
   },
   languageImage: {
     width: 24,
     height: 24,
+    marginRight: 8,
   },
-  languageIcon: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    textAlign: 'center',
+  languageText: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "bold",
   },
   drawerToggle: {
     padding: 10,

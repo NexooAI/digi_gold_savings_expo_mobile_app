@@ -20,7 +20,6 @@ import PhoneInput from "../components/PhoneInputs";
 import { theme } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, Feather } from "@expo/vector-icons";
-import { useOtpAutoFetch } from "@/hooks/useOtpAutoFetch";
 import * as SecureStore from "expo-secure-store";
 import { API_BASE_URL } from "@/config/api";
 import { registerStyles } from "../../_styles/registerStyles";
@@ -30,7 +29,7 @@ import { AppLocale } from "@/i18n";
 import useGlobalStore from "@/store/global.store";
 
 const OTP_RESEND_LIMIT = 3;
-const INITIAL_TIMER = 120;
+const INITIAL_TIMER = 20;
 
 // Simple Language Switcher Component
 const SimpleLanguageSwitcher = () => {
@@ -206,7 +205,7 @@ export default function Register() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${theme.baseUrl}/auth/check-mobile`, {
+      const response = await fetch(`${theme.baseUrl}/register/mobile`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -261,7 +260,7 @@ export default function Register() {
       showErrorAlert(t("pleaseEnterCompleteOtp"));
       return;
     }
-
+    console.log('handle otp')
     setLoading(true);
     try {
       const response = await fetch(`${theme.baseUrl}/register/verify-otp`, {
@@ -271,20 +270,25 @@ export default function Register() {
         },
         body: JSON.stringify({ mobile_number: mobile, otp }),
       });
-
+     
       const data = await response.json();
-
-      if (response.ok) {
-        await SecureStore.setItemAsync("authToken", data.token);
+      console.log('handle data',data)
+      if (response.ok && data.message && data.message.toLowerCase().includes('otp verified successfully')) {
+        // await SecureStore.setItemAsync("authToken", data.token);
         router.push({
           pathname: "/(auth)/userBasicDetails",
           params: { mobile },
         });
         setPins(["", "", "", ""]);
       } else {
-        throw new Error(data?.message || t("failedToVerifyOtp"));
+        console.log('failedToVerifyOtp')
+        Alert.alert(
+          t("error"),
+          data?.message || t("failedToVerifyOtp")
+        );
       }
     } catch (error: any) {
+      console.log('alert')
       Alert.alert(
         t("error"),
         error.response?.data?.message || t("failedToVerifyOtp")
@@ -293,25 +297,6 @@ export default function Register() {
       setLoading(false);
     }
   };
-
-  // Auto-fetch OTP functionality
-  const handleOtpAutoFill = (otp: string) => {
-    const otpArray = otp.split("");
-    setPins(otpArray);
-
-    // Auto-verify if we get a complete 4-digit OTP
-    if (otp.length === 4) {
-      setTimeout(() => {
-        handleVerifyOtp();
-      }, 500); // Small delay to show the filled OTP to user
-    }
-  };
-
-  const { startSmsListener, stopSmsListener } = useOtpAutoFetch({
-    onOtpReceived: handleOtpAutoFill,
-    isActive: otpSent, // Start listening when OTP is sent
-    senderName: t("dcJewellery"), // Match your SMS sender
-  });
 
   useFocusEffect(
     React.useCallback(() => {
@@ -350,8 +335,6 @@ export default function Register() {
       setTimer(INITIAL_TIMER);
       setResendCount(OTP_RESEND_LIMIT);
       if (intervalRef.current) clearInterval(intervalRef.current);
-      // Stop SMS listener when going back to mobile input
-      stopSmsListener();
     } else {
       // If mobile input is showing, navigate back to previous route
       router.back();
@@ -516,7 +499,7 @@ export default function Register() {
                             style={registerStyles.resendButton}
                           >
                             <Text style={registerStyles.resendText}>
-                              {t("resendOtp")} ({resendCount} {t("left")})
+                              {t("resendOTP")} ({resendCount} {t("left")})
                             </Text>
                           </TouchableOpacity>
                         )}

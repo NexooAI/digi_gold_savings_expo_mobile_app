@@ -29,7 +29,6 @@ import { theme } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { t } from "@/i18n";
-import { useOtpAutoFetch } from "@/hooks/useOtpAutoFetch";
 import { registerStyles } from "../../_styles/registerStyles";
 import { useAuth } from "@/contexts/AuthContext";
 import LanguageSwitcher from "@/contexts/LanguageSwitcher";
@@ -234,48 +233,6 @@ export default function Login() {
   // const isAndroid = Platform.OS === "android";
   // const isIOS = Platform.OS === "ios";
 
-  // Auto-fetch OTP functionality
-  const handleOtpAutoFill = (otp: string) => {
-    // console.log("Auto-filling OTP:", otp);
-    const otpArray = otp.split("");
-    setPins(otpArray);
-
-    // Auto-verify if we get a complete 4-digit OTP
-    if (otp.length === 4) {
-      setTimeout(() => {
-        verifyOtp(otp);
-      }, 500); // Small delay to show the filled OTP to user
-    }
-  };
-
-  // useEffect(() => {
-  //   let subscription: any;
-
-  //   const startSmsListener = async () => {
-  //     if (isAndroid) {
-  //       const { status } = await SMSRetriever.requestPhoneNumber();
-  //       if (status === "granted") {
-  //         subscription = SMSRetriever.addSMSListener(
-  //           ({ message }: { message: string }) => {
-  //             const otpMatch = /\b\d{4}\b/.exec(message);
-  //             if (otpMatch) {
-  //               handleOtpAutoFill(otpMatch[0]);
-  //             }
-  //           }
-  //         );
-  //       }
-  //     }
-  //   };
-
-  //   startSmsListener();
-
-  //   return () => {
-  //     if (subscription) {
-  //       subscription.remove();
-  //     }
-  //   };
-  // }, [isAndroid]);
-
   useEffect(() => {
     checkTokenValidity();
   }, []);
@@ -357,21 +314,6 @@ export default function Login() {
       inputRefs[index - 1]?.current?.focus();
     }
   };
-
-  // const getOtpFromSms = async () => {
-  //   try {
-  //     await SmsRetriever.requestPhoneNumber();
-  //     SmsRetriever.addSmsListener((event) => {
-  //       const otp = extractOtpFromMessage(event.message);
-  //       if (otp) {
-  //         setPins(otp.split(""));
-  //         verifyOtp(otp);
-  //       }
-  //     });
-  //   } catch (error) {
-  //     console.error("Error retrieving OTP:", error);
-  //   }
-  // };
 
   const extractOtpFromMessage = (message: string) => {
     const otpMatch = message.match(/\d{4}/); // Assuming 4-digit OTP

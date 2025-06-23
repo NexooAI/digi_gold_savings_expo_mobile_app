@@ -15,7 +15,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import useGlobalStore from "@/store/global.store";
 import { theme } from "@/constants/theme";
 import { t } from "../../../i18n";
-import { useAuth } from "../../../../contexts/AuthContext";
+// import { useAuth } from "../../../../contexts/AuthContext";
 
 const { width } = Dimensions.get("window");
 

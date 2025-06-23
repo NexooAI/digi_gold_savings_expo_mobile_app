@@ -45,10 +45,10 @@ import StatusView from "@/app/components/StatusView";
 import NotificationService from "@/services/NotificationService";
 import { AppLocale } from "@/i18n";
 // Import API logging utilities
-import { 
-  logApiSummary, 
-  logRecentApiCalls, 
-  getApiLogs, 
+import {
+  logApiSummary,
+  logRecentApiCalls,
+  getApiLogs,
   getFailedApiLogs,
   apiLogManager,
   monitorEndpoint,
@@ -324,7 +324,7 @@ export default function Home2() {
   const [collectionsData, setCollectionsData] = useState<Collection[]>([]);
   const [totalGoldSavings, setTotalGoldSavings] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
-  const [flashNews, setFlashNews] = useState<FlashNews[]>([]);
+  const [flashNews, setFlashNews] = useState<any[]>([]);
   const [sliderImages, setSliderImages] = useState<any[]>([]);
   const [isSliderLoading, setIsSliderLoading] = useState(true);
 
@@ -421,16 +421,16 @@ export default function Home2() {
 
       const userId = user?.id || 436; // Default to 436 if no user
       const response = await api.get(`/home?userId=${userId}`);
-      
+
       if (response.data.success) {
         const data = response.data.data;
         console.log("Home API response:", data);
-        
+
         setHomeData(response.data);
-        
+
         // Set collections data
         if (data.collections && data.collections.length > 0) {
-          setCollectionsData(data.collections);
+          // setCollectionsData(data.collections);
         } else {
           console.log('No collections found, using default images');
           setCollectionsData(defaultStatusImages);
@@ -459,7 +459,9 @@ export default function Home2() {
 
         // Set flash news
         if (data.flashNews && data.flashNews.length > 0) {
-          setFlashNews(data.flashNews);
+          console.log(data.flashNews)
+          const flashArray = data.flashNews.map((f)=>f.title)
+          setFlashNews(flashArray);
         }
 
         // Store gold rate in AsyncStorage
@@ -518,7 +520,7 @@ export default function Home2() {
   useEffect(() => {
     console.log('🔍 Setting up flash-news endpoint monitoring...');
     const monitoringInterval = monitorEndpoint('/flash-news/active', 10000); // Check every 10 seconds
-    
+
     // Check for continuous calls every 30 seconds
     const continuousCheckInterval = setInterval(() => {
       const isContinuous = checkForContinuousCalls('/flash-news/active', 3, 1); // 3+ calls in 1 minute
@@ -526,7 +528,7 @@ export default function Home2() {
         console.log('🚨 WARNING: Continuous flash-news API calls detected!');
       }
     }, 30000);
-    
+
     return () => {
       clearInterval(monitoringInterval);
       clearInterval(continuousCheckInterval);
@@ -582,43 +584,43 @@ export default function Home2() {
   const demonstrateApiLogging = useCallback(() => {
     console.log('🔍 DEMONSTRATING API LOGGING FUNCTIONALITY');
     console.log('==========================================');
-    
+
     // Log API summary
     logApiSummary();
-    
+
     // Log recent API calls
     logRecentApiCalls(5);
-    
+
     // Get all API logs
     const allLogs = getApiLogs();
     console.log(`📋 Total API logs collected: ${allLogs.length}`);
-    
+
     // Get failed API logs
     const failedLogs = getFailedApiLogs();
     console.log(`❌ Failed API calls: ${failedLogs.length}`);
-    
+
     // Get logs by service
     const mainLogs = apiLogManager.getLogsByService('main');
     const serviceLogs = apiLogManager.getLogsByService('apiService');
     const paymentLogs = apiLogManager.getLogsByService('payment');
-    
+
     console.log(`📊 Logs by service:`);
     console.log(`  Main API: ${mainLogs.length}`);
     console.log(`  API Service: ${serviceLogs.length}`);
     console.log(`  Payment Service: ${paymentLogs.length}`);
-    
+
     // Get slowest endpoints
     const slowestEndpoints = apiLogManager.getSlowestEndpoints(3);
     console.log('🐌 Slowest endpoints:', slowestEndpoints);
-    
+
     // Get error-prone endpoints
     const errorProneEndpoints = apiLogManager.getErrorProneEndpoints(3);
     console.log('⚠️ Error-prone endpoints:', errorProneEndpoints);
-    
+
     // Export logs (for debugging)
     const exportedLogs = apiLogManager.exportLogs();
     console.log('📤 Exported logs length:', exportedLogs.length);
-    
+
     // Show alert with summary
     const summary = apiLogManager.getApiSummary();
     Alert.alert(
@@ -700,18 +702,18 @@ export default function Home2() {
               showBackButton={false}
               backRoute="index"
               showLanguageSwitcher={true}
-              goldRateInfo={
-                homeData?.data?.currentRates?.gold_rate
-                  ? {
-                      rate: homeData.data.currentRates.gold_rate,
-                      purity: "22K",
-                    }
-                  : {
-                      rate: dummyData.rates.gold.price,
-                      purity: "22K",
-                    }
-              }
-              goldRateUpdatedAt={homeData?.data?.currentRates?.updated_at}
+            // goldRateInfo={
+            //   homeData?.data?.currentRates?.gold_rate
+            //     ? {
+            //         rate: homeData.data.currentRates.gold_rate,
+            //         purity: "22K",
+            //       }
+            //     : {
+            //         rate: dummyData.rates.gold.price,
+            //         purity: "22K",
+            //       }
+            // }
+            // goldRateUpdatedAt={homeData?.data?.currentRates?.updated_at}
             />
             {/* Debug button for API logging - remove in production */}
             <TouchableOpacity
@@ -772,7 +774,7 @@ export default function Home2() {
               ) : (
                 <View style={styles.rateWarningContainer}>
                   <View style={styles.rateWarningContent}>
-                    <Ionicons name="warning" size={24} color="#FFD700"/>
+                    <Ionicons name="warning" size={24} color="#FFD700" />
                     <View style={styles.rateWarningTextContainer}>
                       <Text style={styles.rateWarningTitle}>{t('liveRatesUnavailable')}</Text>
                       <Text style={styles.rateWarningSubtitle}>{t('pleaseTryAgainLater')}</Text>
@@ -814,14 +816,14 @@ export default function Home2() {
               )}
 
               <FlashOffer
-                fallbackMessages={[
-                  translations.discountOffer20,
-                  translations.newFeaturesAvailable,
-                  translations.limitedTimeOffer,
-                  translations.specialOffer20,
-                ]}
-                textColor="#fff"
-                duration={8000}
+                // fallbackMessages={[
+                //   "🎉 Welcome to Digital Gold Savings!",
+                //   "🔥 Gold price drops! Invest smart.",
+                //   "🌟 Special offer for new users!",
+                // ]}
+                fallbackMessages={flashNews}
+                onPress={() => console.log("Flash news tapped")}
+                textColor="#ffffff"
               />
 
               <UserInfoCard
@@ -865,8 +867,8 @@ export default function Home2() {
             initialCollectionIndex={
               selectedCollection
                 ? collectionsData.findIndex(
-                    (c) => c.id === selectedCollection.id
-                  )
+                  (c) => c.id === selectedCollection.id
+                )
                 : 0
             }
             onClose={() => {

@@ -325,13 +325,17 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   videoInfoContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 10,
   },
   videoTitle: {
+    flex: 1,
     fontSize: moderateScale(16),
     fontWeight: '700',
     color: '#850111',
-    marginBottom: 5,
+    marginRight: 8,
   },
   videoDate: {
     fontSize: moderateScale(14),

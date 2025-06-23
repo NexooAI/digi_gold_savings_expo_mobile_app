@@ -329,7 +329,7 @@ api.interceptors.response.use(
     
     if (response.config.method?.toUpperCase() !== 'GET') {
       const message = response.data?.message || 'Operation completed successfully';
-      showToast(message, 'success', Toast.durations.SHORT);
+      // showToast(message, 'success', Toast.durations.SHORT);
     }
     return response;
   },
@@ -380,27 +380,27 @@ api.interceptors.response.use(
           break;
         case 403:
           if (message.toLowerCase().includes('token') || message.toLowerCase().includes('authorization')) {
-            showToast('Authentication failed. Please login again.', 'error');
+            // showToast('Authentication failed. Please login again.', 'error');
             handleLogout();
           } else {
-            showToast('You are not authorized for this action.', 'error');
+            // showToast('You are not authorized for this action.', 'error');
           }
           break;
         case 404:
-          showToast('Resource not found.', 'warning');
+          // showToast('Resource not found.', 'warning');
           break;
         case 422:
           if (errorData && typeof errorData === 'object' && 'errors' in errorData) {
             const errors = (errorData as { errors: Record<string, string[]> }).errors;
             message = Object.values(errors).flat().join('\n');
           }
-          showToast(message, 'warning');
+          // showToast(message, 'warning');
           break;
         case 500:
-          showToast('Server error. Please try again later.', 'error');
+          // showToast('Server error. Please try again later.', 'error');
           break;
         default:
-          showToast(message, 'error');
+          // showToast(message, 'error');
           break;
       }
     }

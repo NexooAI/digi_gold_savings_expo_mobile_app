@@ -430,7 +430,7 @@ const ProfileScreen = () => {
                 />
                 <Text style={styles.cardTitle}>{t("personal_info")}</Text>
                 <View style={styles.userIdBadge}>
-                  <Text style={styles.userIdText}>{t('userId') + ": "}{user?.id}</Text>
+                  <Text style={styles.userIdText}>{t('user_id') + ": "}{user?.id}</Text>
                 </View>
               </View>
 
@@ -450,7 +450,7 @@ const ProfileScreen = () => {
                 <View style={styles.infoIcon}>
                   <Icon name="supervised-user-circle" size={20} color={theme.colors.primary}/>
                 </View>
-                <Text style={styles.infoLabel}>{t('userId')}</Text>
+                <Text style={styles.infoLabel}>{t('user_id')}</Text>
                 <Text style={styles.infoValue}>{user?.id}</Text>
               </View>
             </View>
