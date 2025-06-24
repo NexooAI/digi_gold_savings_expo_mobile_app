@@ -41,7 +41,7 @@ export default function CustomBottomBar() {
       iconActive: "wallet",
     },
     {
-      name: "gold_advance",
+      name: "home/gold_advance",
       label: "bottom_nav_gold_advance",
       icon: "diamond-outline",
       iconActive: "diamond",
