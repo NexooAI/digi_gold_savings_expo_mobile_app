@@ -28,6 +28,7 @@ interface AppHeaderProps {
   showLanguageSwitcher?: boolean;
   goldRateInfo?: RateInfo;
   goldRateUpdatedAt?: string;
+  title?: string;
 }
 
 // Helper to format date as 'dd/MM/yyyy HH:mm'
@@ -39,7 +40,7 @@ function formatDateTime(dateString?: string) {
   return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-const AppHeader: React.FC<AppHeaderProps> = ({ showBackButton = false, backRoute, showLanguageSwitcher = false, goldRateInfo, goldRateUpdatedAt }) => {
+const AppHeader: React.FC<AppHeaderProps> = ({ showBackButton = false, backRoute, showLanguageSwitcher = false, goldRateInfo, goldRateUpdatedAt, title }) => {
   const navigation = useNavigation();
   const { setLanguage, language } = useGlobalStore();
 
@@ -122,13 +123,19 @@ const AppHeader: React.FC<AppHeaderProps> = ({ showBackButton = false, backRoute
             <Text style={styles.backButtonText}>{t('back')}</Text>
           </TouchableOpacity>
         )}
-        <View style={styles.logoContainer}>
-          <Image
-            source={theme.theme.image.transparentLogo}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </View>
+        {title ? (
+          <View style={styles.titleContainer}>
+            <Text style={styles.titleText}>{title}</Text>
+          </View>
+        ) : (
+          <View style={styles.logoContainer}>
+            <Image
+              source={theme.theme.image.transparentLogo}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </View>
+        )}
         {goldRateInfo && (
           <View style={styles.flipCardWrapper}>
             <Animated.View
@@ -206,6 +213,16 @@ const styles = StyleSheet.create({
   logoContainer: {
     width: width * 0.3,
     height: 50,
+  },
+  titleContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  titleText: {
+    color: theme.theme.colors.white,
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   logo: {
     width: "100%",

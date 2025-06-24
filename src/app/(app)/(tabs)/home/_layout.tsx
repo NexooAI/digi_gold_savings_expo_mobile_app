@@ -49,10 +49,13 @@ export default function HomeLayout() {
         name="faq"
         options={{ title: "FAQ", headerShown: false }}
       />
-      {/* <Stack.Screen
-        name="storeLocator"
-        options={{ title: "Store Locator", headerShown: false }}
-      /> */}
+      <Stack.Screen
+        name="gold_advance"
+        options={{
+          headerShown: false,
+          tabBarStyle: { display: 'none' },
+        }}
+      />
       <Stack.Screen
         name="(storeInfo)/contact_us"
         options={{ title: "Contact US", headerShown: false }}

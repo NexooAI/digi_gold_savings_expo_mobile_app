@@ -358,7 +358,7 @@ const AnimatedGoldRate: React.FC<{ goldRate: string; updatedAt?: string }> = ({ 
           end={{ x: 1, y: 1 }}
           style={styles.goldRateLabel}
         >
-          <Text style={styles.goldRateTitle}>Gold Rate</Text>
+          <Text style={styles.goldRateTitle}>{t("goldRate")}</Text>
           <View style={styles.goldRateRow}>
             <Ionicons name="star" size={18} color="#FFD700" style={{ marginRight: 4 }} />
             <Text style={styles.goldRatePrice}>₹{goldRate}/-</Text>
@@ -527,7 +527,7 @@ export default function Home2() {
         // Set flash news
         if (data.flashNews && data.flashNews.length > 0) {
           console.log(data.flashNews)
-          const flashArray = data.flashNews.map((f)=>f.title)
+          const flashArray = data.flashNews.map((f) => f.title)
           setFlashNews(flashArray);
         }
 
@@ -646,6 +646,7 @@ export default function Home2() {
     setShowFlashBanner(false);
     await AsyncStorage.setItem("flashBannerSeen", "true");
   }, []);
+
 
   // API Logging demonstration function
   const demonstrateApiLogging = useCallback(() => {
@@ -861,7 +862,13 @@ export default function Home2() {
                 </View>
               )}
             </View>
-
+            {/* Gold Rate Widget (inline, below FlashOffer) */}
+            {homeData?.data?.currentRates?.gold_rate && (
+              <AnimatedGoldRate
+                goldRate={homeData.data.currentRates.gold_rate}
+                updatedAt={homeData.data.currentRates.updated_at}
+              />
+            )}
             <View style={styles.statusContainer}>
               <FlatList
                 data={collectionsData}
@@ -892,14 +899,6 @@ export default function Home2() {
                 onPress={() => console.log("Flash news tapped")}
                 textColor="#ffffff"
               />
-
-              {/* Gold Rate Widget (inline, below FlashOffer) */}
-              {homeData?.data?.currentRates?.gold_rate && (
-                <AnimatedGoldRate 
-                  goldRate={homeData.data.currentRates.gold_rate}
-                  updatedAt={homeData.data.currentRates.updated_at}
-                />
-              )}
 
               <UserInfoCard
                 userName={user?.name}

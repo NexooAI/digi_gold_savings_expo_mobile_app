@@ -245,8 +245,8 @@
   "yourCode": "നിങ്ങളുടെ കോഡ്",
   "points": "പോയിന്റുകൾ",
   "inviteFriendsEarn": "സുഹൃത്തുക്കളെ ക്ഷണിച്ച് നേടൂ",
-  "changeKYC": "KYC മാറ്റുക",
-  "changeMPIN": "MPIN മാറ്റുക",
+  "changeKYC": "Change KYC",
+  "changeMPIN": "Change MPIN",
   "english": "ഇംഗ്ലീഷ്",
   "malayalam": "മലയാളം",
   "goldCollection": "സ്വർണ്ണ ശേഖരം",
@@ -360,5 +360,7 @@
   "averageResponse": "ശരാശരി പ്രതികരണം: 2 മിനിറ്റ്",
   "featuredVideo": "വിശേഷ വീഡിയോ",
   "videoLoadingError": "വീഡിയോ ലോഡ് ചെയ്യുന്നതിൽ പിശക്",
-  "noVideosAvailable": "ഇപ്പോൾ വീഡിയോകൾ ലഭ്യമല്ല"
+  "noVideosAvailable": "ഇപ്പോൾ വീഡിയോകൾ ലഭ്യമല്ല",
+  "last_updated":"അവസാനമായി പുതുക്കിയത്",
+  "bottom_nav_gold_advance": "തങ്കം അഡ്‌വാൻസ്"
 }

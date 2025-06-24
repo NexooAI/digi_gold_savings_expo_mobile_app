@@ -24,8 +24,8 @@ export default function CustomBottomBar() {
   const current = segments.at(2) || "home";
   
   // Animation refs for each tab
-  const tabAnimations = useRef([0, 1, 2, 3].map(() => new Animated.Value(1))).current;
-  const badgeAnimations = useRef([0, 1, 2, 3].map(() => new Animated.Value(1))).current;
+  const tabAnimations = useRef([0, 1, 2, 3, 4].map(() => new Animated.Value(1))).current;
+  const badgeAnimations = useRef([0, 1, 2, 3, 4].map(() => new Animated.Value(1))).current;
 
   const tabs: Tab[] = [
     {
@@ -39,6 +39,12 @@ export default function CustomBottomBar() {
       label: "bottom_nav_savings",
       icon: "wallet-outline",
       iconActive: "wallet",
+    },
+    {
+      name: "gold_advance",
+      label: "bottom_nav_gold_advance",
+      icon: "diamond-outline",
+      iconActive: "diamond",
     },
     {
       name: "notifications",
@@ -229,16 +235,16 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
   },
-  // activeIndicator: {
-  //   position: "absolute",
-  //   bottom: -2,
-  //   left: 0,
-  //   right: 0,
-  //   width: 'auto',
-  //   height: 3,
-  //   backgroundColor: theme.colors.primary,
-  //   borderRadius: 2,
-  //   marginLeft: 'auto',
-  //   marginRight: 'auto',
-  // },
+  activeIndicator: {
+    position: "absolute",
+    bottom: -2,
+    left: 0,
+    right: 0,
+    width: 'auto',
+    height: 3,
+    backgroundColor: theme.colors.primary,
+    borderRadius: 2,
+    marginLeft: 'auto',
+    marginRight: 'auto',
+  },
 }); 

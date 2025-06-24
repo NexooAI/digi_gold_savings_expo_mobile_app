@@ -1,14 +1,35 @@
+import { Tabs } from "expo-router";
 import CustomBottomBar from "@/common/components/navigation/CustomBottomBar";
 import { Slot } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { View, StyleSheet } from "react-native";
+import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 
-export default function TabLayout() {
+function MyTabBar(props: BottomTabBarProps) {
+  return <CustomBottomBar {...props} />;
+}
+
+export default function TabsLayout() {
   return (
     <SafeAreaProvider>
       <View style={{ flex: 1 }}>
-        <Slot />
-        <CustomBottomBar />
+        <Tabs
+          screenOptions={{
+            headerShown: false,
+          }}
+          tabBar={(props) => <CustomBottomBar {...props} />}
+        >
+          <Tabs.Screen name="home" />
+          <Tabs.Screen name="savings" />
+          <Tabs.Screen
+            name="gold_advance"
+            options={{
+              tabBarStyle: { display: "none" },
+            }}
+          />
+          <Tabs.Screen name="notifications" />
+          <Tabs.Screen name="profile" />
+        </Tabs>
       </View>
     </SafeAreaProvider>
   );

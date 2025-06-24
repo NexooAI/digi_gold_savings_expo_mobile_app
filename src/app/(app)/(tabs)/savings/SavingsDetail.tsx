@@ -135,6 +135,7 @@ const SavingsDetail = () => {
   const [alertType, setAlertType] = useState<"success" | "error" | "info">(
     "info"
   );
+  const [selectedPayments, setSelectedPayments] = useState<any[]>([]);
   const translations = useMemo(
     () => ({
       totalInvested: t("totalInvested"),
@@ -154,6 +155,12 @@ const SavingsDetail = () => {
     [language]
   );
   const state = useNavigationState(state => state);
+  const [advancePayments, setAdvancePayments] = useState<any[]>([]);
+  const totalSelectedAmount = useMemo(() => {
+    if (selectedPayments.length === 0) return 0;
+    // Use emiAmount from params as it's the fixed installment amount
+    return selectedPayments.length * Number(params.emiAmount);
+  }, [selectedPayments, params.emiAmount]);
 
   // Initialize socket connection
   useEffect(() => {
@@ -280,6 +287,9 @@ const SavingsDetail = () => {
         if (response.data.data.paymentHistory) {
           setPaymentHistrory(response.data.data.paymentHistory);
         }
+        if (response.data.data.paymentStatus) {
+          setAdvancePayments(response.data.data.paymentStatus);
+        }
       } catch (error) {
         console.error("Error fetching transactions:", error);
       } finally {
@@ -313,6 +323,116 @@ const SavingsDetail = () => {
       </Text>
     </View>
   );
+
+  // Parse schemesData for payment_duration
+  let parsedSchemesData: any = {};
+  try {
+    parsedSchemesData = params.schemesData ? JSON.parse(params.schemesData) : {};
+  } catch (e) {
+    parsedSchemesData = {};
+  }
+
+  const handleSelectPayment = (payment: any) => {
+    setSelectedPayments(prev => {
+      const isSelected = prev.some(p => p.monthNumber === payment.monthNumber);
+      if (isSelected) {
+        return prev.filter(p => p.monthNumber !== payment.monthNumber);
+      } else {
+        return [...prev, payment];
+      }
+    });
+  };
+
+  const handleBulkPayment = async () => {
+    if (!user || selectedPayments.length === 0) {
+      setAlertMessage("Please select at least one installment to pay.");
+      setAlertType("error");
+      setAlertVisible(true);
+      return;
+    }
+
+    // Show maintenance message instead of calling API
+    setAlertMessage("Advance payment feature is currently under maintenance. Please try again later.");
+    setAlertType("info");
+    setAlertVisible(true);
+    return;
+
+    // Commented out the API call for now
+    /*
+    setIsLoading(true);
+
+    try {
+      const payload = {
+        userId: user.id,
+        investmentId: params.id,
+        months: selectedPayments.map(p => p.monthNumber)?.length, // Array of month numbers
+      };
+
+      // IMPORTANT: Using a new endpoint for bulk payment as requested.
+      // Please ensure this endpoint exists on your backend.
+      const responce = await api.post("investments/bulk-check-payment", payload);
+
+      if (responce?.data?.success === false) {
+        setAlertMessage(responce?.data.message || "Something went wrong with bulk payment.");
+        setAlertType("error");
+        setAlertVisible(true);
+        return;
+      }
+
+      let parseSchemes;
+      try {
+        parseSchemes = JSON.parse(params.schemesData);
+      } catch (parseError) {
+        parseSchemes = {
+          schemeTypeName: "Fixed",
+          paymentFrequencyName: params.paymentFrequency || "Monthly"
+        };
+      }
+
+      router.push({
+        pathname: "/(tabs)/home/paymentNewOverView",
+        params: {
+          amount: totalSelectedAmount.toString(),
+          schemeName: params.schemeName,
+          schemeId: responce?.data.data.schemeId,
+          chitId: responce?.data.data?.chitId,
+          paymentFrequency: params.paymentFrequency,
+          schemeType: parseSchemes.schemeTypeName,
+          userDetails: JSON.stringify({
+            amount: totalSelectedAmount.toString(),
+            accountname: params.accountHolder,
+            accNo: params.accNo,
+            associated_branch: 1,
+            investmentId: responce?.data.data?.investmentId,
+            schemeId: responce?.data.data?.schemeId,
+            schemeType: parseSchemes.schemeTypeName,
+            schemeName: params?.schemeName,
+            paymentFrequency: params?.paymentFrequency,
+            chitId: responce?.data.data?.chitId,
+            months: JSON.stringify(selectedPayments.map(p => p.monthNumber)),
+          }),
+        },
+      });
+
+    } catch (error) {
+      console.error("Error in handleBulkPayment:", error);
+      setAlertMessage("An error occurred during bulk payment. Please try again.");
+      setAlertType("error");
+      setAlertVisible(true);
+    } finally {
+      setIsLoading(false);
+    }
+    */
+  };
+
+  const handleSelectAll = () => {
+    const pendingPayments = advancePayments.filter(p => p.status === 'PENDING');
+    setSelectedPayments(pendingPayments);
+  };
+
+  const handleUnselectAll = () => {
+    setSelectedPayments([]);
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f3f4f6" }}>
@@ -383,27 +503,29 @@ const SavingsDetail = () => {
             </View>
           </View>
 
-          <View style={styles.progressSection}>
-            <View style={styles.progressHeader}>
-              <Text style={styles.progressLabel}>
-                {translations.paymentProgress}
-              </Text>
-              <Text style={styles.progressValue}>
-                {params.monthsPaid}/{params.noOfIns} months
-              </Text>
+          {/* Progress Bar: Hide if payment_duration === '0.00' */}
+          {parsedSchemesData.payment_duration !== '0.00' && (
+            <View style={styles.progressSection}>
+              <View style={styles.progressHeader}>
+                <Text style={styles.progressLabel}>
+                  {translations.paymentProgress}
+                </Text>
+                <Text style={styles.progressValue}>
+                  {params.monthsPaid}/{params.noOfIns} months
+                </Text>
+              </View>
+              <View style={styles.progressBar}>
+                <View
+                  style={[
+                    styles.progressFill,
+                    {
+                      width: `${(Number(params.monthsPaid) / Number(params.noOfIns)) * 100}%`,
+                    },
+                  ]}
+                />
+              </View>
             </View>
-            <View style={styles.progressBar}>
-              <View
-                style={[
-                  styles.progressFill,
-                  {
-                    width: `${(Number(params.monthsPaid) / Number(params.noOfIns)) * 100
-                      }%`,
-                  },
-                ]}
-              />
-            </View>
-          </View>
+          )}
         </LinearGradient>
 
         {/* Details Section */}
@@ -435,7 +557,7 @@ const SavingsDetail = () => {
         </View>
 
         {/* Transactions Section */}
-        <View style={[styles.transactionsCard, { backgroundColor: "#FFF8DC" }]}>
+        <View style={[styles.transactionsCard, { backgroundColor: "#FFF8DC" }]}> 
           <View style={styles.transactionsHeader}>
             <Text style={styles.sectionTitle}>
               {translations.transactionHistory}
@@ -470,7 +592,6 @@ const SavingsDetail = () => {
                       <Text>{index + 1}</Text>
                     </View>
                     <View style={styles.transactionIcon}>
-
                       <Ionicons
                         name="checkmark-circle"
                         size={24}
@@ -488,67 +609,101 @@ const SavingsDetail = () => {
                           }
                         )}
                       </Text>
-                      <Text style={styles.transactionId}>
-                        {transaction.transactionId}
-                      </Text>
                     </View>
                     <Text style={styles.transactionAmount}>
                       ₹{Number(transaction.amountPaid).toLocaleString()}
                     </Text>
+                    <Ionicons name="receipt-outline" size={22} color="#8B4513" style={{ marginLeft: 10 }} />
                   </TouchableOpacity>
-
-                  {/* Transaction Actions */}
-                  <View style={styles.transactionActions}>
-                    <TouchableOpacity
-                      style={styles.actionButton}
-                      onPress={() => {
-                        setSelectedTransaction(transaction);
-                      }}
-                    >
-                      <Ionicons name="eye-outline" size={20} color="#8B4513" />
-                      <Text style={styles.actionText}>View Invoice</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={styles.actionButton}
-                      onPress={() => generateInvoicePDF(transaction)}
-                    >
-                      <Ionicons
-                        name="download-outline"
-                        size={20}
-                        color="#8B4513"
-                      />
-                      <Text style={styles.actionText}>Download</Text>
-                    </TouchableOpacity>
-                  </View>
                 </View>
               ))}
             </View>
           )}
         </View>
 
-        {/* Pay Now Button */}
-        <TouchableOpacity
-          style={styles.payButton}
-          onPress={PaymentNow}
-          disabled={isLoading}
-        >
-          <LinearGradient
-            colors={["#850111", "#B8860B", "#DAA520"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.payButtonGradient}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Text style={styles.payButtonText}>Pay Now</Text>
-                <Ionicons name="arrow-forward" size={24} color="#fff" />
-              </>
+        {/* Advance Payment Card: Show all PENDING payments */}
+        {advancePayments.filter(p => p.status === 'PENDING').length > 0 && (
+          <View style={[styles.transactionsCard, { backgroundColor: '#FFF8DC', marginTop: 16 }]}> 
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <Text style={styles.sectionTitle}>Advance Payment</Text>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TouchableOpacity
+                  style={{ backgroundColor: '#850111', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}
+                  onPress={handleSelectAll}
+                >
+                  <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>Select All</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{ backgroundColor: '#8B4513', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}
+                  onPress={handleUnselectAll}
+                >
+                  <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>Unselect All</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            {advancePayments.filter(p => p.status === 'PENDING').map((pending, idx) => {
+              const isSelected = selectedPayments.some(p => p.monthNumber === pending.monthNumber);
+              return (
+                <TouchableOpacity key={pending.monthNumber} onPress={() => handleSelectPayment(pending)} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' }}>
+                  <Ionicons name={isSelected ? "checkbox" : "square-outline"} size={24} color={isSelected ? "#850111" : "#8B4513"} style={{ marginRight: 16 }} />
+                  <Text style={{ flex: 1, fontSize: 14, color: '#2C1810' }}>{`Month ${pending.monthNumber} - Due ${new Date(pending.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}`}</Text>
+                  <Text style={{ fontSize: 15, fontWeight: '700', color: '#850111', marginLeft: 12 }}>₹{Number(params.emiAmount).toLocaleString()}</Text>
+                </TouchableOpacity>
+              )
+            })}
+
+            {selectedPayments.length > 0 && (
+              <View style={{ marginTop: 20 }}>
+                <TouchableOpacity
+                  style={styles.payButton}
+                  onPress={handleBulkPayment}
+                  disabled={isLoading}
+                >
+                  <LinearGradient
+                    colors={["#850111", "#B8860B", "#DAA520"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.payButtonGradient}
+                  >
+                    {isLoading ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <>
+                        <Text style={styles.payButtonText}>Pay Selected (₹{totalSelectedAmount.toLocaleString()})</Text>
+                        <Ionicons name="arrow-forward" size={24} color="#fff" />
+                      </>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
             )}
-          </LinearGradient>
-        </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Pay Now Button */}
+        {selectedPayments.length === 0 && (
+          <TouchableOpacity
+            style={styles.payButton}
+            onPress={PaymentNow}
+            disabled={isLoading}
+          >
+            <LinearGradient
+              colors={["#850111", "#B8860B", "#DAA520"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.payButtonGradient}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                  <Text style={styles.payButtonText}>Pay Now</Text>
+                  <Ionicons name="arrow-forward" size={24} color="#fff" />
+                </>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
 
         <CustomAlert
           visible={alertVisible}
@@ -975,38 +1130,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#8B4513",
     textAlign: "center",
-  },
-  transactionActions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    gap: 12,
-  },
-  actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F5DEB3",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    gap: 4,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
-  },
-  actionText: {
-    fontSize: 12,
-    color: "#8B4513",
-    fontWeight: "600",
   },
   modalOverlay: {
     flex: 1,

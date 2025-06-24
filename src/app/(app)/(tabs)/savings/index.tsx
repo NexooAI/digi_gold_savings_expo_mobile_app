@@ -595,7 +595,7 @@ export default function SavingsScreen() {
               ]}
             >
               <View style={styles.infoGrid}>
-                <View style={styles.infoRow}>
+                <View className="infoRow" style={styles.infoRow}>
                   <View style={styles.infoItem}>
                     <View style={styles.infoIconContainer}>
                       <Ionicons name="wallet-outline" size={20} color="#FFFFFF" />
@@ -605,19 +605,22 @@ export default function SavingsScreen() {
                       ₹{item.totalPaid.toLocaleString()}
                     </Text>
                   </View>
-                  <View style={styles.infoItem}>
-                    <View style={styles.infoIconContainer}>
-                      <Ionicons
-                        name="calendar-outline"
-                        size={20}
-                        color="#FFFFFF"
-                      />
+                  {/* Show Months Paid card only for Flexi schemes */}
+                  {item.schemesData?.paymentFrequencyName === 'Flexi' && (
+                    <View style={styles.infoItem}>
+                      <View style={styles.infoIconContainer}>
+                        <Ionicons
+                          name="calendar-outline"
+                          size={20}
+                          color="#FFFFFF"
+                        />
+                      </View>
+                      <Text style={styles.infoLabel}>Months Paid</Text>
+                      <Text style={styles.infoValue}>
+                        {Number(item.noOfIns) !== 0 ? `${item.monthsPaid} / ${item.noOfIns}` : `${item.monthsPaid}` }
+                      </Text>
                     </View>
-                    <Text style={styles.infoLabel}>Months Paid</Text>
-                    <Text style={styles.infoValue}>
-                      {item.monthsPaid} / {item.noOfIns}
-                    </Text>
-                  </View>
+                  )}
                   <View style={styles.infoItem}>
                     <View style={styles.infoIconContainer}>
                       <Ionicons name="cash-outline" size={20} color="#FFFFFF" />
@@ -654,57 +657,60 @@ export default function SavingsScreen() {
                 </View>
               </View>
 
-              <View style={styles.progressContainer}>
-                <View style={styles.progressHeader}>
-                  <Text style={styles.progressLabel}>Installment Progress</Text>
-                  <View style={styles.progressStats}>
-                    <Text style={styles.progressValue}>
-                      {progressPercentage}%
-                    </Text>
-                    <Text style={styles.progressMonths}>
-                      {item.monthsPaid}/{item.noOfIns} months
-                    </Text>
+              {/* Installment Progress Section - Only show if not Flexi with payment_duration 0.00 */}
+              {!(item.schemesData?.paymentFrequencyName === 'Flexi' && item.schemesData?.payment_duration === '0.00') && (
+                <View style={styles.progressContainer}>
+                  <View style={styles.progressHeader}>
+                    <Text style={styles.progressLabel}>Installment Progress</Text>
+                    <View style={styles.progressStats}>
+                      <Text style={styles.progressValue}>
+                        {progressPercentage}%
+                      </Text>
+                      <Text style={styles.progressMonths}>
+                        {item.monthsPaid}/{item.noOfIns} months
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.progressBar}>
+                    <Animated.View
+                      style={[
+                        styles.progressFill,
+                        {
+                          width: animatedHeight.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ["0%", `${progressPercentage}%`],
+                          }),
+                        },
+                      ]}
+                    />
+                  </View>
+                  <View style={styles.monthsInfo}>
+                    <View style={styles.monthItem}>
+                      <View
+                        style={[styles.monthDot, { backgroundColor: "#850111" }]}
+                      />
+                      <Text style={styles.monthLabel}>Paid</Text>
+                      <Text style={styles.monthValue}>{item.monthsPaid}</Text>
+                    </View>
+                    <View style={styles.monthItem}>
+                      <View
+                        style={[styles.monthDot, { backgroundColor: "#DAA520" }]}
+                      />
+                      <Text style={styles.monthLabel}>Pending</Text>
+                      <Text style={styles.monthValue}>
+                        {Number(item.noOfIns) - Number(item.monthsPaid)}
+                      </Text>
+                    </View>
+                    <View style={styles.monthItem}>
+                      <View
+                        style={[styles.monthDot, { backgroundColor: "#850111" }]}
+                      />
+                      <Text style={styles.monthLabel}>Total</Text>
+                      <Text style={styles.monthValue}>{item.noOfIns}</Text>
+                    </View>
                   </View>
                 </View>
-                <View style={styles.progressBar}>
-                  <Animated.View
-                    style={[
-                      styles.progressFill,
-                      {
-                        width: animatedHeight.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: ["0%", `${progressPercentage}%`],
-                        }),
-                      },
-                    ]}
-                  />
-                </View>
-                <View style={styles.monthsInfo}>
-                  <View style={styles.monthItem}>
-                    <View
-                      style={[styles.monthDot, { backgroundColor: "#850111" }]}
-                    />
-                    <Text style={styles.monthLabel}>Paid</Text>
-                    <Text style={styles.monthValue}>{item.monthsPaid}</Text>
-                  </View>
-                  <View style={styles.monthItem}>
-                    <View
-                      style={[styles.monthDot, { backgroundColor: "#DAA520" }]}
-                    />
-                    <Text style={styles.monthLabel}>Pending</Text>
-                    <Text style={styles.monthValue}>
-                      {Number(item.noOfIns) - Number(item.monthsPaid)}
-                    </Text>
-                  </View>
-                  <View style={styles.monthItem}>
-                    <View
-                      style={[styles.monthDot, { backgroundColor: "#850111" }]}
-                    />
-                    <Text style={styles.monthLabel}>Total</Text>
-                    <Text style={styles.monthValue}>{item.noOfIns}</Text>
-                  </View>
-                </View>
-              </View>
+              )}
             </Animated.View>
           {/* </LinearGradient> */}
         </ImageBackground>
