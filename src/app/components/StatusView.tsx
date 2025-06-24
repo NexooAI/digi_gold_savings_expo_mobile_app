@@ -9,6 +9,7 @@ import {
   Text,
   Animated,
   TouchableWithoutFeedback,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/constants/theme';
@@ -33,6 +34,7 @@ const StatusView: React.FC<StatusViewProps> = ({
   const [currentCollectionIndex, setCurrentCollectionIndex] = useState(initialCollectionIndex);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
   const progressAnim = useRef(new Animated.Value(0)).current;
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const touchStartX = useRef(0);
@@ -45,6 +47,7 @@ const StatusView: React.FC<StatusViewProps> = ({
       setCurrentCollectionIndex(initialCollectionIndex);
       setCurrentImageIndex(0);
       setIsPaused(false);
+      setImageLoading(true);
       startProgressAnimation();
     }
     return () => {
@@ -57,6 +60,7 @@ const StatusView: React.FC<StatusViewProps> = ({
   // Handle image progression
   useEffect(() => {
     if (isVisible && !isPaused) {
+      setImageLoading(true);
       startProgressAnimation();
     }
   }, [currentImageIndex, currentCollectionIndex, isPaused]);
@@ -211,7 +215,14 @@ const StatusView: React.FC<StatusViewProps> = ({
               source={{ uri: getFullImageUrl(currentCollection?.status_images?.[currentImageIndex]) }}
               style={styles.statusImage}
               resizeMode="contain"
+              onLoadStart={() => setImageLoading(true)}
+              onLoadEnd={() => setImageLoading(false)}
             />
+            {imageLoading && (
+              <View style={styles.loadingOverlay}>
+                <ActivityIndicator size="large" color="#FFD700" accessibilityLabel="Loading image" />
+              </View>
+            )}
             {isPaused && (
               <View style={styles.pauseOverlay}>
                 <Ionicons name="pause" size={40} color="#fff" />
@@ -297,6 +308,13 @@ const styles = StyleSheet.create({
   statusImage: {
     width: width,
     height: height,
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    zIndex: 2,
   },
   pauseOverlay: {
     ...StyleSheet.absoluteFillObject,

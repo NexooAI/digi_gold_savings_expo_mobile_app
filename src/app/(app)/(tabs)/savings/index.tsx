@@ -116,9 +116,31 @@ export default function SavingsScreen() {
     try {
       //console.log("=== FETCHING SAVINGS LIST ===");
       const response = await api.get(`investments/user_investments/${user.id}`);
-      //console.log("Raw API Response:", JSON.stringify(response.data, null, 2));
+      // Defensive: log and check response structure
+      // console.log("Raw API Response:", JSON.stringify(response.data, null, 2));
 
-      const investments = response.data.data || [];
+      let investments: any[] = [];
+      if (response?.data?.data) {
+        if (Array.isArray(response.data.data)) {
+          investments = response.data.data;
+        } else {
+          // Unexpected structure, log for debugging
+          console.error("Expected investments to be an array, got:", response.data.data);
+          // Show backend error message if available
+          const backendMsg = response.data.data && response.data.data.message ? response.data.data.message : null;
+          setError(backendMsg || "Unexpected data format received from server. Please try again later.");
+          setLoading(false);
+          return;
+        }
+      } else {
+        // No data field or data is undefined
+        console.error("No investments data found in response:", response.data);
+        // Show backend error message if available
+        const backendMsg = response.data && response.data.message ? response.data.message : null;
+        setError(backendMsg || "No savings data found. Please try again later.");
+        setLoading(false);
+        return;
+      }
 
       // Validate and transform each investment
       const transformedSavings: Scheme[] = investments
@@ -238,7 +260,16 @@ export default function SavingsScreen() {
           // Validate months paid
           const monthsPaid = Math.max(0, item.lastInstallment || 0);
 
+          let chitId: string | number | (string | number)[] = '';
+          if (item.chits && 'chitId' in item.chits) {
+            const val = item.chits.chitId;
+            if (typeof val === 'string' || typeof val === 'number' || (Array.isArray(val) && val.every(v => typeof v === 'string' || typeof v === 'number'))) {
+              chitId = val;
+            }
+          }
           return {
+            chitId,
+            investmentId: item.investmentId || '',
             id: item.investmentId,
             schemeName:
               schemeObj.schemeName || item.schemeName || "Unknown Scheme",
@@ -256,7 +287,7 @@ export default function SavingsScreen() {
             accNo: item.accountNo || "",
             joiningDate: doj,
             schemeCode: schemeObj.schemeId ? schemeObj.schemeId.toString() : "",
-            noOfIns: chit.noOfInstallments || 0,
+            noOfIns: chit.noOfInstallments ? chit.noOfInstallments.toString() : "0",
             schemesData: schemeObj,
             chitData: chit,
             transactions: [],

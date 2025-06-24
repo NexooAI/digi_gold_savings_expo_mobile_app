@@ -452,7 +452,11 @@ export default function Home2() {
       const response = await api.get(`investments/user_investments/${user.id}`);
       console.log('Investment API response:', response.data);
 
-      const investments = response.data.data || [];
+      let investments = response.data.data;
+      if (!Array.isArray(investments)) {
+        console.warn('Expected investments to be an array, got:', investments);
+        investments = [];
+      }
       console.log('Total investments found:', investments.length);
 
       setActiveSchemesCount(investments.length || 0);

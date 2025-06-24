@@ -5,6 +5,8 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { usePaymentSocket } from "@/hooks/usePaymentSocket";
 // import your socket library here if needed
 
+let errorTimeout: NodeJS.Timeout | null = null;
+
 export default function PaymentWebView() {
   const params = useLocalSearchParams();
   const router = useRouter();
@@ -37,17 +39,36 @@ export default function PaymentWebView() {
             "Payment Failed",
           orderId: data?.paymentResponse?.order_id,
           txnId: data?.paymentResponse?.txn_id,
-          amount: data?.paymentResponse?.amount,
+          amount: data?.paymentResponse?.amount, 
           status: data?.paymentResponse?.txn_detail?.status,
         },
       });
     },
     onPaymentError: (error) => {
-      console.error("Payment Error:", error);
-      // Disconnect socket before navigation
-      if (socket && socket.connected) {
-        socket.disconnect();
+      // If it's a disconnect error, wait a bit before showing the alert
+      if (error?.error === "Disconnected") {
+        if (errorTimeout) clearTimeout(errorTimeout);
+        errorTimeout = setTimeout(() => {
+          // If still disconnected after 5 seconds, show the alert
+          if (socket && !socket.connected) {
+            Alert.alert(
+              "Payment Error",
+              "Lost connection to payment server. Please try again.",
+              [
+                {
+                  text: "OK",
+                  onPress: () => {
+                    router.back();
+                  },
+                },
+              ]
+            );
+          }
+        }, 5000); // 5 seconds
+        return;
       }
+
+      // For other errors, show the alert immediately
       Alert.alert(
         "Payment Error",
         error?.message ||
@@ -57,18 +78,6 @@ export default function PaymentWebView() {
             text: "OK",
             onPress: () => {
               router.back();
-              // router.replace({
-              //   pathname: "/(tabs)/home/paymentNewOverView",
-              //   params: {
-              //     userDetails: params.userDetails,
-              //     amount: params.amount,
-              //     schemeName: params.schemeName,
-              //     schemeId: params.schemeId,
-              //     chitId: params.chitId,
-              //     paymentFrequency: params.paymentFrequency,
-              //     schemeType: params.schemeType,
-              //   },
-              // });
             },
           },
         ]

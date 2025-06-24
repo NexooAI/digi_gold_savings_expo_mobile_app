@@ -5,6 +5,7 @@ import paymentService from "@/services/payment.service";
 import api from "@/services/api";
 import { Alert } from 'react-native';
 import { theme } from "@/constants/theme";
+import { AppState, AppStateStatus } from "react-native";
 
 interface PaymentSocketProps {
   onPaymentSuccess?: (data: any) => void;
@@ -110,16 +111,13 @@ export const usePaymentSocket = ({
 
     // Handle connection events
     socketInstance.on("connect", () => {
-      //console.log("Socket connected:", socketInstance.id);
-      //console.log("check orderid", parsedUserDetails);
-
-      // Join the order room if we have an order ID
       const currentOrderId = orderId || parsedUserDetails?.orderId;
+      console.log("[Socket] Connected. Socket ID:", socketInstance.id);
       if (currentOrderId) {
+        console.log("[Socket] Emitting joinOrderRoom on connect for orderId:", currentOrderId);
         socketInstance.emit("joinOrderRoom", currentOrderId);
-        //console.log(`Joined room for order ${currentOrderId}`);
       } else {
-        console.warn("No order ID available for socket room");
+        console.warn("[Socket] No orderId found on connect");
       }
     });
 
@@ -242,12 +240,33 @@ export const usePaymentSocket = ({
       }
     });
 
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (nextAppState === "active") {
+        // App has come to the foreground
+        const socketInstance = socketRef.current;
+        const currentOrderId = orderId || parsedUserDetails?.orderId;
+        console.log("[AppState] App is active. Socket connected:", socketInstance?.connected, "OrderId:", currentOrderId);
+        if (socketInstance && !socketInstance.connected) {
+          console.log("[AppState] Socket not connected. Attempting to reconnect...");
+          socketInstance.connect();
+        }
+        if (socketInstance && socketInstance.connected && currentOrderId) {
+          console.log("[AppState] Emitting joinOrderRoom after reconnect for orderId:", currentOrderId);
+          socketInstance.emit("joinOrderRoom", currentOrderId);
+        } else if (socketInstance && !socketInstance.connected) {
+          console.warn("[AppState] Socket still not connected after reconnect attempt.");
+        }
+      }
+    };
+
+    const appStateSubscription = AppState.addEventListener("change", handleAppStateChange);
+
     // Cleanup on unmount
     return () => {
       if (socketInstance && socketInstance.connected) {
         socketInstance.disconnect();
       }
-
+      appStateSubscription.remove();
     };
   }, [parsedUserDetails, router, onPaymentSuccess, onPaymentFailure, onPaymentError, onPaymentExpired, orderId]);
 

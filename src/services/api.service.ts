@@ -192,6 +192,7 @@ apiClient.interceptors.response.use(
     if (error.response) {
       Alert.alert('Error', (error.response.data && (error.response.data as any).message) || 'Something went wrong!');
     } else if (error.request) {
+      console.log(error)
       Alert.alert('Network Error', 'Please check your internet connection.');
     } else {
       Alert.alert('Error', error.message);

@@ -18,6 +18,8 @@ Notifications.setNotificationHandler({
 });
 
 class NotificationService {
+  private isSendingToken = false;
+
   private async storeFcmToken(token: string) {
     try {
       await AsyncStorage.setItem('fcmToken', token);
@@ -118,6 +120,8 @@ class NotificationService {
 
   // New method to send token to API when user info is available
   async sendTokenToApi(): Promise<void> {
+    if (this.isSendingToken) return;
+    this.isSendingToken = true;
     try {
       const token = await this.getStoredFcmToken();
       if (!token) {
@@ -126,9 +130,11 @@ class NotificationService {
         const newToken = await this.registerForPushNotificationsAsync();
         if (!newToken) {
           //console.log('Failed to generate new FCM token');
+          this.isSendingToken = false;
           return;
         }
         // Token was generated and stored, continue with sending
+        this.isSendingToken = false;
         return this.sendTokenToApi(); // Recursively call with the new token
       }
 
@@ -137,20 +143,23 @@ class NotificationService {
       const userDataStr = await AsyncStorage.getItem('userData');
       if (userDataStr) {
         const userData = JSON.parse(userDataStr);
-        //console.log('User data:------------------', userData);
         userId = Number(userData.user_id) || 0;
       } else {
         // Try to get from global store if available
         const user = useGlobalStore.getState().user;
         if (user) {
-          // Handle both possible user object structures
           userId = Number((user as any).user_id || user.id) || 0;
         }
       }
 
       if (userId > 0) {
-        //console.log('Checking existing FCM token for User ID:', userId);
-
+        // Check last sent token to avoid redundant API calls
+        const lastSentToken = await this.getLastSentToken();
+        if (lastSentToken === token) {
+          //console.log('FCM token already sent, skipping update');
+          this.isSendingToken = false;
+          return;
+        }
         try {
           // First, check if there's an existing token
           const existingTokenResponse = await users.getFcmToken(userId);
@@ -159,26 +168,21 @@ class NotificationService {
           if (existingToken) {
             // If token exists and is different, update it
             if (existingToken !== token) {
-              //console.log('Updating FCM token - New token detected');
               const response = await users.updateFcmToken(token, userId, Platform.OS === 'ios' ? 'ios' : 'android');
-              //console.log('FCM token updated successfully', response.data);
               await this.storeLastSentToken(token);
             } else {
               //console.log('FCM token unchanged, skipping update');
+              await this.storeLastSentToken(token); // Mark as sent to avoid future redundant calls
             }
           } else {
             // If no token exists, send new token
-            //console.log('No existing FCM token found, sending new token');
             const response = await users.updateFcmToken(token, userId, Platform.OS === 'ios' ? 'ios' : 'android');
-            //console.log('New FCM token sent successfully', response.data);
             await this.storeLastSentToken(token);
           }
         } catch (error: any) {
           if (error.response?.status === 404) {
             // If token endpoint returns 404, send new token
-            //console.log('No existing token found, sending new token');
             const response = await users.updateFcmToken(token, userId, Platform.OS === 'ios' ? 'ios' : 'android');
-            //console.log('New FCM token sent successfully', response.data);
             await this.storeLastSentToken(token);
           } else {
             throw error;
@@ -193,6 +197,8 @@ class NotificationService {
         data: error.response?.data,
         message: error.message
       });
+    } finally {
+      this.isSendingToken = false;
     }
   }
 

@@ -19,7 +19,7 @@ interface FlashOfferProps {
   duration?: number;
   onPress?: () => void;
   iconColor?: string;
-  backgroundGradient?: string[];
+  backgroundGradient?: [string, string];
 }
 
 const FlashOffer: React.FC<FlashOfferProps> = ({
@@ -33,6 +33,12 @@ const FlashOffer: React.FC<FlashOfferProps> = ({
   const translateX = useRef(new Animated.Value(width)).current;
   const [newsMessages, setNewsMessages] = useState<string[]>(fallbackMessages);
   const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
+
+  // Sync newsMessages with fallbackMessages prop
+  useEffect(() => {
+    setNewsMessages(fallbackMessages);
+    setCurrentNewsIndex(0);
+  }, [fallbackMessages]);
 
   // Rotate flash messages
   // useEffect(() => {
