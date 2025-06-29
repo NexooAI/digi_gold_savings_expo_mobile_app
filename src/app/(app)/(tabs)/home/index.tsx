@@ -22,6 +22,7 @@ import {
   StatusBar,
   ActivityIndicator,
   Easing,
+  ListRenderItem,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -376,6 +377,73 @@ const AnimatedGoldRate: React.FC<{ goldRate: string; updatedAt?: string }> = ({ 
   );
 };
 
+// BannerCard component for FlatList renderItem
+interface BannerCardProps {
+  item: Banner;
+  router: ReturnType<typeof useRouter>;
+}
+const BannerCard: React.FC<BannerCardProps> = ({ item, router }) => {
+  const joinNowScale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(joinNowScale, {
+          toValue: 1.08,
+          duration: 700,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(joinNowScale, {
+          toValue: 1,
+          duration: 700,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [joinNowScale]);
+
+  return (
+    <View style={styles.bannerCard}>
+      <TouchableOpacity
+        style={styles.bannerImageWrapper}
+        onPress={() => router.push(item.schemeUrl)}
+        activeOpacity={0.9}
+      >
+        <Image
+          source={item.image}
+          style={styles.bannerImage}
+          resizeMode="cover"
+        />
+      </TouchableOpacity>
+      <View style={styles.bannerButtonRow}>
+        <TouchableOpacity
+          style={styles.aboutSchemesButton}
+          onPress={() => router.push('/(app)/(tabs)/home/schemes')}
+          activeOpacity={0.85}
+          accessibilityLabel="About Schemes"
+        >
+          <Text style={styles.aboutSchemesButtonText}>About Schemes</Text>
+        </TouchableOpacity>
+        <Animated.View style={{ flex: 1, transform: [{ scale: joinNowScale }] }}>
+          <TouchableOpacity
+            style={styles.joinNowButton}
+            onPress={() => router.push(item.schemeUrl)}
+            activeOpacity={0.85}
+            accessibilityLabel="Join Now - Highlighted"
+            accessibilityHint="Tap to join the scheme. This button is highlighted for your attention."
+          >
+            <Text style={styles.joinNowButtonText}>Join Now</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
+    </View>
+  );
+};
+
 export default function Home2() {
   // State
   const { language, user } = useGlobalStore();
@@ -707,21 +775,8 @@ export default function Home2() {
   }, []);
 
   // Render functions
-  const renderBanner = useCallback(
-    ({ item }: { item: Banner }) => (
-      <TouchableOpacity
-        style={styles.bannerItem}
-        onPress={() => router.push(item.schemeUrl)}
-        activeOpacity={0.9}
-      >
-        <Image
-          source={item.image}
-          style={styles.bannerImage}
-          resizeMode="cover"
-        />
-      </TouchableOpacity>
-    ),
-    [router]
+  const renderBanner: ListRenderItem<Banner> = useCallback(
+    ({ item }) => <BannerCard item={item} router={router} />, [router]
   );
 
   const renderStatusItem = useCallback(
@@ -1030,15 +1085,83 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingRight: 30,
   },
-  bannerItem: {
+  bannerCard: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
     marginHorizontal: 5,
-    borderRadius: 8,
-    overflow: "hidden",
+    marginBottom: 8,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 6,
+    width: screenWidth * 0.85,
+    alignItems: 'center',
+    overflow: 'hidden',
+    paddingBottom: 16,
+  },
+  bannerImageWrapper: {
+    width: '100%',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    overflow: 'hidden',
   },
   bannerImage: {
     width: screenWidth * 0.85,
     height: 200,
     borderRadius: 20,
+  },
+  bannerButtonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '90%',
+    alignSelf: 'center',
+    marginTop: 16,
+    gap: 12,
+  },
+  aboutSchemesButton: {
+    flex: 1,
+    backgroundColor: '#fffbe6',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 1,
+    marginRight: 6,
+  },
+  aboutSchemesButtonText: {
+    color: theme.colors.primary,
+    fontWeight: '600',
+    fontSize: 15,
+    letterSpacing: 0.2,
+  },
+  joinNowButton: {
+    flex: 1,
+    backgroundColor: theme.colors.primary,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: theme.colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
+    marginLeft: 6,
+  },
+  joinNowButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 16,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   userInfoCard: {
     width: "90%",
