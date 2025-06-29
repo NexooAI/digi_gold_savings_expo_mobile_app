@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppHeader from '@/app/components/AppHeader';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -48,8 +48,10 @@ export default function GoldAdvanceScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <AppHeader showBackButton title="Gold Advance" />
-      
+      {/* Fixed Header */}
+      <View style={styles.headerWrapper}>
+        <AppHeader showBackButton={false} backRoute="index" />
+      </View>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         <Text style={styles.subtitle}>
           Book your gold in advance and secure today's rate
@@ -111,14 +113,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFF8DC',
-    marginVertical: 'auto'
+  },
+  headerWrapper: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    backgroundColor: 'transparent',
+    paddingHorizontal: 4,
   },
   scrollView: {
     flex: 1,
   },
   content: {
     padding: 16,
-    marginTop: 100,
+    paddingTop: 100, // Ensure content appears below the header
     paddingBottom: 180,
   },
   subtitle: {

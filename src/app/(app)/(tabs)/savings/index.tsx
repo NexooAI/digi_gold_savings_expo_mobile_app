@@ -119,6 +119,14 @@ export default function SavingsScreen() {
       // Defensive: log and check response structure
       // console.log("Raw API Response:", JSON.stringify(response.data, null, 2));
 
+      // Improved error handling: check for backend error
+      if (response?.data?.success === false) {
+        const backendMsg = response.data.message || "Failed to fetch savings data.";
+        setError(backendMsg);
+        setLoading(false);
+        return;
+      }
+
       let investments: any[] = [];
       if (response?.data?.data) {
         if (Array.isArray(response.data.data)) {

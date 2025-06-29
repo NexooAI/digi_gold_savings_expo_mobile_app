@@ -21,12 +21,7 @@ export default function TabsLayout() {
         >
           <Tabs.Screen name="home" />
           <Tabs.Screen name="savings" />
-          <Tabs.Screen
-            name="gold_advance"
-            options={{
-              tabBarStyle: { display: "none" },
-            }}
-          />
+          <Tabs.Screen name="gold_advance"/>
           <Tabs.Screen name="notifications" />
           <Tabs.Screen name="profile" />
         </Tabs>
