@@ -36,7 +36,7 @@ export default {
         xxhdpi: theme.adaptiveIcon,
         xxxhdpi: theme.adaptiveIcon,
       },
-      package: "com.nexooai.dcjewellery",
+      package: theme.bundleIdentifier,
       googleServicesFile: "./google-services.json",
       versionCode:2,
       config: {
@@ -54,7 +54,7 @@ export default {
         backgroundColor: theme.primaryColor,
         tabletImage: theme.adaptiveIcon,
       },
-      bundleIdentifier: "com.nexooai.dcjewellery",
+      bundleIdentifier: theme.bundleIdentifier,
     },
 
     plugins: [

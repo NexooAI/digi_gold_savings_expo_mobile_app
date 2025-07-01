@@ -412,7 +412,7 @@ export default function Register() {
               <View style={[registerStyles.logoContainer, { paddingTop: 10, marginBottom: 0 }]}>
                 <Image
                   source={theme.image.transparentLogo}
-                  style={[registerStyles.logo, { width: 220, height: 180 }]}
+                  style={[registerStyles.logo, { width: 220, height: 140 }]}
                   resizeMode="contain"
                 />
               </View>
@@ -421,47 +421,46 @@ export default function Register() {
                   <Text style={registerStyles.pageTitle}>{t("register")}</Text>
                   <Text style={registerStyles.subtitle}>{t("registerSubtitle")}</Text>
                   {/* Mobile Number + Get OTP Button */}
-                  <View style={{ marginBottom: 16, width: '100%', flexDirection: 'row', alignItems: 'center' }}>
-                    <View style={{ flex: 1 }}>
-                      <PhoneInput
-                        value={mobile}
-                        onChangeText={text => {
-                          setMobile(text);
-                          setOtpSent(false);
-                          setOtpVerified(false);
-                          setOtpValidated(false);
-                          setOtp('');
-                          setTimer(INITIAL_TIMER);
-                          setResendCount(OTP_RESEND_LIMIT);
-                        }}
-                        loading={loading || otpVerified}
-                      />
-                    </View>
+                  <View style={{ marginBottom: 16, width: '100%' }}>
+                    <PhoneInput
+                      value={mobile}
+                      onChangeText={text => {
+                        setMobile(text);
+                        setOtpSent(false);
+                        setOtpVerified(false);
+                        setOtpValidated(false);
+                        setOtp('');
+                        setTimer(INITIAL_TIMER);
+                        setResendCount(OTP_RESEND_LIMIT);
+                      }}
+                      loading={loading || otpVerified}
+                    />
                     {otpVerified && (
                       <Ionicons name="checkmark-circle" size={24} color="green" style={{ marginLeft: 8 }} />
                     )}
                     {!otpSent && !otpVerified && (
-                      <TouchableOpacity
-                        onPress={handleGetOtp}
-                        style={{
-                          marginLeft: 8,
-                          backgroundColor: '#ffd700',
-                          borderRadius: 16,
-                          paddingVertical: 8,
-                          paddingHorizontal: 16,
-                          elevation: 2,
-                          shadowColor: '#000',
-                          shadowOffset: { width: 0, height: 1 },
-                          shadowOpacity: 0.12,
-                          shadowRadius: 2,
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                        }}
-                        disabled={loading || otpSent || otpVerified || !/^[6-9]\d{9}$/.test(mobile)}
-                      >
-                        {loading && <ActivityIndicator size="small" color="#1a2a39" style={{ marginRight: 6 }} />}
-                        <Text style={{ color: '#1a2a39', fontWeight: 'bold', fontSize: 13 }}>{t('getOtp')}</Text>
-                      </TouchableOpacity>
+                      <View style={{ alignItems: 'flex-end', marginTop: -16 }}>
+                        <TouchableOpacity
+                          onPress={handleGetOtp}
+                          style={{
+                            backgroundColor: '#ffd700',
+                            borderRadius: 16,
+                            paddingVertical: 8,
+                            paddingHorizontal: 16,
+                            elevation: 2,
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 1 },
+                            shadowOpacity: 0.12,
+                            shadowRadius: 2,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                          }}
+                          disabled={loading || otpSent || otpVerified || !/^[6-9]\d{9}$/.test(mobile)}
+                        >
+                          {loading && <ActivityIndicator size="small" color="#1a2a39" style={{ marginRight: 6 }} />}
+                          <Text style={{ color: '#1a2a39', fontWeight: 'bold', fontSize: 13 }}>{t('getOtp')}</Text>
+                        </TouchableOpacity>
+                      </View>
                     )}
                   </View>
                   {/* OTP Input and Verify OTP Button */}

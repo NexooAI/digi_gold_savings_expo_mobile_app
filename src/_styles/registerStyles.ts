@@ -41,6 +41,7 @@ export const registerStyles = StyleSheet.create({
     justifyContent: "flex-start",
     paddingHorizontal: 10,
     paddingBottom: 0,
+    backgroundColor: '#fffbe6',
   },
   cardContainer: {
     borderRadius: 16,
@@ -51,6 +52,7 @@ export const registerStyles = StyleSheet.create({
     borderColor: "rgba(255, 201, 12, 0.3)",
     marginBottom: 8,
     overflow: "hidden",
+    backgroundColor: '#222',
     ...Platform.select({
       ios: {
         shadowColor: "#000",
