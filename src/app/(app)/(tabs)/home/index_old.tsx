@@ -189,7 +189,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
       activeOpacity={0.8}
     >
       <LinearGradient
-        colors={["#850111", "#5a000b"]}
+        colors={["#1a2a39", "#5a000b"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.userInfoGradient}
@@ -950,7 +950,7 @@ const styles = StyleSheet.create({
     height: STATUS_IMAGE_SIZE,
     borderRadius: STATUS_BORDER_RADIUS,
     borderWidth: 2,
-    borderColor: "#850111",
+    borderColor: "#1a2a39",
     padding: 2,
     backgroundColor: "#fff",
     marginBottom: 6,
@@ -970,7 +970,7 @@ const styles = StyleSheet.create({
   },
   statusItemName: {
     fontSize: 12,
-    color: "#850111",
+    color: "#1a2a39",
     textAlign: "center",
     width: STATUS_IMAGE_SIZE,
     fontWeight: "600",
@@ -1027,7 +1027,7 @@ const styles = StyleSheet.create({
   sectionHeaderText: {
     fontSize: moderateScale(16),
     fontWeight: "700",
-    color: "#850111",
+    color: "#1a2a39",
     textTransform: "uppercase",
     letterSpacing: 0.3,
     textShadowColor: "rgba(0, 0, 0, 0.1)",
@@ -1055,7 +1055,7 @@ const styles = StyleSheet.create({
   videoTitle: {
     fontSize: moderateScale(16),
     fontWeight: "700",
-    color: "#850111",
+    color: "#1a2a39",
     textTransform: "uppercase",
     letterSpacing: 0.3,
     marginRight: 10,

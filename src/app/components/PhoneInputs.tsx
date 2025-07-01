@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: "600",
-    color: "rgba(255, 255, 255, 0.9)",
+    color: "#FFD700",
     marginBottom: 8,
     paddingLeft: 4,
   },

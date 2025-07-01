@@ -431,12 +431,12 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === 'ios' ? 40 : 0,
   },
   cardContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(26, 42, 57, 0.85)',
     borderRadius: 20,
     padding: 20,
     width: '100%',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(255, 201, 12, 0.3)',
     marginBottom: Platform.OS === 'ios' ? 20 : 10,
     maxHeight: '80%',
     ...Platform.select({

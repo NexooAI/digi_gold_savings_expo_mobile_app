@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import { theme } from '@/constants/theme';
 
 const { width, height } = Dimensions.get('window');
 
@@ -31,15 +32,17 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const crownRotateAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const floatAnim = useRef(new Animated.Value(0)).current;
+  const shimmerAnim = useRef(new Animated.Value(0)).current;
 
   const getSizeConfig = () => {
     switch (size) {
       case 'small':
-        return { logoSize: 60, containerSize: 120 };
+        return { logoSize: 100, containerSize: 160 };
       case 'large':
-        return { logoSize: 120, containerSize: 200 };
+        return { logoSize: 160, containerSize: 240 };
       default:
-        return { logoSize: 80, containerSize: 160 };
+        return { logoSize: 120, containerSize: 200 };
     }
   };
 
@@ -101,14 +104,41 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
         ])
       );
 
+      const floatAnimation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(floatAnim, {
+            toValue: 1,
+            duration: 2000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(floatAnim, {
+            toValue: 0,
+            duration: 2000,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+
+      const shimmerAnimation = Animated.loop(
+        Animated.timing(shimmerAnim, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: true,
+        })
+      );
+
       rotateAnimation.start();
       crownAnimation.start();
       pulseAnimation.start();
+      floatAnimation.start();
+      shimmerAnimation.start();
 
       return () => {
         rotateAnimation.stop();
         crownAnimation.stop();
         pulseAnimation.stop();
+        floatAnimation.stop();
+        shimmerAnimation.stop();
       };
     } else {
       // Exit animation
@@ -138,6 +168,16 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
     outputRange: ['0deg', '20deg'],
   });
 
+  const floatInterpolate = floatAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -10],
+  });
+
+  const shimmerInterpolate = shimmerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-width, width],
+  });
+
   if (!visible) return null;
 
   return (
@@ -154,10 +194,40 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
         <BlurView intensity={10} style={StyleSheet.absoluteFill} />
       ) : null}
       
+      {/* Background gradient with theme colors */}
       <LinearGradient
-        colors={['rgba(0, 0, 0, 0.95)', 'rgba(20, 20, 20, 0.95)', 'rgba(0, 0, 0, 0.95)']}
+        colors={[
+          `${theme.colors.primary}E6`,
+          `${theme.colors.support_container[1]}E6`,
+          `${theme.colors.support_container[2]}E6`,
+        ]}
         style={[styles.gradientBackground, overlay && StyleSheet.absoluteFill]}
       />
+
+      {/* Floating gold particles */}
+      <View style={styles.particlesContainer}>
+        {[...Array(8)].map((_, index) => (
+          <Animated.View
+            key={index}
+            style={[
+              styles.particle,
+              {
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                transform: [
+                  { translateY: floatInterpolate },
+                  { rotate: rotateAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0deg', '360deg'],
+                  })},
+                ],
+              },
+            ]}
+          >
+            <Text style={styles.particleText}>✨</Text>
+          </Animated.View>
+        ))}
+      </View>
 
       <Animated.View
         style={[
@@ -169,7 +239,7 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
           },
         ]}
       >
-        {/* Outer rotating ring */}
+        {/* Outer rotating ring with theme colors */}
         <Animated.View
           style={[
             styles.outerRing,
@@ -181,10 +251,20 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
           ]}
         >
           <LinearGradient
-            colors={['#000000', '#ffd700', '#000000', '#ffd700']}
+            colors={['#2a5a8d', '#2a5a8d']}
             style={styles.ringGradient}
           />
         </Animated.View>
+
+        {/* Shimmer effect */}
+        <Animated.View
+          style={[
+            styles.shimmer,
+            {
+              transform: [{ translateX: shimmerInterpolate }],
+            },
+          ]}
+        />
 
         {/* Inner glow effect */}
         <Animated.View
@@ -209,7 +289,7 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
             },
           ]}
         >
-          {/* DC Jewellers logo */}
+          {/* Akila Jewellers logo */}
           <Image
             source={require('../../../assets/images/adaptive-icon.png')}
             style={[styles.logo, { width: logoSize, height: logoSize }]}
@@ -236,7 +316,7 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
                 },
               ]}
             >
-              <Text style={styles.sparkleText}>✨</Text>
+              <Text style={styles.sparkleText}>💎</Text>
             </Animated.View>
           ))}
         </View>
@@ -256,7 +336,7 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
         ]}
       >
         <Text style={styles.loadingText}>{message}</Text>
-        <Text style={styles.brandText}>DC JEWELLERS</Text>
+        <Text style={styles.brandText}>{theme.constants.customerName}</Text>
         <View style={styles.dotsContainer}>
           {[...Array(3)].map((_, index) => (
             <Animated.View
@@ -264,6 +344,7 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
               style={[
                 styles.dot,
                 {
+                  backgroundColor: theme.colors.secondary,
                   opacity: rotateAnim.interpolate({
                     inputRange: [0, 0.33, 0.66, 1],
                     outputRange: index === 0 ? [1, 0.5, 0.5, 1] : 
@@ -285,7 +366,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: `${theme.colors.primary}E6`,
   },
   overlay: {
     position: 'absolute',
@@ -311,13 +392,15 @@ const styles = StyleSheet.create({
   ringGradient: {
     flex: 1,
     borderRadius: 100,
-    borderWidth: 1,
-    borderColor: 'transparent',
+    borderWidth: 2,
+    borderColor: theme.colors.secondary,
   },
   innerGlow: {
     position: 'absolute',
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: `${theme.colors.primary}20`,
     borderRadius: 1000,
+    borderWidth: 1,
+    borderColor: `${theme.colors.secondary}40`,
   },
   logoContainer: {
     justifyContent: 'center',
@@ -340,7 +423,7 @@ const styles = StyleSheet.create({
   },
   sparkleText: {
     fontSize: 16,
-    textShadowColor: 'rgba(255, 215, 0, 0.8)',
+    textShadowColor: `${theme.colors.secondary}80`,
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
@@ -351,20 +434,23 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFD700',
+    color: theme.colors.secondary,
     marginBottom: 8,
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+    textShadowRadius: 3,
   },
   brandText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#FFF',
+    color: theme.colors.textPrimary,
     letterSpacing: 2,
     marginBottom: 15,
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   dotsContainer: {
     flexDirection: 'row',
@@ -374,7 +460,31 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#FFD700',
+  },
+  particlesContainer: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+  },
+  particle: {
+    position: 'absolute',
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  particleText: {
+    fontSize: 16,
+    textShadowColor: `${theme.colors.secondary}80`,
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+  },
+  shimmer: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 1000,
   },
 });
 

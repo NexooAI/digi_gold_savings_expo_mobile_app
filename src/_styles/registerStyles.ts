@@ -1,5 +1,17 @@
 import { StyleSheet, Platform } from "react-native";
 import { theme } from "@/constants/theme";
+import { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+
+const [mobile, setMobile] = useState('');
+const [otp, setOtp] = useState('');
+const [otpSent, setOtpSent] = useState(false);
+const [otpVerified, setOtpVerified] = useState(false);
+
+const [name, setName] = useState('');
+const [email, setEmail] = useState('');
+const [referral, setReferral] = useState('');
 
 export const registerStyles = StyleSheet.create({
   backgroundImage: {
@@ -36,7 +48,7 @@ export const registerStyles = StyleSheet.create({
     paddingBottom: 16,
     width: "100%",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.4)",
+    borderColor: "rgba(255, 201, 12, 0.3)",
     marginBottom: 8,
     overflow: "hidden",
     ...Platform.select({
@@ -63,18 +75,18 @@ export const registerStyles = StyleSheet.create({
     paddingVertical: 0,
   },
   pageTitle: {
-    color: "#ffffff",
+    color: "#1a2a39",
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 6,
     textAlign: "center",
   },
   subtitle: {
-    color: "#ffffff",
+    color: "#4A4A4A",
     fontSize: 14,
     marginBottom: 12,
     textAlign: "center",
-    opacity: 0.8,
+    opacity: 0.85,
   },
   inputContainer: {
     width: "100%",
@@ -117,13 +129,13 @@ export const registerStyles = StyleSheet.create({
     width: "100%",
   },
   otpTitle: {
-    color: "#ffffff",
+    color: "#000000",
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 10,
   },
   otpSentText: {
-    color: "#ffffff",
+    color: "#000000",
     fontSize: 16,
     marginBottom: 20,
     opacity: 0.8,
@@ -147,7 +159,7 @@ export const registerStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(0, 0, 0, 0.1)",
     borderRadius: 12,
-    color: "#000000",
+    color: "#FFD700",
     fontSize: 24,
     backgroundColor: "#ffffff",
     textAlign: "center",
@@ -237,7 +249,7 @@ export const registerStyles = StyleSheet.create({
     marginBottom: 10,
   },
   poweredByText: {
-    color: theme.colors.primary,
+    color: theme.colors.secondary,
     fontSize: 14,
     opacity: 0.7,
     letterSpacing: 1,
@@ -393,5 +405,32 @@ export const registerStyles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 5,
     opacity: 0.8,
+  },
+  input: {
+    flex: 1,
+    marginRight: 8,
+  },
+  formFieldsContainer: {
+    width: '100%',
+    alignItems: 'flex-start',
+    paddingLeft: 4,
+    paddingRight: 4,
+  },
+  registerInput: {
+    width: '100%',
+    backgroundColor: '#fffbe6',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 201, 12, 0.3)',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#1a2a39',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
 }); 

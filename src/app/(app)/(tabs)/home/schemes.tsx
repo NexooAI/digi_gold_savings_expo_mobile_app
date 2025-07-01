@@ -515,7 +515,7 @@ export default function SchemeList() {
             <View style={styles.amountContainer}>
               <Text style={styles.amountLabel}>Available Plans:</Text>
               <View style={styles.amountChipsContainer}>
-                <Text style={[styles.amountChipText, { color: "#850111" }]}>
+                <Text style={[styles.amountChipText, { color: "#1a2a39" }]}>
                   ₹100 to ₹10,000
                 </Text>
               </View>
@@ -526,7 +526,7 @@ export default function SchemeList() {
               activeOpacity={0.7}
             >
               <LinearGradient
-                colors={["#850111", "#850111"]}
+                colors={["#1a2a39", "#1a2a39"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.joinButton}
@@ -948,7 +948,7 @@ const styles = StyleSheet.create({
   benefitsTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#850111",
+    color: "#1a2a39",
   },
   benefitsContainer: {
     marginBottom: 16,
@@ -978,7 +978,7 @@ const styles = StyleSheet.create({
   amountLabel: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#850111",
+    color: "#1a2a39",
     marginBottom: 10,
   },
   amountChipsContainer: {
@@ -997,7 +997,7 @@ const styles = StyleSheet.create({
   amountChipText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#850111",
+    color: "#1a2a39",
   },
   joinButton: {
     padding: 16,

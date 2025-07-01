@@ -30,7 +30,7 @@ interface Store {
 const stores: Store[] = [
   {
     id: 1,
-    name: "DC Jewellers ",
+    name: "Akila Jewellers ",
     latitude: 10.519531086895093,
     longitude: 76.22355145836895,
     address:

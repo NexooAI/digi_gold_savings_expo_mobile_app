@@ -218,7 +218,7 @@ const InvestmentCards = ({ schemes }: InvestmentCardsProps) => {
 const styles = StyleSheet.create({
   cardContainer: {
     elevation: 15,
-    shadowColor: "#850111",
+    shadowColor: "#1a2a39",
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.4,
     shadowRadius: 20,
@@ -335,12 +335,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#850111',
+    backgroundColor: '#1a2a39',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 16,
     gap: 8,
-    shadowColor: '#850111',
+    shadowColor: '#1a2a39',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

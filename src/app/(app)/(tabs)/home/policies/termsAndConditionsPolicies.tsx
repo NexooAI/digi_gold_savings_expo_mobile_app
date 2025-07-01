@@ -98,7 +98,7 @@ export default function TermsAndConditions() {
       <SafeAreaView style={styles.loadingContainer}>
         <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
         <LinearGradient
-          colors={["#850111", "#5a000b"]}
+          colors={["#1a2a39", "#5a000b"]}
           style={styles.loadingGradient}
         >
           <ActivityIndicator size="large" color="#FFD700" />
@@ -113,7 +113,7 @@ export default function TermsAndConditions() {
       <SafeAreaView style={styles.errorContainer}>
         <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
         <LinearGradient
-          colors={["#850111", "#5a000b"]}
+          colors={["#1a2a39", "#5a000b"]}
           style={styles.errorGradient}
         >
           <Ionicons name="alert-circle-outline" size={60} color="#FFD700" />
@@ -152,7 +152,7 @@ export default function TermsAndConditions() {
 
           {/* Hero Section */}
           <LinearGradient
-            colors={["#850111", "#5a000b"]}
+            colors={["#1a2a39", "#5a000b"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.heroSection}
@@ -190,7 +190,7 @@ export default function TermsAndConditions() {
                 style={styles.cardGradient}
               >
                 <View style={styles.contentHeader}>
-                  <Ionicons name="shield-checkmark" size={24} color="#850111" />
+                  <Ionicons name="shield-checkmark" size={24} color="#1a2a39" />
                   <Text style={styles.contentHeaderText}>
                     Our Commitment to You
                   </Text>
@@ -203,7 +203,7 @@ export default function TermsAndConditions() {
                 {/* Additional styled sections */}
                 <View style={styles.sectionContainer}>
                   <View style={styles.sectionHeader}>
-                    <Ionicons name="people-outline" size={20} color="#850111" />
+                    <Ionicons name="people-outline" size={20} color="#1a2a39" />
                     <Text style={styles.sectionTitle}>User Agreement</Text>
                   </View>
                   <Text style={styles.sectionText}>
@@ -214,7 +214,7 @@ export default function TermsAndConditions() {
 
                 <View style={styles.sectionContainer}>
                   <View style={styles.sectionHeader}>
-                    <Ionicons name="star-outline" size={20} color="#850111" />
+                    <Ionicons name="star-outline" size={20} color="#1a2a39" />
                     <Text style={styles.sectionTitle}>Service Quality</Text>
                   </View>
                   <Text style={styles.sectionText}>
@@ -228,7 +228,7 @@ export default function TermsAndConditions() {
                     <Ionicons
                       name="lock-closed-outline"
                       size={20}
-                      color="#850111"
+                      color="#1a2a39"
                     />
                     <Text style={styles.sectionTitle}>Security & Privacy</Text>
                   </View>
@@ -240,7 +240,7 @@ export default function TermsAndConditions() {
 
                 <View style={styles.contactSection}>
                   <LinearGradient
-                    colors={["#850111", "#5a000b"]}
+                    colors={["#1a2a39", "#5a000b"]}
                     style={styles.contactGradient}
                   >
                     <Ionicons name="mail-outline" size={24} color="#FFD700" />
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
   contentHeaderText: {
     fontSize: moderateScale(20),
     fontWeight: "600",
-    color: "#850111",
+    color: "#1a2a39",
     marginLeft: 12,
   },
   contentText: {
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(133, 1, 17, 0.05)",
     borderRadius: 12,
     borderLeftWidth: 4,
-    borderLeftColor: "#850111",
+    borderLeftColor: "#1a2a39",
   },
   sectionHeader: {
     flexDirection: "row",
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: moderateScale(16),
     fontWeight: "600",
-    color: "#850111",
+    color: "#1a2a39",
     marginLeft: 8,
   },
   sectionText: {
@@ -437,6 +437,6 @@ const styles = StyleSheet.create({
   retryButtonText: {
     fontSize: moderateScale(16),
     fontWeight: "600",
-    color: "#850111",
+    color: "#1a2a39",
   },
 });

@@ -28,7 +28,7 @@ const FlashOffer: React.FC<FlashOfferProps> = ({
   duration = 8000,
   onPress,
   iconColor = "#fff",
-  backgroundGradient = ["#850111", "#2e0406"],
+  backgroundGradient = ["#1a2a39", "#2e0406"],
 }) => {
   const translateX = useRef(new Animated.Value(width)).current;
   const [newsMessages, setNewsMessages] = useState<string[]>(fallbackMessages);

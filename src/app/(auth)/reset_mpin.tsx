@@ -144,9 +144,9 @@ const SimpleLanguageSwitcher = () => {
     let newLang: AppLocale;
     switch (language) {
       case 'en':
-        newLang = 'mal';
+        newLang = 'ta';
         break;
-      case 'mal':
+      case 'ta':
         newLang = 'en';
         break;
       default:
@@ -158,11 +158,11 @@ const SimpleLanguageSwitcher = () => {
   const getLanguageDisplayName = () => {
     switch (language) {
       case 'en':
-        return 'മലയാളം';
-      case 'mal':
+        return 'தமிழ்'; // Tamil in Tamil script
+      case 'ta':
         return 'English';
       default:
-        return 'മലയാളം';
+        return 'தமிழ்';
     }
   };
 
@@ -174,13 +174,13 @@ const SimpleLanguageSwitcher = () => {
         top: Platform.OS === 'ios' ? 60 : 40,
         right: 20,
         zIndex: 1000,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backgroundColor: 'rgba(0, 0, 0, 0.85)',
         padding: 12,
         borderRadius: 25,
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.3)',
+        borderColor: 'rgba(255, 255, 255, 0.6)',
       }}
     >
       <Image
@@ -285,17 +285,17 @@ export default function ResetMpin() {
                   {/* Base fog layer */}
                   <LinearGradient
                     colors={[
-                      "rgba(6, 2, 2, 0.78)",
-                      "rgba(34, 0, 0, 0.35)",
-                      "rgba(31, 3, 3, 0.54)",
+                      "rgba(26, 42, 57, 0.85)",
+                      "rgba(42, 90, 141, 0.75)",
+                      "rgba(58, 106, 173, 0.80)",
                     ]}
                     style={StyleSheet.absoluteFill}
                   />
                   {/* Top fog highlight */}
                   <LinearGradient
                     colors={[
-                      "rgba(10, 2, 2, 0.38)",
-                      "rgba(76, 63, 63, 0.74)",
+                      "rgba(255, 201, 12, 0.15)",
+                      "rgba(26, 42, 57, 0.60)",
                     ]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 0, y: 0.5 }}
@@ -304,8 +304,8 @@ export default function ResetMpin() {
                   {/* Bottom fog highlight */}
                   <LinearGradient
                     colors={[
-                      "rgba(0, 0, 0, 0.44)",
-                      "rgba(0, 0, 0, 0.28)",
+                      "rgba(26, 42, 57, 0.70)",
+                      "rgba(255, 201, 12, 0.10)",
                     ]}
                     start={{ x: 0, y: 0.5 }}
                     end={{ x: 0, y: 1 }}

@@ -452,7 +452,7 @@ const SavingsDetail = () => {
       >
         {/* Summary Card */}
         <LinearGradient
-          colors={["#850111", "#5a000b", "#2e0406"]}
+          colors={["#1a2a39", "#5a000b", "#2e0406"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.summaryCard}
@@ -628,7 +628,7 @@ const SavingsDetail = () => {
               <Text style={styles.sectionTitle}>Advance Payment</Text>
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <TouchableOpacity
-                  style={{ backgroundColor: '#850111', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}
+                  style={{ backgroundColor: '#1a2a39', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}
                   onPress={handleSelectAll}
                 >
                   <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>Select All</Text>
@@ -645,9 +645,9 @@ const SavingsDetail = () => {
               const isSelected = selectedPayments.some(p => p.monthNumber === pending.monthNumber);
               return (
                 <TouchableOpacity key={pending.monthNumber} onPress={() => handleSelectPayment(pending)} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' }}>
-                  <Ionicons name={isSelected ? "checkbox" : "square-outline"} size={24} color={isSelected ? "#850111" : "#8B4513"} style={{ marginRight: 16 }} />
+                  <Ionicons name={isSelected ? "checkbox" : "square-outline"} size={24} color={isSelected ? "#1a2a39" : "#8B4513"} style={{ marginRight: 16 }} />
                   <Text style={{ flex: 1, fontSize: 14, color: '#2C1810' }}>{`Month ${pending.monthNumber} - Due ${new Date(pending.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}`}</Text>
-                  <Text style={{ fontSize: 15, fontWeight: '700', color: '#850111', marginLeft: 12 }}>₹{Number(params.emiAmount).toLocaleString()}</Text>
+                  <Text style={{ fontSize: 15, fontWeight: '700', color: '#1a2a39', marginLeft: 12 }}>₹{Number(params.emiAmount).toLocaleString()}</Text>
                 </TouchableOpacity>
               )
             })}
@@ -660,7 +660,7 @@ const SavingsDetail = () => {
                   disabled={isLoading}
                 >
                   <LinearGradient
-                    colors={["#850111", "#B8860B", "#DAA520"]}
+                    colors={["#1a2a39", "#B8860B", "#DAA520"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={styles.payButtonGradient}
@@ -688,7 +688,7 @@ const SavingsDetail = () => {
             disabled={isLoading}
           >
             <LinearGradient
-              colors={["#850111", "#B8860B", "#DAA520"]}
+              colors={["#1a2a39", "#B8860B", "#DAA520"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.payButtonGradient}
@@ -723,7 +723,7 @@ const SavingsDetail = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <LinearGradient
-              colors={["#850111", "#B8860B", "#DAA520"]}
+              colors={["#1a2a39", "#B8860B", "#DAA520"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.modalHeader}
@@ -766,7 +766,7 @@ const SavingsDetail = () => {
                       <Ionicons
                         name="calendar-outline"
                         size={20}
-                        color="#850111"
+                        color="#1a2a39"
                       />
                     </View>
                     <View style={styles.detailInfo}>
@@ -786,7 +786,7 @@ const SavingsDetail = () => {
 
                   <View style={styles.detailRow}>
                     <View style={styles.detailIconContainer}>
-                      <Ionicons name="card-outline" size={20} color="#850111" />
+                      <Ionicons name="card-outline" size={20} color="#1a2a39" />
                     </View>
                     <View style={styles.detailInfo}>
                       <Text style={styles.modalDetailLabel}>
@@ -803,7 +803,7 @@ const SavingsDetail = () => {
                       <Ionicons
                         name="wallet-outline"
                         size={20}
-                        color="#850111"
+                        color="#1a2a39"
                       />
                     </View>
                     <View style={styles.detailInfo}>
@@ -1213,7 +1213,7 @@ const styles = StyleSheet.create({
   amountValue: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#850111",
+    color: "#1a2a39",
   },
   detailsContainer: {
     marginBottom: 24,
@@ -1272,7 +1272,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#850111",
+    backgroundColor: "#1a2a39",
     padding: 16,
     borderRadius: 12,
     gap: 8,

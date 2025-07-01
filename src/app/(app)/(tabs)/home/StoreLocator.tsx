@@ -28,7 +28,7 @@ import { Ionicons } from "@expo/vector-icons";
 const stores = [
   {
     id: 1,
-    name: "DC Jewellers ",
+    name: "Akila Jewellers ",
     latitude: 8.427828080550306,
     longitude: 78.02855977120382,
     address:

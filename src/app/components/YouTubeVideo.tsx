@@ -128,13 +128,13 @@ const YouTubeVideo: React.FC = () => {
       <View style={styles.container}>
         <View style={styles.headerContainer}>
           <View style={styles.headerContent}>
-            <Ionicons name="play-circle" size={24} color="#850111" />
+            <Ionicons name="play-circle" size={24} color="#1a2a39" />
             <Text style={styles.headerText}>{t("featuredVideo")}</Text>
           </View>
           <View style={styles.headerLine} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#850111" />
+          <ActivityIndicator size="large" color="#1a2a39" />
           <Text style={styles.loadingText}>Loading videos...</Text>
         </View>
       </View>
@@ -146,13 +146,13 @@ const YouTubeVideo: React.FC = () => {
       <View style={styles.container}>
         <View style={styles.headerContainer}>
           <View style={styles.headerContent}>
-            <Ionicons name="play-circle" size={24} color="#850111" />
+            <Ionicons name="play-circle" size={24} color="#1a2a39" />
             <Text style={styles.headerText}>{t("featuredVideo")}</Text>
           </View>
           <View style={styles.headerLine} />
         </View>
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle" size={48} color="#850111" />
+          <Ionicons name="alert-circle" size={48} color="#1a2a39" />
           <Text style={styles.errorText}>{t(error || "videoLoadingError")}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={fetchVideos}>
             <Text style={styles.retryButtonText}>Retry</Text>
@@ -166,7 +166,7 @@ const YouTubeVideo: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <View style={styles.headerContent}>
-          <Ionicons name="play-circle" size={24} color="#850111" />
+          <Ionicons name="play-circle" size={24} color="#1a2a39" />
           <Text style={styles.headerText}>{t("featuredVideo")}</Text>
         </View>
         <View style={styles.headerLine} />
@@ -196,7 +196,7 @@ const YouTubeVideo: React.FC = () => {
               style={styles.controlButton} 
               onPress={handlePreviousVideo}
             >
-              <Ionicons name="play-skip-back" size={20} color="#850111" />
+              <Ionicons name="play-skip-back" size={20} color="#1a2a39" />
             </TouchableOpacity>
             
             <TouchableOpacity 
@@ -206,7 +206,7 @@ const YouTubeVideo: React.FC = () => {
               <Ionicons 
                 name={playing ? "pause" : "play"} 
                 size={24} 
-                color="#850111" 
+                color="#1a2a39" 
               />
             </TouchableOpacity>
             
@@ -214,7 +214,7 @@ const YouTubeVideo: React.FC = () => {
               style={styles.controlButton} 
               onPress={handleNextVideo}
             >
-              <Ionicons name="play-skip-forward" size={20} color="#850111" />
+              <Ionicons name="play-skip-forward" size={20} color="#1a2a39" />
             </TouchableOpacity>
           </View>
         )}
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: moderateScale(18),
     fontWeight: '700',
-    color: '#850111',
+    color: '#1a2a39',
     marginLeft: 8,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: moderateScale(16),
     fontWeight: '700',
-    color: '#850111',
+    color: '#1a2a39',
     marginLeft: 10,
   },
   errorContainer: {
@@ -302,12 +302,12 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: moderateScale(16),
     fontWeight: '700',
-    color: '#850111',
+    color: '#1a2a39',
     marginBottom: 20,
   },
   retryButton: {
     padding: 10,
-    backgroundColor: '#850111',
+    backgroundColor: '#1a2a39',
     borderRadius: 5,
   },
   retryButtonText: {
@@ -334,12 +334,12 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: moderateScale(16),
     fontWeight: '700',
-    color: '#850111',
+    color: '#1a2a39',
     marginRight: 8,
   },
   videoDate: {
     fontSize: moderateScale(14),
-    color: '#850111',
+    color: '#1a2a39',
   },
 });
 

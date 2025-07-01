@@ -243,6 +243,11 @@ class NotificationService {
   addNotificationResponseReceivedListener(callback: (response: Notifications.NotificationResponse) => void) {
     return Notifications.addNotificationResponseReceivedListener(callback);
   }
+
+  // Setup notifications and register for push notifications
+  async setupNotifications() {
+    await this.registerForPushNotificationsAsync();
+  }
 }
 
 export default new NotificationService(); 

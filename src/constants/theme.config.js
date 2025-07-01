@@ -1,6 +1,6 @@
 module.exports = {
-  customerName: "DC Jewellers",
-  primaryColor: "#850111",
+  customerName: "Akila Jewellers",
+  primaryColor: "#1a2a39",
   splashLogo: "./assets/images/splashscreen_logo.png",
   icon: "./assets/images/logo_trans.png",
   adaptiveIcon: "./assets/images/adaptive-icon.png",

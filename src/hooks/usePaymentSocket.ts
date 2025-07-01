@@ -6,6 +6,7 @@ import api from "@/services/api";
 import { Alert } from 'react-native';
 import { theme } from "@/constants/theme";
 import { AppState, AppStateStatus } from "react-native";
+import { PaymentMetadata } from "@/types/payment.types";
 
 interface PaymentSocketProps {
   onPaymentSuccess?: (data: any) => void;
@@ -113,6 +114,26 @@ export const usePaymentSocket = ({
     socketInstance.on("connect", () => {
       const currentOrderId = orderId || parsedUserDetails?.orderId;
       console.log("[Socket] Connected. Socket ID:", socketInstance.id);
+      
+      // Emit store_payment_metadata with payment details
+      if (parsedUserDetails) {
+        const paymentMetadata: PaymentMetadata = {
+          orderId: currentOrderId,
+          investmentId: parsedUserDetails.data?.data?.id || parsedUserDetails.id || parsedUserDetails.investmentId,
+          userId: parsedUserDetails.data?.data?.userId || parsedUserDetails.userId,
+          schemeId: parsedUserDetails.data?.data?.schemeId || parsedUserDetails.schemeId,
+          chitId: parsedUserDetails.data?.data?.chitId || parsedUserDetails.chitId,
+          amount: parsedUserDetails.amount || parsedUserDetails.paymentAmount || parsedUserDetails.data?.data?.amount,
+          isManual: "no",
+          utr_reference_number: "",
+          accountNumber: parsedUserDetails.data?.data?.accountNo || parsedUserDetails.accountNo || parsedUserDetails.accNo,
+          accountName: parsedUserDetails.data?.data?.accountName || parsedUserDetails.accountName || parsedUserDetails.accountname
+        };
+        
+        console.log("[Socket] Emitting store_payment_metadata:", paymentMetadata);
+        socketInstance.emit("store_payment_metadata", paymentMetadata);
+      }
+      
       if (currentOrderId) {
         console.log("[Socket] Emitting joinOrderRoom on connect for orderId:", currentOrderId);
         socketInstance.emit("joinOrderRoom", currentOrderId);

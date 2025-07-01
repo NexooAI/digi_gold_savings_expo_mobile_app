@@ -733,7 +733,7 @@ export default function KycForm() {
                   activeOpacity={0.9}
                 >
                   <LinearGradient
-                    colors={["#850111", "#5a000b", "#2e0406"]}
+                    colors={["#1a2a39", "#5a000b", "#2e0406"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.gradientButton}
@@ -900,7 +900,7 @@ const styles = StyleSheet.create({
   submitButton: {
     borderRadius: 16,
     overflow: "hidden",
-    shadowColor: "#850111",
+    shadowColor: "#1a2a39",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

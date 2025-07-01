@@ -40,12 +40,12 @@ export default function CustomBottomBar() {
       icon: "wallet-outline",
       iconActive: "wallet",
     },
-    {
-      name: "home/gold_advance",
-      label: "bottom_nav_gold_advance",
-      icon: "diamond-outline",
-      iconActive: "diamond",
-    },
+    // {
+    //   name: "home/gold_advance",
+    //   label: "bottom_nav_gold_advance",
+    //   icon: "diamond-outline",
+    //   iconActive: "diamond",
+    // },
     {
       name: "notifications",
       label: "bottom_nav_notifications",
@@ -114,7 +114,11 @@ export default function CustomBottomBar() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.98)']}
+        colors={[
+          'rgba(26, 42, 57, 0.95)', // Primary color with transparency
+          'rgba(26, 42, 57, 0.98)', // Primary color with more opacity
+          'rgba(26, 42, 57, 0.95)'  // Primary color with transparency
+        ]}
         style={styles.gradientContainer}
       >
         {tabs.map((tab, index) => {
@@ -138,7 +142,7 @@ export default function CustomBottomBar() {
                   <Ionicons
                     name={isActive ? tab.iconActive : tab.icon}
                     size={26}
-                    color={isActive ? theme.colors.primary : "#888"}
+                    color={isActive ? theme.colors.secondary : "#ffffff"}
                   />
                   {tab.badge && (
                     <Animated.View
@@ -158,7 +162,7 @@ export default function CustomBottomBar() {
                 <Text
                   style={[
                     styles.label,
-                    { color: isActive ? theme.colors.primary : "#888" },
+                    { color: isActive ? theme.colors.secondary : "#ffffff" },
                   ]}
                 >
                   {t(tab.label)}
@@ -188,11 +192,11 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 15,
+    shadowOpacity: 0.25,
+    shadowRadius: 15,
+    elevation: 20,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
+    borderColor: "rgba(255, 193, 12, 0.3)", // Gold accent border
   },
   tab: {
     flex: 1,
@@ -242,7 +246,7 @@ const styles = StyleSheet.create({
     right: 0,
     width: 'auto',
     height: 3,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.secondary, // Gold accent for active indicator
     borderRadius: 2,
     marginLeft: 'auto',
     marginRight: 'auto',

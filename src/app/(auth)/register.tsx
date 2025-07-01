@@ -14,6 +14,9 @@ import {
   Linking,
   ScrollView,
   SafeAreaView,
+  Modal,
+  Pressable,
+  ActivityIndicator,
 } from "react-native";
 import { useFocusEffect, useRouter, useLocalSearchParams } from "expo-router";
 import PhoneInput from "../components/PhoneInputs";
@@ -27,9 +30,12 @@ import { t } from "@/i18n";
 import LanguageSwitcher from "@/contexts/LanguageSwitcher";
 import { AppLocale } from "@/i18n";
 import useGlobalStore from "@/store/global.store";
+import ModernAuthCard from '../components/ModernAuthCard';
+import FloatingLabelInput from '../components/FloatingLabelInput';
+import api from "@/services/api";
 
 const OTP_RESEND_LIMIT = 3;
-const INITIAL_TIMER = 20;
+const INITIAL_TIMER = 180;
 
 // Simple Language Switcher Component
 const SimpleLanguageSwitcher = () => {
@@ -39,9 +45,9 @@ const SimpleLanguageSwitcher = () => {
     let newLang: AppLocale;
     switch (language) {
       case 'en':
-        newLang = 'mal';
+        newLang = 'ta';
         break;
-      case 'mal':
+      case 'ta':
         newLang = 'en';
         break;
       default:
@@ -53,11 +59,11 @@ const SimpleLanguageSwitcher = () => {
   const getLanguageDisplayName = () => {
     switch (language) {
       case 'en':
-        return 'മലയാളം';
-      case 'mal':
+        return 'தமிழ்'; // Tamil in Tamil script
+      case 'ta':
         return 'English';
       default:
-        return 'മലയാളം';
+        return 'தமிழ்';
     }
   };
 
@@ -69,13 +75,13 @@ const SimpleLanguageSwitcher = () => {
         top: Platform.OS === 'ios' ? 60 : 40,
         right: 20,
         zIndex: 1000,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backgroundColor: 'rgba(0, 0, 0, 0.85)',
         padding: 12,
         borderRadius: 25,
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.3)',
+        borderColor: 'rgba(255, 255, 255, 0.6)',
       }}
     >
       <Image
@@ -109,8 +115,14 @@ const ErrorAlert = ({
 );
 
 export default function Register() {
-  const [mobile, setMobile] = useState("");
+  const [step, setStep] = useState(1); // 1 = initial, 2 = OTP, 3 = post-OTP
+  const [mobile, setMobile] = useState('');
+  const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [referral, setReferral] = useState('');
   const [loading, setLoading] = useState(false);
   const [pins, setPins] = useState(["", "", "", ""]);
   const [timer, setTimer] = useState(INITIAL_TIMER);
@@ -128,6 +140,9 @@ export default function Register() {
     useRef<TextInput>(null),
     useRef<TextInput>(null),
   ];
+  const [otpModalVisible, setOtpModalVisible] = useState(false);
+  const [otpValidated, setOtpValidated] = useState(false);
+  const [emailError, setEmailError] = useState('');
 
   // Add useEffect to handle pre-filled mobile number
   useEffect(() => {
@@ -175,7 +190,10 @@ export default function Register() {
 
       if (response.ok) {
         setOtpSent(true);
-        setResendCount(OTP_RESEND_LIMIT);
+        setOtpModalVisible(true);
+        setOtpVerified(false);
+        setOtpValidated(false);
+        setStep(2);
         startTimer();
         Alert.alert(t("success"), t("otpResentSuccessfully"));
       } else {
@@ -201,7 +219,7 @@ export default function Register() {
   };
 
   const handleResendOtp = async () => {
-    if (resendCount <= 0) return;
+    if (resendCount <= 0 || timer > 0) return;
 
     setLoading(true);
     try {
@@ -215,7 +233,7 @@ export default function Register() {
 
       if (response.ok) {
         setResendCount((prev) => prev - 1);
-        startTimer();
+        setTimer(INITIAL_TIMER);
         setPins(["", "", "", ""]);
         Alert.alert(t("success"), t("otpResentSuccessfully"));
       } else {
@@ -255,14 +273,13 @@ export default function Register() {
   };
 
   const handleVerifyOtp = async () => {
-    const otp = pins.join("");
     if (otp.length !== 4) {
       showErrorAlert(t("pleaseEnterCompleteOtp"));
       return;
     }
-    console.log('handle otp')
     setLoading(true);
     try {
+      console.log('Verifying OTP for:', mobile, 'OTP:', otp);
       const response = await fetch(`${theme.baseUrl}/register/verify-otp`, {
         method: "POST",
         headers: {
@@ -270,25 +287,20 @@ export default function Register() {
         },
         body: JSON.stringify({ mobile_number: mobile, otp }),
       });
-     
       const data = await response.json();
-      console.log('handle data',data)
       if (response.ok && data.message && data.message.toLowerCase().includes('otp verified successfully')) {
-        // await SecureStore.setItemAsync("authToken", data.token);
-        router.push({
-          pathname: "/(auth)/userBasicDetails",
-          params: { mobile },
-        });
-        setPins(["", "", "", ""]);
+        setOtpModalVisible(false);
+        setOtpValidated(true);
+        setOtpVerified(true);
+        setStep(3);
+        setOtp("");
       } else {
-        console.log('failedToVerifyOtp')
         Alert.alert(
           t("error"),
           data?.message || t("failedToVerifyOtp")
         );
       }
     } catch (error: any) {
-      console.log('alert')
       Alert.alert(
         t("error"),
         error.response?.data?.message || t("failedToVerifyOtp")
@@ -298,11 +310,35 @@ export default function Register() {
     }
   };
 
+  const handleRegister = async () => {
+    setLoading(true);
+    try {
+      const response = await api.post("/register/complete", {
+        name,
+        email,
+        mobile_number: mobile,
+        mpin: '1234',
+        password: 1234,
+        referral_code: referral.trim(),
+      });
+      if (response.status === 200) {
+        Alert.alert('Success', 'Registration complete!');
+        router.replace({ pathname: "/(auth)/login", params: { mobile } });
+      } else {
+        Alert.alert('Error', response.data.message || 'Registration failed');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.message || 'Registration failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useFocusEffect(
     React.useCallback(() => {
       return () => {
         setMobile("");
-        setOtpSent(false);
+        setOtpVerified(false);
         setLoading(false);
         setTimer(INITIAL_TIMER);
         setResendCount(OTP_RESEND_LIMIT);
@@ -312,14 +348,14 @@ export default function Register() {
   );
 
   useEffect(() => {
-    let countdown: NodeJS.Timeout;
-    if (otpSent && timer > 0) {
-      countdown = setInterval(() => {
-        setTimer((prev) => prev - 1);
+    let interval: NodeJS.Timeout | null = null;
+    if (otpSent && !otpVerified && timer > 0) {
+      interval = setInterval(() => {
+        setTimer(prev => (prev > 0 ? prev - 1 : 0));
       }, 1000);
     }
-    return () => clearInterval(countdown);
-  }, [otpSent, timer]);
+    return () => { if (interval) clearInterval(interval); };
+  }, [otpSent, otpVerified, timer]);
 
   useEffect(() => {
     return () => {
@@ -327,10 +363,17 @@ export default function Register() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!otpModalVisible && otpSent && !otpValidated) {
+      // Modal closed but OTP not validated
+      showErrorAlert(t('otpNotValidated'));
+    }
+  }, [otpModalVisible]);
+
   const handleBackButton = () => {
-    if (otpSent) {
+    if (otpVerified) {
       // If OTP fields are showing, hide them and go back to mobile input
-      setOtpSent(false);
+      setOtpVerified(false);
       setPins(["", "", "", ""]);
       setTimer(INITIAL_TIMER);
       setResendCount(OTP_RESEND_LIMIT);
@@ -341,18 +384,19 @@ export default function Register() {
     }
   };
 
+  const validateEmail = (email: string) => {
+    return /^[\w-.]+@[\w-]+\.[a-zA-Z]{2,}$/.test(email);
+  };
+
   return (
     <SafeAreaView style={registerStyles.container}>
       <ImageBackground
         source={theme.image.bg_image}
         style={registerStyles.backgroundImage}
       >
-        {/* Dark overlay for background */}
         <View style={registerStyles.darkOverlay} />
         <LinearGradient
-          colors={["rgba(32, 1, 1, 0.55)",
-             "rgba(167, 0, 0, 0)", 
-             "rgba(118, 1, 1, 0)"]}
+          colors={["rgba(32, 1, 1, 0.55)", "rgba(167, 0, 0, 0)", "rgba(118, 1, 1, 0)"]}
           style={registerStyles.gradient}
         >
           <SimpleLanguageSwitcher />
@@ -364,168 +408,167 @@ export default function Register() {
             style={registerStyles.keyboardAvoidingView}
             keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
           >
-            <ScrollView
-              contentContainerStyle={registerStyles.scrollViewContent}
-              keyboardShouldPersistTaps="handled"
-            >
-              <View style={registerStyles.logoContainer}>
+            <ScrollView contentContainerStyle={registerStyles.scrollViewContent} keyboardShouldPersistTaps="handled">
+              <View style={[registerStyles.logoContainer, { paddingTop: 10, marginBottom: 0 }]}>
                 <Image
                   source={theme.image.transparentLogo}
-                  style={registerStyles.logo}
+                  style={[registerStyles.logo, { width: 220, height: 180 }]}
                   resizeMode="contain"
                 />
               </View>
-
-              <View style={registerStyles.formContainer}>
-                <View style={registerStyles.cardContainer}>
-                  {/* Base fog layer */}
-                  <LinearGradient
-                      colors={[
-                        "rgba(6, 2, 2, 0.78)",
-                        "rgba(34, 0, 0, 0.35)",
-                        "rgba(31, 3, 3, 0.54)",
-                      ]}
-                      style={StyleSheet.absoluteFill}
-                    />
-                    {/* Top fog highlight */}
-                    <LinearGradient
-                      colors={[
-                        "rgba(10, 2, 2, 0.38)",
-                        "rgba(76, 63, 63, 0.74)",
-                      ]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 0, y: 0.5 }}
-                      style={StyleSheet.absoluteFill}
-                    />
-                    {/* Bottom fog highlight */}
-                    <LinearGradient
-                      colors={[
-                        "rgba(0, 0, 0, 0.44)",
-                        "rgba(0, 0, 0, 0.28)",
-                      ]}
-                      start={{ x: 0, y: 0.5 }}
-                      end={{ x: 0, y: 1 }}
-                      style={StyleSheet.absoluteFill}
-                    />
-                  {/* Content */}
-                  <View style={registerStyles.cardContent}>
-                    <Text style={registerStyles.pageTitle}>{t("createAccount")}</Text>
-                    <Text style={registerStyles.subtitle}>{t("joinUsToStartYourJourney")}</Text>
-
-                    {!otpSent ? (
-                      <>
-                        <View style={registerStyles.inputContainer}>
-                          <PhoneInput
-                            value={mobile}
-                            onChangeText={setMobile}
-                            loading={loading}
-                          />
-                        </View>
-                        <TouchableOpacity
-                          style={[
-                            registerStyles.loginButton,
-                            loading && registerStyles.loginButtonDisabled,
-                          ]}
-                          onPress={handleGetOtp}
-                          disabled={loading}
-                        >
-                          <LinearGradient
-                            colors={["#ffc90c", "#ffd700"]}
-                            style={registerStyles.gradientButton}
-                          >
-                            <Text style={registerStyles.loginButtonText}>
-                              {loading ? t("sending") : t("getOtp")}
-                            </Text>
-                          </LinearGradient>
-                        </TouchableOpacity>
-                        <View style={registerStyles.footer}>
-                          <Text style={registerStyles.footerText}>
-                            {t("alreadyHaveAccount")}{" "}
-                          </Text>
-                          <TouchableOpacity onPress={() => router.push("/login")}>
-                            <Text style={registerStyles.footerLink}>{t("login")}</Text>
-                          </TouchableOpacity>
-                        </View>
-                      </>
-                    ) : (
-                      <View style={registerStyles.otpContainer}>
-                        <Text style={registerStyles.otpTitle}>{t("enterOtp")}</Text>
-                        <Text style={registerStyles.otpSentText}>
-                          {t("otpSentTo")} {mobile.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3")}
-                        </Text>
-
-                        <View style={registerStyles.otpInputsWrapper}>
-                          <View style={registerStyles.otpInputsContainer}>
-                            {pins.map((pin, index) => (
-                              <TextInput
-                                key={index}
-                                ref={inputRefs[index]}
-                                style={registerStyles.otpInput}
-                                keyboardType="numeric"
-                                maxLength={1}
-                                value={pin}
-                                onChangeText={(text) => handlePinChange(text, index)}
-                                onKeyPress={(e) => handleKeyPress(e, index)}
-                                secureTextEntry={!showOtp}
-                                textContentType="oneTimeCode"
-                                autoComplete="sms-otp"
-                              />
-                            ))}
-                          </View>
-                          <TouchableOpacity
-                            onPress={() => setShowOtp((prev) => !prev)}
-                            style={registerStyles.eyeButton}
-                          >
-                            <Feather
-                              name={showOtp ? "eye-off" : "eye"}
-                              size={24}
-                              color={theme.colors.white}
-                            />
-                          </TouchableOpacity>
-                        </View>
-
-                        <View style={registerStyles.timerContainer}>
-                          <Ionicons
-                            name="time-outline"
-                            size={20}
-                            color={theme.colors.white}
-                          />
-                          <Text style={registerStyles.timerText}>{t("resendIn")} {timer}s</Text>
-                        </View>
-
-                        {timer === 0 && resendCount > 0 && (
-                          <TouchableOpacity
-                            onPress={handleResendOtp}
-                            style={registerStyles.resendButton}
-                          >
-                            <Text style={registerStyles.resendText}>
-                              {t("resendOTP")} ({resendCount} {t("left")})
-                            </Text>
-                          </TouchableOpacity>
-                        )}
-
-                        <TouchableOpacity
-                          style={[
-                            registerStyles.loginButton,
-                            loading && registerStyles.loginButtonDisabled,
-                          ]}
-                          onPress={handleVerifyOtp}
-                          disabled={loading || pins.includes("")}
-                        >
-                          <LinearGradient
-                            colors={["#ffc90c", "#ffd700"]}
-                            style={registerStyles.gradientButton}
-                          >
-                            <Text style={registerStyles.loginButtonText}>
-                              {loading ? t("verifying") : t("verifyOtp")}
-                            </Text>
-                          </LinearGradient>
-                        </TouchableOpacity>
-                      </View>
+              <ModernAuthCard activeTab="register" onTabChange={(tab) => { if(tab==='login'){router.push('/login')} }}>
+                <View style={registerStyles.formFieldsContainer}>
+                  <Text style={registerStyles.pageTitle}>{t("register")}</Text>
+                  <Text style={registerStyles.subtitle}>{t("registerSubtitle")}</Text>
+                  {/* Mobile Number + Get OTP Button */}
+                  <View style={{ marginBottom: 16, width: '100%', flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ flex: 1 }}>
+                      <PhoneInput
+                        value={mobile}
+                        onChangeText={text => {
+                          setMobile(text);
+                          setOtpSent(false);
+                          setOtpVerified(false);
+                          setOtpValidated(false);
+                          setOtp('');
+                          setTimer(INITIAL_TIMER);
+                          setResendCount(OTP_RESEND_LIMIT);
+                        }}
+                        loading={loading || otpVerified}
+                      />
+                    </View>
+                    {otpVerified && (
+                      <Ionicons name="checkmark-circle" size={24} color="green" style={{ marginLeft: 8 }} />
+                    )}
+                    {!otpSent && !otpVerified && (
+                      <TouchableOpacity
+                        onPress={handleGetOtp}
+                        style={{
+                          marginLeft: 8,
+                          backgroundColor: '#ffd700',
+                          borderRadius: 16,
+                          paddingVertical: 8,
+                          paddingHorizontal: 16,
+                          elevation: 2,
+                          shadowColor: '#000',
+                          shadowOffset: { width: 0, height: 1 },
+                          shadowOpacity: 0.12,
+                          shadowRadius: 2,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                        }}
+                        disabled={loading || otpSent || otpVerified || !/^[6-9]\d{9}$/.test(mobile)}
+                      >
+                        {loading && <ActivityIndicator size="small" color="#1a2a39" style={{ marginRight: 6 }} />}
+                        <Text style={{ color: '#1a2a39', fontWeight: 'bold', fontSize: 13 }}>{t('getOtp')}</Text>
+                      </TouchableOpacity>
                     )}
                   </View>
+                  {/* OTP Input and Verify OTP Button */}
+                  {otpSent && !otpVerified && (
+                    <>
+                      <Modal
+                        visible={otpModalVisible}
+                        transparent
+                        animationType="fade"
+                        onRequestClose={() => {}}
+                      >
+                        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' }}>
+                          <View style={{ width: '90%', backgroundColor: '#fff', borderRadius: 16, padding: 24, alignSelf: 'center', elevation: 10 }}>
+                            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12, color: '#1a2a39', textAlign: 'center' }}>{t('enterOtp')}</Text>
+                            <Text style={{ fontSize: 16, color: '#888', textAlign: 'center', marginBottom: 8 }}>{mobile}</Text>
+                            <TextInput
+                              value={otp}
+                              onChangeText={setOtp}
+                              placeholder={t('enterOtp')}
+                              keyboardType="number-pad"
+                              style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12, fontSize: 18, marginBottom: 16, color: '#1a2a39' }}
+                              maxLength={4}
+                            />
+                           
+                            <TouchableOpacity
+                              onPress={handleVerifyOtp}
+                              style={{ backgroundColor: '#ffd700', borderRadius: 8, paddingVertical: 12, alignItems: 'center', marginBottom: 8 }}
+                              disabled={otp.length < 4}
+                            >
+                              <Text style={{ color: '#1a2a39', fontWeight: 'bold', fontSize: 16 }}>{t('verifyOtp')}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              onPress={() => {
+                                setOtpModalVisible(false);
+                                setOtp("");
+                                setOtpSent(false);
+                              }}
+                              style={{ alignItems: 'center', marginTop: 4 }}
+                            >
+                              <Text style={{ color: '#ff4444', fontWeight: 'bold', fontSize: 15 }}>{t('cancel')}</Text>
+                            </TouchableOpacity>
+                            <View style={{ alignItems: 'center', marginTop: 10 }}>
+                              <Text style={{ color: '#888', fontSize: 14 }}>{t('resendOTP')} {timer}s</Text>
+                              <TouchableOpacity
+                                onPress={handleResendOtp}
+                                disabled={timer > 0 || resendCount <= 0}
+                                style={{ marginTop: 8, opacity: timer > 0 || resendCount <= 0 ? 0.5 : 1 }}
+                              >
+                                <Text style={{ color: '#007bff', fontWeight: 'bold', fontSize: 15 }}>{t('resendOTP')}</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        </View>
+                      </Modal>
+                    </>
+                  )}
+                  {/* Name */}
+                  <FloatingLabelInput
+                    label="Name"
+                    value={name}
+                    onChangeText={setName}
+                    style={{ marginBottom: 8 }}
+                  />
+                  {/* Email */}
+                  <FloatingLabelInput
+                    label="Email"
+                    value={email}
+                    onChangeText={text => {
+                      setEmail(text);
+                      if (text.length === 0 || validateEmail(text)) {
+                        setEmailError('');
+                      } else {
+                        setEmailError('Please enter a valid email address');
+                      }
+                    }}
+                    keyboardType="email-address"
+                    style={{ marginBottom: 8 }}
+                  />
+                  {emailError ? (
+                    <Text style={{ color: 'red', marginBottom: 8, marginLeft: 4, fontSize: 13 }}>{emailError}</Text>
+                  ) : null}
+                  {/* Referral Code */}
+                  <FloatingLabelInput
+                    label="Referral Code"
+                    value={referral}
+                    onChangeText={text => {
+                      const filtered = text.replace(/[^a-zA-Z0-9]/g, '').slice(0, 6).toUpperCase();
+                      setReferral(filtered);
+                    }}
+                    maxLength={6}
+                    style={{ marginBottom: 20 }}
+                  />
+                  {/* Submit Button */}
+                  <TouchableOpacity
+                    onPress={handleRegister}
+                    style={[registerStyles.loginButton, { height: 48, borderRadius: 24, marginTop: 0 }]}
+                    disabled={!otpVerified || !name || !email || !!emailError || loading}
+                  >
+                    <LinearGradient
+                      colors={["#ffc90c", "#ffd700"]}
+                      style={[registerStyles.gradientButton, { borderRadius: 24, height: 48 }]}
+                    >
+                      <Text style={[registerStyles.loginButtonText, { fontSize: 18 }]}>{t("submit")}</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
                 </View>
-              </View>
+              </ModernAuthCard>
             </ScrollView>
           </KeyboardAvoidingView>
           <View style={registerStyles.poweredByContainer}>

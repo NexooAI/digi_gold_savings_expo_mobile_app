@@ -34,6 +34,7 @@ import ProductsList from "@/app/components/Products";
 import FlashOffer from "@/app/components/FlashOffer";
 import YouTubeVideo from "@/app/components/YouTubeVideo";
 import SupportContactCard from "@/app/components/SupportContactCard";
+import StaticSchemesHorizontalScroll from "@/app/components/StaticSchemesHorizontalScroll";
 import useGlobalStore from "@/store/global.store";
 import api from "@/services/api";
 import NetInfo from "@react-native-community/netinfo";
@@ -247,7 +248,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
       activeOpacity={0.8}
     >
       <LinearGradient
-        colors={["#850111", "#5a000b"]}
+        colors={["#1a2a39", "#5a000b"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.userInfoGradient}
@@ -300,9 +301,9 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
             end={{ x: 1, y: 0 }}
             style={styles.viewDetailsGradient}
           >
-            <Ionicons name="eye-outline" size={18} color="#850111" />
+            <Ionicons name="eye-outline" size={18} color="#1a2a39" />
             <Text style={styles.viewDetailsText}>{t('viewInvestmentDetails')}</Text>
-            <Ionicons name="chevron-forward" size={18} color="#850111" />
+            <Ionicons name="chevron-forward" size={18} color="#1a2a39" />
           </LinearGradient>
         </View>
       </LinearGradient>
@@ -353,7 +354,7 @@ const AnimatedGoldRate: React.FC<{ goldRate: string; updatedAt?: string }> = ({ 
     <View style={styles.goldRateLabelContainer} accessibilityLabel="Gold Rate Label">
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
         <LinearGradient
-          colors={['#850111', '#2e0406']}
+          colors={['#1a2a39', '#2e0406']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.goldRateLabel}
@@ -531,7 +532,7 @@ export default function Home2() {
         // Set flash news
         if (data.flashNews && data.flashNews.length > 0) {
           console.log(data.flashNews)
-          const flashArray = data.flashNews.map((f) => f.title)
+          const flashArray = data.flashNews.map((f: FlashNews) => f.title)
           setFlashNews(flashArray);
         }
 
@@ -812,7 +813,7 @@ export default function Home2() {
             <View style={styles.ratesContainer}>
               {homeData?.data?.currentRates ? (
                 <>
-                  {/* <View
+                  <View
                     style={[
                       styles.rateCard,
                       !homeData.data.currentRates.silver_rate && styles.singleRateCard,
@@ -829,8 +830,8 @@ export default function Home2() {
                       image={dummyData.rates.gold.image}
                       isSingle={!homeData.data.currentRates.silver_rate}
                     />
-                  </View> */}
-                  {/* {homeData.data.currentRates.silver_rate && (
+                  </View>
+                  {homeData.data.currentRates.silver_rate && (
                     <View style={styles.rateCard}>
                       <LiveRateCard
                         type={translations.silver}
@@ -841,7 +842,7 @@ export default function Home2() {
                         image={dummyData.rates.silver.image}
                       />
                     </View>
-                  )} */}
+                  )}
                 </>
               ) : (
                 <View style={styles.rateWarningContainer}>
@@ -867,12 +868,12 @@ export default function Home2() {
               )}
             </View>
             {/* Gold Rate Widget (inline, below FlashOffer) */}
-            {homeData?.data?.currentRates?.gold_rate && (
+            {/* {homeData?.data?.currentRates?.gold_rate && (
               <AnimatedGoldRate
                 goldRate={homeData.data.currentRates.gold_rate}
                 updatedAt={homeData.data.currentRates.updated_at}
               />
-            )}
+            )} */}
             <View style={styles.statusContainer}>
               <FlatList
                 data={collectionsData}
@@ -912,16 +913,10 @@ export default function Home2() {
                 onPress={() => router.push("/(tabs)/savings")}
               />
 
-              <View style={styles.sectionHeader}>
-                <View style={styles.sectionHeaderContent}>
-                  <View style={styles.sectionHeaderLine} />
-                  <Text style={styles.sectionHeaderText}>{t('activeSchemes')}</Text>
-                  <View style={styles.sectionHeaderLine} />
-                </View>
-                <Text style={styles.sectionHeaderSubtext}>{t('exploreGoldSavingsPlans')}</Text>
-              </View>
+              {/* New Horizontal Schemes Component */}
+              <StaticSchemesHorizontalScroll />
 
-              <View style={styles.bannerContainer}>
+              {/* <View style={styles.bannerContainer}>
                 <FlatList
                   data={banners}
                   renderItem={renderBanner}
@@ -930,9 +925,9 @@ export default function Home2() {
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.bannerListContent}
                 />
-              </View>
+              </View> */}
 
-              <YouTubeVideo />
+              {/* <YouTubeVideo /> */}
 
               <SupportContactCard />
               <View style={styles.spacer} />
@@ -987,7 +982,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   ratesContainer: {
-    marginTop: moderateScale(20),
+    marginTop: moderateScale(40),
     paddingHorizontal: moderateScale(16),
     width: "100%",
     flexDirection: "row",
@@ -1162,7 +1157,7 @@ const styles = StyleSheet.create({
     height: STATUS_IMAGE_SIZE,
     borderRadius: STATUS_BORDER_RADIUS,
     borderWidth: 2,
-    borderColor: "#850111",
+    borderColor: "#1a2a39",
     padding: 2,
     backgroundColor: "#fff",
     marginBottom: 6,
@@ -1182,7 +1177,7 @@ const styles = StyleSheet.create({
   },
   statusItemName: {
     fontSize: 12,
-    color: "#850111",
+    color: "#1a2a39",
     textAlign: "center",
     width: STATUS_IMAGE_SIZE,
     fontWeight: "600",
@@ -1239,7 +1234,7 @@ const styles = StyleSheet.create({
   sectionHeaderText: {
     fontSize: moderateScale(16),
     fontWeight: "700",
-    color: "#850111",
+    color: "#1a2a39",
     textTransform: "uppercase",
     letterSpacing: 0.3,
     textShadowColor: "rgba(0, 0, 0, 0.1)",
@@ -1267,7 +1262,7 @@ const styles = StyleSheet.create({
   videoTitle: {
     fontSize: moderateScale(16),
     fontWeight: "700",
-    color: "#850111",
+    color: "#1a2a39",
     textTransform: "uppercase",
     letterSpacing: 0.3,
     marginRight: 10,
@@ -1376,7 +1371,7 @@ const styles = StyleSheet.create({
   viewDetailsText: {
     fontSize: moderateScale(10),
     fontWeight: "bold",
-    color: "#850111",
+    color: "#1a2a39",
     textAlign: "center",
   },
   goldRateLabelContainer: {

@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
-import theme from "src/constants/theme";
+import { theme } from "@/constants/theme";
 import useGlobalStore from "@/store/global.store";
 import { AppLocale, t } from "@/i18n";
 
@@ -86,7 +86,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ showBackButton = false, backRoute
     let newLocale: AppLocale;
     
     if (currentLang === "en") {
-      newLocale = "mal";
+      newLocale = "ta";
     } else {
       newLocale = "en";
     }
@@ -96,7 +96,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ showBackButton = false, backRoute
 
   const getLanguageDisplayName = () => {
     if (language === "en") {
-      return "മലയാളം"; // Malayalam in Malayalam script
+      return "தமிழ்"; // Tamil in Tamil script
     } else {
       return "English";
     }
@@ -104,7 +104,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ showBackButton = false, backRoute
 
   const getLanguageImage = () => {
     if (language === "en") {
-      return require('../../../assets/images/translate/mal.png'); // Show Malayalam flag to switch to Malayalam
+      return theme.image.translate; // Use translate icon for Tamil
     } else {
       return require('../../../assets/images/translate/eng.png'); // Show English flag to switch to English
     }
@@ -118,7 +118,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ showBackButton = false, backRoute
             <Ionicons
               name="arrow-back-outline"
               size={20}
-              color={theme.theme.colors.white}
+              color={theme.colors.white}
             />
             <Text style={styles.backButtonText}>{t('back')}</Text>
           </TouchableOpacity>
@@ -130,7 +130,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ showBackButton = false, backRoute
         ) : (
           <View style={styles.logoContainer}>
             <Image
-              source={theme.theme.image.transparentLogo}
+              source={theme.image.transparentLogo}
               style={styles.logo}
               resizeMode="contain"
             />
@@ -196,7 +196,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ showBackButton = false, backRoute
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: theme.theme.colors.primary,
+    backgroundColor: theme.colors.primary,
     position: "absolute",
     top: 0,
     left: 0,
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   titleText: {
-    color: theme.theme.colors.white,
+    color: theme.colors.white,
     fontSize: 20,
     fontWeight: 'bold',
   },
@@ -235,16 +235,16 @@ const styles = StyleSheet.create({
   languageButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    backgroundColor: "rgba(0, 0, 0, 0.85)",
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
+    borderColor: "rgba(255, 255, 255, 0.6)",
     marginRight: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.4,
     shadowRadius: 3,
     elevation: 4,
   },
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 14, // Smaller text for better UX
-    color: theme.theme.colors.white,
+    color: theme.colors.white,
     marginLeft: 5,
   },
   flipCardWrapper: {

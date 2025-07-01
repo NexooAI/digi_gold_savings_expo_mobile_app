@@ -53,6 +53,22 @@ interface Branch {
   branch_name: string;
 }
 
+// Dummy branch data for fallback
+const dummyBranches: Branch[] = [
+  {
+    id: 1,
+    branch_name: "Akila Jewellers - Main Branch",
+  },
+  {
+    id: 2,
+    branch_name: "Akila Jewellers - Udangudi",
+  },
+  {
+    id: 3,
+    branch_name: "Akila Jewellers - Thoothukudi",
+  },
+];
+
 export default function JoinSavings() {
   const { schemeId } = useLocalSearchParams();
   const router = useRouter();
@@ -275,13 +291,22 @@ export default function JoinSavings() {
       try {
         const branches = await api.get(`/branches`);
         //console.log("branches", branches.data.data);
-        setBranch(branches.data.data);
-        // Auto-select if only one branch
-        if (branches.data.data.length === 1) {
-          handleChange("associated_branch", String(branches.data.data[0].id));
+        if (branches.data.data && branches.data.data.length > 0) {
+          setBranch(branches.data.data);
+          // Auto-select if only one branch
+          if (branches.data.data.length === 1) {
+            handleChange("associated_branch", String(branches.data.data[0].id));
+          }
+        } else {
+          console.warn("No branches found in API response, using dummy data");
+          setBranch(dummyBranches);
         }
       } catch (error) {
         console.error("Error fetching branches:", error);
+        console.log("Using dummy branch data as fallback");
+        setBranch(dummyBranches);
+        // Auto-select first dummy branch
+        handleChange("associated_branch", String(dummyBranches[0].id));
       }
     };
     fetchBranche();
@@ -2300,3 +2325,4 @@ const styles = StyleSheet.create({
     color: '#333',
   },
 });
+ 

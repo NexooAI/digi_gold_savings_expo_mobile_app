@@ -2,7 +2,7 @@
 
 const theme = {
   colors: {
-    primary: process.env.APP_COLOR || "#850111", //850111
+    primary: process.env.APP_COLOR || "#1a2a39", //850111
     secondary: "#ffc90c", //
     background: "#ffffff",
     textPrimary: "#ffffff",
@@ -21,7 +21,7 @@ const theme = {
     lightGrey: "#f0f0f0",
     darkGrey: "#808080",
     lightBlack: "#000000",
-    support_container: ["#721c0b", "#c42101", "#fc320a"],
+    support_container: ["#1a4a6d", "#2a5a8d", "#3a6aad"],
   },
   image: {
     splashScreen: require("../../assets/images/splashscreen_logo.png"),
@@ -49,14 +49,16 @@ const theme = {
     translate: require("../../assets/images/translate/mal.png"),
   },
   constants: {
-    customerName: "DC Jewellers",
+    customerName: "Akila Jewellers",
     address:
       "Road Fathima Nagar, Mission Quarters, Anchery, Thrissur, Kerala 680005",
-    mobile: "+91 9061803999",
-    email: "dcjewellerstcr@gmail.com",
-    website: "https://www.dcjewellers.org",
+    mobile: "+91 6384226384",
+    whatsapp: "+91 6384226384",
+    email: "akilajewellwes66@gmail.com",
+    website: "https://akilajewellers.com/",
   },
-  baseUrl: "https://api.dcjewellers.org",
+  baseUrl:"http://api.akila.ramcarmotor.com",
+  // baseUrl: "https://api.dcjewellers.org",
   // baseUrl: "https://nexooai.ramcarmotor.com",
   youtubeUrl: "https://youtu.be/8RAhdn5b9Bw",
 };

@@ -144,7 +144,7 @@ export default function KnowProduct() {
                 onPress={() => router.back()}
                 className="absolute top-6 left-4 p-2 bg-white rounded-full z-10"
               >
-                <Ionicons name="arrow-back" size={24} color="#850111" />
+                <Ionicons name="arrow-back" size={24} color="#1a2a39" />
               </TouchableOpacity> */}
 
               <View className="bg-white/80 p-4 rounded-xl">
@@ -201,7 +201,7 @@ export default function KnowProduct() {
               <View className="bg-gray-50 rounded-xl p-4">
                 {translations.steps.map((step, index) => (
                   <View key={index} className="flex-row items-center mb-4">
-                    <View className="w-8 h-8 bg-[#850111] rounded-full items-center justify-center">
+                    <View className="w-8 h-8 bg-[#1a2a39] rounded-full items-center justify-center">
                       <Text className="text-white font-bold">{index + 1}</Text>
                     </View>
                     <View className="ml-4">
@@ -243,7 +243,7 @@ export default function KnowProduct() {
                 <View className="p-6">
                   <TouchableOpacity
                     onPress={() => router.back()}
-                    className="bg-[#850111] p-4 rounded-xl"
+                    className="bg-[#1a2a39] p-4 rounded-xl"
                   >
                     <Text className="text-white text-center font-bold text-lg">
                       Back to Schemes

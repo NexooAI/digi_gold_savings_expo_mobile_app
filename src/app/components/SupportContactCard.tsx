@@ -37,7 +37,7 @@ interface ContactOptionProps {
 const FloatingElement: React.FC<FloatingElementProps> = ({ 
   delay = 0, 
   size = 20, 
-  color = "rgba(255,215,0,0.3)" 
+  color = "rgba(255,201,12,0.3)" 
 }) => {
   const floatAnim = useRef(new Animated.Value(0)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
@@ -193,7 +193,7 @@ const ContactOption: React.FC<ContactOptionProps> = ({
             ]}
           >
             <LinearGradient
-              colors={['#FFD700', 'transparent']}
+              colors={['#FFC90C', 'transparent']}
               style={styles.iconGlow}
             />
           </Animated.View>
@@ -251,19 +251,19 @@ const SupportContactCard = () => {
   }, []);
 
   const handleCall = () => {
-    Linking.openURL(`tel:+919061803999`).catch((err) =>
+    Linking.openURL(`tel:${theme.constants.mobile}`).catch((err) =>
       Alert.alert(t("error"), t("couldNotOpenDialer"))
     );
   };
 
   const handleEmail = () => {
-    Linking.openURL("mailto:dcjewellerstcr@gmail.com").catch((err) =>
+    Linking.openURL(`mailto:${theme.constants.email}`).catch((err) =>
       Alert.alert(t("error"), t("couldNotOpenEmail"))
     );
   };
 
   const handleWhatsApp = () => {
-    Linking.openURL("https://wa.me/919061803999").catch((err) =>
+    Linking.openURL(`https://wa.me/${theme.constants.whatsapp.replace('+', '')}`).catch((err) =>
       Alert.alert(t("error"), t("couldNotOpenWhatsApp"))
     );
   };
@@ -288,14 +288,14 @@ const SupportContactCard = () => {
     >
       {/* Floating Background Elements */}
       <View style={styles.floatingElementsContainer}>
-        <FloatingElement delay={0} size={15} color="rgba(255,215,0,0.2)" />
-        <FloatingElement delay={1000} size={12} color="rgba(255,107,107,0.2)" />
-        <FloatingElement delay={2000} size={18} color="rgba(133,1,17,0.3)" />
+        <FloatingElement delay={0} size={15} color="rgba(255,201,12,0.2)" />
+        <FloatingElement delay={1000} size={12} color="rgba(26,42,57,0.3)" />
+        <FloatingElement delay={2000} size={18} color="rgba(255,201,12,0.2)" />
         <FloatingElement delay={3000} size={10} color="rgba(255,255,255,0.2)" />
       </View>
 
       <LinearGradient
-        colors={['#850111', '#5a000b', '#2e0406']}
+        colors={[theme.colors.primary, '#2a3a49', '#1a2a39']}
         style={styles.mainGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -313,10 +313,10 @@ const SupportContactCard = () => {
           
           <View style={styles.headerContent}>
             <LinearGradient
-              colors={['#FFD700', '#FFC90C']}
+              colors={[theme.colors.secondary, '#FFD700']}
               style={styles.mainIconContainer}
             >
-              <MaterialIcons name="support-agent" size={28} color="#850111" />
+              <MaterialIcons name="support-agent" size={28} color={theme.colors.primary} />
             </LinearGradient>
             
             <View style={styles.headerTextContainer}>
@@ -331,7 +331,7 @@ const SupportContactCard = () => {
               <Ionicons 
                 name={showSocialOptions ? "chevron-up" : "chevron-down"} 
                 size={20} 
-                color="#FFD700" 
+                color={theme.colors.secondary} 
               />
             </TouchableOpacity>
           </View>
@@ -340,7 +340,7 @@ const SupportContactCard = () => {
         {/* Decorative Separator */}
         <View style={styles.decorativeSeparator}>
           <LinearGradient
-            colors={['transparent', '#FFD700', 'transparent']}
+            colors={['transparent', theme.colors.secondary, 'transparent']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.separatorLine}
@@ -356,19 +356,19 @@ const SupportContactCard = () => {
         <View style={styles.contactOptionsContainer}>
           <ContactOption
             icon="call"
-            title="+91 9061803999"
+            title={theme.constants.mobile}
             subtitle={t("instantPhoneSupport")}
             onPress={handleCall}
-            gradient={['#4CAF50', '#45A049']}
+            gradient={['#1a2a39', '#2a3a49', '#1a2a39']}
             delay={200}
           />
           
           <ContactOption
             icon="mail"
-            title="dcjewellerstcr@gmail.com"
+            title={theme.constants.email}
             subtitle={t("emailUsAnytime")}
             onPress={handleEmail}
-            gradient={['#2196F3', '#1976D2']}
+            gradient={['#1a2a39', '#2a3a49', '#1a2a39']}
             delay={400}
           />
         </View>
@@ -381,7 +381,7 @@ const SupportContactCard = () => {
               title={t("whatsAppSupport")}
               subtitle={t("chatWithUsInstantly")}
               onPress={handleWhatsApp}
-              gradient={['#25D366', '#20BA5A']}
+              gradient={['#1a2a39', '#2a3a49', '#1a2a39']}
               delay={100}
             />
             
@@ -390,7 +390,7 @@ const SupportContactCard = () => {
               title={t("liveChat")}
               subtitle={t("realtimeAssistance")}
               onPress={handleLiveChat}
-              gradient={['#FF6B6B', '#FF5252']}
+              gradient={['#1a2a39', '#2a3a49', '#1a2a39']}
               delay={200}
             />
           </Animated.View>
@@ -426,13 +426,13 @@ const styles = StyleSheet.create({
   mainGradient: {
     borderRadius: moderateScale(20),
     padding: moderateScale(20),
-    shadowColor: "#850111",
+    shadowColor: theme.colors.primary,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 15,
     borderWidth: 1,
-    borderColor: 'rgba(255,215,0,0.2)',
+    borderColor: `rgba(255,201,12,0.2)`,
     overflow: 'hidden',
     position: 'relative',
     zIndex: 2,
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
     left: -moderateScale(10),
     right: -moderateScale(10),
     bottom: -moderateScale(10),
-    backgroundColor: 'rgba(255,215,0,0.1)',
+    backgroundColor: `rgba(255,201,12,0.1)`,
     borderRadius: moderateScale(25),
     zIndex: -1,
   },
@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: moderateScale(12),
-    shadowColor: "#FFD700",
+    shadowColor: theme.colors.secondary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
@@ -486,7 +486,7 @@ const styles = StyleSheet.create({
     width: moderateScale(32),
     height: moderateScale(32),
     borderRadius: moderateScale(16),
-    backgroundColor: "rgba(255,215,0,0.2)",
+    backgroundColor: `rgba(255,201,12,0.2)`,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
     width: moderateScale(4),
     height: moderateScale(4),
     borderRadius: moderateScale(2),
-    backgroundColor: '#FFD700',
+    backgroundColor: theme.colors.secondary,
   },
   contactOptionsContainer: {
     gap: moderateScale(8),
@@ -584,7 +584,7 @@ const styles = StyleSheet.create({
   availabilityBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(76,175,80,0.2)',
+    backgroundColor: `rgba(255,201,12,0.2)`,
     paddingHorizontal: moderateScale(8),
     paddingVertical: moderateScale(4),
     borderRadius: moderateScale(12),
@@ -593,11 +593,11 @@ const styles = StyleSheet.create({
     width: moderateScale(6),
     height: moderateScale(6),
     borderRadius: moderateScale(3),
-    backgroundColor: '#4CAF50',
+    backgroundColor: theme.colors.secondary,
     marginRight: moderateScale(6),
   },
   availabilityText: {
-    color: '#4CAF50',
+    color: theme.colors.secondary,
     fontSize: moderateScale(10),
     fontWeight: '600',
   },

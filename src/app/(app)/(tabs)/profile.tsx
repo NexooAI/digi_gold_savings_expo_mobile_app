@@ -24,7 +24,7 @@ import Icon from "@expo/vector-icons/MaterialIcons";
 import * as ImagePicker from "expo-image-picker";
 import AppHeader from "@/app/components/AppHeader";
 import useGlobalStore from "@/store/global.store";
-import { t } from "@/i18n";
+import { t, AppLocale } from "@/i18n";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { theme } from "@/constants/theme";
@@ -151,7 +151,17 @@ const ProfileScreen = () => {
   };
 
   const toggleLanguage = async () => {
-    const newLang = language === "en" ? "mal" : "en";
+    let newLang: AppLocale;
+    switch (language) {
+      case 'en':
+        newLang = 'ta';
+        break;
+      case 'ta':
+        newLang = 'en';
+        break;
+      default:
+        newLang = 'en';
+    }
     await setLanguage(newLang);
   };
 
@@ -164,12 +174,12 @@ const ProfileScreen = () => {
     try {
       const playStoreLink =
         "https://play.google.com/store/apps/details?id=com.nexooai.dcjewellery&hl=en-US";
-      const message = `Join me on DC Jewellers Gold and Diamonds! Download the app from: ${playStoreLink}`;
+      const message = `Join me on Akila Jewellers Gold and Diamonds! Download the app from: ${playStoreLink}`;
 
       const result = await Share.share({
         message: message,
         url: playStoreLink, // iOS
-        title: "DC Jewellers Gold and Diamonds", // Android
+        title: "Akila Jewellers Gold and Diamonds", // Android
       });
 
       if (result.action === Share.sharedAction) {
@@ -212,9 +222,9 @@ const ProfileScreen = () => {
       <View style={styles.backgroundImage}>
         <LinearGradient
           colors={[
-            theme.colors.primary + "E6",
-            theme.colors.support_container[1] + "E6",
-            theme.colors.support_container[2] + "E6",
+            theme.colors.primary,
+            theme.colors.primary,
+            theme.colors.primary,
           ]}
           style={StyleSheet.absoluteFill}
         />
@@ -589,7 +599,7 @@ const ProfileScreen = () => {
                 </View>
                 <Text style={styles.settingText}>{t("language")}</Text>
                 <Text style={styles.settingValue}>
-                  {language === "en" ? t('english') : t('malayalam')}
+                  {language === "en" ? t('english') : t('tamil')}
                 </Text>
                 <Icon name="chevron-right" size={24} color="#9E9E9E" />
               </TouchableOpacity>

@@ -4,16 +4,17 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { Image, TouchableOpacity, StyleSheet, Text, View } from "react-native";
 import { AppLocale } from "@/i18n";
 import { theme } from "@/constants/theme";
+
 const LanguageSwitcher = () => {
   const { setLanguage, language } = useGlobalStore();
   const { locale, setLocale } = useLanguage();
   
-  // Function to cycle through languages (en -> mal -> en)
+  // Function to cycle through languages (en -> ta -> en)
   const handleLanguageChange = async (currentLang: AppLocale) => {
     let newLocale: AppLocale;
     
     if (currentLang === "en") {
-      newLocale = "mal";
+      newLocale = "ta";
     } else {
       newLocale = "en";
     }
@@ -25,7 +26,7 @@ const LanguageSwitcher = () => {
   // Display language label based on current language
   const getNextLanguageLabel = () => {
     if (language === "en") {
-      return "മലയാളം"; // Malayalam in Malayalam script
+      return "தமிழ்"; // Tamil in Tamil script
     } else {
       return "English";
     }
@@ -56,15 +57,15 @@ const styles = StyleSheet.create({
     zIndex: 1,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    backgroundColor: "rgba(0, 0, 0, 0.85)",
     borderRadius: 24,
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#ffffff50",
+    borderColor: "#ffffff60",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.4,
     shadowRadius: 3,
     elevation: 4,
   },

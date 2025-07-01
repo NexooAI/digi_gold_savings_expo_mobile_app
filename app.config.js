@@ -13,23 +13,23 @@ export default {
     splash: {
       image: theme.splashLogo,
       resizeMode: "contain",
-      backgroundColor: "#850111",
+      backgroundColor: "#1a2a39",
     },
 
     androidStatusBar: {
-      backgroundColor: "#850111",
+      backgroundColor: "#1a2a39",
       translucent: false,
     },
 
     android: {
       adaptiveIcon: {
         foregroundImage: theme.adaptiveIcon,
-        backgroundColor: "#850111",
+        backgroundColor: "#1a2a39",
       },
       splash: {
         image: theme.adaptiveIcon,
         resizeMode: "contain",
-        backgroundColor: "#850111",
+        backgroundColor: "#1a2a39",
         mdpi: theme.adaptiveIcon,
         hdpi: theme.adaptiveIcon,
         xhdpi: theme.adaptiveIcon,
@@ -67,7 +67,7 @@ export default {
         "expo-notifications",
         {
           icon: "./assets/images/icon.png",
-          color: "#850111",
+          color: "#1a2a39",
           sounds: ["./assets/sound/notification.wav"]
         }
       ],

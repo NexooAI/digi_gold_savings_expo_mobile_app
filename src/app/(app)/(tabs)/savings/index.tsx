@@ -550,7 +550,7 @@ export default function SavingsScreen() {
               </View>
               <View style={styles.accountValuesRow}>
                 <Text style={styles.accountValue}>{item.accountHolder?.toUpperCase()}</Text>
-                <Text style={styles.accountValue}>DCJ-{item.accNo}</Text>
+                <Text style={styles.accountValue}>AKJ-{item.accNo}</Text>
               </View>
             </View>
 
@@ -561,7 +561,7 @@ export default function SavingsScreen() {
                 onPress={() => handleNavigation(item)}
               >
                 <LinearGradient
-                  colors={["#850111", "#B8860B", "#DAA520"]}
+                  colors={["#1a2a39", "#B8860B", "#DAA520"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.detailsButtonGradient}
@@ -718,7 +718,7 @@ export default function SavingsScreen() {
                   <View style={styles.monthsInfo}>
                     <View style={styles.monthItem}>
                       <View
-                        style={[styles.monthDot, { backgroundColor: "#850111" }]}
+                        style={[styles.monthDot, { backgroundColor: "#1a2a39" }]}
                       />
                       <Text style={styles.monthLabel}>Paid</Text>
                       <Text style={styles.monthValue}>{item.monthsPaid}</Text>
@@ -734,7 +734,7 @@ export default function SavingsScreen() {
                     </View>
                     <View style={styles.monthItem}>
                       <View
-                        style={[styles.monthDot, { backgroundColor: "#850111" }]}
+                        style={[styles.monthDot, { backgroundColor: "#1a2a39" }]}
                       />
                       <Text style={styles.monthLabel}>Total</Text>
                       <Text style={styles.monthValue}>{item.noOfIns}</Text>
@@ -1426,7 +1426,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#850111",
+    backgroundColor: "#1a2a39",
     borderRadius: 4,
   },
   monthsInfo: {
@@ -1464,7 +1464,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
     elevation: 6,
-    shadowColor: "#850111",
+    shadowColor: "#1a2a39",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 6,

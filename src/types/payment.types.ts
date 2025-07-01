@@ -182,5 +182,20 @@ export interface PaymentSocket extends Socket<DefaultEventsMap, DefaultEventsMap
   emit(event: 'payment_completed', data: any): this;
   emit(event: 'payment_failed', data: any): this;
   emit(event: 'payment_error', data: any): boolean;
+  emit(event: 'store_payment_metadata', data: PaymentMetadata): this;
+  emit(event: 'joinOrderRoom', orderId: string): this;
   on(event: 'payment_status_update' | `payment_status_update_${string}`, listener: (data: PaymentStatusUpdate) => void): this;
+}
+
+export interface PaymentMetadata {
+  orderId?: string;
+  investmentId?: number;
+  userId?: number;
+  schemeId?: number;
+  chitId?: number;
+  amount?: number;
+  isManual: string;
+  utr_reference_number: string;
+  accountNumber?: string;
+  accountName?: string;
 } 

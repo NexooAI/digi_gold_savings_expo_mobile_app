@@ -98,7 +98,7 @@ export default function PrivacyPolicy() {
       <SafeAreaView style={styles.loadingContainer}>
         <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
         <LinearGradient
-          colors={["#850111", "#5a000b"]}
+          colors={["#1a2a39", "#5a000b"]}
           style={styles.loadingGradient}
         >
           <ActivityIndicator size="large" color="#FFD700" />
@@ -113,7 +113,7 @@ export default function PrivacyPolicy() {
       <SafeAreaView style={styles.errorContainer}>
         <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
         <LinearGradient
-          colors={["#850111", "#5a000b"]}
+          colors={["#1a2a39", "#5a000b"]}
           style={styles.errorGradient}
         >
           <Ionicons name="alert-circle-outline" size={60} color="#FFD700" />
@@ -150,7 +150,7 @@ export default function PrivacyPolicy() {
 
           {/* Hero Section */}
           <LinearGradient
-            colors={["#850111", "#5a000b"]}
+            colors={["#1a2a39", "#5a000b"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.heroSection}
@@ -184,7 +184,7 @@ export default function PrivacyPolicy() {
                 style={styles.cardGradient}
               >
                 <View style={styles.contentHeader}>
-                  <Ionicons name="lock-closed" size={24} color="#850111" />
+                  <Ionicons name="lock-closed" size={24} color="#1a2a39" />
                   <Text style={styles.contentHeaderText}>
                     Your Privacy Matters
                   </Text>
@@ -200,7 +200,7 @@ export default function PrivacyPolicy() {
                     <Ionicons
                       name="documents-outline"
                       size={20}
-                      color="#850111"
+                      color="#1a2a39"
                     />
                     <Text style={styles.sectionTitle}>Data Collection</Text>
                   </View>
@@ -217,7 +217,7 @@ export default function PrivacyPolicy() {
                     <Ionicons
                       name="shield-checkmark-outline"
                       size={20}
-                      color="#850111"
+                      color="#1a2a39"
                     />
                     <Text style={styles.sectionTitle}>Data Security</Text>
                   </View>
@@ -250,7 +250,7 @@ export default function PrivacyPolicy() {
                     <Ionicons
                       name="analytics-outline"
                       size={20}
-                      color="#850111"
+                      color="#1a2a39"
                     />
                     <Text style={styles.sectionTitle}>
                       How We Use Your Data
@@ -266,7 +266,7 @@ export default function PrivacyPolicy() {
                 {/* Rights Section */}
                 <View style={styles.sectionContainer}>
                   <View style={styles.sectionHeader}>
-                    <Ionicons name="person-outline" size={20} color="#850111" />
+                    <Ionicons name="person-outline" size={20} color="#1a2a39" />
                     <Text style={styles.sectionTitle}>Your Rights</Text>
                   </View>
                   <Text style={styles.sectionText}>
@@ -278,7 +278,7 @@ export default function PrivacyPolicy() {
 
                 <View style={styles.contactSection}>
                   <LinearGradient
-                    colors={["#850111", "#5a000b"]}
+                    colors={["#1a2a39", "#5a000b"]}
                     style={styles.contactGradient}
                   >
                     <Ionicons
@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
   contentHeaderText: {
     fontSize: moderateScale(20),
     fontWeight: "600",
-    color: "#850111",
+    color: "#1a2a39",
     marginLeft: 12,
   },
   contentText: {
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(133, 1, 17, 0.05)",
     borderRadius: 12,
     borderLeftWidth: 4,
-    borderLeftColor: "#850111",
+    borderLeftColor: "#1a2a39",
   },
   sectionHeader: {
     flexDirection: "row",
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: moderateScale(16),
     fontWeight: "600",
-    color: "#850111",
+    color: "#1a2a39",
     marginLeft: 8,
   },
   sectionText: {
@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
   midTitle: {
     fontSize: moderateScale(20),
     fontWeight: "600",
-    color: "#850111",
+    color: "#1a2a39",
     textAlign: "center",
   },
   contactSection: {
@@ -495,6 +495,6 @@ const styles = StyleSheet.create({
   retryButtonText: {
     fontSize: moderateScale(16),
     fontWeight: "600",
-    color: "#850111",
+    color: "#1a2a39",
   },
 });

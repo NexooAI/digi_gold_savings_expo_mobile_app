@@ -163,13 +163,13 @@ export default function PaymentNewOverView() {
         const orderId = response?.session?.order_id;
 
         router.push({
-          pathname: "/(tabs)/home/paymentWebView",
+          pathname: "/(tabs)/home/PaymentWebView",
           params: {
             url: response.session.payment_links.web,
             orderId: orderId, // Add orderId to params
             userDetails: JSON.stringify({
               ...userDetails,
-              // amount: currentAmount,
+              amount: currentAmount, // Include the current amount
               orderId: orderId, // Include orderId in userDetails
               // investmentId: params.investmentId,
               // schemeId: params.schemeId,
@@ -229,7 +229,7 @@ export default function PaymentNewOverView() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -246,10 +246,11 @@ export default function PaymentNewOverView() {
 
       <ScrollView
         style={styles.content}
-        contentContainerStyle={[
-          styles.contentContainer,
-          { paddingBottom: 100 }, // Add extra padding at bottom for button
-        ]}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={true}
+        bounces={true}
+        alwaysBounceVertical={true}
+        keyboardShouldPersistTaps="handled"
       >
         {/* Amount Card */}
         {isFlexi ? (
@@ -493,9 +494,11 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    backgroundColor: "#fff",
   },
   contentContainer: {
     padding: 16,
+    paddingBottom: 200, // Much more padding to ensure content is above footer
     gap: 16,
   },
   amountCard: {
@@ -609,11 +612,11 @@ const styles = StyleSheet.create({
   },
   footer: {
     position: "absolute",
-    bottom: 40,
+    bottom: 0,
     left: 0,
     right: 0,
     padding: 16,
-    paddingBottom: 32, // Extra padding for tab bar
+    paddingBottom: 100, // Increased padding to ensure it's above bottom tab
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: "#e5e5e5",

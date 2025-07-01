@@ -157,13 +157,13 @@ export default function ContactUs() {
                   marginBottom: 12,
                 }}
               >
-                <Ionicons name="call" size={24} color="#850111" />
+                <Ionicons name="call" size={24} color="#1a2a39" />
                 <Text
                   style={{
                     fontSize: 18,
                     fontWeight: "600",
                     marginLeft: 12,
-                    color: "#850111",
+                    color: "#1a2a39",
                   }}
                 >
                   Phone
@@ -288,7 +288,7 @@ export default function ContactUs() {
                   shadowRadius: 6,
                 }}
               >
-                <Ionicons name="arrow-back" size={24} color="#850111" />
+                <Ionicons name="arrow-back" size={24} color="#1a2a39" />
               </TouchableOpacity> */}
               <Text
                 style={{
@@ -301,7 +301,7 @@ export default function ContactUs() {
                   fontFamily: "serif",
                 }}
               >
-                DC Jewellers
+                Akila Jewellers
               </Text>
               <Text
                 style={{

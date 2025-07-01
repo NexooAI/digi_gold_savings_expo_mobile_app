@@ -176,7 +176,7 @@ export default function AboutUs() {
                   letterSpacing: 0.4,
                 }}
               >
-                DC Jewellers blends centuries-old craftsmanship with
+                Akila Jewellers blends centuries-old craftsmanship with
                 contemporary design. Our master artisans pour passion into every
                 piece, creating heirlooms that transcend generations.
               </Text>
@@ -383,7 +383,7 @@ export default function AboutUs() {
                   fontFamily: "serif",
                 }}
               >
-                DC Jewellers 
+                Akila Jewellers 
               </Text>
               <Text
                 style={{

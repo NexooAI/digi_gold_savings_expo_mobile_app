@@ -114,7 +114,7 @@ const FlashNews: React.FC<FlashNewsProps> = ({ onNewsPress }) => {
       setNewsData([
         {
           id: 1,
-          title: "Welcome to DC Jewellers",
+          title: "Welcome to Akila Jewellers",
           content:
             "Discover our premium gold investment schemes and start your journey towards financial security.",
           created_at: new Date().toISOString(),
@@ -149,7 +149,7 @@ const FlashNews: React.FC<FlashNewsProps> = ({ onNewsPress }) => {
       activeOpacity={0.8}
     >
       <LinearGradient
-        colors={["#850111", "#5a000b"]}
+        colors={["#1a2a39", "#5a000b"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.newsGradient}
@@ -180,7 +180,7 @@ const FlashNews: React.FC<FlashNewsProps> = ({ onNewsPress }) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#850111" />
+        <ActivityIndicator size="large" color="#1a2a39" />
         <Text style={styles.loadingText}>Loading Flash News...</Text>
       </View>
     );
@@ -193,7 +193,7 @@ const FlashNews: React.FC<FlashNewsProps> = ({ onNewsPress }) => {
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
-        <Ionicons name="flash" size={24} color="#850111" />
+        <Ionicons name="flash" size={24} color="#1a2a39" />
         <Text style={styles.sectionTitle}>Flash News</Text>
         <View style={styles.newsIndicator}>
           <Text style={styles.indicatorText}>
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: moderateScale(18),
     fontWeight: "bold",
-    color: "#850111",
+    color: "#1a2a39",
     marginLeft: moderateScale(8),
     flex: 1,
   },
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
   },
   indicatorText: {
     fontSize: moderateScale(12),
-    color: "#850111",
+    color: "#1a2a39",
     fontWeight: "600",
   },
   newsList: {
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: moderateScale(8),
     fontSize: moderateScale(14),
-    color: "#850111",
+    color: "#1a2a39",
     fontWeight: "500",
   },
 });
