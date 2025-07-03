@@ -71,6 +71,8 @@ const PhoneInput: React.FC<PhoneInputProps> = ({ value, onChangeText, loading })
           textContentType="telephoneNumber"
           autoComplete="tel"
           returnKeyType="done"
+          blurOnSubmit={true}
+          enablesReturnKeyAutomatically={true}
         />
       </View>
 
@@ -90,10 +92,13 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#FFD700",
+    fontWeight: "700",
+    color: "#ffd700",
     marginBottom: 8,
     paddingLeft: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   inputContainer: {
     flexDirection: "row",
@@ -101,8 +106,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     borderRadius: 12,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(0, 0, 0, 0.1)",
+    borderWidth: 2,
+    borderColor: "#2a4a7a",
     height: 50,
     shadowColor: "#000",
     shadowOffset: {
@@ -110,7 +115,7 @@ const styles = StyleSheet.create({
       height: 2,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowRadius: 4,
     elevation: 3,
   },
   errorContainer: {
@@ -119,20 +124,20 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   countryCodeBox: {
-    backgroundColor: "rgba(255, 215, 0, 0.1)",
+    backgroundColor: "#ffd700",
     paddingHorizontal: 16,
     paddingVertical: 0,
-    borderRightWidth: 1,
-    borderRightColor: "rgba(0, 0, 0, 0.1)",
+    borderRightWidth: 2,
+    borderRightColor: "#2a4a7a",
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
     minWidth: 50,
   },
   countryCodeText: {
-    color: "#000000",
+    color: "#1a2a39",
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   input: {
     flex: 1,
@@ -157,10 +162,10 @@ const styles = StyleSheet.create({
   counterText: {
     textAlign: "right",
     paddingRight: 4,
-    color: "rgba(255, 255, 255, 0.7)",
+    color: "#b8c5d6",
     fontSize: 12,
     marginTop: 4,
-    fontWeight: "500",
+    fontWeight: "600",
   },
   errorText: {
     color: "#ff4444",

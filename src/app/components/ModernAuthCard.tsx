@@ -34,20 +34,20 @@ export default ModernAuthCard;
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff8e1',
+    backgroundColor: '#0f1a2a',
     borderRadius: 24,
     padding: 24,
     width: '100%',
     maxWidth: 370,
     alignSelf: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.10,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 12,
     marginTop: 40,
-    borderColor: '#ffe082',
-    borderWidth: 1,
+    borderColor: '#1e3a5f',
+    borderWidth: 2,
   },
   tabRow: {
     flexDirection: 'row',
@@ -62,15 +62,16 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 18,
-    color: '#1a2a39',
+    color: '#a0b4cc',
     fontWeight: '600',
   },
   tabTextActive: {
-    color: theme.colors.secondary,
+    color: '#ffd700',
+    fontWeight: '700',
   },
   tabUnderline: {
     height: 3,
-    backgroundColor: theme.colors.secondary,
+    backgroundColor: '#ffd700',
     borderRadius: 2,
     marginTop: 4,
     width: 40,
@@ -79,7 +80,7 @@ const styles = StyleSheet.create({
   tabDivider: {
     width: 1,
     height: 24,
-    backgroundColor: '#eee',
+    backgroundColor: '#2a4a7a',
     marginHorizontal: 8,
   },
   content: {

@@ -203,7 +203,7 @@ export default function PaymentNewOverView() {
               onPress={() => setShowTermsModal(false)}
               style={styles.closeButton}
             >
-              <Ionicons name="close" size={24} color={theme.colors.primary} />
+              <Ionicons name="close" size={24} color={theme.colors.primary} style={{ alignSelf: "center" }} />
             </TouchableOpacity>
           </View>
           <ScrollView style={styles.modalBody}>
@@ -220,7 +220,7 @@ export default function PaymentNewOverView() {
                 setShowTermsModal(false);
               }}
             >
-              <Text style={styles.acceptButtonText}>{t("accept")}</Text>
+              <Text style={styles.acceptButtonText}>{t("iAccept")}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -701,7 +701,9 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
   },
   closeButton: {
-    padding: 4,
+    padding: 8,
+    alignItems: "center",
+    justifyContent: "center",
   },
   modalBody: {
     padding: 16,

@@ -25,6 +25,8 @@ import RNPickerSelect from "react-native-picker-select";
 import api from "@/services/api";
 import { theme } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
+import { t } from "@/i18n";
+import LanguageSwitcher from "@/contexts/LanguageSwitcher";
 
 const indianStates = [
   "Andhra Pradesh",
@@ -244,7 +246,7 @@ export default function KycForm() {
             pointerEvents="none"
             editable={false}
             value={formatDate(selectedDate)}
-            placeholder="DD/MM/YYYY"
+            placeholder={t("kyc_placeholder_dob")}
           />
           <Ionicons
             name="calendar"
@@ -303,21 +305,32 @@ export default function KycForm() {
     Object.keys(formData).forEach((field) => {
       const value = formData[field as keyof FormData];
       if (typeof value === "string" && !value.trim()) {
-        newErrors[field] = "This field is required";
+        newErrors[field] = t("kyc_error_required");
       }
     });
 
     // Validate Date of Birth (DD/MM/YYYY)
-    if (
-      formData.dob &&
-      !/^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/.test(formData.dob)
-    ) {
-      newErrors.dob = "Date of Birth must be in DD/MM/YYYY format";
+    if (formData.dob) {
+      if (!/^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/.test(formData.dob)) {
+        newErrors.dob = t("kyc_error_dob_format");
+      } else {
+        // Check if age is at least 18
+        const [day, month, year] = formData.dob.split("/").map(Number);
+        const dobDate = new Date(year, month - 1, day);
+        const today = new Date();
+        const age = today.getFullYear() - dobDate.getFullYear();
+        const m = today.getMonth() - dobDate.getMonth();
+        const d = today.getDate() - dobDate.getDate();
+        let is18 = age > 18 || (age === 18 && (m > 0 || (m === 0 && d >= 0)));
+        if (!is18) {
+          newErrors.dob = t("kyc_error_age_min_18");
+        }
+      }
     }
 
     // Validate Pincode (must be 6 digits)
     if (formData.pincode && !/^\d{6}$/.test(formData.pincode)) {
-      newErrors.pincode = "Pincode must be 6 digits";
+      newErrors.pincode = t("kyc_error_pincode");
     }
 
     // Validate ID Number based on Address Proof Type
@@ -326,13 +339,12 @@ export default function KycForm() {
         formData.addressprooftype === "aadhar" &&
         !/^\d{12}$/.test(formData.idNumber)
       ) {
-        newErrors.idNumber = "Aadhar number must be 12 digits";
+        newErrors.idNumber = t("kyc_error_aadhar");
       } else if (
         formData.addressprooftype === "pan" &&
         !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(formData.idNumber)
       ) {
-        newErrors.idNumber =
-          "PAN number must be in valid format (e.g., ABCDE1234F)";
+        newErrors.idNumber = t("kyc_error_pan");
       }
     }
 
@@ -404,9 +416,9 @@ export default function KycForm() {
           Alert.alert(
             kycId ? "KYC Updated" : "KYC Submitted",
             response.data?.message ||
-              (kycId
-                ? "Your KYC details have been updated successfully."
-                : "Your KYC details have been submitted successfully.")
+            (kycId
+              ? "Your KYC details have been updated successfully."
+              : "Your KYC details have been submitted successfully.")
           );
           router.back(); // Navigate back on success
         } else {
@@ -445,7 +457,7 @@ export default function KycForm() {
         />
         <SafeAreaView style={styles.safeArea}>
           {/* Header */}
-          <View style={styles.header}>
+          <View style={[styles.header, { backgroundColor: theme.colors.primary }]}>
             <TouchableOpacity
               onPress={() => router.back()}
               style={styles.backButton}
@@ -453,7 +465,10 @@ export default function KycForm() {
             >
               <Ionicons name="arrow-back" size={24} color="#FFC857" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Know Your Customer</Text>
+            <Text style={styles.headerTitle}>{t("kyc_title") /* Know Your Customer */}</Text>
+            <View style={{ flex: 1, alignItems: "flex-end" }}>
+              <LanguageSwitcher />
+            </View>
           </View>
 
           <KeyboardAvoidingView
@@ -474,88 +489,86 @@ export default function KycForm() {
               <View style={[styles.groupCard, styles.groupAddress]}>
                 <View style={styles.groupHeader}>
                   <Ionicons name="home-outline" size={24} color="#1976d2" />
-                  <Text style={[styles.groupTitle, { color: "#1976d2" }]}>
-                    Address Details
-                  </Text>
+                  <Text style={[styles.groupTitle, { color: "#1976d2" }]}>{t("kyc_address_details")}</Text>
                 </View>
                 <View style={styles.formContent}>
                   {/* Door Number */}
                   <View style={styles.formGroup}>
-                    <Text style={styles.label}>Door No.</Text>
+                    <Text style={styles.label}>{t("kyc_doorno")}</Text>
                     <TextInput
                       style={styles.input}
-                      placeholder="Enter your door number"
+                      placeholder={t("kyc_placeholder_doorno")}
                       value={formData.doorno}
                       placeholderTextColor="gray"
                       onChangeText={(text) => handleChange("doorno", text)}
                     />
                     {errors.doorno && (
-                      <Text style={styles.errorText}>{errors.doorno}</Text>
+                      <Text style={styles.errorText}>{t("kyc_error_required")}</Text>
                     )}
                   </View>
                   {/* Street */}
                   <View style={styles.formGroup}>
-                    <Text style={styles.label}>Street</Text>
+                    <Text style={styles.label}>{t("kyc_street")}</Text>
                     <TextInput
                       style={styles.input}
-                      placeholder="Enter your street name"
+                      placeholder={t("kyc_placeholder_street")}
                       placeholderTextColor="gray"
                       value={formData.street}
                       onChangeText={(text) => handleChange("street", text)}
                     />
                     {errors.street && (
-                      <Text style={styles.errorText}>{errors.street}</Text>
+                      <Text style={styles.errorText}>{t("kyc_error_required")}</Text>
                     )}
                   </View>
                   {/* Area */}
                   <View style={styles.formGroup}>
-                    <Text style={styles.label}>Area</Text>
+                    <Text style={styles.label}>{t("kyc_area")}</Text>
                     <TextInput
                       style={styles.input}
-                      placeholder="Enter your area/locality"
+                      placeholder={t("kyc_placeholder_area")}
                       placeholderTextColor="gray"
                       value={formData.area}
                       onChangeText={(text) => handleChange("area", text)}
                     />
                     {errors.area && (
-                      <Text style={styles.errorText}>{errors.area}</Text>
+                      <Text style={styles.errorText}>{t("kyc_error_required")}</Text>
                     )}
                   </View>
                   {/* City */}
                   <View style={styles.formGroup}>
-                    <Text style={styles.label}>City</Text>
+                    <Text style={styles.label}>{t("kyc_city")}</Text>
                     <TextInput
                       style={styles.input}
-                      placeholder="Enter your city"
+                      placeholder={t("kyc_placeholder_city")}
                       placeholderTextColor="gray"
                       value={formData.city}
                       onChangeText={(text) => handleChange("city", text)}
                     />
                     {errors.city && (
-                      <Text style={styles.errorText}>{errors.city}</Text>
+                      <Text style={styles.errorText}>{t("kyc_error_required")}</Text>
                     )}
                   </View>
                   {/* District */}
                   <View style={styles.formGroup}>
-                    <Text style={styles.label}>District</Text>
+                    <Text style={styles.label}>{t("kyc_district")}</Text>
                     <TextInput
                       style={styles.input}
-                      placeholder="Enter your district"
+                      placeholder={t("kyc_placeholder_district")}
                       placeholderTextColor="gray"
                       value={formData.district}
                       onChangeText={(text) => handleChange("district", text)}
                     />
                     {errors.district && (
-                      <Text style={styles.errorText}>{errors.district}</Text>
+                      <Text style={styles.errorText}>{t("kyc_error_required")}</Text>
                     )}
                   </View>
                   {/* State (Dropdown) */}
                   <View style={styles.formGroup}>
-                    <Text style={styles.label}>State</Text>
+                    <Text style={styles.label}>{t("kyc_state")}</Text>
                     <RNPickerSelect
                       onValueChange={(value) => handleChange("state", value)}
-                      onDonePress={() => {}}
-                      placeholder={{ label: "Select your state", value: "" }}
+                      onDonePress={() => { }}
+                      placeholder={{ label: t("kyc_select_state"), value: "" }}
                       value={formData.state}
                       items={indianStates.map((state) => ({
                         label: state,
@@ -565,28 +578,28 @@ export default function KycForm() {
                       useNativeAndroidPickerStyle={false}
                     />
                     {errors.state && (
-                      <Text style={styles.errorText}>{errors.state}</Text>
+                      <Text style={styles.errorText}>{t("kyc_error_required")}</Text>
                     )}
                   </View>
                   {/* Country (Default to India) */}
                   <View style={styles.formGroup}>
-                    <Text style={styles.label}>Country</Text>
+                    <Text style={styles.label}>{t("kyc_country")}</Text>
                     <TextInput
                       style={[styles.input, styles.disabledInput]}
-                      placeholder="Country"
+                      placeholder={t("kyc_country")}
                       value={formData.country}
                       editable={false}
                     />
                     {errors.country && (
-                      <Text style={styles.errorText}>{errors.country}</Text>
+                      <Text style={styles.errorText}>{t("kyc_error_required")}</Text>
                     )}
                   </View>
                   {/* Pincode */}
                   <View style={styles.formGroup}>
-                    <Text style={styles.label}>Pincode</Text>
+                    <Text style={styles.label}>{t("kyc_pincode")}</Text>
                     <TextInput
                       style={styles.input}
-                      placeholder="Enter your 6-digit pincode"
+                      placeholder={t("kyc_placeholder_pincode")}
                       placeholderTextColor="gray"
                       keyboardType="number-pad"
                       value={formData.pincode}
@@ -594,7 +607,7 @@ export default function KycForm() {
                       maxLength={6}
                     />
                     {errors.pincode && (
-                      <Text style={styles.errorText}>{errors.pincode}</Text>
+                      <Text style={styles.errorText}>{t("kyc_error_pincode")}</Text>
                     )}
                   </View>
                 </View>
@@ -604,50 +617,43 @@ export default function KycForm() {
               <View style={[styles.groupCard, styles.groupIdProof]}>
                 <View style={styles.groupHeader}>
                   <Ionicons name="card-outline" size={24} color="#bfa14a" />
-                  <Text style={[styles.groupTitle, { color: "#bfa14a" }]}>
-                    ID Proof
-                  </Text>
+                  <Text style={[styles.groupTitle, { color: "#bfa14a" }]}>{t("kyc_id_proof")}</Text>
                 </View>
                 <View style={styles.formContent}>
                   <View style={styles.formGroup}>
-                    <Text style={styles.label}>Date of Birth</Text>
                     <FormDatePicker
-                      label="Date of Birth"
+                      label={t("kyc_dob")}
                       value={formData.dob}
                       onDateChange={(date) => handleChange("dob", date)}
                       error={errors.dob}
                     />
                   </View>
                   <View style={styles.formGroup}>
-                    <Text style={styles.label}>Address Proof Type</Text>
+                    <Text style={styles.label}>{t("kyc_addressprooftype")}</Text>
                     <RNPickerSelect
                       onValueChange={(value) =>
                         handleChange("addressprooftype", value)
                       }
-                      onDonePress={() => {}}
-                      placeholder={{ label: "Select your ID proof", value: "" }}
+                      onDonePress={() => { }}
+                      placeholder={{ label: t("kyc_select_id_proof"), value: "" }}
                       value={formData.addressprooftype}
                       items={idTypes.map((id) => ({
-                        label: id.name,
+                        label: t(`kyc_idtype_${id.value}`),
                         value: id.value,
                       }))}
                       style={pickerSelectStyles}
                       useNativeAndroidPickerStyle={false}
                     />
                     {errors.addressprooftype && (
-                      <Text style={styles.errorText}>
-                        {errors.addressprooftype}
-                      </Text>
+                      <Text style={styles.errorText}>{t("kyc_error_required")}</Text>
                     )}
                   </View>
                   <View style={styles.formGroup}>
-                    <Text style={styles.label}>ID Number</Text>
+                    <Text style={styles.label}>{t("kyc_id_number")}</Text>
                     <TextInput
                       style={styles.input}
                       placeholderTextColor="gray"
-                      placeholder={getPlaceholderText(
-                        formData.addressprooftype
-                      )}
+                      placeholder={t("kyc_placeholder_id_number")}
                       value={formData.idNumber}
                       onChangeText={(text) =>
                         handleChange(
@@ -678,16 +684,34 @@ export default function KycForm() {
               <View style={[styles.groupCard, styles.groupNominee]}>
                 <View style={styles.groupHeader}>
                   <Ionicons name="people-outline" size={24} color="#388e3c" />
-                  <Text style={[styles.groupTitle, { color: "#388e3c" }]}>
-                    Nominee Details
-                  </Text>
+                  <Text style={[styles.groupTitle, { color: "#388e3c" }]}>{t("kyc_nominee_details")}</Text>
+                </View>
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>{t("kyc_nominee_relationship")}</Text>
+                  <RNPickerSelect
+                    onValueChange={(value) =>
+                      handleChange("nominee_relationship", value)
+                    }
+                    onDonePress={() => { }}
+                    placeholder={{ label: t("kyc_select_relationship"), value: "" }}
+                    value={formData.nominee_relationship}
+                    items={nomineeRelationship.map((id) => ({
+                      label: t(`kyc_nominee_${id.value}`),
+                      value: id.value,
+                    }))}
+                    style={pickerSelectStyles}
+                    useNativeAndroidPickerStyle={false}
+                  />
+                  {errors.nominee_relationship && (
+                    <Text style={styles.errorText}>{t("kyc_error_required")}</Text>
+                  )}
                 </View>
                 <View style={styles.formContent}>
                   <View style={styles.formGroup}>
-                    <Text style={styles.label}>Nominee Name</Text>
+                    <Text style={styles.label}>{t("kyc_nominee_name")}</Text>
                     <TextInput
                       style={styles.input}
-                      placeholder="Enter your nominee's full name"
+                      placeholder={t("kyc_placeholder_nominee_name")}
                       placeholderTextColor="gray"
                       value={formData.nominee_name}
                       onChangeText={(text) =>
@@ -695,31 +719,7 @@ export default function KycForm() {
                       }
                     />
                     {errors.nominee_name && (
-                      <Text style={styles.errorText}>
-                        {errors.nominee_name}
-                      </Text>
-                    )}
-                  </View>
-                  <View style={styles.formGroup}>
-                    <Text style={styles.label}>Nominee Relationship</Text>
-                    <RNPickerSelect
-                      onValueChange={(value) =>
-                        handleChange("nominee_relationship", value)
-                      }
-                      onDonePress={() => {}}
-                      placeholder={{ label: "Select relationship", value: "" }}
-                      value={formData.nominee_relationship}
-                      items={nomineeRelationship.map((id) => ({
-                        label: id.name,
-                        value: id.value,
-                      }))}
-                      style={pickerSelectStyles}
-                      useNativeAndroidPickerStyle={false}
-                    />
-                    {errors.nominee_relationship && (
-                      <Text style={styles.errorText}>
-                        {errors.nominee_relationship}
-                      </Text>
+                      <Text style={styles.errorText}>{t("kyc_error_required")}</Text>
                     )}
                   </View>
                 </View>
@@ -729,17 +729,12 @@ export default function KycForm() {
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
                   onPress={handleSubmit}
-                  style={styles.submitButton}
+                  style={[styles.submitButton, { backgroundColor: theme.colors.primary }]}
                   activeOpacity={0.9}
                 >
-                  <LinearGradient
-                    colors={["#1a2a39", "#5a000b", "#2e0406"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.gradientButton}
-                  >
+                  <View style={styles.gradientButton}>
                     <Text style={styles.submitButtonText}>
-                      {kycId ? "Update KYC" : "Submit KYC"}
+                      {kycId ? t("kyc_update") : t("kyc_submit")}
                     </Text>
                     <Ionicons
                       name="arrow-forward"
@@ -747,7 +742,7 @@ export default function KycForm() {
                       color="#FFC857"
                       style={styles.buttonIcon}
                     />
-                  </LinearGradient>
+                  </View>
                 </TouchableOpacity>
               </View>
 

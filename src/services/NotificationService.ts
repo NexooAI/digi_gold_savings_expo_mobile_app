@@ -102,6 +102,7 @@ class NotificationService {
         //console.log('Push token generated:', cleanToken);
 
         // Store the clean token locally
+        console.log('cleanToken',cleanToken)
         await this.storeFcmToken(cleanToken);
 
         // Immediately try to send token to API

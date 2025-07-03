@@ -64,10 +64,10 @@ export default function HomeLayout() {
         name="offers"
         options={{ title: "Our Offers", headerShown: false }}
       />
-      {/* <Stack.Screen
+      <Stack.Screen
         name="StoreLocator"
         options={{ title: "Store Locator", headerShown: false }}
-      /> */}
+      />
       <Stack.Screen
         name="our_stores"
         options={{ title: "Our Stores", headerShown: false }}

@@ -41,7 +41,7 @@ const FloatingLabelInput: React.FC<FloatingLabelInputProps> = ({
     }),
     color: animatedIsFocused.interpolate({
       inputRange: [0, 1],
-      outputRange: ['#aaa', '#1a2a39'],
+      outputRange: ['#a0b4cc', '#ffd700'],
     }),
     backgroundColor: '#fff',
     paddingHorizontal: 4,
@@ -58,6 +58,9 @@ const FloatingLabelInput: React.FC<FloatingLabelInputProps> = ({
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         secureTextEntry={secureTextEntry}
+        blurOnSubmit={true}
+        enablesReturnKeyAutomatically={true}
+        returnKeyType="next"
         {...rest}
       />
     </View>
@@ -72,13 +75,18 @@ const styles = StyleSheet.create({
   input: {
     width: '100%',
     height: 48,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 12,
+    borderWidth: 2,
+    borderColor: '#2a4a7a',
+    borderRadius: 12,
+    paddingHorizontal: 16,
     fontSize: 16,
     backgroundColor: '#fff',
     color: '#1a2a39',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
 });
 

@@ -953,7 +953,7 @@ export default function JoinSavings() {
                 style={{
                   padding: 4,
                   borderRadius: 8,
-                  backgroundColor: "rgba(255, 200, 87, 0.1)",
+                  backgroundColor: "rgba(79, 140, 255, 0.1)", // blue accent
                 }}
               >
                 <Ionicons
@@ -966,17 +966,17 @@ export default function JoinSavings() {
             {/* Address Card */}
             <View
               style={{
-                backgroundColor: "#e3f2fd",
+                backgroundColor: "#e0f7fa", // Light teal
                 borderRadius: 18,
                 padding: 20,
                 marginBottom: 16,
-                shadowColor: "#2196F3",
+                shadowColor: "#26c6da",
                 shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.1,
+                shadowOpacity: 0.12,
                 shadowRadius: 8,
                 elevation: 4,
                 borderWidth: 1,
-                borderColor: "#90caf9",
+                borderColor: "#4dd0e1",
               }}
             >
               <View
@@ -1040,17 +1040,17 @@ export default function JoinSavings() {
             {/* ID Proof Card */}
             <View
               style={{
-                backgroundColor: "#fffde7",
+                backgroundColor: "#f1f8e9", // Light greenish
                 borderRadius: 18,
                 padding: 20,
                 marginBottom: 16,
-                shadowColor: "#FFC857",
+                shadowColor: "#aed581",
                 shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.1,
+                shadowOpacity: 0.10,
                 shadowRadius: 8,
                 elevation: 4,
                 borderWidth: 1,
-                borderColor: "#ffe082",
+                borderColor: "#c5e1a5",
               }}
             >
               <View
@@ -1096,17 +1096,17 @@ export default function JoinSavings() {
                 {/* Nominee Card nested inside ID Proof */}
                 <View
                   style={{
-                    backgroundColor: "#e8f5e9",
+                    backgroundColor: "#fffde7", // Soft yellow for nominee
                     borderRadius: 14,
                     padding: 16,
                     marginTop: 18,
-                    shadowColor: "#81c784",
+                    shadowColor: "#ffe082",
                     shadowOffset: { width: 0, height: 2 },
                     shadowOpacity: 0.08,
                     shadowRadius: 6,
                     elevation: 2,
                     borderWidth: 1,
-                    borderColor: "#a5d6a7",
+                    borderColor: "#ffe082",
                   }}
                 >
                   <View
@@ -2215,18 +2215,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   summaryCardModern: {
-    backgroundColor: "#fffbe6",
+    backgroundColor: "#e3f0ff", // Soft blue
     borderRadius: 18,
     padding: 20,
     marginBottom: 18,
     marginHorizontal: 16,
-    shadowColor: "#FFC857",
+    shadowColor: "#4f8cff",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 6,
     borderWidth: 1,
-    borderColor: "#ffe6a1",
+    borderColor: "#b3d1ff",
   },
   summaryCardHeader: {
     flexDirection: "row",

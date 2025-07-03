@@ -543,9 +543,15 @@ export default function Login() {
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={registerStyles.keyboardAvoidingView}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 50}
           >
-            <ScrollView contentContainerStyle={registerStyles.scrollViewContent} keyboardShouldPersistTaps="handled">
+            <ScrollView 
+              contentContainerStyle={registerStyles.scrollViewContent} 
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              bounces={false}
+              automaticallyAdjustKeyboardInsets={true}
+            >
               <View style={[registerStyles.logoContainer, { paddingTop: 10, marginBottom: 0 }]}> 
                 <Image
                   source={theme.image.transparentLogo}
@@ -555,8 +561,8 @@ export default function Login() {
               </View>
 
               <ModernAuthCard activeTab="login" onTabChange={(tab) => { if(tab==='register'){router.push('/register')} }}>
-                <Text style={registerStyles.pageTitle}>{t("welcomeBack")}</Text>
-                <Text style={registerStyles.subtitle}>{t("signInToContinue")}</Text>
+                <Text style={[registerStyles.pageTitle, { color: '#ffffff' }]}>{t("welcomeBack")}</Text>
+                <Text style={[registerStyles.subtitle, { color: '#b8c5d6' }]}>{t("signInToContinue")}</Text>
                 {!isShowOtp ? (
                   <>
                     <View style={registerStyles.inputContainer}>
@@ -605,8 +611,8 @@ export default function Login() {
                   </>
                 ) : (
                   <View style={registerStyles.otpContainer}>
-                    <Text style={registerStyles.otpTitle}>{t("enterOTP")}</Text>
-                    <Text style={registerStyles.otpSentText}>
+                    <Text style={[registerStyles.otpTitle, { color: '#ffffff' }]}>{t("enterOTP")}</Text>
+                    <Text style={[registerStyles.otpSentText, { color: '#b8c5d6' }]}>
                       {t("otpSentTo")}
                       {mobile.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3")}
                     </Text>
@@ -646,14 +652,14 @@ export default function Login() {
                         size={20}
                         color={theme.colors.white}
                       />
-                      <Text style={registerStyles.timerText}>{t("resendIn")} {timer}s</Text>
+                      <Text style={[registerStyles.timerText, { color: '#b8c5d6' }]}>{t("resendIn")} {timer}s</Text>
                     </View>
                     {timer === 0 && resendAttempts < 3 && (
                       <TouchableOpacity
                         onPress={handleResendOtp}
                         style={registerStyles.resendButton}
                       >
-                        <Text style={registerStyles.resendText}>{t("resendOTP")}</Text>
+                        <Text style={[registerStyles.resendText, { color: '#ffd700' }]}>{t("resendOTP")}</Text>
                       </TouchableOpacity>
                     )}
                     <TouchableOpacity

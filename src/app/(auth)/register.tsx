@@ -406,9 +406,15 @@ export default function Register() {
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={registerStyles.keyboardAvoidingView}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 50}
           >
-            <ScrollView contentContainerStyle={registerStyles.scrollViewContent} keyboardShouldPersistTaps="handled">
+            <ScrollView 
+              contentContainerStyle={registerStyles.scrollViewContent} 
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              bounces={false}
+              automaticallyAdjustKeyboardInsets={true}
+            >
               <View style={[registerStyles.logoContainer, { paddingTop: 10, marginBottom: 0 }]}>
                 <Image
                   source={theme.image.transparentLogo}
@@ -418,8 +424,8 @@ export default function Register() {
               </View>
               <ModernAuthCard activeTab="register" onTabChange={(tab) => { if(tab==='login'){router.push('/login')} }}>
                 <View style={registerStyles.formFieldsContainer}>
-                  <Text style={registerStyles.pageTitle}>{t("register")}</Text>
-                  <Text style={registerStyles.subtitle}>{t("registerSubtitle")}</Text>
+                  <Text style={[registerStyles.pageTitle, { color: '#ffffff' }]}>{t("register")}</Text>
+                  <Text style={[registerStyles.subtitle, { color: '#b8c5d6' }]}>{t("registerSubtitle")}</Text>
                   {/* Mobile Number + Get OTP Button */}
                   <View style={{ marginBottom: 16, width: '100%' }}>
                     <PhoneInput
@@ -475,7 +481,7 @@ export default function Register() {
                         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' }}>
                           <View style={{ width: '90%', backgroundColor: '#fff', borderRadius: 16, padding: 24, alignSelf: 'center', elevation: 10 }}>
                             <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12, color: '#1a2a39', textAlign: 'center' }}>{t('enterOtp')}</Text>
-                            <Text style={{ fontSize: 16, color: '#888', textAlign: 'center', marginBottom: 8 }}>{mobile}</Text>
+                            <Text style={{ fontSize: 16, color: '#666', textAlign: 'center', marginBottom: 8 }}>{mobile}</Text>
                             <TextInput
                               value={otp}
                               onChangeText={setOtp}
@@ -503,13 +509,13 @@ export default function Register() {
                               <Text style={{ color: '#ff4444', fontWeight: 'bold', fontSize: 15 }}>{t('cancel')}</Text>
                             </TouchableOpacity>
                             <View style={{ alignItems: 'center', marginTop: 10 }}>
-                              <Text style={{ color: '#888', fontSize: 14 }}>{t('resendOTP')} {timer}s</Text>
+                              <Text style={{ color: '#b8c5d6', fontSize: 14 }}>{t('resendOTP')} {timer}s</Text>
                               <TouchableOpacity
                                 onPress={handleResendOtp}
                                 disabled={timer > 0 || resendCount <= 0}
                                 style={{ marginTop: 8, opacity: timer > 0 || resendCount <= 0 ? 0.5 : 1 }}
                               >
-                                <Text style={{ color: '#007bff', fontWeight: 'bold', fontSize: 15 }}>{t('resendOTP')}</Text>
+                                <Text style={{ color: '#ffd700', fontWeight: 'bold', fontSize: 15 }}>{t('resendOTP')}</Text>
                               </TouchableOpacity>
                             </View>
                           </View>
@@ -522,7 +528,8 @@ export default function Register() {
                     label="Name"
                     value={name}
                     onChangeText={setName}
-                    style={{ marginBottom: 8 }}
+                    style={{ marginBottom: 12 }}
+                    returnKeyType="next"
                   />
                   {/* Email */}
                   <FloatingLabelInput
@@ -537,7 +544,8 @@ export default function Register() {
                       }
                     }}
                     keyboardType="email-address"
-                    style={{ marginBottom: 8 }}
+                    style={{ marginBottom: 12 }}
+                    returnKeyType="next"
                   />
                   {emailError ? (
                     <Text style={{ color: 'red', marginBottom: 8, marginLeft: 4, fontSize: 13 }}>{emailError}</Text>
@@ -551,7 +559,8 @@ export default function Register() {
                       setReferral(filtered);
                     }}
                     maxLength={6}
-                    style={{ marginBottom: 20 }}
+                    style={{ marginBottom: 24 }}
+                    returnKeyType="done"
                   />
                   {/* Submit Button */}
                   <TouchableOpacity
