@@ -63,6 +63,7 @@ export default {
       ["expo-router", { origin: "https://n" }],
       "expo-secure-store",
       "expo-localization",
+      "expo-build-properties",
       [
         "expo-notifications",
         {

@@ -125,11 +125,12 @@ export default function SavingsScreen() {
           investments = response.data.data;
         } else {
           // Unexpected structure, log for debugging
-          console.error("Expected investments to be an array, got:", response.data.data);
-          // Show backend error message if available
-          const backendMsg = response.data.data && response.data.data.message ? response.data.data.message : null;
-          setError(backendMsg || "Unexpected data format received from server. Please try again later.");
-          setLoading(false);
+          // console.error("Expected investments to be an array, got:", response.data.data);
+          // // Show backend error message if available
+          // const backendMsg = response.data.data && response.data.data.message ? response.data.data.message : null;
+          // setError(backendMsg || "Unexpected data format received from server. Please try again later.");
+          // setLoading(false);
+          // investments = []
           return;
         }
       } else {

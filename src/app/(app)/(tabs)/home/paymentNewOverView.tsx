@@ -145,27 +145,38 @@ export default function PaymentNewOverView() {
     }
     
     try {
-      const payload: PaymentInitPayload | any = {
-        userId: userDetails.userId || user?.id,
+      const payload:any = {
+        "order_id": "12345",
         amount: currentAmount,
-        investmentId: userDetails.investmentId,
-        schemeId: params?.schemeId,
-        userEmail: userDetails?.email || user?.email,
-        userMobile: userDetails?.mobile || user?.mobile,
-        userName: userDetails?.accountname,
-        chitId: Array.isArray(params.chitId) ? params.chitId[0] : params.chitId,
-        paymentFrequency: params.paymentFrequency,
-      };
+        "currency": "INR"
+      }
+      // const payload: PaymentInitPayload | any = {
+      //   userId: userDetails.userId || user?.id,
+      //   amount: currentAmount,
+      //   investmentId: userDetails.investmentId,
+      //   schemeId: params?.schemeId,
+      //   userEmail: userDetails?.email || user?.email,
+      //   userMobile: userDetails?.mobile || user?.mobile,
+      //   userName: userDetails?.accountname,
+      //   chitId: Array.isArray(params.chitId) ? params.chitId[0] : params.chitId,
+      //   paymentFrequency: params.paymentFrequency,
+      // };
       console.log("initialpayment ======>", payload);
       const response = await paymentService.initiatePayment(payload);
-      if (response?.session.payment_links.web) {
+      console.log("response",response);
+      const resultUrl = await convertHtmlFormToCCAvenueUrl(response.data);
+      console.log("resultUrl",resultUrl)
+      if (resultUrl) {
+        console.log(resultUrl);
+      }
+      if (response?.status === 200) {
         // Extract order ID from the payment response
         const orderId = response?.session?.order_id;
 
         router.push({
           pathname: "/(tabs)/home/PaymentWebView",
           params: {
-            url: response.session.payment_links.web,
+            url: resultUrl,
             orderId: orderId, // Add orderId to params
             userDetails: JSON.stringify({
               ...userDetails,
@@ -187,7 +198,31 @@ export default function PaymentNewOverView() {
       console.error(error);
     }
   };
+  const convertHtmlFormToCCAvenueUrl = async(htmlString:any) => {
+    // This regular expression captures:
+    // 1. The 'action' URL from the <form> tag
+    // 2. The 'value' of the 'encRequest' input
+    // 3. The 'value' of the 'access_code' input
+    const formRegex = /<form[^>]+action=["']([^"']+)["'][^>]*>/;
+    const encRequestRegex = /<input type="hidden" name="encRequest" value=["']([^"']+)["']\s*\/?>/;
+    const accessCodeRegex = /<input type="hidden" name="access_code" value=["']([^"']+)["']\s*\/?>/;
 
+    const formMatch = htmlString.match(formRegex);
+    const encRequestMatch = htmlString.match(encRequestRegex);
+    const accessCodeMatch = htmlString.match(accessCodeRegex);
+
+    if (formMatch && encRequestMatch && accessCodeMatch) {
+        const baseUrl = formMatch[1];
+        const encRequest = encRequestMatch[1];
+        const accessCode = accessCodeMatch[1];
+
+        // Construct the final URL with query parameters
+        return `${baseUrl}&encRequest=${encRequest}&access_code=${accessCode}`;
+    } else {
+        console.error("Could not parse all required fields from the HTML string.");
+        return null; // Or throw an error, depending on desired error handling
+    }
+}
   const TermsAndConditionsModal = () => (
     <Modal
       animationType="slide"

@@ -145,39 +145,34 @@ class PaymentApiLogger {
 const paymentLogger = new PaymentApiLogger();
 
 class PaymentService {
-  async initiatePayment(payload: PaymentInitPayload): Promise<PaymentResponse> {
-    const startTime = Date.now();
-    
+  async initiatePayment(payload: any): Promise<any> {
+    // const startTime = Date.now();
+    console.log('payload' ,payload)
     try {
-      const formBody = new URLSearchParams();
-      Object.entries(payload).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          formBody.append(key, String(value));
-        }
-      });
+      const urlEncodedPayload = new URLSearchParams(payload).toString();
 
       // Log the request
-      paymentLogger.logPaymentOperation('initiate', {
-        method: 'POST',
-        url: '/payments/initiate',
-        data: payload
-      }, startTime);
-
-      const response = await apiService.post("/payments/initiate", formBody.toString(), {
+      // paymentLogger.logPaymentOperation('initiate', {
+      //   method: 'POST',
+      //   url: '/payments/initiate',
+      //   data: payload
+      // }, startTime);
+      console.log("urlEncodedPayload",urlEncodedPayload)
+      const response = await apiService.post("/payments/ccavenue_initiate-payment", urlEncodedPayload, {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
       });
 
       // Log the response
-      paymentLogger.logPaymentResponse('initiate', response, startTime);
+      // paymentLogger.logPaymentResponse('initiate', response, startTime);
 
-      if (!response.data.success) {
-        throw new Error('Payment initiation failed');
-      }
+      // if (!response.data.success) {
+      //   throw new Error('Payment initiation failed');
+      // }
 
-      return response.data;
+      return response;
     } catch (error) {
       // Log the error
-      paymentLogger.logPaymentError('initiate', error, startTime);
+      // paymentLogger.logPaymentError('initiate', error, startTime);
       
       console.error('Error initiating payment:', error);
       throw error;
