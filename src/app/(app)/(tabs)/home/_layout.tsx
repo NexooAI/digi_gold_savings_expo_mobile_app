@@ -53,7 +53,6 @@ export default function HomeLayout() {
         name="gold_advance"
         options={{
           headerShown: false,
-          tabBarStyle: { display: 'none' },
         }}
       />
       <Stack.Screen

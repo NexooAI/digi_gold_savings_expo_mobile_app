@@ -38,12 +38,15 @@ export default {
       },
       package: theme.bundleIdentifier,
       googleServicesFile: "./google-services.json",
-      versionCode:2,
+      versionCode: 2,
       config: {
         googleMaps: {
           apiKey: "AIzaSyAkuOcNddEvozQR4D4yPdTrbwXCiPsuEFc",
         },
       },
+      "compileSdkVersion": 33, // Or the recommended version
+      "targetSdkVersion": 33, // Or the recommended version
+      "buildToolsVersion": "33.0.0"
     },
 
     ios: {

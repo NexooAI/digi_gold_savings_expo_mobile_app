@@ -134,6 +134,8 @@ export default function PaymentNewOverView() {
   }, [weightPerGram]);
 
   const handlePayment = async () => {
+    Alert.alert("Under Maintenance", "This feature is currently under maintenance. Please try again later.");
+    return;
     if (!userDetails) {
       Alert.alert("Error", "User details not available");
       return;
@@ -161,18 +163,12 @@ export default function PaymentNewOverView() {
       //   chitId: Array.isArray(params.chitId) ? params.chitId[0] : params.chitId,
       //   paymentFrequency: params.paymentFrequency,
       // };
-      console.log("initialpayment ======>", payload);
+      
       const response = await paymentService.initiatePayment(payload);
-      console.log("response",response);
       const resultUrl = await convertHtmlFormToCCAvenueUrl(response.data);
-      console.log("resultUrl",resultUrl)
-      if (resultUrl) {
-        console.log(resultUrl);
-      }
+      
       if (response?.status === 200) {
-        // Extract order ID from the payment response
         const orderId = response?.session?.order_id;
-
         router.push({
           pathname: "/(tabs)/home/PaymentWebView",
           params: {

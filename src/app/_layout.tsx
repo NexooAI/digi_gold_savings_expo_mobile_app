@@ -29,7 +29,7 @@ export default function RootLayout() {
   const router = useRouter();
   const navigation = useNavigation();
   const [overallLoading, setOverallLoading] = useState<boolean>(false);
-  const { user, setUser, setLanguage } = useGlobalStore();
+  const { user, updateUser, setLanguage } = useGlobalStore();
 
   // Initialize language on app start
   useEffect(() => {
@@ -72,7 +72,7 @@ export default function RootLayout() {
         const storedUser = await SecureStore.getItemAsync("user");
         if (storedUser) {
           const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
+          updateUser(parsedUser);
         }
       } catch (error) {
         console.error("Error retrieving stored user:", error);
@@ -80,7 +80,7 @@ export default function RootLayout() {
     };
 
     checkStoredUser();
-  }, [setUser]);
+  }, [updateUser]);
 
   // Register loading service
   useEffect(() => {
