@@ -353,7 +353,7 @@ export default function MpinVerify() {
                         await SecureStore.deleteItemAsync("user_mpin");
                         logout();
                         setMpinPins(["", "", "", ""]);
-                        router.replace("/login");
+                        router.replace("/(auth)/login");
                       }}
                     >
                       <Icon name="help-outline" size={20} color={theme.colors.secondary} />

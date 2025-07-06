@@ -1,9 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Text, Image, TouchableOpacity } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { View, StyleSheet, Text, Image, TouchableOpacity, Platform } from 'react-native';
 import * as Location from 'expo-location';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+// Platform-specific imports
+let MapView, Marker, PROVIDER_GOOGLE;
+if (Platform.OS !== 'web') {
+  const Maps = require('react-native-maps');
+  MapView = Maps.default;
+  Marker = Maps.Marker;
+  PROVIDER_GOOGLE = Maps.PROVIDER_GOOGLE;
+}
 
 // Sample data for locations
 const locations = [
@@ -63,6 +71,88 @@ export default function MapScreen() {
       mapRef.current.animateToRegion(userLocation, 1000);
     }
   };
+
+  // Web fallback
+  if (Platform.OS === 'web') {
+    return (
+      <View style={styles.container}>
+        <View style={styles.mapPlaceholder}>
+          <Text style={styles.mapPlaceholderText}>Map View</Text>
+          <Text style={styles.mapPlaceholderSubtext}>
+            Interactive map would be displayed here on mobile devices
+          </Text>
+          
+          {/* Display locations as cards for web */}
+          <View style={styles.locationsContainer}>
+            {locations.map((location) => (
+              <TouchableOpacity
+                key={location.id}
+                style={[
+                  styles.locationCard,
+                  selectedLocation?.id === location.id && styles.selectedLocationCard,
+                ]}
+                onPress={() => handleMarkerPress(location)}
+              >
+                <Image source={location.image} style={styles.locationCardImage} />
+                <View style={styles.locationCardContent}>
+                  <Text style={styles.locationCardTitle}>{location.title}</Text>
+                  <Text style={styles.locationCardDescription}>
+                    {location.description}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Center Position Button */}
+        <TouchableOpacity
+          style={styles.centerButton}
+          onPress={handleCenterButtonPress}
+        >
+          <Image
+            source={require('../../../assets/images/center-location.png')}
+            style={styles.centerButtonIcon}
+          />
+        </TouchableOpacity>
+
+        {/* Bottom Sheet for Details */}
+        <BottomSheet
+          ref={bottomSheetRef}
+          index={-1}
+          snapPoints={snapPoints}
+          bottomInset={insets.bottom}
+          style={styles.bottomSheet}
+          backgroundComponent={({ style }) => (
+            <View style={[style, styles.bottomSheetBackground]} />
+          )}
+        >
+          <View style={styles.bottomSheetContent}>
+            {selectedLocation ? (
+              <>
+                <Image
+                  source={selectedLocation.image}
+                  style={styles.locationImage}
+                />
+                <Text style={styles.locationTitle}>{selectedLocation.title}</Text>
+                <Text style={styles.locationDescription}>
+                  {selectedLocation.description}
+                </Text>
+                <TouchableOpacity
+                  style={styles.directionsButton}
+                  onPress={() => {/* Add navigation logic */}}
+                >
+                  <Text style={styles.directionsButtonText}>Get Directions</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <Text style={styles.noSelectionText}>Select a location to view details</Text>
+            )}
+          </View>
+        </BottomSheet>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -152,6 +242,64 @@ const styles = StyleSheet.create({
   map: {
     width: '100%',
     height: '80%',
+  },
+  // Web-specific styles
+  mapPlaceholder: {
+    width: '100%',
+    height: '80%',
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  mapPlaceholderText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+  },
+  mapPlaceholderSubtext: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 30,
+  },
+  locationsContainer: {
+    width: '100%',
+    maxWidth: 400,
+  },
+  locationCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    marginBottom: 15,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  selectedLocationCard: {
+    borderColor: '#007AFF',
+    borderWidth: 2,
+  },
+  locationCardImage: {
+    width: '100%',
+    height: 120,
+    resizeMode: 'cover',
+  },
+  locationCardContent: {
+    padding: 15,
+  },
+  locationCardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 5,
+  },
+  locationCardDescription: {
+    fontSize: 14,
+    color: '#666',
   },
   markerContainer: {
     alignItems: 'center',

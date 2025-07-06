@@ -67,7 +67,7 @@ export default function Intro() {
 
   const handleGetStarted = async () => {
     await markAsLaunched();
-    router.replace("/login");
+            router.replace("/(auth)/login");
   };
 
   const renderSlide = ({ item }) => {

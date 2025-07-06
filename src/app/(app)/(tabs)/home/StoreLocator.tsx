@@ -15,7 +15,14 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import MapView, { Marker } from "react-native-maps";
+
+// Platform-specific imports
+let MapView, Marker;
+if (Platform.OS !== 'web') {
+  const Maps = require('react-native-maps');
+  MapView = Maps.default;
+  Marker = Maps.Marker;
+}
 import { Dropdown } from "react-native-element-dropdown";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useRouter } from "expo-router";
@@ -161,28 +168,37 @@ const StoreLocator = () => {
             />
 
             {/* Map View */}
-            <MapView
-              ref={mapRef}
-              style={styles.map}
-              initialRegion={{
-                latitude: stores[0].latitude,
-                longitude: stores[0].longitude,
-                latitudeDelta: 0.0922,
-                longitudeDelta: 0.0421,
-              }}
-            >
-              {stores.map((store) => (
-                <Marker
-                  key={store.id}
-                  coordinate={{
-                    latitude: store.latitude,
-                    longitude: store.longitude,
-                  }}
-                  title={store.name}
-                  description={store.address}
-                />
-              ))}
-            </MapView>
+            {Platform.OS === 'web' ? (
+              <View style={styles.mapPlaceholder}>
+                <Text style={styles.mapPlaceholderText}>Store Map</Text>
+                <Text style={styles.mapPlaceholderSubtext}>
+                  Interactive map would be displayed here on mobile devices
+                </Text>
+              </View>
+            ) : (
+              <MapView
+                ref={mapRef}
+                style={styles.map}
+                initialRegion={{
+                  latitude: stores[0].latitude,
+                  longitude: stores[0].longitude,
+                  latitudeDelta: 0.0922,
+                  longitudeDelta: 0.0421,
+                }}
+              >
+                {stores.map((store) => (
+                  <Marker
+                    key={store.id}
+                    coordinate={{
+                      latitude: store.latitude,
+                      longitude: store.longitude,
+                    }}
+                    title={store.name}
+                    description={store.address}
+                  />
+                ))}
+              </MapView>
+            )}
 
             {/* Store List */}
             <ScrollView style={styles.storeList}>
@@ -239,6 +255,27 @@ const styles = StyleSheet.create({
     height: 500,
     borderRadius: 12,
     marginBottom: 12,
+  },
+  // Web-specific styles
+  mapPlaceholder: {
+    height: 500,
+    borderRadius: 12,
+    marginBottom: 12,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  mapPlaceholderText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+  },
+  mapPlaceholderSubtext: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
   },
   storeList: {
     maxHeight: "20%",

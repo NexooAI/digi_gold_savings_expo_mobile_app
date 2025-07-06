@@ -172,10 +172,6 @@ export default function RootLayout() {
                   options={{ gestureEnabled: false }}
                 />
                 <Stack.Screen
-                  name="login"
-                  options={{ gestureEnabled: false }}
-                />
-                <Stack.Screen
                   name="[...missing]"
                   options={{
                     gestureEnabled: false,

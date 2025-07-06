@@ -21,11 +21,15 @@ const FloatingLabelInput: React.FC<FloatingLabelInputProps> = ({
   const animatedIsFocused = useRef(new Animated.Value(value ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.timing(animatedIsFocused, {
-      toValue: isFocused || value ? 1 : 0,
-      duration: 180,
-      useNativeDriver: false,
-    }).start();
+    try {
+      Animated.timing(animatedIsFocused, {
+        toValue: isFocused || value ? 1 : 0,
+        duration: 180,
+        useNativeDriver: false,
+      }).start();
+    } catch (error) {
+      console.error('FloatingLabelInput animation error:', error);
+    }
   }, [isFocused, value]);
 
   const labelStyle = {

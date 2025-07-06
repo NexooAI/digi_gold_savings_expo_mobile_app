@@ -16,6 +16,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Pressable,
+  Linking,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -249,38 +250,42 @@ export default function ResetMpin() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { minHeight: '100%' }]}>
       <ImageBackground
         source={theme.image.bg_image}
-        style={styles.backgroundImage}
+        style={[styles.backgroundImage, { minHeight: '100%' }]}
+        resizeMode="cover"
       >
-        {/* Dark overlay for background */}
-        <View style={styles.darkOverlay} />
-        <LinearGradient
-          colors={["rgba(32, 1, 1, 0.55)", "rgba(167, 0, 0, 0)", "rgba(118, 1, 1, 0)"]}
-          style={styles.gradient}
-        >
-          <SimpleLanguageSwitcher />
-          {showError && (
-            <ErrorAlert message={errorMessage} onClose={hideErrorAlert} />
-          )}
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={styles.keyboardAvoidingView}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
+        <SafeAreaView style={{ flex: 1, minHeight: '100%' }}>
+          <View style={styles.darkOverlay} />
+          <LinearGradient
+            colors={["rgba(32, 1, 1, 0.55)", "rgba(167, 0, 0, 0)", "rgba(118, 1, 1, 0)"]}
+            style={[styles.gradient, { minHeight: '100%' }]}
           >
-            <ScrollView
-              contentContainerStyle={styles.scrollViewContent}
-              keyboardShouldPersistTaps="handled"
+            <SimpleLanguageSwitcher />
+            {showError && (
+              <ErrorAlert message={errorMessage} onClose={hideErrorAlert} />
+            )}
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              style={styles.keyboardAvoidingView}
+              keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 50}
             >
-              <View style={styles.logoContainer}>
-                <Image
-                  source={theme.image.transparentLogo}
-                  style={styles.logo}
-                  resizeMode="contain"
-                />
-              </View>
-              <View style={styles.formContainer}>
+              <ScrollView
+                contentContainerStyle={styles.scrollViewContent}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                bounces={false}
+                automaticallyAdjustKeyboardInsets={true}
+              >
+                <View style={[styles.logoContainer, { paddingTop: 10, marginBottom: 0 }]}>
+                  <Image
+                    source={theme.image.transparentLogo}
+                    style={[styles.logo, { width: 220, height: 220 }]}
+                    resizeMode="contain"
+                  />
+                </View>
+
                 <View style={styles.cardContainer}>
                   {/* Base fog layer */}
                   <LinearGradient
@@ -313,22 +318,22 @@ export default function ResetMpin() {
                   />
                   {/* Content */}
                   <View style={styles.cardContent}>
-                    <Text style={styles.pageTitle}>
+                    <Text style={[styles.pageTitle, { color: '#ffffff' }]}>
                       {isCreatingMPIN ? t("createMpin") : t("resetMpin")}
                     </Text>
-                    <Text style={styles.subtitle}>
+                    <Text style={[styles.subtitle, { color: '#b8c5d6' }]}>
                       {isCreatingMPIN
                         ? t("createMpinSubtitle")
                         : t("resetMpinSubtitle")}
                     </Text>
-                    <Text style={styles.label}>{t("newMpin")}</Text>
+                    <Text style={[styles.label, { color: '#ffffff' }]}>{t("newMpin")}</Text>
                     <MpinInput
                       length={4}
                       onComplete={setMpin}
                       secureTextEntry={!showPin}
                     />
                     <View style={{ height: 16 }} />
-                    <Text style={styles.label}>{t("confirmMpin")}</Text>
+                    <Text style={[styles.label, { color: '#ffffff' }]}>{t("confirmMpin")}</Text>
                     <MpinInput
                       length={4}
                       onComplete={setConfirmMpin}
@@ -350,7 +355,7 @@ export default function ResetMpin() {
                         size={24}
                         color={theme.colors.secondary}
                       />
-                      <Text style={styles.eyeText}>
+                      <Text style={[styles.eyeText, { color: '#b8c5d6' }]}>
                         {showPin ? t("hideMpin") : t("showMpin")}
                       </Text>
                     </TouchableOpacity>
@@ -395,11 +400,16 @@ export default function ResetMpin() {
                     )}
                   </View>
                 </View>
-              </View>
-            </ScrollView>
-          </KeyboardAvoidingView>
-        </LinearGradient>
+              </ScrollView>
+            </KeyboardAvoidingView>
+            <View style={styles.poweredByContainer}>
+              <Text style={styles.poweredByText}>
+                {t("poweredBy")} <Text style={{textDecorationLine: 'underline', color: theme.colors.textLight}} onPress={() => Linking.openURL('https://agnisofterp.com/')}>Agni Soft ERP</Text>
+              </Text>
+            </View>
+          </LinearGradient>
+        </SafeAreaView>
       </ImageBackground>
-    </SafeAreaView>
+    </View>
   );
 }

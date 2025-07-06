@@ -458,11 +458,15 @@ export default function Login() {
             },
             {
               text: t("createAccount"),
-              onPress: () => {
-                // Handle create account navigation
-                router.push(`/register?mobile=${mobile}`);
-                setLoading(false);
-              },
+                              onPress: () => {
+                  // Handle create account navigation
+                  try {
+                    router.push(`/(auth)/register?mobile=${mobile}`);
+                  } catch (error) {
+                    console.error('Navigation error:', error);
+                  }
+                  setLoading(false);
+                },
             },
           ]
         );
@@ -526,15 +530,17 @@ export default function Login() {
   if (isLoggedIn) return null;
 
   return (
-    <SafeAreaView style={registerStyles.container}>
+    <View style={[registerStyles.container, { minHeight: '100%' }]}>
       <ImageBackground
         source={theme.image.bg_image}
-        style={registerStyles.backgroundImage}
+        style={[registerStyles.backgroundImage, { minHeight: '100%' }]}
+        resizeMode="cover"
       >
+        <SafeAreaView style={{ flex: 1, minHeight: '100%' }}>
         <View style={registerStyles.darkOverlay} />
         <LinearGradient
           colors={["rgba(32, 1, 1, 0.55)", "rgba(167, 0, 0, 0)", "rgba(118, 1, 1, 0)"]}
-          style={registerStyles.gradient}
+          style={[registerStyles.gradient, { minHeight: '100%' }]}
         >
           <SimpleLanguageSwitcher />
           {showError && (
@@ -560,7 +566,15 @@ export default function Login() {
                 />
               </View>
 
-              <ModernAuthCard activeTab="login" onTabChange={(tab) => { if(tab==='register'){router.push('/register')} }}>
+              <ModernAuthCard activeTab="login" onTabChange={(tab) => { 
+                try {
+                  if(tab==='register'){
+                    router.push('/(auth)/register');
+                  }
+                } catch (error) {
+                  console.error('Navigation error:', error);
+                }
+              }}>
                 <Text style={[registerStyles.pageTitle, { color: '#ffffff' }]}>{t("welcomeBack")}</Text>
                 <Text style={[registerStyles.subtitle, { color: '#b8c5d6' }]}>{t("signInToContinue")}</Text>
                 {!isShowOtp ? (
@@ -604,7 +618,13 @@ export default function Login() {
                       <Text style={registerStyles.registerText}>
                         {t("dontHaveAccount")} {" "}
                       </Text>
-                      <TouchableOpacity onPress={() => router.push("/register")}> 
+                      <TouchableOpacity onPress={() => {
+                        try {
+                          router.push("/(auth)/register");
+                        } catch (error) {
+                          console.error('Navigation error:', error);
+                        }
+                      }}> 
                         <Text style={registerStyles.registerLink}>{t("register")}</Text>
                       </TouchableOpacity>
                     </View> */}
@@ -693,8 +713,9 @@ export default function Login() {
             </Text>
           </View>
         </LinearGradient>
+        </SafeAreaView>
       </ImageBackground>
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -19,31 +19,39 @@ const PhoneInput: React.FC<PhoneInputProps> = ({ value, onChangeText, loading })
   const [error, setError] = useState("");
 
   const validateMobile = (text: string) => {
-    const numericText = text.replace(/[^0-9]/g, "").slice(0, 10);
-    onChangeText(numericText);
+    try {
+      const numericText = text.replace(/[^0-9]/g, "").slice(0, 10);
+      onChangeText(numericText);
 
-    if (numericText.length > 0) {
-      setError("");
-    }
-    if (numericText.length === 10) {
-      Keyboard.dismiss();
+      if (numericText.length > 0) {
+        setError("");
+      }
+      if (numericText.length === 10) {
+        Keyboard.dismiss();
+      }
+    } catch (error) {
+      console.error('PhoneInput validateMobile error:', error);
     }
   };
 
   const handleBlur = () => {
-    if (!value) {
-      setError(t("pleaseEnterMobile"));
-      Alert.alert(t("error"), t("pleaseEnterMobile"));
-      return;
-    }
+    try {
+      if (!value) {
+        setError(t("pleaseEnterMobile"));
+        Alert.alert(t("error"), t("pleaseEnterMobile"));
+        return;
+      }
 
-    if (value.length !== 10) {
-      setError(t("validMobileNumber"));
-      Alert.alert(t("error"), t("validMobileNumber"));
-      return;
-    }
+      if (value.length !== 10) {
+        setError(t("validMobileNumber"));
+        Alert.alert(t("error"), t("validMobileNumber"));
+        return;
+      }
 
-    setError("");
+      setError("");
+    } catch (error) {
+      console.error('PhoneInput handleBlur error:', error);
+    }
   };
 
   return (

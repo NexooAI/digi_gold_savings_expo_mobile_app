@@ -143,6 +143,7 @@ export default function Register() {
   const [otpModalVisible, setOtpModalVisible] = useState(false);
   const [otpValidated, setOtpValidated] = useState(false);
   const [emailError, setEmailError] = useState('');
+  const [isComponentMounted, setIsComponentMounted] = useState(true);
 
   // Add useEffect to handle pre-filled mobile number
   useEffect(() => {
@@ -151,11 +152,26 @@ export default function Register() {
     }
   }, [params]);
 
+  // Component mount/unmount effect
+  useEffect(() => {
+    setIsComponentMounted(true);
+    return () => {
+      setIsComponentMounted(false);
+      // Cleanup all intervals
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, []);
+
   const startTimer = () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     setTimer(INITIAL_TIMER);
     intervalRef.current = setInterval(() => {
-      setTimer((prev) => (prev > 0 ? prev - 1 : 0));
+      if (isComponentMounted) {
+        setTimer((prev) => (prev > 0 ? prev - 1 : 0));
+      }
     }, 1000);
   };
 
@@ -169,6 +185,8 @@ export default function Register() {
   };
 
   const handleGetOtp = async () => {
+    if (!isComponentMounted) return;
+    
     const indianMobilePattern = /^[6-9]\d{9}$/;
 
     if (!mobile || !indianMobilePattern.test(mobile)) {
@@ -188,7 +206,7 @@ export default function Register() {
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (response.ok && isComponentMounted) {
         setOtpSent(true);
         setOtpModalVisible(true);
         setOtpVerified(false);
@@ -200,6 +218,8 @@ export default function Register() {
         throw new Error(data?.error || t("failedToSendOtp"));
       }
     } catch (error: any) {
+      if (!isComponentMounted) return;
+      
       let message = t("anErrorOccurred");
       if (error.response?.data?.message) {
         message = error.response.data.message;
@@ -208,18 +228,26 @@ export default function Register() {
       }
       if (message.toLowerCase().includes(t("alreadyRegistered"))) {
         Alert.alert(t("accountExists"), t("accountExistsMessage"), [
-          { text: t("ok"), onPress: () => router.push("/login") },
+          { text: t("ok"), onPress: () => {
+            try {
+              router.push("/(auth)/login");
+            } catch (error) {
+              console.error('Navigation error:', error);
+            }
+          }},
         ]);
       } else {
         Alert.alert(t("registrationFailed"), message);
       }
     } finally {
-      setLoading(false);
+      if (isComponentMounted) {
+        setLoading(false);
+      }
     }
   };
 
   const handleResendOtp = async () => {
-    if (resendCount <= 0 || timer > 0) return;
+    if (!isComponentMounted || resendCount <= 0 || timer > 0) return;
 
     setLoading(true);
     try {
@@ -231,7 +259,7 @@ export default function Register() {
         body: JSON.stringify({ mobile_number: mobile }),
       });
 
-      if (response.ok) {
+      if (response.ok && isComponentMounted) {
         setResendCount((prev) => prev - 1);
         setTimer(INITIAL_TIMER);
         setPins(["", "", "", ""]);
@@ -241,6 +269,8 @@ export default function Register() {
         throw new Error(data?.error || t("failedToResendOtp"));
       }
     } catch (error: any) {
+      if (!isComponentMounted) return;
+      
       let message = t("anErrorOccurred");
       if (error.response?.data?.message) {
         message = error.response.data.message;
@@ -249,7 +279,9 @@ export default function Register() {
       }
       Alert.alert(t("resendOtpFailed"), message);
     } finally {
-      setLoading(false);
+      if (isComponentMounted) {
+        setLoading(false);
+      }
     }
   };
 
@@ -273,8 +305,10 @@ export default function Register() {
   };
 
   const handleVerifyOtp = async () => {
-    if (otp.length !== 4) {
-      showErrorAlert(t("pleaseEnterCompleteOtp"));
+    if (!isComponentMounted || otp.length !== 4) {
+      if (otp.length !== 4) {
+        showErrorAlert(t("pleaseEnterCompleteOtp"));
+      }
       return;
     }
     setLoading(true);
@@ -288,29 +322,35 @@ export default function Register() {
         body: JSON.stringify({ mobile_number: mobile, otp }),
       });
       const data = await response.json();
-      if (response.ok && data.message && data.message.toLowerCase().includes('otp verified successfully')) {
+      if (response.ok && data.message && data.message.toLowerCase().includes('otp verified successfully') && isComponentMounted) {
         setOtpModalVisible(false);
         setOtpValidated(true);
         setOtpVerified(true);
         setStep(3);
         setOtp("");
-      } else {
+      } else if (isComponentMounted) {
         Alert.alert(
           t("error"),
           data?.message || t("failedToVerifyOtp")
         );
       }
     } catch (error: any) {
+      if (!isComponentMounted) return;
+      
       Alert.alert(
         t("error"),
         error.response?.data?.message || t("failedToVerifyOtp")
       );
     } finally {
-      setLoading(false);
+      if (isComponentMounted) {
+        setLoading(false);
+      }
     }
   };
 
   const handleRegister = async () => {
+    if (!isComponentMounted) return;
+    
     setLoading(true);
     try {
       const response = await api.post("/register/complete", {
@@ -321,54 +361,62 @@ export default function Register() {
         password: 1234,
         referral_code: referral.trim(),
       });
-      if (response.status === 200) {
+      if (response.status === 200 && isComponentMounted) {
         Alert.alert('Success', 'Registration complete!');
-        router.replace({ pathname: "/(auth)/login", params: { mobile } });
-      } else {
+        try {
+          router.replace({ pathname: "/(auth)/login", params: { mobile } });
+        } catch (error) {
+          console.error('Navigation error:', error);
+        }
+      } else if (isComponentMounted) {
         Alert.alert('Error', response.data.message || 'Registration failed');
       }
     } catch (error: any) {
+      if (!isComponentMounted) return;
+      
       Alert.alert('Error', error.response?.data?.message || 'Registration failed');
     } finally {
-      setLoading(false);
+      if (isComponentMounted) {
+        setLoading(false);
+      }
     }
   };
 
   useFocusEffect(
     React.useCallback(() => {
       return () => {
-        setMobile("");
-        setOtpVerified(false);
-        setLoading(false);
-        setTimer(INITIAL_TIMER);
-        setResendCount(OTP_RESEND_LIMIT);
-        if (intervalRef.current) clearInterval(intervalRef.current);
+        if (isComponentMounted) {
+          setMobile("");
+          setOtpVerified(false);
+          setLoading(false);
+          setTimer(INITIAL_TIMER);
+          setResendCount(OTP_RESEND_LIMIT);
+          if (intervalRef.current) clearInterval(intervalRef.current);
+        }
       };
-    }, [])
+    }, [isComponentMounted])
   );
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    if (otpSent && !otpVerified && timer > 0) {
+    if (otpSent && !otpVerified && timer > 0 && isComponentMounted) {
       interval = setInterval(() => {
-        setTimer(prev => (prev > 0 ? prev - 1 : 0));
+        if (isComponentMounted) {
+          setTimer(prev => (prev > 0 ? prev - 1 : 0));
+        }
       }, 1000);
     }
-    return () => { if (interval) clearInterval(interval); };
-  }, [otpSent, otpVerified, timer]);
-
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+    return () => { 
+      if (interval) clearInterval(interval); 
     };
-  }, []);
+  }, [otpSent, otpVerified, timer, isComponentMounted]);
 
   useEffect(() => {
-    if (!otpModalVisible && otpSent && !otpValidated) {
+    if (!otpModalVisible && otpSent && !otpValidated && isComponentMounted) {
       // Modal closed but OTP not validated
       showErrorAlert(t('otpNotValidated'));
     }
-  }, [otpModalVisible]);
+  }, [otpModalVisible, otpSent, otpValidated, isComponentMounted]);
 
   const handleBackButton = () => {
     if (otpVerified) {
@@ -388,16 +436,28 @@ export default function Register() {
     return /^[\w-.]+@[\w-]+\.[a-zA-Z]{2,}$/.test(email);
   };
 
-  return (
-    <SafeAreaView style={registerStyles.container}>
+  // Add error boundary
+  if (!isComponentMounted) {
+    return null;
+  }
+
+  // Add error boundary
+  if (!isComponentMounted) {
+    return null;
+  }
+
+  try {
+    return (
+      <SafeAreaView style={[registerStyles.container, { minHeight: '100%' }]}>
       <ImageBackground
         source={theme.image.bg_image}
-        style={registerStyles.backgroundImage}
+        style={[registerStyles.backgroundImage, { minHeight: '100%' }]}
+        resizeMode="cover"
       >
         <View style={registerStyles.darkOverlay} />
         <LinearGradient
           colors={["rgba(32, 1, 1, 0.55)", "rgba(167, 0, 0, 0)", "rgba(118, 1, 1, 0)"]}
-          style={registerStyles.gradient}
+          style={[registerStyles.gradient, { minHeight: '100%' }]}
         >
           <SimpleLanguageSwitcher />
           {showError && (
@@ -422,7 +482,15 @@ export default function Register() {
                   resizeMode="contain"
                 />
               </View>
-              <ModernAuthCard activeTab="register" onTabChange={(tab) => { if(tab==='login'){router.push('/login')} }}>
+              <ModernAuthCard activeTab="register" onTabChange={(tab) => { 
+                try {
+                  if(tab==='login'){
+                    router.push('/(auth)/login');
+                  }
+                } catch (error) {
+                  console.error('Navigation error:', error);
+                }
+              }}>
                 <View style={registerStyles.formFieldsContainer}>
                   <Text style={[registerStyles.pageTitle, { color: '#ffffff' }]}>{t("register")}</Text>
                   <Text style={[registerStyles.subtitle, { color: '#b8c5d6' }]}>{t("registerSubtitle")}</Text>
@@ -476,7 +544,13 @@ export default function Register() {
                         visible={otpModalVisible}
                         transparent
                         animationType="fade"
-                        onRequestClose={() => {}}
+                        onRequestClose={() => {
+                          if (isComponentMounted) {
+                            setOtpModalVisible(false);
+                            setOtp("");
+                            setOtpSent(false);
+                          }
+                        }}
                       >
                         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' }}>
                           <View style={{ width: '90%', backgroundColor: '#fff', borderRadius: 16, padding: 24, alignSelf: 'center', elevation: 10 }}>
@@ -500,9 +574,11 @@ export default function Register() {
                             </TouchableOpacity>
                             <TouchableOpacity
                               onPress={() => {
-                                setOtpModalVisible(false);
-                                setOtp("");
-                                setOtpSent(false);
+                                if (isComponentMounted) {
+                                  setOtpModalVisible(false);
+                                  setOtp("");
+                                  setOtpSent(false);
+                                }
                               }}
                               style={{ alignItems: 'center', marginTop: 4 }}
                             >
@@ -587,5 +663,15 @@ export default function Register() {
         </LinearGradient>
       </ImageBackground>
     </SafeAreaView>
-  );
+    );
+  } catch (error) {
+    console.error('Register component error:', error);
+    return (
+      <SafeAreaView style={registerStyles.container}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ color: '#fff', fontSize: 16 }}>Something went wrong. Please try again.</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 }

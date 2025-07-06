@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, TextInput, StyleSheet, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '@/constants/theme';
@@ -10,16 +10,42 @@ interface ModernAuthCardProps {
 }
 
 const ModernAuthCard: React.FC<ModernAuthCardProps> = ({ activeTab, onTabChange, children }) => {
+  const [isComponentMounted, setIsComponentMounted] = useState(true);
+  const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setIsComponentMounted(true);
+    return () => {
+      setIsComponentMounted(false);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, []);
+
+  const handleTabChange = (tab: 'login' | 'register') => {
+    try {
+      if (onTabChange) {
+        onTabChange(tab);
+      }
+    } catch (error) {
+      console.error('Error in tab change:', error);
+    }
+  };
+
+
+
   return (
     <View style={styles.card}>
       {/* Tab Switcher */}
       <View style={styles.tabRow}>
-        <TouchableOpacity onPress={() => onTabChange('login')} style={styles.tabButton}>
+        <TouchableOpacity onPress={() => handleTabChange('login')} style={styles.tabButton}>
           <Text style={[styles.tabText, activeTab === 'login' && styles.tabTextActive]}>Login</Text>
           {activeTab === 'login' && <View style={styles.tabUnderline} />}
         </TouchableOpacity>
         <View style={styles.tabDivider} />
-        <TouchableOpacity onPress={() => onTabChange('register')} style={styles.tabButton}>
+        <TouchableOpacity onPress={() => handleTabChange('register')} style={styles.tabButton}>
           <Text style={[styles.tabText, activeTab === 'register' && styles.tabTextActive]}>Register</Text>
           {activeTab === 'register' && <View style={styles.tabUnderline} />}
         </TouchableOpacity>

@@ -16,27 +16,44 @@ const [referral, setReferral] = useState('');
 export const registerStyles = StyleSheet.create({
   backgroundImage: {
     flex: 1,
+    width: '100%',
+    height: '100%',
     resizeMode: "cover",
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    minHeight: '100%',
   },
   darkOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0, 0, 0, 0)', // Adjust opacity as needed
     zIndex: 0,
+    minHeight: '100%',
   },
   gradient: {
     flex: 1,
+    width: '100%',
+    height: '100%',
+    minHeight: '100%',
   },
   container: {
     flex: 1,
-    paddingBottom: Platform.OS === "ios" ? 40 : 20,
+    width: '100%',
+    height: '100%',
+    position: 'relative',
+    minHeight: '100%',
   },
   keyboardAvoidingView: {
     flex: 1,
+    minHeight: '100%',
   },
   scrollViewContent: {
     flexGrow: 1,
     paddingBottom: Platform.OS === "ios" ? 100 : 80,
     minHeight: '100%',
+    justifyContent: 'flex-start',
   },
   formContainer: {
     flex: 1,
@@ -264,6 +281,11 @@ export const registerStyles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 20,
     marginBottom: 10,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
   },
   poweredByText: {
     color: theme.colors.secondary,
@@ -321,7 +343,7 @@ export const registerStyles = StyleSheet.create({
     borderColor: "rgba(255, 255, 255, 0.3)",
     borderRadius: 15,
     backgroundColor: "rgba(255, 255, 255, 0.95)",
-    color: "#000000",
+    color: "#1a2a39",
     fontSize: 28,
     fontWeight: "bold",
     textAlign: "center",
@@ -371,10 +393,11 @@ export const registerStyles = StyleSheet.create({
   },
   label: {
     color: "#ffffff",
-    fontSize: 14,
-    marginBottom: 8,
+    fontSize: 16,
+    marginBottom: 12,
     alignSelf: "center",
     textAlign: "center",
+    fontWeight: "600",
   },
   eyeToggle: {
     flexDirection: "row",
