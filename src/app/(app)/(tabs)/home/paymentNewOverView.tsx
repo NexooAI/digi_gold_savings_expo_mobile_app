@@ -163,7 +163,7 @@ export default function PaymentNewOverView() {
         const orderId = response?.session?.order_id;
 
         router.push({
-          pathname: "/(tabs)/home/paymentWebView",
+          pathname: "/(tabs)/home/PaymentWebView",
           params: {
             url: response.session.payment_links.web,
             orderId: orderId, // Add orderId to params
