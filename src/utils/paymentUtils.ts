@@ -25,12 +25,30 @@ export const initiatePayment = ({
   setIsLoading(true);
 
   // Notify server that payment was initiated
+  console.log("=== INITIAL SOCKET EMISSION DEBUG ===");
+  console.log("Socket exists:", !!socket);
   if (socket) {
-    socket.emit("payment_initiated", {
+    console.log("Socket connected:", socket.connected);
+    console.log("Socket ID:", socket.id);
+    console.log("About to emit 'payment_initiated'");
+    console.log("Emission data:", {
       amount: amount,
       userId: userId,
       timestamp: new Date().toISOString(),
     });
+    
+    try {
+      socket.emit("payment_initiated", {
+        amount: amount,
+        userId: userId,
+        timestamp: new Date().toISOString(),
+      });
+      console.log("✅ Initial socket emission successful!");
+    } catch (error) {
+      console.error("❌ Initial socket emission failed:", error);
+    }
+  } else {
+    console.log("❌ Socket is null - cannot emit initial payment_initiated");
   }
 
   const payload = {
@@ -56,10 +74,90 @@ export const initiatePayment = ({
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
     })
     .then((response) => {
+      console.log("=== PAYMENT INITIATION API RESPONSE ===");
+      console.log("Full response:", JSON.stringify(response, null, 2));
+      console.log("Response data:", JSON.stringify(response.data, null, 2));
+      console.log("Session data:", JSON.stringify(response.data.session, null, 2));
+      
       const paymentUrl = response.data.session.payment_links.web;
+      console.log("Payment URL:", paymentUrl);
+      
+      // Emit payment metadata to socket after successful API call
+      if (socket) {
+        console.log("=== SOCKET EMISSION DEBUG ===");
+        console.log("Socket exists:", !!socket);
+        console.log("Socket connected:", socket.connected);
+        console.log("Socket ID:", socket.id);
+        
+        const orderId = response.data.session.order_id;
+        console.log("Order ID from response:", orderId);
+        
+        // Debug parsedUserDetails
+        console.log("=== PARSED USER DETAILS DEBUG ===");
+        console.log("Full parsedUserDetails:", JSON.stringify(parsedUserDetails, null, 2));
+        console.log("parsedUserDetails.data?.data?.id:", parsedUserDetails.data?.data?.id);
+        console.log("parsedUserDetails.investmentId:", parsedUserDetails.investmentId);
+        console.log("parsedUserDetails.data?.data?.userId:", parsedUserDetails.data?.data?.userId);
+        console.log("parsedUserDetails.userId:", parsedUserDetails.userId);
+        console.log("parsedUserDetails.data?.data?.schemeId:", parsedUserDetails.data?.data?.schemeId);
+        console.log("parsedUserDetails.schemeId:", parsedUserDetails.schemeId);
+        console.log("parsedUserDetails.data?.data?.chitId:", parsedUserDetails.data?.data?.chitId);
+        console.log("parsedUserDetails.chitId:", parsedUserDetails.chitId);
+        console.log("parsedUserDetails.data?.data?.accountNo:", parsedUserDetails.data?.data?.accountNo);
+        console.log("parsedUserDetails.accountNo:", parsedUserDetails.accountNo);
+        console.log("parsedUserDetails.accNo:", parsedUserDetails.accNo);
+        console.log("parsedUserDetails.data?.data?.accountName:", parsedUserDetails.data?.data?.accountName);
+        console.log("parsedUserDetails.accountName:", parsedUserDetails.accountName);
+        console.log("parsedUserDetails.name:", parsedUserDetails.name);
+        console.log("Amount:", amount);
+        
+        const paymentMetadata = {
+          orderId: orderId,
+          investmentId: parsedUserDetails.data?.data?.id || parsedUserDetails.investmentId,
+          userId: parsedUserDetails.data?.data?.userId || parsedUserDetails.userId,
+          schemeId: parsedUserDetails.data?.data?.schemeId || parsedUserDetails.schemeId,
+          chitId: parsedUserDetails.data?.data?.chitId || parsedUserDetails.chitId,
+          amount: amount,
+          isManual: "no",
+          utr_reference_number: "",
+          accountNumber: parsedUserDetails.data?.data?.accountNo || parsedUserDetails.accountNo || parsedUserDetails.accNo,
+          accountName: parsedUserDetails.data?.data?.accountName || parsedUserDetails.accountName || parsedUserDetails.name
+        };
+        
+        console.log("=== FINAL PAYMENT METADATA TO EMIT ===");
+        console.log("Payment metadata object:", JSON.stringify(paymentMetadata, null, 2));
+        console.log("Individual fields:");
+        console.log("- orderId:", paymentMetadata.orderId);
+        console.log("- investmentId:", paymentMetadata.investmentId);
+        console.log("- userId:", paymentMetadata.userId);
+        console.log("- schemeId:", paymentMetadata.schemeId);
+        console.log("- chitId:", paymentMetadata.chitId);
+        console.log("- amount:", paymentMetadata.amount);
+        console.log("- isManual:", paymentMetadata.isManual);
+        console.log("- utr_reference_number:", paymentMetadata.utr_reference_number);
+        console.log("- accountNumber:", paymentMetadata.accountNumber);
+        console.log("- accountName:", paymentMetadata.accountName);
+        
+        console.log("=== SOCKET EMISSION ===");
+        console.log("About to emit 'store_payment_metadata' with data:", paymentMetadata);
+        
+        try {
+          socket.emit("store_payment_metadata", paymentMetadata);
+          console.log("✅ Socket emission successful!");
+        } catch (error) {
+          console.error("❌ Socket emission failed:", error);
+        }
+      } else {
+        console.log("❌ Socket is null or undefined - cannot emit payment metadata");
+      }
+      
       router.push({
         pathname: "/(tabs)/home/PaymentWebView",
-        params: { paymentUrl },
+        params: { 
+          paymentUrl,
+          orderId: response.data.session.order_id,
+          userDetails: JSON.stringify(parsedUserDetails)
+        },
       });
       return response;
     })
