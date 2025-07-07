@@ -153,8 +153,8 @@ export default function PaymentNewOverView() {
         userEmail: userDetails?.email || user?.email,
         userMobile: userDetails?.mobile || user?.mobile,
         userName: userDetails?.accountname,
-        chitId: Array.isArray(params.chitId) ? params.chitId[0] : params.chitId,
-        paymentFrequency: params.paymentFrequency,
+        // chitId: Array.isArray(params.chitId) ? params.chitId[0] : params.chitId,
+        // paymentFrequency: params.paymentFrequency,
       };
       console.log("initialpayment ======>", payload);
       const response = await paymentService.initiatePayment(payload);
@@ -248,8 +248,9 @@ export default function PaymentNewOverView() {
         style={styles.content}
         contentContainerStyle={[
           styles.contentContainer,
-          { paddingBottom: 100 }, // Add extra padding at bottom for button
+          { paddingBottom: 250 }, // Increase padding to ensure all content is visible above footer
         ]}
+        showsVerticalScrollIndicator={true}
       >
         {/* Amount Card */}
         {isFlexi ? (
@@ -609,11 +610,11 @@ const styles = StyleSheet.create({
   },
   footer: {
     position: "absolute",
-    bottom: 40,
+    bottom: 80, // Lift the footer up to avoid tab bar overlap
     left: 0,
     right: 0,
     padding: 16,
-    paddingBottom: 32, // Extra padding for tab bar
+    paddingBottom: 20, // Reduced padding since we moved the footer up
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: "#e5e5e5",

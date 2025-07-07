@@ -599,7 +599,7 @@ export default function Home2() {
         // Set flash news
         if (data.flashNews && data.flashNews.length > 0) {
           console.log(data.flashNews)
-          const flashArray = data.flashNews.map((f) => f.title)
+          const flashArray = data.flashNews.map((f:any) => f.title)
           setFlashNews(flashArray);
         }
 
