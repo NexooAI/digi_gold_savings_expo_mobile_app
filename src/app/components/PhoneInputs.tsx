@@ -13,9 +13,10 @@ interface PhoneInputProps {
   value: string;
   onChangeText: (text: string) => void;
   loading: boolean;
+  rightIcon?: React.ReactNode;
 }
 
-const PhoneInput: React.FC<PhoneInputProps> = ({ value, onChangeText, loading }) => {
+const PhoneInput: React.FC<PhoneInputProps> = ({ value, onChangeText, loading, rightIcon }) => {
   const [error, setError] = useState("");
 
   const validateMobile = (text: string) => {
@@ -82,6 +83,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({ value, onChangeText, loading })
           blurOnSubmit={true}
           enablesReturnKeyAutomatically={true}
         />
+        {rightIcon ? <View style={{ marginRight: 10 }}>{rightIcon}</View> : null}
       </View>
 
       {/* Count */}

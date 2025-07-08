@@ -402,11 +402,11 @@ export default function ResetMpin() {
                 </View>
               </ScrollView>
             </KeyboardAvoidingView>
-            <View style={styles.poweredByContainer}>
+            {/* <View style={styles.poweredByContainer}>
               <Text style={styles.poweredByText}>
                 {t("poweredBy")} <Text style={{textDecorationLine: 'underline', color: theme.colors.textLight}} onPress={() => Linking.openURL('https://agnisofterp.com/')}>Agni Soft ERP</Text>
               </Text>
-            </View>
+            </View> */}
           </LinearGradient>
         </SafeAreaView>
       </ImageBackground>

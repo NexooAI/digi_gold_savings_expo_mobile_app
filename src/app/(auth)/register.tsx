@@ -358,7 +358,6 @@ export default function Register() {
         email,
         mobile_number: mobile,
         mpin: '1234',
-        password: 1234,
         referral_code: referral.trim(),
       });
       if (response.status === 200 && isComponentMounted) {
@@ -508,10 +507,12 @@ export default function Register() {
                         setResendCount(OTP_RESEND_LIMIT);
                       }}
                       loading={loading || otpVerified}
+                      rightIcon={
+                        otpVerified && /^[6-9]\d{9}$/.test(mobile) ? (
+                          <Ionicons name="checkmark-circle" size={24} color="green" />
+                        ) : null
+                      }
                     />
-                    {otpVerified && (
-                      <Ionicons name="checkmark-circle" size={24} color="green" style={{ marginLeft: 8 }} />
-                    )}
                     {!otpSent && !otpVerified && (
                       <View style={{ alignItems: 'flex-end', marginTop: -16 }}>
                         <TouchableOpacity
@@ -655,11 +656,6 @@ export default function Register() {
               </ModernAuthCard>
             </ScrollView>
           </KeyboardAvoidingView>
-          <View style={registerStyles.poweredByContainer}>
-            <Text style={registerStyles.poweredByText}>
-              {t("poweredBy")} <Text style={{textDecorationLine: 'underline', color: theme.colors.textLight}} onPress={() => Linking.openURL('https://agnisofterp.com/')}>Agni Soft ERP</Text>
-            </Text>
-          </View>
         </LinearGradient>
       </ImageBackground>
     </SafeAreaView>

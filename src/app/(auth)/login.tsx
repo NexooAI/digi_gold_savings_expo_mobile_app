@@ -707,11 +707,6 @@ export default function Login() {
               </ModernAuthCard>
             </ScrollView>
           </KeyboardAvoidingView>
-          <View style={registerStyles.poweredByContainer}>
-            <Text style={registerStyles.poweredByText}>
-              {t("poweredBy")} <Text style={{textDecorationLine: 'underline', color: theme.colors.textLight}} onPress={() => Linking.openURL('https://agnisofterp.com/')}>Agni Soft ERP</Text>
-            </Text>
-          </View>
         </LinearGradient>
         </SafeAreaView>
       </ImageBackground>

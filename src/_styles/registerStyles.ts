@@ -475,4 +475,17 @@ export const registerStyles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  formCardContainer: {
+    backgroundColor: 'rgba(255,255,255,0.97)',
+    borderRadius: 24,
+    padding: 20,
+    marginHorizontal: 12,
+    marginTop: 30,
+    marginBottom: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
+    elevation: 8,
+  },
 }); 

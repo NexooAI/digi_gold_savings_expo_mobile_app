@@ -134,8 +134,8 @@ export default function PaymentNewOverView() {
   }, [weightPerGram]);
 
   const handlePayment = async () => {
-    Alert.alert("Under Maintenance", "This feature is currently under maintenance. Please try again later.");
-    return;
+    // Alert.alert("Under Maintenance", "This feature is currently under maintenance. Please try again later.");
+    // return;
     if (!userDetails) {
       Alert.alert("Error", "User details not available");
       return;
@@ -147,42 +147,45 @@ export default function PaymentNewOverView() {
     }
     
     try {
-      const payload:any = {
-        "order_id": "12345",
-        amount: currentAmount,
-        "currency": "INR"
-      }
-      // const payload: PaymentInitPayload | any = {
-      //   userId: userDetails.userId || user?.id,
+      // const payload:any = {
+      //   "order_id": "12345",
       //   amount: currentAmount,
-      //   investmentId: userDetails.investmentId,
-      //   schemeId: params?.schemeId,
-      //   userEmail: userDetails?.email || user?.email,
-      //   userMobile: userDetails?.mobile || user?.mobile,
-      //   userName: userDetails?.accountname,
-      //   chitId: Array.isArray(params.chitId) ? params.chitId[0] : params.chitId,
-      //   paymentFrequency: params.paymentFrequency,
-      // };
+      //   "currency": "INR"
+      // }
+      const payload: PaymentInitPayload | any = {
+        userId: userDetails.userId || user?.id,
+        amount: currentAmount,
+        investmentId: userDetails.investmentId,
+        schemeId: params?.schemeId,
+        userEmail: userDetails?.email || user?.email,
+        userMobile: userDetails?.mobile || user?.mobile,
+        userName: userDetails?.accountname,
+        order_id:Math.round( Math.random()*1000000 ),
+        currency: "INR",
+        // chitId: Array.isArray(params.chitId) ? params.chitId[0] : params.chitId,
+        // paymentFrequency: params.paymentFrequency,
+      };
       
       const response = await paymentService.initiatePayment(payload);
-      const resultUrl = await convertHtmlFormToCCAvenueUrl(response.data);
+      console.log(response.data.data)
+      // const resultUrl = await convertHtmlFormToCCAvenueUrl(response.data);
       
-      if (response?.status === 200) {
-        const orderId = response?.session?.order_id;
+      if (response?.data?.success) {
+        // const orderId = response?.session?.order_id;
         router.push({
           pathname: "/(tabs)/home/PaymentWebView",
           params: {
-            url: resultUrl,
-            orderId: orderId, // Add orderId to params
+            url: response?.data?.data,
+            orderId: payload.order_id, // Add orderId to params
             userDetails: JSON.stringify({
               ...userDetails,
               amount: currentAmount, // Include the current amount
-              orderId: orderId, // Include orderId in userDetails
+              orderId: payload.order_id, // Include orderId in userDetails
               // investmentId: params.investmentId,
               // schemeId: params.schemeId,
               // chitId:  params.chitId,
               userId:userDetails.userId || user?.id,
-              paymentFrequency: params.paymentFrequency || "Monthly",
+              paymentFrequency: params.paymentFrequency,
             }),
           },
         });

@@ -168,7 +168,7 @@ class PaymentService {
       // if (!response.data.success) {
       //   throw new Error('Payment initiation failed');
       // }
-
+      console.log('---------response' ,response)
       return response;
     } catch (error) {
       // Log the error

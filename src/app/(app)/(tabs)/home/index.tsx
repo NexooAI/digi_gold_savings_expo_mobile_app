@@ -609,7 +609,7 @@ export default function Home2() {
   useEffect(() => {
     const checkBanner = async () => {
       const seen = await AsyncStorage.getItem("flashBannerSeen");
-      if (!seen) setShowFlashBanner(true);
+      if (!seen) setShowFlashBanner(false);
     };
     checkBanner();
   }, []);
