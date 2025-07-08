@@ -17,7 +17,7 @@ import {
 } from "react-native-safe-area-context";
 
 // Platform-specific imports
-let MapView, Marker;
+let MapView: any, Marker: any;
 if (Platform.OS !== 'web') {
   const Maps = require('react-native-maps');
   MapView = Maps.default;
@@ -62,8 +62,8 @@ const StoreLocator = () => {
     extrapolate: "clamp",
   });
 
-  const mapRef = useRef(null);
-  const [selectedStore, setSelectedStore] = useState(null);
+  const mapRef = useRef<any>(null);
+  const [selectedStore, setSelectedStore] = useState<any>(null);
   const [isFocus, setIsFocus] = useState(false);
   const insets = useSafeAreaInsets() || {
     top: 0,
@@ -72,16 +72,18 @@ const StoreLocator = () => {
     right: 0,
   };
 
-  const focusOnStore = (store) => {
-    mapRef.current.animateToRegion(
-      {
-        latitude: store.latitude,
-        longitude: store.longitude,
-        latitudeDelta: 0.005,
-        longitudeDelta: 0.005,
-      },
-      800
-    );
+  const focusOnStore = (store: any) => {
+    if (mapRef.current) {
+      mapRef.current.animateToRegion(
+        {
+          latitude: store.latitude,
+          longitude: store.longitude,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005,
+        },
+        800
+      );
+    }
   };
 
   const dropdownData = stores.map((store) => ({
@@ -152,7 +154,7 @@ const StoreLocator = () => {
               value={selectedStore?.value}
               onFocus={() => setIsFocus(true)}
               onBlur={() => setIsFocus(false)}
-              onChange={(item) => {
+              onChange={(item: any) => {
                 setSelectedStore(item);
                 setIsFocus(false);
                 focusOnStore(item);
@@ -177,7 +179,7 @@ const StoreLocator = () => {
               </View>
             ) : (
               <MapView
-                ref={mapRef}
+                ref={mapRef as any}
                 style={styles.map}
                 initialRegion={{
                   latitude: stores[0].latitude,
@@ -186,7 +188,7 @@ const StoreLocator = () => {
                   longitudeDelta: 0.0421,
                 }}
               >
-                {stores.map((store) => (
+                {stores.map((store: any) => (
                   <Marker
                     key={store.id}
                     coordinate={{

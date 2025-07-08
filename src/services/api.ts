@@ -304,7 +304,7 @@ api.interceptors.request.use(
       LoadingService.hide();
       
       if (error.message === 'NO_INTERNET') {
-        showToast('No internet connection. Please check your network.', 'error');
+        // showToast('No internet connection. Please check your network.', 'error');
       }
       return Promise.reject(error);
     }
@@ -350,9 +350,9 @@ api.interceptors.response.use(
     LoadingService.hide();
     
     if (error.code === 'ECONNABORTED') {
-      showToast('Request timeout. Please try again.', 'error');
+      // showToast('Request timeout. Please try again.', 'error');
     } else if (!error.response) {
-      showToast('Network error. Please check your connection.', 'error');
+      // showToast('Network error. Please check your connection.', 'error');
     } else {
       const status = error.response?.status;
       const errorData = error.response?.data;
@@ -368,7 +368,7 @@ api.interceptors.response.use(
 
       switch (status) {
         case 401:
-          showToast('Session expired. Please login again.', 'error');
+          // showToast('Session expired. Please login again.', 'error');
           Alert.alert(
             'Session Expired',
             'Your session has expired. Please login again.',

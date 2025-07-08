@@ -160,7 +160,6 @@ export default function PaymentNewOverView() {
         userEmail: userDetails?.email || user?.email,
         userMobile: userDetails?.mobile || user?.mobile,
         userName: userDetails?.accountname,
-        order_id:Math.round( Math.random()*1000000 ),
         currency: "INR",
         // chitId: Array.isArray(params.chitId) ? params.chitId[0] : params.chitId,
         // paymentFrequency: params.paymentFrequency,
@@ -176,7 +175,7 @@ export default function PaymentNewOverView() {
           pathname: "/(tabs)/home/PaymentWebView",
           params: {
             url: response?.data?.data,
-            orderId: payload.order_id, // Add orderId to params
+            orderId: response?.data?.order_id, // Add orderId to params
             userDetails: JSON.stringify({
               ...userDetails,
               amount: currentAmount, // Include the current amount

@@ -19,7 +19,7 @@ export default function PaymentWebView() {
       router.replace({
         pathname: "/(tabs)/home/payment-success",
         params: {
-          txnId: data?.paymentResponse?.txn_id,
+          txnId: data?.paymentResponse?.bank_ref_no,
           orderId: data?.paymentResponse?.order_id,
           amount: data?.paymentResponse?.amount,
         },
@@ -38,7 +38,7 @@ export default function PaymentWebView() {
             (data?.paymentResponse?.txn_detail as any)?.response_message ||
             "Payment Failed",
           orderId: data?.paymentResponse?.order_id,
-          txnId: data?.paymentResponse?.txn_id,
+          txnId: data?.paymentResponse?.bank_ref_no,
           amount: data?.paymentResponse?.amount, 
           status: data?.paymentResponse?.txn_detail?.status,
         },

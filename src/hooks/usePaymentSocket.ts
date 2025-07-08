@@ -162,7 +162,7 @@ export const usePaymentSocket = ({
 
     // Listen for payment status updates
     socketInstance.on("payment_status_update", async (data: any) => {
-      //console.log("Payment status update received:", data);
+      console.log("Payment status update received:", data);
 
       // Check both the top-level status and the payment response status
       const isSuccess = data?.status === "success" ||
@@ -171,7 +171,7 @@ export const usePaymentSocket = ({
 
       try {
         if (isSuccess) {
-          //console.log('Payment charged successfully');
+          console.log('Payment charged successfully');
           isPaymentCompleted.current = true;
 
           if (parsedUserDetails && router) {
@@ -202,36 +202,36 @@ export const usePaymentSocket = ({
             socketInstance.disconnect();
           }
         } else {
-          //console.log('Payment not charged');
+          console.log('Payment not charged');
           isPaymentCompleted.current = true;
 
           if (parsedUserDetails && router) {
-            const transactionPayload = {
-              userId: parsedUserDetails.data?.data?.userId || parsedUserDetails.userId || '',
-              investmentId: parsedUserDetails.data?.data?.id || parsedUserDetails.id || parsedUserDetails.investmentId ||'',
-              schemeId: parsedUserDetails.data?.data?.schemeId || parsedUserDetails.schemeId || '',
-              chitId: parsedUserDetails.data?.data?.chitId || parsedUserDetails.chitId || '',
-              accountNumber: parsedUserDetails.data?.data?.accountNo || parsedUserDetails.accountNo || parsedUserDetails.accNo ||'',
-              paymentId: 0,
-              orderId: data?.paymentResponse?.order_id || '',
-              amount: data?.paymentResponse?.amount || '',
-              currency: data?.paymentResponse?.currency || 'INR',
-              paymentMethod: data?.paymentResponse?.payment_method || '',
-              signature: '000',
-              paymentStatus: data?.paymentResponse?.payment_gateway_response?.resp_message || 'Failed',
-              paymentDate: data?.paymentResponse?.date_created || '',
-              status: data?.paymentResponse?.status || 'FAILED',
-              gatewayTransactionId: data?.paymentResponse?.txn_id || '',
-              "gatewayresponse": JSON.stringify(data?.paymentResponse),
-              "isManual":"no",
-              "utr_reference_number":""
-            };
+            // const transactionPayload = {
+            //   userId: parsedUserDetails.data?.data?.userId || parsedUserDetails.userId || '',
+            //   investmentId: parsedUserDetails.data?.data?.id || parsedUserDetails.id || parsedUserDetails.investmentId ||'',
+            //   schemeId: parsedUserDetails.data?.data?.schemeId || parsedUserDetails.schemeId || '',
+            //   chitId: parsedUserDetails.data?.data?.chitId || parsedUserDetails.chitId || '',
+            //   accountNumber: parsedUserDetails.data?.data?.accountNo || parsedUserDetails.accountNo || parsedUserDetails.accNo ||'',
+            //   paymentId: 0,
+            //   orderId: data?.paymentResponse?.order_id || '',
+            //   amount: data?.paymentResponse?.amount || '',
+            //   currency: data?.paymentResponse?.currency || 'INR',
+            //   paymentMethod: data?.paymentResponse?.payment_method || '',
+            //   signature: '000',
+            //   paymentStatus: data?.paymentResponse?.payment_gateway_response?.resp_message || 'Failed',
+            //   paymentDate: data?.paymentResponse?.date_created || '',
+            //   status: data?.paymentResponse?.status || 'FAILED',
+            //   gatewayTransactionId: data?.paymentResponse?.txn_id || '',
+            //   "gatewayresponse": JSON.stringify(data?.paymentResponse),
+            //   "isManual":"no",
+            //   "utr_reference_number":""
+            // };
 
-            try {
-              await paymentService.createTransaction(transactionPayload);
-            } catch (error) {
-              console.error("Error posting failed transaction:", error);
-            }
+            // try {
+            //   await paymentService.createTransaction(transactionPayload);
+            // } catch (error) {
+            //   console.error("Error posting failed transaction:", error);
+            // }
 
             router.replace({
               pathname: '/(tabs)/home/payment-failure',

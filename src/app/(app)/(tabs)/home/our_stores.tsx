@@ -14,7 +14,7 @@ import {
 } from "react-native-safe-area-context";
 
 // Platform-specific imports
-let MapView, Marker;
+let MapView: any, Marker: any;
 if (Platform.OS !== 'web') {
   const Maps = require('react-native-maps');
   MapView = Maps.default;
@@ -38,16 +38,16 @@ const stores: Store[] = [
   {
     id: 1,
     name: "Akila Jewellers ",
-    latitude: 10.519531086895093,
-    longitude: 76.22355145836895,
+    latitude: 8.427828080550306,
+    longitude: 78.02855977120382,
     address:
-      "Road Fathima Nagar, Mission Quarters, Anchery, Thrissur, Kerala 680005",
+      "205/64A, Main Bazar, Udangudi, Thoothukudi(D), Tamil Nadu - 628203",
   },
 ];
 
 const StoreLocator = () => {
   const router = useRouter();
-  const mapRef = useRef<MapView | null>(null);
+  const mapRef = useRef<any>(null);
   const [selectedStore, setSelectedStore] = useState<any>(null);
   const [isFocus, setIsFocus] = useState(false);
   const insets = useSafeAreaInsets();
@@ -132,7 +132,7 @@ const StoreLocator = () => {
             </View>
           ) : (
             <MapView
-              ref={mapRef}
+              ref={mapRef as any}
               style={styles.map}
               initialRegion={{
                 latitude: stores[0].latitude,

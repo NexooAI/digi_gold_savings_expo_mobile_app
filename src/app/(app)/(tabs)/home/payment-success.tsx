@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing, BackHandler, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/constants/theme';
 import { t } from '@/i18n';
+import { usePaymentSocket } from '@/hooks/usePaymentSocket';
 
 export default function PaymentSuccess() {
   const params = useLocalSearchParams();
   const router = useRouter();
+  const { socket } = usePaymentSocket({ parsedUserDetails: null, router, orderId: '', });
   
   const [fadeAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0.8));
@@ -56,7 +58,46 @@ export default function PaymentSuccess() {
         })
       ])
     ).start();
+
+    const tWithFallback = (key: 'chooseDestination' | 'whereToGo' | 'home' | 'savings' | 'cancel'): string => {
+      const fallback: Record<'chooseDestination' | 'whereToGo' | 'home' | 'savings' | 'cancel', string> = {
+        chooseDestination: 'Choose Destination',
+        whereToGo: 'Where do you want to go?',
+        home: 'Home',
+        savings: 'Savings',
+        cancel: 'Cancel',
+      };
+      try {
+        const val = t(key);
+        if (val === key) return fallback[key];
+        return val;
+      } catch {
+        return fallback[key];
+      }
+    };
+
+    const onBackPress = () => {
+      Alert.alert(
+        tWithFallback('chooseDestination'),
+        tWithFallback('whereToGo'),
+        [
+          { text: tWithFallback('home'), onPress: () => router.replace('/(tabs)/home') },
+          { text: tWithFallback('savings'), onPress: () => router.replace('/(tabs)/savings') },
+          { text: tWithFallback('cancel'), style: 'cancel' },
+        ]
+      );
+      return true;
+    };
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => backHandler.remove();
   }, []);
+
+  useEffect(() => {
+    // Defensive: disconnect lingering payment socket
+    if (socket && socket.connected) {
+      socket.disconnect();
+    }
+  }, [socket]);
 
   const handleHomePress = () => {
     Animated.timing(fadeAnim, {
