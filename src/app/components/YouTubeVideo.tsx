@@ -10,7 +10,6 @@ import {
   Alert,
 } from "react-native";
 import YoutubePlayer from "react-native-youtube-iframe";
-import api from "@/services/api";
 import { theme } from "@/constants/theme";
 import { Ionicons } from '@expo/vector-icons';
 import { moderateScale } from "react-native-size-matters";
@@ -20,35 +19,41 @@ import { LinearGradient } from "expo-linear-gradient";
 interface Video {
   id: number;
   title: string;
-  video_url: string;
+  video_url?: string;
+  url?: string | null;
   created_at: string;
 }
 
-const YouTubeVideo: React.FC = () => {
+interface YouTubeVideoProps {
+  videos?: Video[];
+}
+
+const YouTubeVideo: React.FC<YouTubeVideoProps> = ({ videos }) => {
   const screenWidth = Dimensions.get("window").width;
   const [playing, setPlaying] = useState(false);
   const [videoId, setVideoId] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
-  const [videos, setVideos] = useState<Video[]>([]);
+  const [videoList, setVideoList] = useState<Video[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const onStateChange = useCallback((state: string) => {
     if (state === "ended") {
       setPlaying(false);
       // Auto-play next video if available
-      if (videos.length > 1) {
-        const nextIndex = (currentIndex + 1) % videos.length;
+      if (videoList.length > 1) {
+        const nextIndex = (currentIndex + 1) % videoList.length;
         setCurrentIndex(nextIndex);
-        const nextVideo = videos[nextIndex];
-        const nextVideoId = extractYouTubeVideoId(nextVideo.video_url);
+        const nextVideo = videoList[nextIndex];
+        const nextVideoUrl = nextVideo.video_url || nextVideo.url || "";
+        const nextVideoId = extractYouTubeVideoId(nextVideoUrl);
         setVideoId(nextVideoId);
         setCurrentVideo(nextVideo);
         setPlaying(true);
       }
     }
-  }, [videos, currentIndex]);
+  }, [videoList, currentIndex]);
 
   // Function to extract video ID from various YouTube URL formats.
   const extractYouTubeVideoId = (url: string): string => {
@@ -58,33 +63,55 @@ const YouTubeVideo: React.FC = () => {
     return match ? match[1] : "";
   };
 
-  const fetchVideos = async () => {
+  const initializeVideo = () => {
     try {
       setLoading(true);
       setError("");
       
-      const response = await api.get("videos/active");
-      const videoData = response.data.data || [];
+      let videoData: Video[] = [];
       
-      if (videoData.length === 0) {
-        setError("noVideosAvailable");
-        return;
+      // Use provided videos if available and not empty
+      if (videos && videos.length > 0) {
+        videoData = videos;
+        console.log('Using provided videos:', videoData);
+      } else {
+        // Use the local YouTube URL from theme as fallback
+        const localVideoUrl = theme.youtubeUrl;
+        const localVideoId = extractYouTubeVideoId(localVideoUrl);
+        
+        if (!localVideoId) {
+          setError("videoLoadingError");
+          return;
+        }
+
+        // Create a local video object
+        const localVideo: Video = {
+          id: 1,
+          title: "DC Jewellers - Featured Video",
+          video_url: localVideoUrl,
+          created_at: new Date().toISOString(),
+        };
+
+        videoData = [localVideo];
+        console.log('Using fallback video from theme:', localVideo);
       }
 
-      setVideos(videoData);
+      // Find the first valid video
       const firstVideo = videoData[0];
-      const videoId = extractYouTubeVideoId(firstVideo.video_url);
+      const videoUrl = firstVideo.video_url || firstVideo.url;
+      const extractedVideoId = extractYouTubeVideoId(videoUrl || "");
       
-      if (!videoId) {
+      if (!extractedVideoId) {
         setError("videoLoadingError");
         return;
       }
 
-      setVideoId(videoId);
+      setVideoList(videoData);
+      setVideoId(extractedVideoId);
       setCurrentVideo(firstVideo);
       setCurrentIndex(0);
     } catch (error) {
-      console.error("Error fetching videos:", error);
+      console.error("Error initializing video:", error);
       setError("videoLoadingError");
     } finally {
       setLoading(false);
@@ -92,19 +119,20 @@ const YouTubeVideo: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchVideos();
-  }, []);
+    initializeVideo();
+  }, [videos]);
 
   const handlePlayPause = () => {
     setPlaying(!playing);
   };
 
   const handleNextVideo = () => {
-    if (videos.length > 1) {
-      const nextIndex = (currentIndex + 1) % videos.length;
+    if (videoList.length > 1) {
+      const nextIndex = (currentIndex + 1) % videoList.length;
       setCurrentIndex(nextIndex);
-      const nextVideo = videos[nextIndex];
-      const nextVideoId = extractYouTubeVideoId(nextVideo.video_url);
+      const nextVideo = videoList[nextIndex];
+      const nextVideoUrl = nextVideo.video_url || nextVideo.url || "";
+      const nextVideoId = extractYouTubeVideoId(nextVideoUrl);
       setVideoId(nextVideoId);
       setCurrentVideo(nextVideo);
       setPlaying(true);
@@ -112,11 +140,12 @@ const YouTubeVideo: React.FC = () => {
   };
 
   const handlePreviousVideo = () => {
-    if (videos.length > 1) {
-      const prevIndex = currentIndex === 0 ? videos.length - 1 : currentIndex - 1;
+    if (videoList.length > 1) {
+      const prevIndex = currentIndex === 0 ? videoList.length - 1 : currentIndex - 1;
       setCurrentIndex(prevIndex);
-      const prevVideo = videos[prevIndex];
-      const prevVideoId = extractYouTubeVideoId(prevVideo.video_url);
+      const prevVideo = videoList[prevIndex];
+      const prevVideoUrl = prevVideo.video_url || prevVideo.url || "";
+      const prevVideoId = extractYouTubeVideoId(prevVideoUrl);
       setVideoId(prevVideoId);
       setCurrentVideo(prevVideo);
       setPlaying(true);
@@ -154,7 +183,7 @@ const YouTubeVideo: React.FC = () => {
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle" size={48} color="#850111" />
           <Text style={styles.errorText}>{t(error || "videoLoadingError")}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={fetchVideos}>
+          <TouchableOpacity style={styles.retryButton} onPress={initializeVideo}>
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
@@ -190,7 +219,7 @@ const YouTubeVideo: React.FC = () => {
         </View>
         
         {/* Video Controls */}
-        {videos.length > 1 && (
+        {videoList.length > 1 && (
           <View style={styles.controlsContainer}>
             <TouchableOpacity 
               style={styles.controlButton} 

@@ -603,6 +603,13 @@ export default function Home2() {
           setFlashNews(flashArray);
         }
 
+        // Log videos data
+        if (data.videos && data.videos.length > 0) {
+          console.log('📹 Videos data received from API:', data.videos);
+        } else {
+          console.log('📹 No videos data received from API, will use fallback');
+        }
+
         // Store gold rate in AsyncStorage
         if (data.currentRates?.gold_rate) {
           await AsyncStorage.setItem("gold_rate", data.currentRates.gold_rate);
@@ -987,7 +994,7 @@ export default function Home2() {
                 />
               </View>
 
-              <YouTubeVideo />
+              <YouTubeVideo videos={homeData?.data?.videos} />
 
               <SupportContactCard />
               <View style={styles.spacer} />
