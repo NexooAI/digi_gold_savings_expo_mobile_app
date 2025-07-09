@@ -572,6 +572,19 @@ export default function Home2() {
     }
   }, [homeData && typeof homeData === 'object' && homeData.data && Array.isArray(homeData.data.collections) ? homeData.data.collections : undefined]);
 
+  useEffect(() => {
+    if (
+      homeData &&
+      typeof homeData === 'object' &&
+      homeData.data &&
+      Array.isArray(homeData.data.flashNews)
+    ) {
+      setFlashNews(homeData.data.flashNews);
+    } else {
+      setFlashNews([]); // or provide a fallback if needed
+    }
+  }, [homeData && typeof homeData === 'object' && homeData.data && Array.isArray(homeData.data.flashNews) ? homeData.data.flashNews : undefined]);
+
   // Fallback for video URL
   const videoUrl = (homeData && typeof homeData === 'object' && homeData.data && Array.isArray(homeData.data.videos) && homeData.data.videos.length > 0 && homeData.data.videos[0].url)
     ? homeData.data.videos[0].url
@@ -813,7 +826,7 @@ export default function Home2() {
               )}
 
               <FlashOffer
-                fallbackMessages={flashNews}
+                fallbackMessages={flashNews.map(item => item.title)}
                 onPress={() => console.log("Flash news tapped")}
                 textColor="#ffffff"
               />
