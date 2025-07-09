@@ -38,7 +38,7 @@ export default {
       },
       package: theme.bundleIdentifier,
       googleServicesFile: "./google-services.json",
-      versionCode: 3,
+      versionCode: 4,
       config: {
         googleMaps: {
           apiKey: "AIzaSyAkuOcNddEvozQR4D4yPdTrbwXCiPsuEFc",
