@@ -118,6 +118,7 @@ export const usePaymentSocket = ({
       console.log("Socket connected status:", socketInstance.connected);
       console.log("Current orderId:", currentOrderId);
       console.log("parsedUserDetails?.orderId:", parsedUserDetails?.orderId);
+      console.log("parsedUserDetails",parsedUserDetails);
       
       if (currentOrderId) {
         console.log("🎯 Emitting joinOrderRoom for orderId:", currentOrderId);
@@ -131,7 +132,7 @@ export const usePaymentSocket = ({
           userId: parsedUserDetails?.data?.data?.userId || parsedUserDetails?.userId || 0,
           schemeId: parsedUserDetails?.data?.data?.schemeId || parsedUserDetails?.schemeId || 0,
           chitId: parsedUserDetails?.data?.data?.chitId || parsedUserDetails?.chitId || 0,
-          amount: parsedUserDetails?.data?.data?.amount || parsedUserDetails?.amount || 0,
+          amount: parsedUserDetails?.data?.data?.amount || parsedUserDetails?.amount || 500,
           isManual: "no",
           utr_reference_number: "",
           accountNumber: parsedUserDetails?.data?.data?.accountNo || parsedUserDetails?.accountNo || parsedUserDetails?.accNo || "",

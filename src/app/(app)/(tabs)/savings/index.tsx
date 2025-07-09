@@ -127,25 +127,33 @@ export default function SavingsScreen() {
         return;
       }
 
+      // Accept both 'data' and 'investments' as possible array fields
       let investments: any[] = [];
-      if (response?.data?.data) {
-        if (Array.isArray(response.data.data)) {
-          investments = response.data.data;
-        } else {
-          // Unexpected structure, log for debugging
-          console.error("Expected investments to be an array, got:", response.data.data);
-          // Show backend error message if available
-          const backendMsg = response.data.data && response.data.data.message ? response.data.data.message : null;
-          setError(backendMsg || "Unexpected data format received from server. Please try again later.");
-          setLoading(false);
-          return;
-        }
+      if (Array.isArray(response?.data?.data)) {
+        investments = response.data.data;
+      } else if (Array.isArray(response?.data?.investments)) {
+        investments = response.data.investments;
+      } else if (response?.data?.data) {
+        // Unexpected structure, log for debugging
+        console.error("Expected investments to be an array, got:", response.data.data);
+        // Show backend error message if available
+        const backendMsg = response.data.data && response.data.data.message ? response.data.data.message : null;
+        setError(backendMsg || "Unexpected data format received from server. Please try again later.");
+        setLoading(false);
+        return;
       } else {
         // No data field or data is undefined
         console.error("No investments data found in response:", response.data);
         // Show backend error message if available
         const backendMsg = response.data && response.data.message ? response.data.message : null;
         setError(backendMsg || "No savings data found. Please try again later.");
+        setLoading(false);
+        return;
+      }
+
+      // If investments is empty and success is true, do not set error (show EmptyState)
+      if (Array.isArray(investments) && investments.length === 0) {
+        setSavings([]);
         setLoading(false);
         return;
       }
@@ -862,7 +870,7 @@ export default function SavingsScreen() {
   const ErrorState = () => (
     <View className="flex-1 justify-center items-center px-4">
       <Image
-        source={require("../../../../../assets/images/savingsbg.jpg")}
+        source={require("../../../../../assets/images/bg_new.jpg")}
         className="w-32 h-32 mb-4"
         resizeMode="contain"
       />
