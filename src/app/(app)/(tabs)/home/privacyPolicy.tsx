@@ -25,14 +25,20 @@ import { theme } from "@/constants/theme";
 const { width } = Dimensions.get("window");
 const HEADER_HEIGHT = 0; // Adjust to your header's height if needed
 
+interface Policy {
+  title?: string;
+  subtitle?: string;
+  description?: string;
+}
+
 export default function PrivacyPolicy() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { language } = useGlobalStore();
 
-  const [policy, setPolicy] = useState(null);
+  const [policy, setPolicy] = useState<Policy | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchPolicy = async () => {
@@ -85,7 +91,7 @@ export default function PrivacyPolicy() {
         style={{ paddingTop: insets.top }}
       >
         <View className="absolute top-0 left-0 right-0 z-20 bg-transparent px-4">
-          <AppHeader showBackButton={true} backRoute="index" />
+          <AppHeader showBackButton={true} backRoute="home" hideMenuIcon={true} />
         </View>
 
         <ScrollView

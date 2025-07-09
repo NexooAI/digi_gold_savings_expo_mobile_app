@@ -15,11 +15,19 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import useGlobalStore from "@/store/global.store";
 import { theme } from "@/constants/theme";
 import { t } from "../../../i18n";
+import { DrawerContentComponentProps } from '@react-navigation/drawer';
 // import { useAuth } from "../../../../contexts/AuthContext";
 
 const { width } = Dimensions.get("window");
 
-const DrawerMenuItem = ({ label, iconName, onPress, disabled }) => (
+interface DrawerMenuItemProps {
+  label: string;
+  iconName: string;
+  onPress: () => void;
+  disabled?: boolean;
+}
+
+const DrawerMenuItem: React.FC<DrawerMenuItemProps> = ({ label, iconName, onPress, disabled }) => (
   <TouchableOpacity
     style={[styles.menuItem, disabled && styles.disabledMenuItem]}
     onPress={onPress}
@@ -27,7 +35,7 @@ const DrawerMenuItem = ({ label, iconName, onPress, disabled }) => (
     activeOpacity={0.7}
   >
     <Ionicons
-      name={iconName}
+      name={iconName as any}
       size={24}
       color={disabled ? "#666" : theme.colors.primary}
       style={styles.icon}
@@ -38,17 +46,16 @@ const DrawerMenuItem = ({ label, iconName, onPress, disabled }) => (
   </TouchableOpacity>
 );
 
-export function CustomDrawerContent(props) {
+export function CustomDrawerContent(props: DrawerContentComponentProps) {
   const router = useRouter();
   const { logout } = useGlobalStore();
   const [isNavigating, setIsNavigating] = useState(false);
 
   const handleNavigation = useCallback(
-    (route) => {
+    (route: string) => {
       if (isNavigating) return;
       setIsNavigating(true);
       props.navigation.closeDrawer();
-      // Use a longer timeout to ensure drawer animation completes
       setTimeout(() => {
         try {
           router.push(route);
@@ -57,14 +64,12 @@ export function CustomDrawerContent(props) {
         } finally {
           setIsNavigating(false);
         }
-      }, 500); // Increased to 500ms
+      }, 500);
     },
     [router, props.navigation, isNavigating]
   );
-  // Updated handleLogout with navigation state
   const handleLogout = useCallback(() => {
     if (isNavigating) return;
-
     Alert.alert(
       t("logout_confirmation_title"),
       t("logout_confirmation_message"),
@@ -138,22 +143,22 @@ export function CustomDrawerContent(props) {
           onPress={() => handleNavigation("/(tabs)/home/our_stores")}
           disabled={isNavigating}
         />
-        <DrawerMenuItem
+        {/* <DrawerMenuItem
           label={t("storeLocator")}
           iconName="location-outline"
           onPress={() => handleNavigation("/(tabs)/home/StoreLocator")}
           disabled={isNavigating}
-        />
+        /> */}
         <DrawerMenuItem
           label={t("contactUs")}
           iconName="call-outline"
-          onPress={() => handleNavigation("/(tabs)/home/contact_us")}
+          onPress={() => handleNavigation("/(tabs)/home/(storeInfo)/contact_us")}
           disabled={isNavigating}
         />
         <DrawerMenuItem
           label={t("aboutUs")}
           iconName="information-circle-outline"
-          onPress={() => handleNavigation("/(tabs)/home/about_us")}
+          onPress={() => handleNavigation("/(tabs)/home/(storeInfo)/about_us")}
           disabled={isNavigating}
         />
         <DrawerMenuItem

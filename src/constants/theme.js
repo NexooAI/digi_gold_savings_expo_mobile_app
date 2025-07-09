@@ -49,14 +49,17 @@ const theme = {
   constants: {
     customerName: "Akila Jewellers",
     address:
-      "Road Fathima Nagar, Mission Quarters, Anchery, Thrissur, Kerala 680005",
+      "205/64A, Main Bazar, Udangudi, Thoothukudi(D), Tamil Nadu - 628203",
     mobile: "+91 6384226384",
     whatsapp: "+91 6384226384",
     email: "akilajewellwes66@gmail.com",
     website: "https://akilajewellers.com/",
+    latitude:8.427828080550306,
+    longitude:78.02855977120382
   },
   // baseUrl:"http://api.akila.ramcarmotor.com",
-  baseUrl:"http://reqres.akilajewellers.com", 
+  // baseUrl:"http://reqres.akilajewellers.com", 
+  baseUrl: "http://13.127.96.61",
   // baseUrl: "https://api.dcjewellers.org",
   // baseUrl: "https://nexooai.ramcarmotor.com",
   youtubeUrl: "https://youtu.be/8RAhdn5b9Bw",

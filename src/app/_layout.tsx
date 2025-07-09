@@ -23,6 +23,7 @@ import NotificationService from "@/services/NotificationService";
 import * as Notifications from "expo-notifications";
 import { RootSiblingParent } from "react-native-root-siblings";
 import GlobalLoadingProvider from "@/app/components/GlobalLoadingProvider";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 export default function RootLayout() {
   const { isFirstLaunch } = useFirstLaunch();
@@ -144,6 +145,8 @@ export default function RootLayout() {
     return () => backHandler.remove();
   }, [navigation]);
 
+  const queryClient = new QueryClient();
+
   if (isFirstLaunch === null) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -155,33 +158,35 @@ export default function RootLayout() {
   return (
     <RootSiblingParent>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <AuthProvider>
-          <LanguageProvider1>
-            <GlobalLoadingProvider>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen
-                  name="intro"
-                  options={{ gestureEnabled: false }}
-                />
-                <Stack.Screen
-                  name="(app)"
-                  options={{ gestureEnabled: false }}
-                />
-                <Stack.Screen
-                  name="(auth)"
-                  options={{ gestureEnabled: false }}
-                />
-                <Stack.Screen
-                  name="[...missing]"
-                  options={{
-                    gestureEnabled: false,
-                    animation: "fade",
-                  }}
-                />
-              </Stack>
-            </GlobalLoadingProvider>
-          </LanguageProvider1>
-        </AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <LanguageProvider1>
+              <GlobalLoadingProvider>
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen
+                    name="intro"
+                    options={{ gestureEnabled: false }}
+                  />
+                  <Stack.Screen
+                    name="(app)"
+                    options={{ gestureEnabled: false }}
+                  />
+                  <Stack.Screen
+                    name="(auth)"
+                    options={{ gestureEnabled: false }}
+                  />
+                  <Stack.Screen
+                    name="[...missing]"
+                    options={{
+                      gestureEnabled: false,
+                      animation: "fade",
+                    }}
+                  />
+                </Stack>
+              </GlobalLoadingProvider>
+            </LanguageProvider1>
+          </AuthProvider>
+        </QueryClientProvider>
       </GestureHandlerRootView>
     </RootSiblingParent>
   );

@@ -28,14 +28,21 @@ import { moderateScale } from "react-native-size-matters";
 
 const { width, height } = Dimensions.get("window");
 
+// Define a more complete Policy type
+interface Policy {
+  title?: string;
+  subtitle?: string;
+  description?: string;
+}
+
 export default function PrivacyPolicy() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { language } = useGlobalStore();
 
-  const [policy, setPolicy] = useState(null);
+  const [policy, setPolicy] = useState<Policy | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPolicy = async () => {
@@ -45,7 +52,12 @@ export default function PrivacyPolicy() {
         api
           .get("/policies/type/privacy_policy")
           .then((response: any) => {
-            setPolicy(response.data.data);
+            if (response.data && typeof response.data.data === 'object') {
+              setPolicy(response.data.data);
+            } else {
+              setPolicy(null);
+              setError("Invalid policy data received.");
+            }
             //console.log("Privacy Policy loaded successfully:", response.data.data);
           })
           .catch((err: any) => {
@@ -71,7 +83,12 @@ export default function PrivacyPolicy() {
       setLoading(true);
       setError(null);
       const response = await api.get("/policies/type/privacy_policy");
-      setPolicy(response.data.data);
+      if (response.data && typeof response.data.data === 'object') {
+        setPolicy(response.data.data);
+      } else {
+        setPolicy(null);
+        setError("Invalid policy data received.");
+      }
       //console.log("Privacy Policy retried and loaded successfully:", response.data.data);
     } catch (err: any) {
       console.error("Error retrying Privacy Policy:", err);
@@ -145,7 +162,7 @@ export default function PrivacyPolicy() {
         <SafeAreaView style={styles.safeArea}>
           {/* Fixed Header */}
           <View style={styles.headerContainer}>
-            <AppHeader showBackButton={true} backRoute="index" />
+            <AppHeader showBackButton={true} backRoute="home" hideMenuIcon={true} />
           </View>
 
           {/* Hero Section */}

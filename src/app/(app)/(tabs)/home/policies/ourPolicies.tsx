@@ -148,7 +148,7 @@ export default function OurPolicy() {
         <SafeAreaView style={styles.safeArea}>
           {/* Fixed Header */}
           <View style={styles.headerContainer}>
-            <AppHeader showBackButton={true} backRoute="index" />
+            <AppHeader showBackButton={true} backRoute="index" hideMenuIcon={true} />
           </View>
 
           {/* Hero Section */}

@@ -56,6 +56,7 @@ import {
   monitorEndpoint,
   checkForContinuousCalls
 } from "@/utils/apiLogger";
+import { useQuery } from '@tanstack/react-query';
 
 // Constants
 const { width: screenWidth } = Dimensions.get("window");
@@ -380,17 +381,11 @@ export default function Home2() {
   // State
   const { language, user } = useGlobalStore();
   const router = useRouter();
-  const [homeData, setHomeData] = useState<HomeApiResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [showFlashBanner, setShowFlashBanner] = useState(false);
-  const [activeSchemesCount, setActiveSchemesCount] = useState(0);
   const [selectedCollection, setSelectedCollection] =
     useState<Collection | null>(null);
   const [showStatus, setShowStatus] = useState(false);
   const [collectionsData, setCollectionsData] = useState<Collection[]>([]);
-  const [totalGoldSavings, setTotalGoldSavings] = useState(0);
-  const [totalAmount, setTotalAmount] = useState(0);
   const [flashNews, setFlashNews] = useState<any[]>([]);
   const [sliderImages, setSliderImages] = useState<any[]>([]);
   const [isSliderLoading, setIsSliderLoading] = useState(true);
@@ -398,6 +393,57 @@ export default function Home2() {
   // Refs
   const scrollX = useRef(new Animated.Value(0)).current;
   const sliderRef = useRef<FlatList<Banner>>(null);
+
+  // React Query: Fetch home data
+  const {
+    data: homeData,
+    isLoading: isHomeLoading,
+    refetch: refetchHomeData,
+    isRefetching: isHomeRefetching,
+    error: homeError
+  } = useQuery({
+    queryKey: ['homeData', user?.id],
+    queryFn: async () => {
+      const userId = user?.id || 436;
+      const response = await api.get(`/home?userId=${userId}`);
+      return response.data;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: !!user,
+  });
+
+  // React Query: Fetch investment data
+  const {
+    data: investmentData,
+    isLoading: isInvestmentLoading,
+    refetch: refetchInvestmentData,
+    isRefetching: isInvestmentRefetching,
+    error: investmentError
+  } = useQuery({
+    queryKey: ['investmentData', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const response = await api.get(`investments/user_investments/${user.id}`);
+      return response.data.data;
+    },
+    staleTime: 1000 * 60 * 5,
+    enabled: !!user,
+  });
+
+  // Calculate derived values from investmentData
+  const activeSchemesCount = Array.isArray(investmentData) ? investmentData.length : 0;
+  const totalGoldSavings = Array.isArray(investmentData)
+    ? investmentData.reduce((sum: number, investment: any) => {
+        const goldWeight = parseFloat(investment.totalgoldweight) || 0;
+        return sum + goldWeight;
+      }, 0)
+    : 0;
+  const totalAmount = Array.isArray(investmentData)
+    ? investmentData.reduce((sum: number, investment: any) => {
+        const amount = parseFloat(investment.total_paid) || 0;
+        return sum + amount;
+      }, 0)
+    : 0;
 
   // Memoized translations
   const translations = useMemo(
@@ -443,168 +489,13 @@ export default function Home2() {
     return `${theme.baseUrl}/${path}`;
   }, []);
 
-  // Fetch investment data separately
-  const fetchInvestmentData = useCallback(async () => {
-    if (!user) return;
-
-    try {
-      console.log('🔍 Fetching investment data for user:', user.id);
-      const response = await api.get(`investments/user_investments/${user.id}`);
-      console.log('Investment API response:', response.data);
-
-      let investments = response.data.data;
-      if (!Array.isArray(investments)) {
-        console.warn('Expected investments to be an array, got:', investments);
-        investments = [];
-      }
-      console.log('Total investments found:', investments.length);
-
-      setActiveSchemesCount(investments.length || 0);
-
-      const totalGold = investments.reduce((sum: number, investment: any) => {
-        const goldWeight = parseFloat(investment.totalgoldweight) || 0;
-        console.log(`Investment ${investment.investmentId} gold weight:`, goldWeight);
-        return sum + goldWeight;
-      }, 0);
-
-      const totalAmount = investments.reduce((sum: number, investment: any) => {
-        const amount = parseFloat(investment.total_paid) || 0;
-        console.log(`Investment ${investment.investmentId} total paid:`, amount);
-        return sum + amount;
-      }, 0);
-
-      console.log('Final calculations - Total Gold:', totalGold, 'Total Amount:', totalAmount);
-      setTotalGoldSavings(totalGold);
-      setTotalAmount(totalAmount);
-    } catch (error) {
-      console.error('Error fetching investment data:', error);
-      setActiveSchemesCount(0);
-      setTotalGoldSavings(0);
-      setTotalAmount(0);
-    }
-  }, [user]);
-
-  // Data fetching - Single API call
-  const fetchHomeData = useCallback(async (isRefreshing = false) => {
-    try {
-      console.log('Starting single API data fetch...');
-      isRefreshing ? setRefreshing(true) : setIsLoading(true);
-
-      const userId = user?.id || 436; // Default to 436 if no user
-      const response = await api.get(`/home?userId=${userId}`);
-
-      if (response.data.success) {
-        const data = response.data.data;
-        console.log("Home API response:", data);
-
-        setHomeData(response.data);
-
-        // Set collections data
-        if (data.collections && data.collections.length > 0) {
-          setCollectionsData(data.collections);
-        } else {
-          console.log('No collections found, using default images');
-          setCollectionsData(defaultStatusImages);
-        }
-
-        // Set slider images from posters
-        if (data.posters && data.posters.length > 0) {
-          const images = data.posters.map((poster: Poster) => ({
-            id: poster.id,
-            image: poster.image.startsWith("http")
-              ? poster.image
-              : `${theme.baseUrl}${poster.image}`,
-            title: poster.title,
-          }));
-          setSliderImages(images);
-        } else {
-          console.log('No posters found, using dummy images');
-          setSliderImages(
-            dummyData.sliderImages.map((image, index) => ({
-              id: index,
-              image,
-              title: `Slider ${index + 1}`,
-            }))
-          );
-        }
-
-        // Set flash news
-        if (data.flashNews && data.flashNews.length > 0) {
-          console.log(data.flashNews)
-          const flashArray = data.flashNews.map((f: FlashNews) => f.title)
-          setFlashNews(flashArray);
-        }
-
-        // Store gold rate in AsyncStorage
-        if (data.currentRates?.gold_rate) {
-          await AsyncStorage.setItem("gold_rate", data.currentRates.gold_rate);
-        }
-      } else {
-        throw new Error("API response indicates failure");
-      }
-    } catch (error) {
-      console.error("Error in fetchHomeData:", error);
-      // Set default data on error
-      setCollectionsData(defaultStatusImages);
-      setSliderImages(
-        dummyData.sliderImages.map((image, index) => ({
-          id: index,
-          image,
-          title: `Slider ${index + 1}`,
-        }))
-      );
-      Alert.alert(
-        t("error"),
-        t("failedToFetchData"),
-        [
-          {
-            text: t("retry"),
-            onPress: () => fetchHomeData(true),
-          },
-          {
-            text: t("ok"),
-            style: "cancel",
-          },
-        ]
-      );
-    } finally {
-      isRefreshing ? setRefreshing(false) : setIsLoading(false);
-      setIsSliderLoading(false);
-    }
-  }, [user?.id]);
-
   // Effects
-  useEffect(() => {
-    console.log('Initial home data fetch...');
-    fetchHomeData();
-    fetchInvestmentData();
-  }, [fetchHomeData, fetchInvestmentData]);
-
   useEffect(() => {
     if (user) {
       console.log('Setting up notifications...');
       NotificationService.sendTokenToApi();
     }
   }, [user]);
-
-  // Monitor flash-news endpoint for continuous calls
-  useEffect(() => {
-    console.log('🔍 Setting up flash-news endpoint monitoring...');
-    const monitoringInterval = monitorEndpoint('/flash-news/active', 10000); // Check every 10 seconds
-
-    // Check for continuous calls every 30 seconds
-    const continuousCheckInterval = setInterval(() => {
-      const isContinuous = checkForContinuousCalls('/flash-news/active', 3, 1); // 3+ calls in 1 minute
-      if (isContinuous) {
-        console.log('🚨 WARNING: Continuous flash-news API calls detected!');
-      }
-    }, 30000);
-
-    return () => {
-      clearInterval(monitoringInterval);
-      clearInterval(continuousCheckInterval);
-    };
-  }, []);
 
   useEffect(() => {
     const checkBanner = async () => {
@@ -643,14 +534,56 @@ export default function Home2() {
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    // Fallback for slider images (posters)
+    if (homeData && typeof homeData === 'object' && homeData.data && Array.isArray(homeData.data.posters) && homeData.data.posters.length > 0) {
+      setSliderImages(
+        homeData.data.posters.map((poster: any, idx: number) => ({
+          id: poster.id || idx,
+          image: poster.image && poster.image.startsWith('http')
+            ? poster.image
+            : theme.image.sliderImages[idx % theme.image.sliderImages.length],
+          title: poster.title || `Slider ${idx + 1}`,
+        }))
+      );
+    } else {
+      setSliderImages(
+        theme.image.sliderImages.map((img: any, idx: number) => ({
+          id: idx,
+          image: img,
+          title: `Slider ${idx + 1}`,
+        }))
+      );
+    }
+    setIsSliderLoading(false);
+  }, [homeData && typeof homeData === 'object' && homeData.data && Array.isArray(homeData.data.posters) ? homeData.data.posters : undefined]);
+
+  useEffect(() => {
+    if (
+      homeData &&
+      typeof homeData === 'object' &&
+      homeData.data &&
+      Array.isArray(homeData.data.collections) &&
+      homeData.data.collections.length > 0
+    ) {
+      setCollectionsData(homeData.data.collections);
+    } else {
+      setCollectionsData(defaultStatusImages);
+    }
+  }, [homeData && typeof homeData === 'object' && homeData.data && Array.isArray(homeData.data.collections) ? homeData.data.collections : undefined]);
+
+  // Fallback for video URL
+  const videoUrl = (homeData && typeof homeData === 'object' && homeData.data && Array.isArray(homeData.data.videos) && homeData.data.videos.length > 0 && homeData.data.videos[0].url)
+    ? homeData.data.videos[0].url
+    : theme.youtubeUrl;
+
   // Event handlers
-  const handleRefresh = useCallback(() => fetchHomeData(true), [fetchHomeData]);
+  const handleRefresh = useCallback(() => refetchHomeData(), [refetchHomeData]);
 
   const handleCloseBanner = useCallback(async () => {
     setShowFlashBanner(false);
     await AsyncStorage.setItem("flashBannerSeen", "true");
   }, []);
-
 
   // API Logging demonstration function
   const demonstrateApiLogging = useCallback(() => {
@@ -774,18 +707,6 @@ export default function Home2() {
               showBackButton={false}
               backRoute="index"
               showLanguageSwitcher={true}
-            // goldRateInfo={
-            //   homeData?.data?.currentRates?.gold_rate
-            //     ? {
-            //         rate: homeData.data.currentRates.gold_rate,
-            //         purity: "22K",
-            //       }
-            //     : {
-            //         rate: dummyData.rates.gold.price,
-            //         purity: "22K",
-            //       }
-            // }
-            // goldRateUpdatedAt={homeData?.data?.currentRates?.updated_at}
             />
             {/* Debug button for API logging - remove in production */}
             <TouchableOpacity
@@ -802,7 +723,7 @@ export default function Home2() {
             contentContainerStyle={styles.scrollContent}
             refreshControl={
               <RefreshControl
-                refreshing={refreshing}
+                refreshing={isHomeRefetching}
                 onRefresh={handleRefresh}
                 colors={["#FFD700"]}
                 tintColor="#FFD700"
@@ -810,7 +731,7 @@ export default function Home2() {
             }
           >
             <View style={styles.ratesContainer}>
-              {homeData?.data?.currentRates ? (
+              {homeData && typeof homeData === 'object' && homeData.data && homeData.data.currentRates ? (
                 <>
                   <View
                     style={[
@@ -866,13 +787,11 @@ export default function Home2() {
                 </View>
               )}
             </View>
-            {/* Gold Rate Widget (inline, below FlashOffer) */}
-            {/* {homeData?.data?.currentRates?.gold_rate && (
-              <AnimatedGoldRate
-                goldRate={homeData.data.currentRates.gold_rate}
-                updatedAt={homeData.data.currentRates.updated_at}
-              />
-            )} */}
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionHeaderLine} />
+              <Text style={styles.sectionHeaderText}>Our new collection</Text>
+              <View style={styles.sectionHeaderLine} />
+            </View>
             <View style={styles.statusContainer}>
               <FlatList
                 data={collectionsData}
@@ -894,11 +813,6 @@ export default function Home2() {
               )}
 
               <FlashOffer
-                // fallbackMessages={[
-                //   "🎉 Welcome to Digital Gold Savings!",
-                //   "🔥 Gold price drops! Invest smart.",
-                //   "🌟 Special offer for new users!",
-                // ]}
                 fallbackMessages={flashNews}
                 onPress={() => console.log("Flash news tapped")}
                 textColor="#ffffff"
@@ -912,21 +826,7 @@ export default function Home2() {
                 onPress={() => router.push("/(tabs)/savings")}
               />
 
-              {/* New Horizontal Schemes Component */}
               <StaticSchemesHorizontalScroll />
-
-              {/* <View style={styles.bannerContainer}>
-                <FlatList
-                  data={banners}
-                  renderItem={renderBanner}
-                  keyExtractor={(item) => item.id.toString()}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.bannerListContent}
-                />
-              </View> */}
-
-              {/* <YouTubeVideo /> */}
 
               <SupportContactCard />
               <View style={styles.spacer} />
@@ -1214,31 +1114,29 @@ const styles = StyleSheet.create({
   sectionHeader: {
     width: "100%",
     paddingHorizontal: 10,
-    marginTop: 20,
-    marginBottom: 12,
+    marginTop: 3,
+    marginBottom: 5,
     alignItems: "center",
-  },
-  sectionHeaderContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
   sectionHeaderLine: {
-    height: 1.5,
-    width: 20,
-    backgroundColor: "#FFD700",
-    marginHorizontal: 5,
+    flex: 1,
+    height: 2,
+    backgroundColor: theme.colors.secondary,
+    marginHorizontal: 8,
+    borderRadius: 2,
   },
   sectionHeaderText: {
     fontSize: moderateScale(16),
     fontWeight: "700",
-    color: "#1a2a39",
+    color: theme.colors.secondary,
     textTransform: "uppercase",
     letterSpacing: 0.3,
     textShadowColor: "rgba(0, 0, 0, 0.1)",
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 1,
+    paddingHorizontal: 8,
   },
   sectionHeaderSubtext: {
     fontSize: moderateScale(11),

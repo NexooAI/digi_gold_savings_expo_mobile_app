@@ -99,7 +99,7 @@ export default function TermsAndConditions() {
       >
         {/* Fixed Header */}
         <View className="absolute top-0 left-0 right-0 z-20 bg-transparent px-4">
-          <AppHeader showBackButton={true} backRoute="index" />
+          <AppHeader showBackButton={true} backRoute="home" hideMenuIcon={true} />
         </View>
 
         {/* Scrollable Content */}

@@ -46,6 +46,10 @@ export default function HomeLayout() {
         options={{ title: "About US", headerShown: false }}
       />
       <Stack.Screen
+        name="about_us"
+        options={{ title: "About US", headerShown: false }}
+      />
+      <Stack.Screen
         name="faq"
         options={{ title: "FAQ", headerShown: false }}
       />
@@ -57,6 +61,10 @@ export default function HomeLayout() {
       />
       <Stack.Screen
         name="(storeInfo)/contact_us"
+        options={{ title: "Contact US", headerShown: false }}
+      />
+      <Stack.Screen
+        name="contact_us"
         options={{ title: "Contact US", headerShown: false }}
       />
       <Stack.Screen

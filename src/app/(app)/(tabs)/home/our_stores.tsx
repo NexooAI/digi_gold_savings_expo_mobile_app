@@ -12,6 +12,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Platform-specific imports
 let MapView: any, Marker: any;
@@ -45,10 +46,18 @@ const stores: Store[] = [
   },
 ];
 
+const dropdownData = stores.map((store) => ({
+  label: store.address,
+  value: store.id.toString(),
+  ...store,
+}));
+
+const queryClient = new QueryClient();
+
 const StoreLocator = () => {
   const router = useRouter();
   const mapRef = useRef<any>(null);
-  const [selectedStore, setSelectedStore] = useState<any>(null);
+  const [selectedStore, setSelectedStore] = useState<any>(dropdownData[0]);
   const [isFocus, setIsFocus] = useState(false);
   const insets = useSafeAreaInsets();
 
@@ -66,106 +75,102 @@ const StoreLocator = () => {
     }
   };
 
-  const dropdownData = stores.map((store) => ({
-    label: store.address,
-    value: store.id.toString(),
-    ...store,
-  }));
-
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={{ flex: 1, backgroundColor: "#fff" }}
-    >
-      <SafeAreaView style={{ flex: 1 }}>
-        <AppHeader showBackButton={true} backRoute="index" />
+    <QueryClientProvider client={queryClient}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1, backgroundColor: "#fff" }}
+      >
+        <SafeAreaView style={{ flex: 1 }}>
+          <AppHeader showBackButton={true} backRoute="home" hideMenuIcon={true} />
 
-        <ScrollView
-          contentContainerStyle={{ paddingTop: 100, paddingHorizontal: 16 }}
-        >
-          <ImageBackground
-            source={require("../../../../../assets/images/shop.jpg")}
-            style={styles.imageBackground}
+          <ScrollView
+            contentContainerStyle={{ paddingTop: 100, paddingHorizontal: 16 }}
           >
-            <View style={styles.headerContainer}>
-              <Text style={styles.headerText}>Our Stores</Text>
-            </View>
-          </ImageBackground>
-
-          <Dropdown
-            style={[styles.dropdown, isFocus && { borderColor: "#007bff" }]}
-            placeholderStyle={styles.placeholderStyle}
-            selectedTextStyle={styles.selectedTextStyle}
-            inputSearchStyle={styles.inputSearchStyle}
-            iconStyle={styles.iconStyle}
-            data={dropdownData}
-            search
-            maxHeight={700}
-            labelField="label"
-            valueField="value"
-            placeholder={!isFocus ? "Select Store Address" : "..."}
-            searchPlaceholder="Search addresses..."
-            value={selectedStore?.value}
-            onFocus={() => setIsFocus(true)}
-            onBlur={() => setIsFocus(false)}
-            onChange={(item) => {
-              setSelectedStore(item);
-              setIsFocus(false);
-              focusOnStore(item);
-            }}
-            renderLeftIcon={() => (
-              <AntDesign
-                name="enviromento"
-                size={20}
-                color={isFocus ? "#007bff" : "#666"}
-                style={styles.icon}
-              />
-            )}
-          />
-
-          {Platform.OS === 'web' ? (
-            <View style={styles.mapPlaceholder}>
-              <Text style={styles.mapPlaceholderText}>Store Map</Text>
-              <Text style={styles.mapPlaceholderSubtext}>
-                Interactive map would be displayed here on mobile devices
-              </Text>
-            </View>
-          ) : (
-            <MapView
-              ref={mapRef as any}
-              style={styles.map}
-              initialRegion={{
-                latitude: stores[0].latitude,
-                longitude: stores[0].longitude,
-                latitudeDelta: 0.0922,
-                longitudeDelta: 0.0421,
-              }}
+            <ImageBackground
+              source={require("../../../../../assets/images/shop.jpg")}
+              style={styles.imageBackground}
             >
-              {stores.map((store) => (
-                <Marker
-                  key={store.id}
-                  coordinate={{
-                    latitude: store.latitude,
-                    longitude: store.longitude,
-                  }}
-                  title={store.name}
-                  description={store.address}
-                />
-              ))}
-            </MapView>
-          )}
-
-          <View style={styles.storeList}>
-            {stores.map((store) => (
-              <View key={store.id} style={styles.storeListItem}>
-                <Text style={styles.storeName}>{store.name}</Text>
-                <Text style={styles.storeAddress}>{store.address}</Text>
+              <View style={styles.headerContainer}>
+                <Text style={styles.headerText}>Our Stores</Text>
               </View>
-            ))}
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </KeyboardAvoidingView>
+            </ImageBackground>
+
+            <Dropdown
+              style={[styles.dropdown, isFocus && { borderColor: "#007bff" }]}
+              placeholderStyle={styles.placeholderStyle}
+              selectedTextStyle={styles.selectedTextStyle}
+              inputSearchStyle={styles.inputSearchStyle}
+              iconStyle={styles.iconStyle}
+              data={dropdownData}
+              search
+              maxHeight={700}
+              labelField="label"
+              valueField="value"
+              placeholder={!isFocus ? "Select Store Address" : "..."}
+              searchPlaceholder="Search addresses..."
+              value={selectedStore?.value}
+              onFocus={() => setIsFocus(true)}
+              onBlur={() => setIsFocus(false)}
+              onChange={(item) => {
+                setSelectedStore(item);
+                setIsFocus(false);
+                focusOnStore(item);
+              }}
+              renderLeftIcon={() => (
+                <AntDesign
+                  name="enviromento"
+                  size={20}
+                  color={isFocus ? "#007bff" : "#666"}
+                  style={styles.icon}
+                />
+              )}
+            />
+
+            {Platform.OS === 'web' ? (
+              <View style={styles.mapPlaceholder}>
+                <Text style={styles.mapPlaceholderText}>Store Map</Text>
+                <Text style={styles.mapPlaceholderSubtext}>
+                  Interactive map would be displayed here on mobile devices
+                </Text>
+              </View>
+            ) : (
+              <MapView
+                ref={mapRef as any}
+                style={styles.map}
+                initialRegion={{
+                  latitude: stores[0].latitude,
+                  longitude: stores[0].longitude,
+                  latitudeDelta: 0.0922,
+                  longitudeDelta: 0.0421,
+                }}
+              >
+                {stores.map((store) => (
+                  <Marker
+                    key={store.id}
+                    coordinate={{
+                      latitude: store.latitude,
+                      longitude: store.longitude,
+                    }}
+                    title={store.name}
+                    description={store.address}
+                  />
+                ))}
+              </MapView>
+            )}
+
+            <View style={styles.storeList}>
+              {stores.map((store) => (
+                <View key={store.id} style={styles.storeListItem}>
+                  <Text style={styles.storeName}>{store.name}</Text>
+                  <Text style={styles.storeAddress}>{store.address}</Text>
+                </View>
+              ))}
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
+    </QueryClientProvider>
   );
 };
 

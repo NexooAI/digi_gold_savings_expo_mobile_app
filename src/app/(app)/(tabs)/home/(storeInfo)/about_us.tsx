@@ -41,7 +41,7 @@ export default function AboutUs() {
     extrapolate: "clamp",
   });
 
-  const renderMilestone = ({ item }) => (
+  const renderMilestone = ({ item }:any) => (
     <View style={{ width: width * 0.4, marginRight: 20, alignItems: "center" }}>
       <View
         style={{
@@ -77,30 +77,33 @@ export default function AboutUs() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={{ flex: 1, backgroundColor: "#fff" }}
     >
-      <SafeAreaView style={{ flex: 1, marginBottom: 40 }}>
+      <SafeAreaView style={{ flex: 1 }}>
         {/* Animated Header */}
-        <Animated.View
+        <View style={{ backgroundColor: 'transparent', paddingHorizontal: 0 }}>
+          <AppHeader showBackButton={true} backRoute="home" hideMenuIcon={true} />
+        </View>
+        {/* Page Title */}
+        <Text
           style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 20,
-            opacity: headerOpacity,
-            backgroundColor: "transparent",
-            paddingHorizontal: 16,
+            fontSize: 24,
+            fontWeight: "700",
+            color: "#fff",
+            backgroundColor: theme.colors.primary,
+            textAlign: "center",
+            marginTop: 70,
+            marginBottom: 0,
+            letterSpacing: 0.5,
           }}
         >
-          <AppHeader showBackButton={true} backRoute="index" />
-        </Animated.View>
+          About Us
+        </Text>
 
-        <Animated.ScrollView
-          contentContainerStyle={{ paddingTop: 100 }}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: true }
-          )}
-          scrollEventThrottle={16}
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingTop: 16,
+            paddingBottom: 0,
+          }}
         >
           <View style={{ paddingHorizontal: 16 }}>
             {/* <TouchableOpacity
@@ -336,7 +339,7 @@ export default function AboutUs() {
               </View>
             </View>
           </View>
-        </Animated.ScrollView>
+        </ScrollView>
 
         {/* Parallax Header */}
         {/* <Animated.View
@@ -400,7 +403,6 @@ export default function AboutUs() {
             </View>
           </ImageBackground>
         </Animated.View> */}
-        <View style={styles.spacer} />
       </SafeAreaView>
     </KeyboardAvoidingView>
   );
@@ -423,7 +425,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     letterSpacing: 0.5,
   },
-  spacer: {
-    height: moderateScale(80),
-  },
+  // spacer: {
+  //   height: moderateScale(80),
+  // },
 });

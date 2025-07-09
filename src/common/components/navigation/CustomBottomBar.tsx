@@ -21,11 +21,30 @@ export default function CustomBottomBar() {
   const segments = useSegments();
   const { language } = useGlobalStore();
   // const { badgeCount } = useNotificationBadge();
-  const current = segments.at(2) || "home";
+  const current = segments[segments.length - 1] || "home";
   
   // Animation refs for each tab
   const tabAnimations = useRef([0, 1, 2, 3, 4].map(() => new Animated.Value(1))).current;
   const badgeAnimations = useRef([0, 1, 2, 3, 4].map(() => new Animated.Value(1))).current;
+
+  // List of special pages where the tab bar should be hidden
+  const hideTabBarRoutes = [
+    "offers",
+    "refer_earn",
+    "our_stores",
+    "contact_us",
+    "about_us",
+    "faq",
+    "ourPolicies",
+    "privacyPolicy",
+    "termsAndConditionsPolicies",
+    "policies/ourPolicies",
+    "policies/privacyPolicy",
+    "policies/termsAndConditionsPolicies"
+  ];
+  if (hideTabBarRoutes.includes(current)) {
+    return null;
+  }
 
   const tabs: Tab[] = [
     {

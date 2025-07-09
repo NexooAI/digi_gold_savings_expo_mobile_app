@@ -22,6 +22,7 @@
     "@react-navigation/elements": "2.x",
     "@react-navigation/native": "7.x",
     "@react-navigation/native-stack": "7.x",
+    "@tanstack/react-query": "^5.81.5",
     "@types/i18n-js": "^3.8.9",
     "@types/react-native-vector-icons": "^6.4.18",
     "axios": "^1.7.9",

@@ -8,9 +8,11 @@ import {
   Dimensions,
   SafeAreaView,
   Animated,
+  Alert,
+  BackHandler,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import { theme } from "@/constants/theme";
 import useGlobalStore from "@/store/global.store";
 import { AppLocale, t } from "@/i18n";
@@ -29,6 +31,7 @@ interface AppHeaderProps {
   goldRateInfo?: RateInfo;
   goldRateUpdatedAt?: string;
   title?: string;
+  hideMenuIcon?: boolean;
 }
 
 // Helper to format date as 'dd/MM/yyyy HH:mm'
@@ -40,8 +43,9 @@ function formatDateTime(dateString?: string) {
   return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-const AppHeader: React.FC<AppHeaderProps> = ({ showBackButton = false, backRoute, showLanguageSwitcher = false, goldRateInfo, goldRateUpdatedAt, title }) => {
+const AppHeader: React.FC<AppHeaderProps> = ({ showBackButton = false, backRoute, showLanguageSwitcher = false, goldRateInfo, goldRateUpdatedAt, title, hideMenuIcon = false }) => {
   const navigation = useNavigation();
+  const router = useRouter();
   const { setLanguage, language } = useGlobalStore();
 
   // Flipping card state
@@ -110,11 +114,19 @@ const AppHeader: React.FC<AppHeaderProps> = ({ showBackButton = false, backRoute
     }
   };
 
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => false // Always allow default behavior
+    );
+    return () => backHandler.remove();
+  }, []);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         {showBackButton && (
-          <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons
               name="arrow-back-outline"
               size={20}
@@ -182,12 +194,14 @@ const AppHeader: React.FC<AppHeaderProps> = ({ showBackButton = false, backRoute
               <Text style={styles.languageText}>{getLanguageDisplayName()}</Text>
             </TouchableOpacity>
           )}
-          <TouchableOpacity
-            onPress={() => (navigation as any).openDrawer()}
-            style={styles.drawerToggle}
-          >
-            <Ionicons name="reorder-three-outline" size={28} color="#ffffff" />
-          </TouchableOpacity>
+          {!hideMenuIcon && (
+            <TouchableOpacity
+              onPress={() => (navigation as any).openDrawer()}
+              style={styles.drawerToggle}
+            >
+              <Ionicons name="reorder-three-outline" size={28} color="#ffffff" />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </SafeAreaView>

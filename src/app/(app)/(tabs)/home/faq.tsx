@@ -17,6 +17,7 @@ import {
   Platform,
   Animated,
   useWindowDimensions,
+  ActivityIndicator,
 } from "react-native";
 import { moderateScale } from "react-native-size-matters";
 
@@ -32,10 +33,14 @@ import { moderateScale } from "react-native-size-matters";
 // FAQ data in JSON format
 
 // FAQ Item Component
-const FAQItem = ({ item, isOpen, toggleOpen, translations }) => {
-  // headerOpacity was used but not defined
-  const headerOpacity = useRef(new Animated.Value(1)).current;
-
+interface FAQItemProps {
+  item: any;
+  isOpen: boolean;
+  toggleOpen: () => void;
+  translations: Record<string, string>;
+}
+const FAQItem: React.FC<FAQItemProps> = ({ item, isOpen, toggleOpen, translations }) => {
+  // Removed unused headerOpacity
   return (
     <View style={styles.faqItem}>
       <TouchableOpacity
@@ -62,7 +67,7 @@ const FAQItem = ({ item, isOpen, toggleOpen, translations }) => {
                 </Text>
               </View>
 
-              {item.table.map((row, index) => (
+              {item.table.map((row: any, index: number) => (
                 <View
                   key={index}
                   style={[
@@ -83,7 +88,7 @@ const FAQItem = ({ item, isOpen, toggleOpen, translations }) => {
 };
 
 export default function App() {
-  const [openItemId, setOpenItemId] = useState(null);
+  const [openItemId, setOpenItemId] = useState<number | null>(null);
   const headerOpacity = useRef(new Animated.Value(1)).current;
   const { language } = useGlobalStore();
   const translations = useMemo(
@@ -216,7 +221,7 @@ export default function App() {
       answer: translations.answer14,
     },
   ];
-  const toggleItem = (id) => {
+  const toggleItem = (id: number) => {
     setOpenItemId(openItemId === id ? null : id);
   };
 
@@ -240,7 +245,7 @@ export default function App() {
             paddingHorizontal: 16,
           }}
         >
-          <AppHeader showBackButton={true} backRoute="index" />
+          <AppHeader showBackButton={true} backRoute="home" hideMenuIcon={true} />
         </Animated.View>
 
         <View style={styles.header}>

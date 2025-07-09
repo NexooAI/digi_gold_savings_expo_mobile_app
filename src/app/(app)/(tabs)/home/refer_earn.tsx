@@ -17,7 +17,7 @@ import { theme } from "@/constants/theme";
 
 export default function ReferCodeScreen() {
   // Retrieve referral code from your global store; fallback to a default value
-  const { user } = useGlobalStore();
+  const { user }:any = useGlobalStore();
   const code = user.referralCode || "DEFAULT123";
 
   const router = useRouter();
@@ -33,7 +33,7 @@ export default function ReferCodeScreen() {
     try {
       const result = await Share.share({
         title: "Refer & Earn",
-        message: `Use my referral code ${code} to sign up and earn rewards! Download the app here: https://play.google.com/store/search?q=dcjewellers&c=apps`,
+        message: `Use my referral code ${code} to sign up and earn rewards! Download the app here: https://play.google.com/apps/internaltest/4701607201997820300/join?hl=en-US`,
       });
       if (result.action === Share.sharedAction) {
         //console.log("Shared successfully");
@@ -52,7 +52,7 @@ export default function ReferCodeScreen() {
       resizeMode="cover"
     >
       <View style={styles.headerContainer}>
-        <AppHeader showBackButton={true} backRoute="index" />
+        <AppHeader showBackButton={true} backRoute="home" hideMenuIcon={true} />
         <TouchableOpacity
           onPress={() => router.back()}
           className="absolute top-6 left-4 p-2 bg-white rounded-full z-10"
