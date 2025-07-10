@@ -4,7 +4,7 @@ export default {
   expo: {
     name: theme.customerName,
     slug: theme.slug,
-    version: "2.0.0",
+    version: "1.0.0",
     orientation: "portrait",
     userInterfaceStyle: "automatic",
     scheme: "acme",
@@ -38,7 +38,7 @@ export default {
       },
       package: theme.bundleIdentifier,
       googleServicesFile: "./google-services.json",
-      versionCode: 4,
+      versionCode: 1,
       config: {
         googleMaps: {
           apiKey: "AIzaSyAkuOcNddEvozQR4D4yPdTrbwXCiPsuEFc",
