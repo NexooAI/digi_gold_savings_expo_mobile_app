@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "932187013222",
-    "project_id": "nexooai-a1096",
-    "storage_bucket": "nexooai-a1096.firebasestorage.app"
+    "project_number": "735940755001",
+    "project_id": "akila-jewellers",
+    "storage_bucket": "akila-jewellers.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:932187013222:android:6eed8af94286e6a44ceda7",
+        "mobilesdk_app_id": "1:735940755001:android:17bff3c78cebae585e97e8",
         "android_client_info": {
           "package_name": "com.nexooai.akilajewellers"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBTjXrjQNL4FwARtaSpT1pAz83ov2tqs44"
+          "current_key": "AIzaSyDUc_Oy8gxUVJcAH9gdbbMwXlPJpaFl5bc"
         }
       ],
       "services": {
