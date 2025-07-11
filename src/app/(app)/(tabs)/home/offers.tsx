@@ -19,6 +19,7 @@ import { useRouter } from "expo-router";
 import AppHeader from "@/app/components/AppHeader";
 import { moderateScale } from "react-native-size-matters";
 import { theme } from "@/constants/theme";
+import offerImg from '../../../../../assets/images/flashbanner.png';
 
 const { width, height } = Dimensions.get('window');
 
@@ -48,7 +49,7 @@ export default function Offers() {
       details: "This exclusive offer applies to all gold jewelry items in our 'Traditional Collection'. Discount will be applied at checkout. Offer valid until December 31st.",
       icon: "festival",
       color: "#FFD700",
-      image: require('../../../../../assets/images/offer.png'),
+      image: offerImg,
       terms: "Valid on purchases above ₹10,000. Cannot be combined with other offers."
     },
     {
@@ -58,7 +59,7 @@ export default function Offers() {
       details: "Be the first to own our latest diamond pieces with this special discount. Includes rings, necklaces, and earrings from our 'Elegance Collection'.",
       icon: "diamond",
       color: "#40E0D0",
-      image: require('../../../../../assets/images/offer.png'),
+      image: offerImg,
       terms: "Limited to stock on hand. Offer ends January 15th."
     },
     {
@@ -68,7 +69,7 @@ export default function Offers() {
       details: "VIP members enjoy 10% off all purchases, early access to sales, and exclusive member-only events. Sign up today to start saving!",
       icon: "star",
       color: theme.colors.primary,
-      image: require('../../../../../assets/images/offer.png'),
+      image: offerImg,
       terms: "Membership fee of ₹2,999/year applies. Some exclusions may apply."
     },
   ];

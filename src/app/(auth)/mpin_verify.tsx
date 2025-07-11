@@ -17,6 +17,7 @@ import {
   TextInputKeyPressEventData,
   TouchableWithoutFeedback,
   Keyboard,
+  ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -240,132 +241,139 @@ export default function MpinVerify() {
       >
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.container}
+          style={{ flex: 1 }}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 200 : 150}
         >
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={styles.container}>
-              <View style={styles.logoContainer}>
-                <Image
-                  source={theme.image.transparentLogo}
-                  style={[styles.logo, { width: logoWidth }]}
-                  resizeMode="contain"
-                />
-              </View>
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.container}>
+                <View style={styles.logoContainer}>
+                  <Image
+                    source={theme.image.transparentLogo}
+                    style={[styles.logo, { width: logoWidth }]}
+                    resizeMode="contain"
+                  />
+                </View>
 
-              <View style={styles.formContainer}>
-                <View style={styles.cardContainer}>
-                  {/* Base fog layer */}
-                  <LinearGradient
-                    colors={[
-                      "rgba(26, 42, 57, 0.85)",
-                      "rgba(42, 90, 141, 0.75)",
-                      "rgba(58, 106, 173, 0.80)",
-                    ]}
-                    style={StyleSheet.absoluteFill}
-                  />
-                  {/* Top fog highlight */}
-                  <LinearGradient
-                    colors={[
-                      "rgba(255, 201, 12, 0.15)",
-                      "rgba(26, 42, 57, 0.60)",
-                    ]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 0, y: 0.5 }}
-                    style={StyleSheet.absoluteFill}
-                  />
-                  {/* Bottom fog highlight */}
-                  <LinearGradient
-                    colors={[
-                      "rgba(26, 42, 57, 0.70)",
-                      "rgba(255, 201, 12, 0.10)",
-                    ]}
-                    start={{ x: 0, y: 0.5 }}
-                    end={{ x: 0, y: 1 }}
-                    style={StyleSheet.absoluteFill}
-                  />
-                  {/* Content */}
-                  <View style={styles.cardContent}>
-                    <Text style={styles.mpinTitle}>{t("enterMpinTitle")}</Text>
-                    <Text style={styles.mpinSubtitle}>
-                      {t("enterMpinSubtitle")}
-                    </Text>
-
-                    <Animated.View 
-                      style={[
-                        styles.otpInputsContainer,
-                        {
-                          transform: [{ translateX: shakeAnim }]
-                        }
+                <View style={styles.formContainer}>
+                  <View style={styles.cardContainer}>
+                    {/* Base fog layer */}
+                    <LinearGradient
+                      colors={[
+                        "rgba(26, 42, 57, 0.85)",
+                        "rgba(42, 90, 141, 0.75)",
+                        "rgba(58, 106, 173, 0.80)",
                       ]}
-                    >
-                      {mpinPins.map((pin, index) => (
-                        <View key={index} style={styles.inputWrapper}>
-                          <TextInput
-                            ref={mpinInputRefs[index]}
-                            style={[
-                              styles.otpInput,
-                              pin ? styles.otpInputFilled : styles.otpInputEmpty
-                            ]}
-                            keyboardType="numeric"
-                            maxLength={1}
-                            value={pin}
-                            onChangeText={(text) => handleEnterMpinChange(text, index)}
-                            onKeyPress={(e) => handleMpinKeyPress(e, index)}
-                            secureTextEntry={true}
-                            autoFocus={index === 0}
-                          />
-                          {pin !== "" && (
-                            <View style={styles.inputDot} />
-                          )}
-                        </View>
-                      ))}
-                    </Animated.View>
-
-                    <Animated.View
-                      style={{
-                        transform: [{ scale: scaleAnim }],
-                        width: '100%',
-                      }}
-                    >
-                      <TouchableOpacity
-                        style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-                        onPress={() => {
-                          animatePress();
-                          verifyMpin(mpinPins.join(""));
-                        }}
-                        disabled={loading || mpinPins.includes("")}
-                      >
-                        <LinearGradient
-                          colors={["#ffc90c", "#ffd700"]}
-                          style={styles.buttonGradient}
-                        >
-                          <Text style={styles.loginButtonText}>
-                            {loading ? t("processing") : t("login")}
-                          </Text>
-                        </LinearGradient>
-                      </TouchableOpacity>
-                    </Animated.View>
-
-                    <TouchableOpacity
-                      style={styles.forgotContainer}
-                      onPress={async () => {
-                        await SecureStore.deleteItemAsync("authToken");
-                        await SecureStore.deleteItemAsync("user_mpin");
-                        logout();
-                        setMpinPins(["", "", "", ""]);
-                        router.replace("/(auth)/login");
-                      }}
-                    >
-                      <Icon name="help-outline" size={20} color={theme.colors.secondary} />
-                      <Text style={styles.loginLink}>
-                        {t("forgotMpinText")}
+                      style={StyleSheet.absoluteFill}
+                    />
+                    {/* Top fog highlight */}
+                    <LinearGradient
+                      colors={[
+                        "rgba(255, 201, 12, 0.15)",
+                        "rgba(26, 42, 57, 0.60)",
+                      ]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 0, y: 0.5 }}
+                      style={StyleSheet.absoluteFill}
+                    />
+                    {/* Bottom fog highlight */}
+                    <LinearGradient
+                      colors={[
+                        "rgba(26, 42, 57, 0.70)",
+                        "rgba(255, 201, 12, 0.10)",
+                      ]}
+                      start={{ x: 0, y: 0.5 }}
+                      end={{ x: 0, y: 1 }}
+                      style={StyleSheet.absoluteFill}
+                    />
+                    {/* Content */}
+                    <View style={styles.cardContent}>
+                      <Text style={styles.mpinTitle}>{t("enterMpinTitle")}</Text>
+                      <Text style={styles.mpinSubtitle}>
+                        {t("enterMpinSubtitle")}
                       </Text>
-                    </TouchableOpacity>
+
+                      <Animated.View 
+                        style={[
+                          styles.otpInputsContainer,
+                          {
+                            transform: [{ translateX: shakeAnim }]
+                          }
+                        ]}
+                      >
+                        {mpinPins.map((pin, index) => (
+                          <View key={index} style={styles.inputWrapper}>
+                            <TextInput
+                              ref={mpinInputRefs[index]}
+                              style={[
+                                styles.otpInput,
+                                pin ? styles.otpInputFilled : styles.otpInputEmpty
+                              ]}
+                              keyboardType="numeric"
+                              maxLength={1}
+                              value={pin}
+                              onChangeText={(text) => handleEnterMpinChange(text, index)}
+                              onKeyPress={(e) => handleMpinKeyPress(e, index)}
+                              secureTextEntry={true}
+                              autoFocus={index === 0}
+                            />
+                            {pin !== "" && (
+                              <View style={styles.inputDot} />
+                            )}
+                          </View>
+                        ))}
+                      </Animated.View>
+
+                      <Animated.View
+                        style={{
+                          transform: [{ scale: scaleAnim }],
+                          width: '100%',
+                        }}
+                      >
+                        <TouchableOpacity
+                          style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+                          onPress={() => {
+                            animatePress();
+                            verifyMpin(mpinPins.join(""));
+                          }}
+                          disabled={loading || mpinPins.includes("")}
+                        >
+                          <LinearGradient
+                            colors={["#ffc90c", "#ffd700"]}
+                            style={styles.buttonGradient}
+                          >
+                            <Text style={styles.loginButtonText}>
+                              {loading ? t("processing") : t("login")}
+                            </Text>
+                          </LinearGradient>
+                        </TouchableOpacity>
+                      </Animated.View>
+
+                      <TouchableOpacity
+                        style={styles.forgotContainer}
+                        onPress={async () => {
+                          await SecureStore.deleteItemAsync("authToken");
+                          await SecureStore.deleteItemAsync("user_mpin");
+                          logout();
+                          setMpinPins(["", "", "", ""]);
+                          router.replace("/(auth)/login");
+                        }}
+                      >
+                        <Icon name="help-outline" size={20} color={theme.colors.secondary} />
+                        <Text style={styles.loginLink}>
+                          {t("forgotMpinText")}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
               </View>
-            </View>
-          </TouchableWithoutFeedback>
+            </TouchableWithoutFeedback>
+          </ScrollView>
         </KeyboardAvoidingView>
       </LinearGradient>
       <SimpleLanguageSwitcher />

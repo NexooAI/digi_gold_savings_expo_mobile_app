@@ -6,6 +6,8 @@ import {
   ImageBackground,
   Image,
   Dimensions,
+  SafeAreaView,
+  Text,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { theme } from "@/constants/theme";

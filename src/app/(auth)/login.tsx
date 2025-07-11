@@ -16,6 +16,7 @@ import {
   TextInputKeyPressEventData,
   Linking,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import NetInfo from "@react-native-community/netinfo";
@@ -198,268 +199,299 @@ const SimpleLanguageSwitcher = () => {
 };
 
 export default function Login() {
-  // State for mobile number and OTP
-  const [mobile, setMobile] = useState("");
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  try {
+    // State for mobile number and OTP
+    const [mobile, setMobile] = useState("");
+    const [loading, setLoading] = useState(false);
+    const router = useRouter();
 
-  // OTP related state
-  const [pins, setPins] = useState(["", "", "", ""]);
-  const [timer, setTimer] = useState(120);
-  const [resendAttempts, setResendAttempts] = useState(3);
-  const [isShowOtp, setIsShowOtp] = useState(false);
-  const [showOtp, setShowOtp] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
-  const [otpValidated, setOtpValidated] = useState(false);
-  const [otp, setOtp] = useState("");
+    // OTP related state
+    const [pins, setPins] = useState(["", "", "", ""]);
+    const [timer, setTimer] = useState(120);
+    const [resendAttempts, setResendAttempts] = useState(3);
+    const [isShowOtp, setIsShowOtp] = useState(false);
+    const [showOtp, setShowOtp] = useState(false);
+    const [otpSent, setOtpSent] = useState(false);
+    const [otpVerified, setOtpVerified] = useState(false);
+    const [otpValidated, setOtpValidated] = useState(false);
+    const [otp, setOtp] = useState("");
 
-  // Refs for OTP inputs
-  const inputRefs = [
-    useRef<TextInput>(null),
-    useRef<TextInput>(null),
-    useRef<TextInput>(null),
-    useRef<TextInput>(null),
-  ];
+    // Refs for OTP inputs
+    const inputRefs = [
+      useRef<TextInput>(null),
+      useRef<TextInput>(null),
+      useRef<TextInput>(null),
+      useRef<TextInput>(null),
+    ];
 
-  // Global state and error handling
-  const { login, isLoggedIn } = useGlobalStore();
-  const [errorMessage, setErrorMessage] = useState("");
-  const [showError, setShowError] = useState(false);
-  const [mobileError, setMobileError] = useState("");
+    // Global state and error handling
+    const { login, isLoggedIn } = useGlobalStore();
+    const [errorMessage, setErrorMessage] = useState("");
+    const [showError, setShowError] = useState(false);
+    const [mobileError, setMobileError] = useState("");
 
-  // Platform detection
-  // const isAndroid = Platform.OS === "android";
-  // const isIOS = Platform.OS === "ios";
+    // Platform detection
+    // const isAndroid = Platform.OS === "android";
+    // const isIOS = Platform.OS === "ios";
 
-  useEffect(() => {
-    checkTokenValidity();
-  }, []);
+    const [apiReachable, setApiReachable] = useState(true);
+    const [checkingApi, setCheckingApi] = useState(true);
 
-  useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener((state) => {
-      if (!state.isConnected) showNetworkAlert();
-    });
-    return () => unsubscribe();
-  }, []);
-
-  useFocusEffect(
-    React.useCallback(() => {
-      setPins(["", "", "", ""]);
-      setIsShowOtp(false);
-    }, [])
-  );
-
-  useEffect(() => {
-    let countdown: NodeJS.Timeout;
-    if (isShowOtp && timer > 0) {
-      countdown = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
-    }
-    return () => clearInterval(countdown);
-  }, [isShowOtp, timer]);
-
-  const checkTokenValidity = async () => {
-    try {
-      const token = await SecureStore.getItem("authToken");
-      if (!token) return;
-    } catch (error) {
-      console.error("Error checking token:", error);
-    }
-  };
-
-  const showNetworkAlert = () => {
-    Alert.alert(t("noInternetTitle"), t("noInternetMessage"), [
-      {
-        text: t("retry"),
-        onPress: async () => {
-          const netState = await NetInfo.fetch();
-          if (!netState.isConnected) showNetworkAlert();
-        },
-      },
-    ]);
-  };
-
-  const handlePinChange = (text: string, index: number) => {
-    // Only allow numeric input
-    const numericValue = text.replace(/[^0-9]/g, "");
-    if (numericValue === "" || /^\d+$/.test(numericValue)) {
-      const newPins = [...pins];
-      newPins[index] = numericValue;
-      setPins(newPins);
-
-      // Auto-focus next input if there's a value
-      if (numericValue && index < 3 && inputRefs[index + 1]?.current) {
-        inputRefs[index + 1].current?.focus();
-      }
-
-      // Auto-submit when all digits are entered
-      const isOtpComplete = newPins.every((pin) => pin.trim() !== "");
-      if (isOtpComplete) {
-        verifyOtp(newPins.join(""));
-      }
-    }
-  };
-
-  const handleKeyPress = (
-    e: NativeSyntheticEvent<TextInputKeyPressEventData>,
-    index: number
-  ) => {
-    if (e.nativeEvent.key === "Backspace" && !pins[index] && index > 0) {
-      const newPins = [...pins];
-      newPins[index - 1] = "";
-      setPins(newPins);
-      inputRefs[index - 1]?.current?.focus();
-    }
-  };
-
-  const extractOtpFromMessage = (message: string) => {
-    const otpMatch = message.match(/\d{4}/); // Assuming 4-digit OTP
-    return otpMatch ? otpMatch[0] : null;
-  };
-
-  const showErrorAlert = (message: string) => {
-    setErrorMessage(message);
-    setShowError(true);
-  };
-
-  const hideErrorAlert = () => {
-    setShowError(false);
-  };
-
-  const verifyOtp = (otp: string) => {
-    setLoading(true);
-    fetch(`${theme.baseUrl}/auth/verify-otp`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({ mobile_number: mobile, otp }),
-    })
-      .then(async (response) => {
-        const data = await response.json();
-        // console.log("OTP verification response:", data);
-        if (data.success) {
-          await SecureStore.setItemAsync("authToken", data.token);
-          await AsyncStorage.setItem("userData", JSON.stringify(data.user));
-          login(data.token, {
-            id: data.user.user_id,
-            name: data.user.name,
-            email: data.user.email,
-            mobile: data.user.mobile_number,
-            referralCode: data.user.referralCode,
-          });
-
-          const storedHashedMPIN = await SecureStore.getItemAsync("user_mpin");
-          router.push({
-            pathname: storedHashedMPIN ? "/mpin_verify" : "/reset_mpin",
-            params: {
-              mode: "create",
-              from: "login",
-            },
-          });
-          setIsShowOtp(false);
-        } else {
-          setPins(["", "", "", ""]);
-          Alert.alert(
-            t("error"),
-            data.message || data.error,
-            [{ text: t("ok") }]
-          );
-        }
-      })
-      .catch((error) => {
-        setPins(["", "", "", ""]);
-        if (error.response) {
-          if (error.response.status === 400) {
-            Alert.alert(
-              t("invalidOtp"),
-              error.response.data.message || t("invalidOtpMessage"),
-              [{ text: t("ok") }]
-            );
-          } else {
-            Alert.alert(
-              t("error"),
-              error.response.data.message || t("somethingWentWrong"),
-              [{ text: t("ok") }]
-            );
+    // Check API connectivity on mount
+    useEffect(() => {
+      const checkApi = async () => {
+        setCheckingApi(true);
+        try {
+          const net = await NetInfo.fetch();
+          console.log("----------",net)
+          if (!net.isConnected) {
+            setApiReachable(false);
+            setCheckingApi(false);
+            return;
           }
-        } else if (error.request) {
-          Alert.alert(
-            t("networkError"),
-            t("checkInternetConnection"),
-            [{ text: t("ok") }]
-          );
-        } else {
-          Alert.alert(
-            t("error"),
-            t("anUnexpectedError"),
-            [{ text: t("ok") }]
-          );
+          // Try to fetch a simple endpoint (health or root)
+          const res = await fetch(`${theme.baseUrl}/health`);
+          if (res.ok) {
+            setApiReachable(true);
+          } else {
+            setApiReachable(false);
+          }
+        } catch (e) {
+          setApiReachable(false);
+        } finally {
+          setCheckingApi(false);
         }
-      })
-      .finally(() => setLoading(false));
-  };
+      };
+      checkApi();
+    }, []);
 
-  const loginAxio = async () => {
-    const indianMobilePattern = /^[6-9]\d{9}$/;
-    if (!mobile) {
-      setMobileError(t("pleaseEnterMobile"));
-      return;
-    }
-    if (!indianMobilePattern.test(mobile)) {
-      setMobileError(t("valid10DigitIndianMobile"));
-      return;
-    }
+    useEffect(() => {
+      checkTokenValidity();
+    }, []);
 
-    setMobileError("");
-    setLoading(true);
+    useEffect(() => {
+      const unsubscribe = NetInfo.addEventListener((state) => {
+        if (!state.isConnected) showNetworkAlert();
+      });
+      return () => unsubscribe();
+    }, []);
 
-    try {
-      const response = await fetch(`${theme.baseUrl}/auth/check-mobile`, {
+    useFocusEffect(
+      React.useCallback(() => {
+        setPins(["", "", "", ""]);
+        setIsShowOtp(false);
+      }, [])
+    );
+
+    useEffect(() => {
+      let countdown: NodeJS.Timeout;
+      if (isShowOtp && timer > 0) {
+        countdown = setInterval(() => {
+          setTimer((prev) => prev - 1);
+        }, 1000);
+      }
+      return () => clearInterval(countdown);
+    }, [isShowOtp, timer]);
+
+    const checkTokenValidity = async () => {
+      try {
+        const token = await SecureStore.getItem("authToken");
+        if (!token) return;
+      } catch (error) {
+        console.error("Error checking token:", error);
+      }
+    };
+
+    const showNetworkAlert = () => {
+      Alert.alert(t("noInternetTitle"), t("noInternetMessage"), [
+        {
+          text: t("retry"),
+          onPress: async () => {
+            const netState = await NetInfo.fetch();
+            if (!netState.isConnected) showNetworkAlert();
+          },
+        },
+      ]);
+    };
+
+    const handlePinChange = (text: string, index: number) => {
+      // Only allow numeric input
+      const numericValue = text.replace(/[^0-9]/g, "");
+      if (numericValue === "" || /^\d+$/.test(numericValue)) {
+        const newPins = [...pins];
+        newPins[index] = numericValue;
+        setPins(newPins);
+
+        // Auto-focus next input if there's a value
+        if (numericValue && index < 3 && inputRefs[index + 1]?.current) {
+          inputRefs[index + 1].current?.focus();
+        }
+
+        // Auto-submit when all digits are entered
+        const isOtpComplete = newPins.every((pin) => pin.trim() !== "");
+        if (isOtpComplete) {
+          verifyOtp(newPins.join(""));
+        }
+      }
+    };
+
+    const handleKeyPress = (
+      e: NativeSyntheticEvent<TextInputKeyPressEventData>,
+      index: number
+    ) => {
+      if (e.nativeEvent.key === "Backspace" && !pins[index] && index > 0) {
+        const newPins = [...pins];
+        newPins[index - 1] = "";
+        setPins(newPins);
+        inputRefs[index - 1]?.current?.focus();
+      }
+    };
+
+    const extractOtpFromMessage = (message: string) => {
+      const otpMatch = message.match(/\d{4}/); // Assuming 4-digit OTP
+      return otpMatch ? otpMatch[0] : null;
+    };
+
+    const showErrorAlert = (message: string) => {
+      setErrorMessage(message);
+      setShowError(true);
+    };
+
+    const hideErrorAlert = () => {
+      setShowError(false);
+    };
+
+    const verifyOtp = (otp: string) => {
+      setLoading(true);
+      fetch(`${theme.baseUrl}/auth/verify-otp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ mobile_number: mobile }),
-      });
+        body: JSON.stringify({ mobile_number: mobile, otp }),
+      })
+        .then(async (response) => {
+          const data = await response.json();
+          // console.log("OTP verification response:", data);
+          if (data.success) {
+            await SecureStore.setItemAsync("authToken", data.token);
+            await AsyncStorage.setItem("userData", JSON.stringify(data.user));
+            login(data.token, {
+              id: data.user.user_id,
+              name: data.user.name,
+              email: data.user.email,
+              mobile: data.user.mobile_number,
+              referralCode: data.user.referralCode,
+            });
 
-      const data = await response.json();
+            const storedHashedMPIN = await SecureStore.getItemAsync("user_mpin");
+            router.push({
+              pathname: storedHashedMPIN ? "/mpin_verify" : "/reset_mpin",
+              params: {
+                mode: "create",
+                from: "login",
+              },
+            });
+            setIsShowOtp(false);
+          } else {
+            setPins(["", "", "", ""]);
+            Alert.alert(
+              t("error"),
+              data.message || data.error,
+              [{ text: t("ok") }]
+            );
+          }
+        })
+        .catch((error) => {
+          setPins(["", "", "", ""]);
+          if (error.response) {
+            if (error.response.status === 400) {
+              Alert.alert(
+                t("invalidOtp"),
+                error.response.data.message || t("invalidOtpMessage"),
+                [{ text: t("ok") }]
+              );
+            } else {
+              Alert.alert(
+                t("error"),
+                error.response.data.message || t("somethingWentWrong"),
+                [{ text: t("ok") }]
+              );
+            }
+          } else if (error.request) {
+            Alert.alert(
+              t("networkError"),
+              t("checkInternetConnection"),
+              [{ text: t("ok") }]
+            );
+          } else {
+            Alert.alert(
+              t("error"),
+              t("anUnexpectedError"),
+              [{ text: t("ok") }]
+            );
+          }
+        })
+        .finally(() => setLoading(false));
+    };
 
-      if (response.ok) {
-        // Show OTP screen
-        setIsShowOtp(true);
-        setTimer(120);
-        // Auto-focus first OTP input
-        setTimeout(() => inputRefs[0]?.current?.focus(), 100);
-      } else {
-        throw new Error(data?.error || t("failedToSendOtp"));
+    const loginAxio = async () => {
+      const indianMobilePattern = /^[6-9]\d{9}$/;
+      if (!mobile) {
+        setMobileError(t("pleaseEnterMobile"));
+        return;
+      }
+      if (!indianMobilePattern.test(mobile)) {
+        setMobileError(t("valid10DigitIndianMobile"));
+        return;
       }
 
-      // Start SMS listener for Android
-      // if (isAndroid) {
-      //   startSmsListener();
-      // }
-      setLoading(false);
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || error.message || t("youAreNotRegistered");
-      if (errorMessage.toLowerCase().includes(t("invalidMobileNumber"))) {
-        Alert.alert(
-          t("invalidMobile"),
-          t("createNewAccountMessage"),
-          [
-            {
-              text: t("cancel"),
-              style: "cancel",
-              onPress: () => setLoading(false),
-            },
-            {
-              text: t("createAccount"),
-                              onPress: () => {
-                  // Handle create account navigation
+      setMobileError("");
+      setLoading(true);
+
+      try {
+        const response = await fetch(`${theme.baseUrl}/auth/check-mobile`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ mobile_number: mobile }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // Show OTP screen
+          setIsShowOtp(true);
+          setTimer(120);
+          // Auto-focus first OTP input
+          setTimeout(() => inputRefs[0]?.current?.focus(), 100);
+        } else {
+          throw new Error(data?.error || t("failedToSendOtp"));
+        }
+
+        // Start SMS listener for Android
+        // if (isAndroid) {
+        //   startSmsListener();
+        // }
+        setLoading(false);
+      } catch (error: any) {
+        const errorMessage = error.response?.data?.error || error.message || t("youAreNotRegistered");
+        if (errorMessage.toLowerCase().includes(t("invalidMobileNumber"))) {
+          Alert.alert(
+            t("invalidMobile"),
+            t("createNewAccountMessage"),
+            [
+              {
+                text: t("cancel"),
+                style: "cancel",
+                onPress: () => setLoading(false),
+              },
+              {
+                text: t("createAccount"),
+                onPress: () => {
                   try {
                     router.push(`/(auth)/register?mobile=${mobile}`);
                   } catch (error) {
@@ -467,250 +499,274 @@ export default function Login() {
                   }
                   setLoading(false);
                 },
-            },
-          ]
-        );
-      } else {
+              },
+            ]
+          );
+        } else {
+          showErrorAlert(errorMessage);
+          setLoading(false);
+        }
+      }
+    };
+
+    const handleResendOtp = async () => {
+      if (resendAttempts <= 0) return;
+
+      setLoading(true);
+      try {
+        const response = await fetch(`${theme.baseUrl}/auth/check-mobile`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ mobile_number: mobile }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setResendAttempts((prev) => prev - 1);
+          // setTimer(INITIAL_TIMER);
+          setPins(["", "", "", ""]);
+          Alert.alert(t("success"), t("otpResentSuccess"));
+          // Auto-focus first OTP input
+          setTimeout(() => inputRefs[0]?.current?.focus(), 100);
+        } else {
+          throw new Error(data?.error || t("failedToResendOtp"));
+        }
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : t("failedToResendOtp");
         showErrorAlert(errorMessage);
+      } finally {
         setLoading(false);
       }
-    }
-  };
+    };
 
-  const handleResendOtp = async () => {
-    if (resendAttempts <= 0) return;
-
-    setLoading(true);
-    try {
-      const response = await fetch(`${theme.baseUrl}/auth/check-mobile`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ mobile_number: mobile }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setResendAttempts((prev) => prev - 1);
-        // setTimer(INITIAL_TIMER);
+    const handleBackButton = () => {
+      if (isShowOtp) {
+        // If OTP fields are showing, hide them and go back to mobile input
+        setIsShowOtp(false);
         setPins(["", "", "", ""]);
-        Alert.alert(t("success"), t("otpResentSuccess"));
-        // Auto-focus first OTP input
-        setTimeout(() => inputRefs[0]?.current?.focus(), 100);
+        setTimer(120);
+        setResendAttempts(0);
+        // Stop SMS listener when going back to mobile input
+        // stopSmsListener();
       } else {
-        throw new Error(data?.error || t("failedToResendOtp"));
+        // If mobile input is showing, navigate back to previous route
+        router.back();
       }
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : t("failedToResendOtp");
-      showErrorAlert(errorMessage);
-    } finally {
-      setLoading(false);
+    };
+
+    if (checkingApi) {
+      return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1a2a39' }}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={{ color: '#fff', marginTop: 16 }}>Checking server connectivity...</Text>
+        </View>
+      );
     }
-  };
-
-  const handleBackButton = () => {
-    if (isShowOtp) {
-      // If OTP fields are showing, hide them and go back to mobile input
-      setIsShowOtp(false);
-      setPins(["", "", "", ""]);
-      setTimer(120);
-      setResendAttempts(0);
-      // Stop SMS listener when going back to mobile input
-      // stopSmsListener();
-    } else {
-      // If mobile input is showing, navigate back to previous route
-      router.back();
+    if (apiReachable) {
+      return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1a2a39' }}>
+          <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 8 }}>Cannot connect to server</Text>
+          <Text style={{ color: '#fff', fontSize: 14, textAlign: 'center', maxWidth: 300 }}>
+            The app cannot reach the backend server. Please check your internet connection or contact support if the problem persists. (URL: {theme.baseUrl})
+          </Text>
+        </View>
+      );
     }
-  };
+    if (isLoggedIn) return null;
 
-  if (isLoggedIn) return null;
-
-  return (
-    <View style={[registerStyles.container, { minHeight: '100%' }]}>
-      <ImageBackground
-        source={theme.image.bg_image}
-        style={[registerStyles.backgroundImage, { minHeight: '100%' }]}
-        resizeMode="cover"
-      >
-        <SafeAreaView style={{ flex: 1, minHeight: '100%' }}>
-        <View style={registerStyles.darkOverlay} />
-        <LinearGradient
-          colors={["rgba(32, 1, 1, 0.55)", "rgba(167, 0, 0, 0)", "rgba(118, 1, 1, 0)"]}
-          style={[registerStyles.gradient, { minHeight: '100%' }]}
+    return (
+      <View style={[registerStyles.container, { minHeight: '100%' }]}>
+        <ImageBackground
+          source={theme.image.bg_image}
+          style={[registerStyles.backgroundImage, { minHeight: '100%' }]}
+          resizeMode="cover"
         >
-          <SimpleLanguageSwitcher />
-          {showError && (
-            <ErrorAlert message={errorMessage} onClose={hideErrorAlert} />
-          )}
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={registerStyles.keyboardAvoidingView}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 50}
+          <SafeAreaView style={{ flex: 1, minHeight: '100%' }}>
+          <View style={registerStyles.darkOverlay} />
+          <LinearGradient
+            colors={["rgba(32, 1, 1, 0.55)", "rgba(167, 0, 0, 0)", "rgba(118, 1, 1, 0)"]}
+            style={[registerStyles.gradient, { minHeight: '100%' }]}
           >
-            <ScrollView 
-              contentContainerStyle={registerStyles.scrollViewContent} 
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-              bounces={false}
-              automaticallyAdjustKeyboardInsets={true}
+            <SimpleLanguageSwitcher />
+            {showError && (
+              <ErrorAlert message={errorMessage} onClose={hideErrorAlert} />
+            )}
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              style={{ flex: 1 }}
+              keyboardVerticalOffset={Platform.OS === "ios" ? 200 : 150}
             >
-              <View style={[registerStyles.logoContainer, { paddingTop: 10, marginBottom: 0 }]}> 
-                <Image
-                  source={theme.image.transparentLogo}
-                  style={[registerStyles.logo, { width: 220, height: 220 }]}
-                  resizeMode="contain"
-                />
-              </View>
+              <ScrollView
+                contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+              >
+                <View style={[registerStyles.logoContainer, { paddingTop: 10, marginBottom: 0 }]}> 
+                  <Image
+                    source={theme.image.transparentLogo}
+                    style={[registerStyles.logo, { width: 220, height: 220 }]}
+                    resizeMode="contain"
+                  />
+                </View>
 
-              <ModernAuthCard activeTab="login" onTabChange={(tab) => { 
-                try {
-                  if(tab==='register'){
-                    router.push('/(auth)/register');
+                <ModernAuthCard activeTab="login" onTabChange={(tab) => {
+                  try {
+                    if(tab==='register'){
+                      router.push('/(auth)/register');
+                    }
+                  } catch (error) {
+                    console.error('Navigation error:', error);
                   }
-                } catch (error) {
-                  console.error('Navigation error:', error);
-                }
-              }}>
-                <Text style={[registerStyles.pageTitle, { color: '#ffffff' }]}>{t("welcomeBack")}</Text>
-                <Text style={[registerStyles.subtitle, { color: '#b8c5d6' }]}>{t("signInToContinue")}</Text>
-                {!isShowOtp ? (
-                  <>
-                    <View style={registerStyles.inputContainer}>
-                      <PhoneInput
-                        value={mobile}
-                        onChangeText={text => {
-                          setMobile(text);
-                          setOtpSent(false);
-                          setOtpVerified(false);
-                          setOtpValidated(false);
-                          setOtp('');
-                          setTimer(120);
-                          setResendAttempts(3);
-                        }}
-                        loading={loading || otpVerified}
-                      />
-                      {mobileError ? (
-                        <Text style={registerStyles.errorText}>{mobileError}</Text>
-                      ) : null}
-                    </View>
-                    <TouchableOpacity
-                      style={[
-                        registerStyles.loginButton,
-                        loading && registerStyles.loginButtonDisabled,
-                      ]}
-                      onPress={loginAxio}
-                      disabled={loading}
-                    >
-                      <LinearGradient
-                        colors={["#ffc90c", "#ffd700"]}
-                        style={registerStyles.gradientButton}
-                      >
-                        <Text style={registerStyles.loginButtonText}>
-                          {loading ? t("processing") : t("getOtp")}
-                        </Text>
-                      </LinearGradient>
-                    </TouchableOpacity>
-                    {/* <View style={registerStyles.registerContainer}>
-                      <Text style={registerStyles.registerText}>
-                        {t("dontHaveAccount")} {" "}
-                      </Text>
-                      <TouchableOpacity onPress={() => {
-                        try {
-                          router.push("/(auth)/register");
-                        } catch (error) {
-                          console.error('Navigation error:', error);
-                        }
-                      }}> 
-                        <Text style={registerStyles.registerLink}>{t("register")}</Text>
-                      </TouchableOpacity>
-                    </View> */}
-                  </>
-                ) : (
-                  <View style={registerStyles.otpContainer}>
-                    <Text style={[registerStyles.otpTitle, { color: '#ffffff' }]}>{t("enterOTP")}</Text>
-                    <Text style={[registerStyles.otpSentText, { color: '#b8c5d6' }]}>
-                      {t("otpSentTo")}
-                      {mobile.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3")}
-                    </Text>
-                    <View style={registerStyles.otpInputsWrapper}>
-                      <View style={registerStyles.otpInputsContainer}>
-                        {pins.map((pin, index) => (
-                          <TextInput
-                            key={index}
-                            ref={inputRefs[index]}
-                            style={[registerStyles.otpInput, { color: '#1a2a39' }]}
-                            keyboardType="numeric"
-                            maxLength={1}
-                            value={pin}
-                            onChangeText={(text) => handlePinChange(text, index)}
-                            onKeyPress={(e) => handleKeyPress(e, index)}
-                            secureTextEntry={!showOtp}
-                            textContentType="oneTimeCode"
-                            autoComplete="sms-otp"
-                            editable={!loading}
-                          />
-                        ))}
+                }}>
+                  <Text style={[registerStyles.pageTitle, { color: '#ffffff' }]}>{t("welcomeBack")}</Text>
+                  <Text style={[registerStyles.subtitle, { color: '#b8c5d6' }]}>{t("signInToContinue")}</Text>
+                  {!isShowOtp ? (
+                    <>
+                      <View style={registerStyles.inputContainer}>
+                        <PhoneInput
+                          value={mobile}
+                          onChangeText={text => {
+                            setMobile(text);
+                            setOtpSent(false);
+                            setOtpVerified(false);
+                            setOtpValidated(false);
+                            setOtp('');
+                            setTimer(120);
+                            setResendAttempts(3);
+                          }}
+                          loading={loading || otpVerified}
+                        />
+                        {mobileError ? (
+                          <Text style={registerStyles.errorText}>{mobileError}</Text>
+                        ) : null}
                       </View>
                       <TouchableOpacity
-                        onPress={() => setShowOtp((prev) => !prev)}
-                        style={registerStyles.eyeButton}
+                        style={[
+                          registerStyles.loginButton,
+                          loading && registerStyles.loginButtonDisabled,
+                        ]}
+                        onPress={loginAxio}
+                        disabled={loading}
                       >
-                        <Feather
-                          name={showOtp ? "eye-off" : "eye"}
-                          size={24}
+                        <LinearGradient
+                          colors={["#ffc90c", "#ffd700"]}
+                          style={registerStyles.gradientButton}
+                        >
+                          <Text style={registerStyles.loginButtonText}>
+                            {loading ? t("processing") : t("getOtp")}
+                          </Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+                      {/* <View style={registerStyles.registerContainer}>
+                        <Text style={registerStyles.registerText}>
+                          {t("dontHaveAccount")} {" "}
+                        </Text>
+                        <TouchableOpacity onPress={() => {
+                          try {
+                            router.push("/(auth)/register");
+                          } catch (error) {
+                            console.error('Navigation error:', error);
+                          }
+                        }}> 
+                          <Text style={registerStyles.registerLink}>{t("register")}</Text>
+                        </TouchableOpacity>
+                      </View> */}
+                    </>
+                  ) : (
+                    <View style={registerStyles.otpContainer}>
+                      <Text style={[registerStyles.otpTitle, { color: '#ffffff' }]}>{t("enterOTP")}</Text>
+                      <Text style={[registerStyles.otpSentText, { color: '#b8c5d6' }]}>
+                        {t("otpSentTo")}
+                        {mobile.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3")}
+                      </Text>
+                      <View style={registerStyles.otpInputsWrapper}>
+                        <View style={registerStyles.otpInputsContainer}>
+                          {pins.map((pin, index) => (
+                            <TextInput
+                              key={index}
+                              ref={inputRefs[index]}
+                              style={[registerStyles.otpInput, { color: '#1a2a39' }]}
+                              keyboardType="numeric"
+                              maxLength={1}
+                              value={pin}
+                              onChangeText={(text) => handlePinChange(text, index)}
+                              onKeyPress={(e) => handleKeyPress(e, index)}
+                              secureTextEntry={!showOtp}
+                              textContentType="oneTimeCode"
+                              autoComplete="sms-otp"
+                              editable={!loading}
+                            />
+                          ))}
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => setShowOtp((prev) => !prev)}
+                          style={registerStyles.eyeButton}
+                        >
+                          <Feather
+                            name={showOtp ? "eye-off" : "eye"}
+                            size={24}
+                            color={theme.colors.white}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                      <View style={registerStyles.timerContainer}>
+                        <Ionicons
+                          name="time-outline"
+                          size={20}
                           color={theme.colors.white}
                         />
-                      </TouchableOpacity>
-                    </View>
-                    <View style={registerStyles.timerContainer}>
-                      <Ionicons
-                        name="time-outline"
-                        size={20}
-                        color={theme.colors.white}
-                      />
-                      <Text style={[registerStyles.timerText, { color: '#b8c5d6' }]}>{t("resendIn")} {timer}s</Text>
-                    </View>
-                    {timer === 0 && resendAttempts < 3 && (
+                        <Text style={[registerStyles.timerText, { color: '#b8c5d6' }]}>{t("resendIn")} {timer}s</Text>
+                      </View>
+                      {timer === 0 && resendAttempts < 3 && (
+                        <TouchableOpacity
+                          onPress={handleResendOtp}
+                          style={registerStyles.resendButton}
+                        >
+                          <Text style={[registerStyles.resendText, { color: '#ffd700' }]}>{t("resendOTP")}</Text>
+                        </TouchableOpacity>
+                      )}
                       <TouchableOpacity
-                        onPress={handleResendOtp}
-                        style={registerStyles.resendButton}
+                        style={[
+                          registerStyles.loginButton,
+                          (loading || !pins.every((pin) => pin.trim() !== "")) &&
+                            registerStyles.loginButtonDisabled,
+                        ]}
+                        onPress={() => verifyOtp(pins.join(""))}
+                        disabled={
+                          loading || !pins.every((pin) => pin.trim() !== "")
+                        }
                       >
-                        <Text style={[registerStyles.resendText, { color: '#ffd700' }]}>{t("resendOTP")}</Text>
+                        <LinearGradient
+                          colors={["#ffc90c", "#ffd700"]}
+                          style={registerStyles.gradientButton}
+                        >
+                          <Text style={registerStyles.loginButtonText}>
+                            {loading ? t("verifying") : t("submit")}
+                          </Text>
+                        </LinearGradient>
                       </TouchableOpacity>
-                    )}
-                    <TouchableOpacity
-                      style={[
-                        registerStyles.loginButton,
-                        (loading || !pins.every((pin) => pin.trim() !== "")) &&
-                          registerStyles.loginButtonDisabled,
-                      ]}
-                      onPress={() => verifyOtp(pins.join(""))}
-                      disabled={
-                        loading || !pins.every((pin) => pin.trim() !== "")
-                      }
-                    >
-                      <LinearGradient
-                        colors={["#ffc90c", "#ffd700"]}
-                        style={registerStyles.gradientButton}
-                      >
-                        <Text style={registerStyles.loginButtonText}>
-                          {loading ? t("verifying") : t("submit")}
-                        </Text>
-                      </LinearGradient>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </ModernAuthCard>
-            </ScrollView>
-          </KeyboardAvoidingView>
-        </LinearGradient>
-        </SafeAreaView>
-      </ImageBackground>
-    </View>
-  );
+                    </View>
+                  )}
+                </ModernAuthCard>
+              </ScrollView>
+            </KeyboardAvoidingView>
+          </LinearGradient>
+          </SafeAreaView>
+        </ImageBackground>
+      </View>
+    );
+  } catch (error) {
+    console.error('Login component error:', error);
+    return (
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1a2a39' }}>
+        <Text style={{ color: '#fff', fontSize: 16 }}>Something went wrong. Please try again.</Text>
+      </SafeAreaView>
+    );
+  }
 }
 

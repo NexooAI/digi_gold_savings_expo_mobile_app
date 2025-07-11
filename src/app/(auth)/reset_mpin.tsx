@@ -268,15 +268,13 @@ export default function ResetMpin() {
             )}
             <KeyboardAvoidingView
               behavior={Platform.OS === "ios" ? "padding" : "height"}
-              style={styles.keyboardAvoidingView}
-              keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 50}
+              style={{ flex: 1 }}
+              keyboardVerticalOffset={Platform.OS === "ios" ? 200 : 150}
             >
               <ScrollView
-                contentContainerStyle={styles.scrollViewContent}
+                contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
-                bounces={false}
-                automaticallyAdjustKeyboardInsets={true}
               >
                 <View style={[styles.logoContainer, { paddingTop: 10, marginBottom: 0 }]}>
                   <Image

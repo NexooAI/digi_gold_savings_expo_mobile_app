@@ -5,7 +5,10 @@ import BottomSheet from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Platform-specific imports
-let MapView, Marker, PROVIDER_GOOGLE;
+type MapViewType = any;
+type MarkerType = any;
+type ProviderType = any;
+let MapView: MapViewType, Marker: MarkerType, PROVIDER_GOOGLE: ProviderType;
 if (Platform.OS !== 'web') {
   const Maps = require('react-native-maps');
   MapView = Maps.default;
@@ -14,14 +17,23 @@ if (Platform.OS !== 'web') {
 }
 
 // Sample data for locations
-const locations = [
+type LocationType = {
+  id: number;
+  title: string;
+  description: string;
+  latitude: number;
+  longitude: number;
+  image: any;
+};
+
+const locations: LocationType[] = [
   {
     id: 1,
     title: "Central Park",
     description: "Large urban park in Manhattan",
     latitude: 40.785091,
     longitude: -73.968285,
-    image: require('../../../assets/images/central-park.jpg'),
+    image: require('../../../assets/images/shop.jpg'),
   },
   {
     id: 2,
@@ -29,18 +41,25 @@ const locations = [
     description: "102-story Art Deco skyscraper",
     latitude: 40.748817,
     longitude: -73.985428,
-    image: require('../../../assets/images/empire-state.jpg'),
+    image: require('../../../assets/images/shop.jpg'),
   },
   // Add more locations as needed
 ];
 
+type UserLocationType = {
+  latitude: number;
+  longitude: number;
+  latitudeDelta: number;
+  longitudeDelta: number;
+} | null;
+
 export default function MapScreen() {
-    const insets = useSafeAreaInsets();
-    const snapPoints = React.useMemo(() => ['25%', '50%'], []);
-  const [userLocation, setUserLocation] = useState(null);
-  const [selectedLocation, setSelectedLocation] = useState(null);
-  const bottomSheetRef = useRef(null);
-  const mapRef = useRef(null);
+  const insets = useSafeAreaInsets();
+  const snapPoints = React.useMemo(() => ['25%', '50%'], []);
+  const [userLocation, setUserLocation] = useState<UserLocationType>(null);
+  const [selectedLocation, setSelectedLocation] = useState<LocationType | null>(null);
+  const bottomSheetRef = useRef<BottomSheet | null>(null);
+  const mapRef = useRef<any>(null);
 
   // Get user location
   useEffect(() => {
@@ -61,13 +80,13 @@ export default function MapScreen() {
     })();
   }, []);
 
-  const handleMarkerPress = (location) => {
+  const handleMarkerPress = (location: LocationType) => {
     setSelectedLocation(location);
-    bottomSheetRef.current?.expand();
+    bottomSheetRef.current?.expand && bottomSheetRef.current.expand();
   };
 
   const handleCenterButtonPress = () => {
-    if (userLocation) {
+    if (userLocation && mapRef.current) {
       mapRef.current.animateToRegion(userLocation, 1000);
     }
   };
@@ -81,7 +100,6 @@ export default function MapScreen() {
           <Text style={styles.mapPlaceholderSubtext}>
             Interactive map would be displayed here on mobile devices
           </Text>
-          
           {/* Display locations as cards for web */}
           <View style={styles.locationsContainer}>
             {locations.map((location) => (
@@ -111,7 +129,7 @@ export default function MapScreen() {
           onPress={handleCenterButtonPress}
         >
           <Image
-            source={require('../../../assets/images/center-location.png')}
+            source={require('../../../assets/images/shop.jpg')}
             style={styles.centerButtonIcon}
           />
         </TouchableOpacity>
@@ -175,7 +193,7 @@ export default function MapScreen() {
           >
             <View style={styles.markerContainer}>
               <Image
-                source={require('../../../assets/images/map-pin.png')}
+                source={require('../../../assets/images/shop.jpg')}
                 style={[
                   styles.markerImage,
                   selectedLocation?.id === location.id && styles.selectedMarker,
@@ -192,7 +210,7 @@ export default function MapScreen() {
         onPress={handleCenterButtonPress}
       >
         <Image
-          source={require('../../../assets/images/center-location.png')}
+          source={require('../../../assets/images/shop.jpg')}
           style={styles.centerButtonIcon}
         />
       </TouchableOpacity>

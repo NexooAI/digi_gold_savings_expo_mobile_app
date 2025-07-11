@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Alert,
   BackHandler,
+  Text,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "../global.css";
@@ -147,49 +148,63 @@ export default function RootLayout() {
 
   const queryClient = new QueryClient();
 
-  if (isFirstLaunch === null) {
+  try {
+    if (isFirstLaunch === null) {
+      return (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      );
+    }
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <RootSiblingParent>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+              <LanguageProvider1>
+                <GlobalLoadingProvider>
+                  <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen
+                      name="intro"
+                      options={{ gestureEnabled: false }}
+                    />
+                    <Stack.Screen
+                      name="(app)"
+                      options={{ gestureEnabled: false }}
+                    />
+                    <Stack.Screen
+                      name="(auth)"
+                      options={{ gestureEnabled: false }}
+                    />
+                    <Stack.Screen
+                      name="[...missing]"
+                      options={{
+                        gestureEnabled: false,
+                        animation: "fade",
+                      }}
+                    />
+                  </Stack>
+                </GlobalLoadingProvider>
+              </LanguageProvider1>
+            </AuthProvider>
+          </QueryClientProvider>
+        </GestureHandlerRootView>
+      </RootSiblingParent>
+    );
+  } catch (error) {
+    console.error('RootLayout error:', error);
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1a2a39' }}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
+        <View style={{ marginTop: 24, alignItems: 'center' }}>
+          <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 8 }}>Something went wrong</Text>
+          <Text style={{ color: '#fff', fontSize: 14, textAlign: 'center', maxWidth: 300 }}>
+            The app encountered an unexpected error. Please restart the app or contact support if the problem persists.
+          </Text>
+        </View>
       </View>
     );
   }
-
-  return (
-    <RootSiblingParent>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <LanguageProvider1>
-              <GlobalLoadingProvider>
-                <Stack screenOptions={{ headerShown: false }}>
-                  <Stack.Screen
-                    name="intro"
-                    options={{ gestureEnabled: false }}
-                  />
-                  <Stack.Screen
-                    name="(app)"
-                    options={{ gestureEnabled: false }}
-                  />
-                  <Stack.Screen
-                    name="(auth)"
-                    options={{ gestureEnabled: false }}
-                  />
-                  <Stack.Screen
-                    name="[...missing]"
-                    options={{
-                      gestureEnabled: false,
-                      animation: "fade",
-                    }}
-                  />
-                </Stack>
-              </GlobalLoadingProvider>
-            </LanguageProvider1>
-          </AuthProvider>
-        </QueryClientProvider>
-      </GestureHandlerRootView>
-    </RootSiblingParent>
-  );
 }
 
 const styles = StyleSheet.create({

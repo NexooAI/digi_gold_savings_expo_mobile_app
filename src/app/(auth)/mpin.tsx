@@ -159,12 +159,13 @@ export default function MpinSetup() {
       >
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
           style={styles.container}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 200 : 150}
         >
           <ScrollView
-            contentContainerStyle={styles.scrollContainer}
+            contentContainerStyle={[styles.scrollContainer, { flexGrow: 1, justifyContent: 'center' }]}
             keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
           >
             <View style={styles.contentContainer}>
               <Image

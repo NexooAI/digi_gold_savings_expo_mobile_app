@@ -464,15 +464,13 @@ export default function Register() {
           )}
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={registerStyles.keyboardAvoidingView}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 50}
+            style={{ flex: 1 }}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 200 : 150}
           >
-            <ScrollView 
-              contentContainerStyle={registerStyles.scrollViewContent} 
+            <ScrollView
+              contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
-              bounces={false}
-              automaticallyAdjustKeyboardInsets={true}
             >
               <View style={[registerStyles.logoContainer, { paddingTop: 10, marginBottom: 0 }]}>
                 <Image
