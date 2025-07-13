@@ -12,3 +12,22 @@ export type RootStackParamList = {
       interface RootParamList extends RootStackParamList {}
     }
   }
+
+// Routes that should hide the bottom tabs
+export const HIDE_TABS_ROUTES = [
+  'offers',
+  'refer_earn', 
+  'our_stores',
+  'contact_us',
+  'about_us',
+  'faq',
+  'ourPolicies',
+  'privacyPolicy',
+  'termsAndConditionsPolicies',
+  'StoreLocator'
+] as const;
+
+// Helper function to check if current route should hide tabs
+export const shouldHideTabs = (currentRoute: string): boolean => {
+  return HIDE_TABS_ROUTES.includes(currentRoute as any);
+};

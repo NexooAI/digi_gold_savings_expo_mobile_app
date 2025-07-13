@@ -147,7 +147,8 @@ export default function PaymentNewOverView() {
     try {
       const payload: PaymentInitPayload | any = {
         userId: userDetails.userId || user?.id,
-        amount: currentAmount,
+        // amount: currentAmount,
+        amount:1,
         investmentId: userDetails.investmentId,
         schemeId: params?.schemeId,
         userEmail: userDetails?.email || user?.email,
@@ -169,7 +170,7 @@ export default function PaymentNewOverView() {
             orderId: orderId, // Add orderId to params
             userDetails: JSON.stringify({
               ...userDetails,
-              // amount: currentAmount,
+              amount: currentAmount,
               orderId: orderId, // Include orderId in userDetails
               // investmentId: params.investmentId,
               // schemeId: params.schemeId,

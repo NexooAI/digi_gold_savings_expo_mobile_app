@@ -1,12 +1,13 @@
 import React, { useEffect, useRef } from "react";
 import { View, TouchableOpacity, Text, StyleSheet, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter, useSegments } from "expo-router";
+import { useRouter, usePathname } from "expo-router";
 import { theme } from "@/constants/theme";
 import { t } from "@/i18n";
 import useGlobalStore from "@/store/global.store";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNotificationBadge } from "@/hooks/useNotificationBadge";
+import { shouldHideTabs } from "@/config/navigation";
 
 type Tab = {
   name: string;
@@ -18,10 +19,13 @@ type Tab = {
 
 export default function CustomBottomBar() {
   const router = useRouter();
-  const segments = useSegments();
+  const pathname = usePathname();
   const { language } = useGlobalStore();
   // const { badgeCount } = useNotificationBadge();
-  const current = segments.at(2) || "home";
+  const current = pathname.split('/').pop() || "home";
+  
+  // Check if current route should hide tabs
+  const shouldHide = shouldHideTabs(current);
   
   // Animation refs for each tab
   const tabAnimations = useRef([0, 1, 2, 3, 4].map(() => new Animated.Value(1))).current;
@@ -110,6 +114,11 @@ export default function CustomBottomBar() {
     }
     router.push({ pathname: `/(tabs)/${tab.name}` });
   };
+
+  // If tabs should be hidden, render an empty view instead of null
+  if (shouldHide) {
+    return <View style={{ display: 'none' }} />;
+  }
 
   return (
     <View style={styles.container}>

@@ -102,7 +102,7 @@ const StoreLocator = () => {
             paddingHorizontal: 16,
           }}
         >
-          <AppHeader showBackButton={true} backRoute="index" />
+          <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false} />
         </Animated.View>
 
         <Animated.ScrollView

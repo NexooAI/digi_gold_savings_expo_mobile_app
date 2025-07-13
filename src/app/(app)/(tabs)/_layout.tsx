@@ -17,7 +17,7 @@ export default function TabsLayout() {
           screenOptions={{
             headerShown: false,
           }}
-          tabBar={(props) => <CustomBottomBar {...props} />}
+          tabBar={MyTabBar}
         >
           <Tabs.Screen name="home" />
           <Tabs.Screen name="savings" />

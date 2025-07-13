@@ -52,7 +52,7 @@ export default function ReferCodeScreen() {
       resizeMode="cover"
     >
       <View style={styles.headerContainer}>
-        <AppHeader showBackButton={true} backRoute="index" />
+        <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false} />
         <TouchableOpacity
           onPress={() => router.back()}
           className="absolute top-6 left-4 p-2 bg-white rounded-full z-10"

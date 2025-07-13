@@ -147,7 +147,7 @@ export default function TermsAndConditions() {
         <SafeAreaView style={styles.safeArea}>
           {/* Fixed Header */}
           <View style={styles.headerContainer}>
-            <AppHeader showBackButton={true} backRoute="index" />
+            <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false} />
           </View>
 
           {/* Hero Section */}
@@ -177,7 +177,7 @@ export default function TermsAndConditions() {
             style={styles.scrollView}
             contentContainerStyle={[
               styles.scrollContent,
-              { paddingBottom: Math.max(insets.bottom, 20) + 80 }, // Account for tab bar + extra padding
+              { paddingBottom: Math.max(insets.bottom, 20) + 20 }, // Reduced padding since no tab bar
             ]}
             showsVerticalScrollIndicator={false}
           >
@@ -200,53 +200,50 @@ export default function TermsAndConditions() {
                   {translations.defaultDiscription}
                 </Text>
 
-                {/* Additional styled sections */}
-                <View style={styles.sectionContainer}>
-                  <View style={styles.sectionHeader}>
-                    <Ionicons name="people-outline" size={20} color="#850111" />
-                    <Text style={styles.sectionTitle}>User Agreement</Text>
-                  </View>
-                  <Text style={styles.sectionText}>
-                    By using our digital gold savings platform, you agree to
-                    these terms and conditions.
-                  </Text>
-                </View>
-
-                <View style={styles.sectionContainer}>
-                  <View style={styles.sectionHeader}>
-                    <Ionicons name="star-outline" size={20} color="#850111" />
-                    <Text style={styles.sectionTitle}>Service Quality</Text>
-                  </View>
-                  <Text style={styles.sectionText}>
-                    We are committed to providing you with the highest quality
-                    digital gold investment services.
-                  </Text>
-                </View>
-
+                {/* Service Terms Section */}
                 <View style={styles.sectionContainer}>
                   <View style={styles.sectionHeader}>
                     <Ionicons
-                      name="lock-closed-outline"
+                      name="business-outline"
                       size={20}
                       color="#850111"
                     />
-                    <Text style={styles.sectionTitle}>Security & Privacy</Text>
+                    <Text style={styles.sectionTitle}>Service Terms</Text>
                   </View>
                   <Text style={styles.sectionText}>
-                    Your financial information and personal data are protected
-                    with bank-level security.
+                    By using our digital gold investment services, you agree to
+                    comply with all applicable terms and conditions.
                   </Text>
                 </View>
 
+                {/* User Responsibilities Section */}
+                <View style={styles.sectionContainer}>
+                  <View style={styles.sectionHeader}>
+                    <Ionicons name="person-outline" size={20} color="#850111" />
+                    <Text style={styles.sectionTitle}>User Responsibilities</Text>
+                  </View>
+                  <Text style={styles.sectionText}>
+                    Users are responsible for maintaining the security of their
+                    accounts and providing accurate information.
+                  </Text>
+                </View>
+
+                {/* Contact Section */}
                 <View style={styles.contactSection}>
                   <LinearGradient
                     colors={["#850111", "#5a000b"]}
                     style={styles.contactGradient}
                   >
-                    <Ionicons name="mail-outline" size={24} color="#FFD700" />
-                    <Text style={styles.contactTitle}>Questions?</Text>
+                    <Ionicons
+                      name="information-circle-outline"
+                      size={24}
+                      color="#FFD700"
+                    />
+                    <Text style={styles.contactTitle}>
+                      Questions About Terms?
+                    </Text>
                     <Text style={styles.contactText}>
-                      Contact our support team for any clarifications
+                      Contact us for clarification on any terms and conditions
                     </Text>
                   </LinearGradient>
                 </View>
@@ -262,43 +259,39 @@ export default function TermsAndConditions() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#f7f7f7",
   },
   backgroundImage: {
     flex: 1,
     width: "100%",
-    height: "100%",
   },
   safeArea: {
     flex: 1,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
   headerContainer: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    zIndex: 20,
-    backgroundColor: "transparent",
-    paddingHorizontal: 16,
+    zIndex: 10,
   },
   heroSection: {
-    paddingTop: 60,
-    paddingBottom: 20,
+    paddingTop: 20,
+    paddingBottom: 30,
     paddingHorizontal: 20,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    marginBottom: 20,
+    alignItems: "center",
   },
   heroContent: {
     alignItems: "center",
   },
   heroTitle: {
-    fontSize: moderateScale(22),
-    fontWeight: "700",
-    color: "#FFFFFF",
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#fff",
     textAlign: "center",
-    marginTop: 12,
-    marginBottom: 8,
+    marginTop: 16,
+    marginBottom: 12,
+    fontFamily: "serif",
   },
   decorativeLine: {
     width: 60,
@@ -310,19 +303,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   contentCard: {
     borderRadius: 20,
     overflow: "hidden",
-    elevation: 5,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 5,
   },
   cardGradient: {
     padding: 24,
@@ -331,20 +322,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(133, 1, 17, 0.2)",
   },
   contentHeaderText: {
-    fontSize: moderateScale(20),
-    fontWeight: "600",
+    fontSize: 20,
+    fontWeight: "700",
     color: "#850111",
     marginLeft: 12,
   },
   contentText: {
-    fontSize: moderateScale(16),
-    color: "#333333",
-    lineHeight: moderateScale(24),
+    fontSize: 16,
+    color: "#333",
+    lineHeight: 26,
+    letterSpacing: 0.3,
     marginBottom: 24,
   },
   sectionContainer: {
@@ -361,15 +350,15 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   sectionTitle: {
-    fontSize: moderateScale(16),
+    fontSize: 16,
     fontWeight: "600",
     color: "#850111",
     marginLeft: 8,
   },
   sectionText: {
-    fontSize: moderateScale(14),
+    fontSize: 14,
     color: "#555555",
-    lineHeight: moderateScale(20),
+    lineHeight: 20,
   },
   contactSection: {
     marginTop: 20,
@@ -381,14 +370,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   contactTitle: {
-    fontSize: moderateScale(18),
+    fontSize: 18,
     fontWeight: "600",
     color: "#FFFFFF",
     marginTop: 8,
     marginBottom: 4,
   },
   contactText: {
-    fontSize: moderateScale(14),
+    fontSize: 14,
     color: "rgba(255, 255, 255, 0.8)",
     textAlign: "center",
   },
@@ -401,8 +390,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    fontSize: moderateScale(16),
-    color: "#FFFFFF",
+    color: "#FFD700",
+    fontSize: 18,
+    fontWeight: "600",
     marginTop: 16,
   },
   errorContainer: {
@@ -412,31 +402,32 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 32,
+    padding: 20,
   },
   errorTitle: {
-    fontSize: moderateScale(20),
-    fontWeight: "600",
-    color: "#FFFFFF",
-    marginTop: 16,
-    marginBottom: 8,
+    color: "#FFD700",
+    fontSize: 24,
+    fontWeight: "700",
+    marginTop: 20,
+    marginBottom: 12,
     textAlign: "center",
   },
   errorText: {
-    fontSize: moderateScale(14),
-    color: "rgba(255, 255, 255, 0.8)",
+    color: "#fff",
+    fontSize: 16,
     textAlign: "center",
     marginBottom: 24,
+    lineHeight: 24,
   },
   retryButton: {
     backgroundColor: "#FFD700",
-    paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 25,
+    paddingHorizontal: 24,
+    borderRadius: 8,
   },
   retryButtonText: {
-    fontSize: moderateScale(16),
-    fontWeight: "600",
     color: "#850111",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

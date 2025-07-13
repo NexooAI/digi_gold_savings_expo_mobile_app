@@ -71,7 +71,7 @@ const StoreLocator = () => {
       style={{ flex: 1, backgroundColor: "#fff" }}
     >
       <SafeAreaView style={{ flex: 1 }}>
-        <AppHeader showBackButton={true} backRoute="index" />
+        <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false} />
 
         <ScrollView
           contentContainerStyle={{ paddingTop: 100, paddingHorizontal: 16 }}
@@ -201,30 +201,29 @@ const styles = StyleSheet.create({
     height: 20,
   },
   map: {
-    height: 500,
+    height: 300,
     borderRadius: 12,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   storeList: {
-    backgroundColor: "white",
-    borderRadius: 12,
-    elevation: 2,
-    padding: 16,
+    marginBottom: 20,
   },
   storeListItem: {
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    backgroundColor: "#f8f9fa",
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 8,
   },
   storeName: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "bold",
     color: "#333",
     marginBottom: 4,
   },
   storeAddress: {
     fontSize: 14,
     color: "#666",
+    lineHeight: 20,
   },
 });
 

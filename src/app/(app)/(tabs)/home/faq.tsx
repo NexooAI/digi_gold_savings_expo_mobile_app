@@ -20,17 +20,6 @@ import {
 } from "react-native";
 import { moderateScale } from "react-native-size-matters";
 
-// AppHeader component was referenced but not defined
-// const AppHeader = () => {
-//   return (
-//     <View style={styles.appHeader}>
-//       <Text style={styles.appHeaderText}>அகிலா ஜுவல்லர்ஸ்</Text>
-//     </View>
-//   );
-// };
-
-// FAQ data in JSON format
-
 // FAQ Item Component
 const FAQItem = ({ item, isOpen, toggleOpen, translations }) => {
   // headerOpacity was used but not defined
@@ -216,6 +205,7 @@ export default function App() {
       answer: translations.answer14,
     },
   ];
+
   const toggleItem = (id) => {
     setOpenItemId(openItemId === id ? null : id);
   };
@@ -226,43 +216,59 @@ export default function App() {
       style={{ flex: 1, backgroundColor: "#fff" }}
     >
       <SafeAreaView style={{ flex: 1 }}>
-        <StatusBar barStyle="light-content" />
-
-        <Animated.View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 20,
-            opacity: headerOpacity,
-            backgroundColor: "transparent",
-            paddingHorizontal: 16,
-          }}
+        <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
+        <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false} />
+        <ScrollView
+          contentContainerStyle={{ paddingTop: 20, paddingHorizontal: 16 }}
         >
-          <AppHeader showBackButton={true} backRoute="index" />
-        </Animated.View>
+          <View
+            style={{
+              backgroundColor: "white",
+              borderRadius: 20,
+              padding: 24,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 20,
+              elevation: 5,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 28,
+                fontWeight: "800",
+                color: theme.colors.primary,
+                marginBottom: 24,
+                textAlign: "center",
+                fontFamily: "serif",
+              }}
+            >
+              {translations.faqQuestion}
+            </Text>
 
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>{translations.storeName}</Text>
-          <Text style={styles.headerSubtitle}>{translations.faqQuestion}</Text>
-        </View>
+            <Text
+              style={{
+                fontSize: 16,
+                color: "#666",
+                lineHeight: 24,
+                marginBottom: 32,
+                letterSpacing: 0.4,
+                textAlign: "center",
+              }}
+            >
+              Find answers to commonly asked questions about our services and policies.
+            </Text>
 
-        <ScrollView style={styles.scrollView}>
-          {faqData.map((item) => (
-            <FAQItem
-              key={item.id}
-              item={item}
-              isOpen={openItemId === item.id}
-              toggleOpen={() => toggleItem(item.id)}
-              translations={translations}
-            />
-          ))}
-
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>{translations.copyright}</Text>
+            {faqData.map((item) => (
+              <FAQItem
+                key={item.id}
+                item={item}
+                isOpen={openItemId === item.id}
+                toggleOpen={() => toggleItem(item.id)}
+                translations={translations}
+              />
+            ))}
           </View>
-          <View style={styles.spacer} />
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>
@@ -270,133 +276,75 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f7f7f7",
-  },
-  spacer: {
-    height: moderateScale(80),
-  },
-  appHeader: {
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  appHeaderText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#fff",
-  },
-  header: {
-    backgroundColor: theme.colors.primary,
-    padding: 20,
-    marginTop: 50,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
-    marginBottom: 5,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: "#fff",
-    textAlign: "center",
-  },
-  scrollView: {
-    flex: 1,
-    padding: 15,
-  },
   faqItem: {
-    marginBottom: 15,
-    borderRadius: 10,
-    backgroundColor: "#fff",
+    marginBottom: 16,
+    backgroundColor: "#f8f9fa",
+    borderRadius: 12,
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 3,
   },
   questionContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 15,
-    backgroundColor: theme.colors.primary,
+    padding: 16,
+    backgroundColor: "#f8f9fa",
   },
   questionContainerOpen: {
     backgroundColor: theme.colors.primary,
-    color: "#fff",
   },
   questionText: {
-    flex: 1,
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#fff",
+    fontWeight: "600",
+    color: "#333",
+    flex: 1,
+    marginRight: 12,
   },
   expandIcon: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "bold",
-    color: "#fff",
-    marginLeft: 10,
+    color: theme.colors.primary,
   },
   answerContainer: {
-    padding: 15,
-    backgroundColor: "#fff",
+    padding: 16,
+    backgroundColor: "white",
   },
   answerText: {
-    fontSize: 15,
-    color: "#333",
+    fontSize: 14,
+    color: "#666",
     lineHeight: 22,
   },
   tableContainer: {
-    marginTop: 15,
+    marginTop: 16,
     borderWidth: 1,
     borderColor: "#ddd",
-    borderRadius: 5,
+    borderRadius: 8,
     overflow: "hidden",
   },
   tableHeader: {
     flexDirection: "row",
     backgroundColor: theme.colors.primary,
-    padding: 10,
   },
   tableHeaderText: {
     flex: 1,
-    fontWeight: "bold",
-    color: "#fff",
+    padding: 12,
+    color: "white",
+    fontWeight: "600",
     textAlign: "center",
   },
   tableRow: {
     flexDirection: "row",
-    borderTopWidth: 1,
-    borderTopColor: "#ddd",
   },
   tableRowEven: {
-    backgroundColor: "#F5EFD5",
+    backgroundColor: "#f8f9fa",
   },
   tableRowOdd: {
-    backgroundColor: "#fff",
+    backgroundColor: "white",
   },
   tableCell: {
     flex: 1,
-    padding: 10,
+    padding: 12,
     textAlign: "center",
-  },
-  footer: {
-    marginTop: 20,
-    marginBottom: 20,
-    alignItems: "center",
-  },
-  footerText: {
-    fontSize: 12,
-    color: "#666",
-    textAlign: "center",
+    fontSize: 14,
+    color: "#333",
   },
 });

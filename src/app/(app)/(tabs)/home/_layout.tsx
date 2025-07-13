@@ -43,38 +43,49 @@ export default function HomeLayout() {
       />
       <Stack.Screen
         name="(storeInfo)/about_us"
-        options={{ title: "About US", headerShown: false }}
+        options={{ 
+          title: "About US", 
+          headerShown: false,
+        }}
       />
       <Stack.Screen
         name="faq"
-        options={{ title: "FAQ", headerShown: false }}
-      />
-      <Stack.Screen
-        name="gold_advance"
-        options={{
+        options={{ 
+          title: "FAQ", 
           headerShown: false,
-          tabBarStyle: { display: 'none' },
         }}
       />
       <Stack.Screen
         name="(storeInfo)/contact_us"
-        options={{ title: "Contact US", headerShown: false }}
+        options={{ 
+          title: "Contact US", 
+          headerShown: false,
+        }}
       />
       <Stack.Screen
         name="offers"
-        options={{ title: "Our Offers", headerShown: false }}
+        options={{ 
+          title: "Our Offers", 
+          headerShown: false,
+        }}
       />
-      {/* <Stack.Screen
+      <Stack.Screen
         name="StoreLocator"
         options={{ title: "Store Locator", headerShown: false }}
-      /> */}
+      />
       <Stack.Screen
         name="our_stores"
-        options={{ title: "Our Stores", headerShown: false }}
+        options={{ 
+          title: "Our Stores", 
+          headerShown: false,
+        }}
       />
       <Stack.Screen
         name="refer_earn"
-        options={{ title: "Refer & Earn", headerShown: false }}
+        options={{ 
+          title: "Refer & Earn", 
+          headerShown: false,
+        }}
       />
        <Stack.Screen
         name="paymentNewOverView"

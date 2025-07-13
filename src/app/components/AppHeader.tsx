@@ -26,6 +26,7 @@ interface AppHeaderProps {
   showBackButton?: boolean;
   backRoute?: string;
   showLanguageSwitcher?: boolean;
+  showDrawerToggle?: boolean;
   goldRateInfo?: RateInfo;
   goldRateUpdatedAt?: string;
   title?: string;
@@ -40,7 +41,15 @@ function formatDateTime(dateString?: string) {
   return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-const AppHeader: React.FC<AppHeaderProps> = ({ showBackButton = false, backRoute, showLanguageSwitcher = false, goldRateInfo, goldRateUpdatedAt, title }) => {
+const AppHeader: React.FC<AppHeaderProps> = ({ 
+  showBackButton = false, 
+  backRoute, 
+  showLanguageSwitcher = false, 
+  showDrawerToggle = true,
+  goldRateInfo, 
+  goldRateUpdatedAt, 
+  title 
+}) => {
   const navigation = useNavigation();
   const { setLanguage, language } = useGlobalStore();
 
@@ -182,12 +191,14 @@ const AppHeader: React.FC<AppHeaderProps> = ({ showBackButton = false, backRoute
               <Text style={styles.languageText}>{getLanguageDisplayName()}</Text>
             </TouchableOpacity>
           )}
-          <TouchableOpacity
-            onPress={() => (navigation as any).openDrawer()}
-            style={styles.drawerToggle}
-          >
-            <Ionicons name="reorder-three-outline" size={28} color="#ffffff" />
-          </TouchableOpacity>
+          {showDrawerToggle && (
+            <TouchableOpacity
+              onPress={() => (navigation as any).openDrawer()}
+              style={styles.drawerToggle}
+            >
+              <Ionicons name="reorder-three-outline" size={28} color="#ffffff" />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </SafeAreaView>

@@ -44,7 +44,7 @@ export default function Offers() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <AppHeader showBackButton={true} backRoute="index" />
+      <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Hero Section */}
         <LinearGradient
@@ -199,6 +199,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   spacer: {
-    height: moderateScale(80),
+    height: 20,
   },
 });
