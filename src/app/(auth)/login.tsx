@@ -188,7 +188,7 @@ const SimpleLanguageSwitcher = () => {
       }}
     >
       <Image
-        source={theme.image.translate}
+        source={theme.image.translate as any}
         style={{ width: 20, height: 20, marginRight: 8, tintColor: '#ffffff' }}
       />
       <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: 'bold' }}>
@@ -608,7 +608,7 @@ export default function Login() {
               >
                 <View style={[registerStyles.logoContainer, { paddingTop: 10, marginBottom: 0 }]}> 
                   <Image
-                    source={theme.image.transparentLogo}
+                    source={theme.image.transparentLogo as any}
                     style={[registerStyles.logo, { width: 220, height: 220 }]}
                     resizeMode="contain"
                   />
@@ -722,7 +722,7 @@ export default function Login() {
                         />
                         <Text style={[registerStyles.timerText, { color: '#b8c5d6' }]}>{t("resendIn")} {timer}s</Text>
                       </View>
-                      {timer === 0 && resendAttempts < 3 && (
+                      {timer === 0 && resendAttempts > 0 && (
                         <TouchableOpacity
                           onPress={handleResendOtp}
                           style={registerStyles.resendButton}

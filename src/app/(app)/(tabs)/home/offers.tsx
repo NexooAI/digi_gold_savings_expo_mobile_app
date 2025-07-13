@@ -19,7 +19,8 @@ import { useRouter } from "expo-router";
 import AppHeader from "@/app/components/AppHeader";
 import { moderateScale } from "react-native-size-matters";
 import { theme } from "@/constants/theme";
-import offerImg from '../../../../../assets/images/flashbanner.png';
+// import offerImg from '../../../../../assets/images/flashbanner.png';
+const offerImg = require('../../../../../assets/images/flashbanner.png');
 
 const { width, height } = Dimensions.get('window');
 

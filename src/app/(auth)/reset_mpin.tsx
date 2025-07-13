@@ -185,7 +185,7 @@ const SimpleLanguageSwitcher = () => {
       }}
     >
       <Image
-        source={theme.image.translate}
+        source={theme.image.translate as any}
         style={{ width: 20, height: 20, marginRight: 8, tintColor: '#ffffff' }}
       />
       <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: 'bold' }}>
@@ -278,7 +278,7 @@ export default function ResetMpin() {
               >
                 <View style={[styles.logoContainer, { paddingTop: 10, marginBottom: 0 }]}>
                   <Image
-                    source={theme.image.transparentLogo}
+                    source={theme.image.transparentLogo as any}
                     style={[styles.logo, { width: 220, height: 220 }]}
                     resizeMode="contain"
                   />

@@ -57,11 +57,7 @@ const theme = {
     latitude:8.427828080550306,
     longitude:78.02855977120382
   },
-  // baseUrl:"http://api.akila.ramcarmotor.com",
-  // baseUrl:"http://reqres.akilajewellers.com", 
-  baseUrl: "http://13.127.96.61",
-  // baseUrl: "https://api.dcjewellers.org",
-  // baseUrl: "https://nexooai.ramcarmotor.com",
+  baseUrl: "https://api.akilajewellers.com/",
   youtubeUrl: "https://youtu.be/8RAhdn5b9Bw",
 };
 
