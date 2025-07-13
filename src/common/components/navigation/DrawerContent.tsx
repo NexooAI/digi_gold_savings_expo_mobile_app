@@ -19,7 +19,14 @@ import { t } from "../../../i18n";
 
 const { width } = Dimensions.get("window");
 
-const DrawerMenuItem = ({ label, iconName, onPress, disabled }) => (
+interface DrawerMenuItemProps {
+  label: string;
+  iconName: keyof typeof Ionicons.glyphMap;
+  onPress: () => void;
+  disabled?: boolean;
+}
+
+const DrawerMenuItem = ({ label, iconName, onPress, disabled }: DrawerMenuItemProps) => (
   <TouchableOpacity
     style={[styles.menuItem, disabled && styles.disabledMenuItem]}
     onPress={onPress}
@@ -38,13 +45,19 @@ const DrawerMenuItem = ({ label, iconName, onPress, disabled }) => (
   </TouchableOpacity>
 );
 
-export function CustomDrawerContent(props) {
+interface CustomDrawerContentProps {
+  navigation: {
+    closeDrawer: () => void;
+  };
+}
+
+export function CustomDrawerContent(props: CustomDrawerContentProps) {
   const router = useRouter();
   const { logout } = useGlobalStore();
   const [isNavigating, setIsNavigating] = useState(false);
 
   const handleNavigation = useCallback(
-    (route) => {
+    (route: string) => {
       if (isNavigating) return;
       setIsNavigating(true);
       props.navigation.closeDrawer();
@@ -138,12 +151,12 @@ export function CustomDrawerContent(props) {
           onPress={() => handleNavigation("/(tabs)/home/our_stores")}
           disabled={isNavigating}
         />
-        <DrawerMenuItem
+        {/* <DrawerMenuItem
           label={t("storeLocator")}
           iconName="location-outline"
           onPress={() => handleNavigation("/(tabs)/home/StoreLocator")}
           disabled={isNavigating}
-        />
+        /> */}
         <DrawerMenuItem
           label={t("contactUs")}
           iconName="call-outline"

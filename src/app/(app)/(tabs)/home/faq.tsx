@@ -12,51 +12,135 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
-  ImageBackground,
   KeyboardAvoidingView,
   Platform,
   Animated,
   useWindowDimensions,
+  Dimensions,
 } from "react-native";
 import { moderateScale } from "react-native-size-matters";
+import { LinearGradient } from 'expo-linear-gradient';
 
-// FAQ Item Component
-const FAQItem = ({ item, isOpen, toggleOpen, translations }) => {
-  // headerOpacity was used but not defined
-  const headerOpacity = useRef(new Animated.Value(1)).current;
+// Types
+interface FAQItem {
+  id: number;
+  question: string;
+  answer: string;
+  table?: Array<{ period: string; bonus: string }>;
+}
+
+interface FAQItemProps {
+  item: FAQItem;
+  isOpen: boolean;
+  toggleOpen: () => void;
+  translations: Record<string, string>;
+  index: number;
+}
+
+interface Translations {
+  [key: string]: string;
+}
+
+// Enhanced FAQ Item Component with animations
+const FAQItem: React.FC<FAQItemProps> = ({ item, isOpen, toggleOpen, translations, index }) => {
+  const animatedHeight = useRef(new Animated.Value(0)).current;
+  const rotateAnimation = useRef(new Animated.Value(0)).current;
+  const scaleAnimation = useRef(new Animated.Value(1)).current;
+
+  React.useEffect(() => {
+    Animated.parallel([
+      Animated.timing(animatedHeight, {
+        toValue: isOpen ? 1 : 0,
+        duration: 300,
+        useNativeDriver: false,
+      }),
+      Animated.timing(rotateAnimation, {
+        toValue: isOpen ? 1 : 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnimation, {
+        toValue: isOpen ? 1.02 : 1,
+        tension: 100,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [isOpen]);
+
+  const rotateInterpolate = rotateAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
 
   return (
-    <View style={styles.faqItem}>
+    <Animated.View 
+      style={[
+        styles.faqItem,
+        { transform: [{ scale: scaleAnimation }] },
+        { marginTop: index === 0 ? 0 : 12 }
+      ]}
+    >
       <TouchableOpacity
         style={[
           styles.questionContainer,
           isOpen && styles.questionContainerOpen,
         ]}
         onPress={toggleOpen}
+        activeOpacity={0.8}
       >
-        <Text style={styles.questionText}>{item.question}</Text>
-        <Text style={styles.expandIcon}>{isOpen ? "-" : "+"}</Text>
+        <LinearGradient
+          colors={isOpen ? ['#5a000b', '#8b0000'] : ['#f8f9fa', '#ffffff']}
+          style={styles.gradientContainer}
+        >
+          <View style={styles.questionContent}>
+            <Text style={[styles.questionText, isOpen && styles.questionTextOpen]}>
+              {item.question}
+            </Text>
+            <Animated.View style={{ transform: [{ rotate: rotateInterpolate }] }}>
+              <View style={[styles.expandIconContainer, isOpen && styles.expandIconContainerOpen]}>
+                <Text style={[styles.expandIcon, isOpen && styles.expandIconOpen]}>
+                  ▼
+                </Text>
+              </View>
+            </Animated.View>
+          </View>
+        </LinearGradient>
       </TouchableOpacity>
 
-      {isOpen && (
-        <View style={styles.answerContainer}>
+      <Animated.View
+        style={[
+          styles.answerContainer,
+          {
+            maxHeight: animatedHeight.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, 500],
+            }),
+            opacity: animatedHeight,
+          },
+        ]}
+      >
+        <View style={styles.answerContent}>
           <Text style={styles.answerText}>{item.answer}</Text>
 
           {item.table && (
             <View style={styles.tableContainer}>
-              <View style={styles.tableHeader}>
+              <LinearGradient
+                colors={['#5a000b', '#8b0000']}
+                style={styles.tableHeader}
+              >
                 <Text style={styles.tableHeaderText}>{translations.times}</Text>
                 <Text style={styles.tableHeaderText}>
                   {translations.immideate_bonese}
                 </Text>
-              </View>
+              </LinearGradient>
 
-              {item.table.map((row, index) => (
+              {item.table.map((row, tableIndex) => (
                 <View
-                  key={index}
+                  key={tableIndex}
                   style={[
                     styles.tableRow,
-                    index % 2 === 0 ? styles.tableRowEven : styles.tableRowOdd,
+                    tableIndex % 2 === 0 ? styles.tableRowEven : styles.tableRowOdd,
                   ]}
                 >
                   <Text style={styles.tableCell}>{row.period}</Text>
@@ -66,18 +150,19 @@ const FAQItem = ({ item, isOpen, toggleOpen, translations }) => {
             </View>
           )}
         </View>
-      )}
-    </View>
+      </Animated.View>
+    </Animated.View>
   );
 };
 
-export default function App() {
-  const [openItemId, setOpenItemId] = useState(null);
-  const headerOpacity = useRef(new Animated.Value(1)).current;
+export default function FAQScreen() {
+  const [openItemId, setOpenItemId] = useState<number | null>(null);
   const { language } = useGlobalStore();
-  const translations = useMemo(
+  const { width } = useWindowDimensions();
+  
+  const translations: Translations = useMemo(
     () => ({
-      defaultTitle: t("privacyPolicyTitle"), // e.g., "Privacy Policy"
+      defaultTitle: t("privacyPolicyTitle"),
       defaultContent: t("privacyPolicyContent"),
       defaultDiscription: t("privacyPolicyDiscription"),
       question1: t("question1"),
@@ -126,7 +211,8 @@ export default function App() {
     }),
     [language]
   );
-  const faqData = [
+
+  const faqData: FAQItem[] = [
     {
       id: 1,
       question: translations.question1,
@@ -147,18 +233,6 @@ export default function App() {
       question: translations.question4,
       answer: translations.answer4,
     },
-    // {
-    //   id: 5,
-    //   question: translations.question5,
-    //   answer: translations.answer5,
-    //   table: [
-    //     { period: translations.period1, bonus: translations.bonus1 },
-    //     { period: translations.period2, bonus: translations.bonus2 },
-    //     { period: translations.period3, bonus: translations.bonus3 },
-    //     { period: translations.period4, bonus: translations.bonus4 },
-    //     { period: translations.period5, bonus: translations.bonus5 },
-    //   ],
-    // },
     {
       id: 6,
       question: translations.question6,
@@ -206,145 +280,255 @@ export default function App() {
     },
   ];
 
-  const toggleItem = (id) => {
+  const toggleItem = (id: number) => {
     setOpenItemId(openItemId === id ? null : id);
   };
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={{ flex: 1, backgroundColor: "#fff" }}
+      style={styles.container}
     >
-      <SafeAreaView style={{ flex: 1 }}>
+      <SafeAreaView style={styles.safeArea}>
         <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
         <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false} />
-        <ScrollView
-          contentContainerStyle={{ paddingTop: 20, paddingHorizontal: 16 }}
+        
+        <LinearGradient
+          colors={['#f8f9fa', '#ffffff']}
+          style={styles.backgroundGradient}
         >
-          <View
-            style={{
-              backgroundColor: "white",
-              borderRadius: 20,
-              padding: 24,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.1,
-              shadowRadius: 20,
-              elevation: 5,
-            }}
+          <ScrollView
+            contentContainerStyle={styles.scrollContainer}
+            showsVerticalScrollIndicator={false}
+            style={styles.scrollView}
           >
-            <Text
-              style={{
-                fontSize: 28,
-                fontWeight: "800",
-                color: theme.colors.primary,
-                marginBottom: 24,
-                textAlign: "center",
-                fontFamily: "serif",
-              }}
-            >
-              {translations.faqQuestion}
-            </Text>
+            <View style={styles.headerContainer}>
+              <LinearGradient
+                colors={['#5a000b', '#8b0000']}
+                style={styles.titleContainer}
+              >
+                <Text style={styles.mainTitle}>
+                  {translations.faqQuestion}
+                </Text>
+                <View style={styles.titleUnderline} />
+              </LinearGradient>
+              
+              <Text style={styles.subtitle}>
+                Find answers to commonly asked questions about our services and policies.
+              </Text>
+            </View>
 
-            <Text
-              style={{
-                fontSize: 16,
-                color: "#666",
-                lineHeight: 24,
-                marginBottom: 32,
-                letterSpacing: 0.4,
-                textAlign: "center",
-              }}
-            >
-              Find answers to commonly asked questions about our services and policies.
-            </Text>
+            <View style={styles.faqContainer}>
+              {faqData.map((item, index) => (
+                <FAQItem
+                  key={item.id}
+                  item={item}
+                  isOpen={openItemId === item.id}
+                  toggleOpen={() => toggleItem(item.id)}
+                  translations={translations}
+                  index={index}
+                />
+              ))}
+            </View>
 
-            {faqData.map((item) => (
-              <FAQItem
-                key={item.id}
-                item={item}
-                isOpen={openItemId === item.id}
-                toggleOpen={() => toggleItem(item.id)}
-                translations={translations}
-              />
-            ))}
-          </View>
-        </ScrollView>
+            <View style={styles.footerContainer}>
+              <Text style={styles.footerText}>
+                Still have questions? Contact our support team
+              </Text>
+            </View>
+          </ScrollView>
+        </LinearGradient>
       </SafeAreaView>
     </KeyboardAvoidingView>
   );
 }
 
+const { width, height } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
-  faqItem: {
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  safeArea: {
+    flex: 1,
+  },
+  backgroundGradient: {
+    flex: 1,
+    paddingTop: 50, // Account for the absolute positioned header
+  },
+  scrollView: {
+    flex: 1,  },
+  scrollContainer: {
+    paddingTop: 20,
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+  },
+  headerContainer: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  titleContainer: {
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 20,
     marginBottom: 16,
-    backgroundColor: "#f8f9fa",
-    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  mainTitle: {
+    fontSize: moderateScale(28),
+    fontWeight: "800",
+    color: "white",
+    textAlign: "center",
+    fontFamily: "serif",
+    letterSpacing: 1,
+  },
+  titleUnderline: {
+    width: 60,
+    height: 3,
+    backgroundColor: "white",
+    borderRadius: 2,
+    alignSelf: "center",
+    marginTop: 8,
+  },
+  subtitle: {
+    fontSize: moderateScale(16),
+    color: "#666",
+    lineHeight: 24,
+    textAlign: "center",
+    letterSpacing: 0.4,
+    maxWidth: width * 0.8,
+  },
+  faqContainer: {
+    marginBottom: 20,
+  },
+  faqItem: {
+    backgroundColor: "white",
+    borderRadius: 16,
     overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
   },
   questionContainer: {
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  questionContainerOpen: {
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  gradientContainer: {
+    padding: 0,
+  },
+  questionContent: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 16,
-    backgroundColor: "#f8f9fa",
-  },
-  questionContainerOpen: {
-    backgroundColor: theme.colors.primary,
+    padding: 20,
   },
   questionText: {
-    fontSize: 16,
+    fontSize: moderateScale(16),
     fontWeight: "600",
     color: "#333",
     flex: 1,
-    marginRight: 12,
+    marginRight: 16,
+    lineHeight: 22,
+  },
+  questionTextOpen: {
+    color: "white",
+    fontWeight: "700",
+  },
+  expandIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  expandIconContainerOpen: {
+    backgroundColor: "rgba(255,255,255,0.3)",
   },
   expandIcon: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: "bold",
     color: theme.colors.primary,
   },
+  expandIconOpen: {
+    color: "white",
+  },
   answerContainer: {
-    padding: 16,
+    overflow: "hidden",
+  },
+  answerContent: {
+    padding: 20,
     backgroundColor: "white",
   },
   answerText: {
-    fontSize: 14,
+    fontSize: moderateScale(14),
     color: "#666",
-    lineHeight: 22,
+    lineHeight: 24,
+    letterSpacing: 0.3,
   },
   tableContainer: {
-    marginTop: 16,
+    marginTop: 20,
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
+    borderColor: "#e0e0e0",
+    borderRadius: 12,
     overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   tableHeader: {
     flexDirection: "row",
-    backgroundColor: theme.colors.primary,
+    paddingVertical: 16,
   },
   tableHeaderText: {
     flex: 1,
-    padding: 12,
+    paddingHorizontal: 16,
     color: "white",
-    fontWeight: "600",
+    fontWeight: "700",
     textAlign: "center",
+    fontSize: moderateScale(14),
   },
   tableRow: {
     flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
   },
   tableRowEven: {
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#fafafa",
   },
   tableRowOdd: {
     backgroundColor: "white",
   },
   tableCell: {
     flex: 1,
-    padding: 12,
+    padding: 16,
     textAlign: "center",
-    fontSize: 14,
+    fontSize: moderateScale(14),
     color: "#333",
+    fontWeight: "500",
+  },
+  footerContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+    paddingVertical: 20,
+  },
+  footerText: {
+    fontSize: moderateScale(14),
+    color: "#888",
+    textAlign: "center",
+    fontStyle: "italic",
   },
 });

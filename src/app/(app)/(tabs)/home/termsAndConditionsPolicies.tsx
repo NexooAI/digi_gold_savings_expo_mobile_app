@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  StatusBar,
 } from "react-native";
 import {
   SafeAreaView,
@@ -23,7 +24,7 @@ import api from "@/services/api";
 import { theme } from "@/constants/theme";
 
 const { width } = Dimensions.get("window");
-const HEADER_HEIGHT = 0; // Adjust to your header's height if needed
+const HEADER_HEIGHT = 80; // Account for the absolute positioned header
 
 export default function TermsAndConditions() {
   const router = useRouter();
@@ -93,6 +94,7 @@ export default function TermsAndConditions() {
       className="flex-1"
       keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
     >
+      <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
       <SafeAreaView
         className="flex-1 bg-white"
         style={{ paddingTop: insets.top }}
@@ -110,7 +112,8 @@ export default function TermsAndConditions() {
           <View className="relative">
             <ImageBackground
               source={theme.image.gold_pattern}
-              className="h-64 justify-end p-6 mt-16"
+              className="h-64 justify-end p-6"
+              style={{ marginTop: 20 }}
             >
               <TouchableOpacity
                 onPress={() => router.back()}

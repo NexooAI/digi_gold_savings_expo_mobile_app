@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,9 @@ import {
   ImageBackground,
   TouchableOpacity,
   StyleSheet,
+  Modal,
+  Dimensions,
+  StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -15,32 +18,89 @@ import AppHeader from "@/app/components/AppHeader";
 import { moderateScale } from "react-native-size-matters";
 import { theme } from "@/constants/theme";
 
+const { width, height } = Dimensions.get('window');
+
+interface Offer {
+  id: number;
+  title: string;
+  description: string;
+  icon: keyof typeof MaterialIcons.glyphMap;
+  color: string;
+  fullDescription: string;
+  validUntil: string;
+  terms: string[];
+  discount: string;
+  category: string;
+}
+
 export default function Offers() {
   const router = useRouter();
+  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
-  const offers = [
+  const offers: Offer[] = [
     {
       id: 1,
       title: "Festive Special",
       description: "Enjoy up to 20% off on select gold jewelry",
-      icon: "festival" as "festival",
+      icon: "celebration",
       color: "#FFD700",
+      fullDescription: "Celebrate the festive season with our exclusive gold jewelry collection. Get up to 20% off on select pieces including necklaces, earrings, bangles, and rings. This limited-time offer is valid on all traditional and modern designs.",
+      validUntil: "December 31, 2024",
+      terms: [
+        "Valid on select gold jewelry items only",
+        "Cannot be combined with other offers",
+        "Offer valid till December 31, 2024",
+        "Terms and conditions apply"
+      ],
+      discount: "20% OFF",
+      category: "Gold Jewelry"
     },
     {
       id: 2,
       title: "New Arrivals",
       description: "Flat 15% off on diamond collections",
-      icon: "diamond" as "diamond",
+      icon: "diamond",
       color: "#40E0D0",
+      fullDescription: "Discover our stunning new diamond collection featuring the latest designs in engagement rings, wedding bands, and luxury jewelry. Get a flat 15% discount on all new arrivals in our diamond category.",
+      validUntil: "January 15, 2025",
+      terms: [
+        "Valid on new diamond collection items only",
+        "Limited stock available",
+        "Offer valid till January 15, 2025",
+        "Cannot be combined with other promotions"
+      ],
+      discount: "15% OFF",
+      category: "Diamond Collection"
     },
     {
       id: 3,
       title: "Exclusive Membership",
       description: "Special offers all year round",
-      icon: "star" as "star",
+      icon: "star",
       color: theme.colors.primary,
+      fullDescription: "Join our exclusive VIP membership program and enjoy special offers, early access to sales, personalized recommendations, and premium customer service throughout the year.",
+      validUntil: "Ongoing",
+      terms: [
+        "Annual membership fee applies",
+        "Exclusive member-only offers",
+        "Early access to sales and new collections",
+        "Priority customer service"
+      ],
+      discount: "VIP Benefits",
+      category: "Membership"
     },
   ];
+
+  const openOfferModal = (offer: Offer) => {
+    setSelectedOffer(offer);
+    setModalVisible(true);
+  };
+
+  const closeOfferModal = () => {
+    setModalVisible(false);
+    setSelectedOffer(null);
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -63,7 +123,12 @@ export default function Offers() {
         {/* Offers List */}
         <View style={styles.offersContainer}>
           {offers.map((offer) => (
-            <View key={offer.id} style={styles.card}>
+            <TouchableOpacity 
+              key={offer.id} 
+              style={styles.card}
+              onPress={() => openOfferModal(offer)}
+              activeOpacity={0.8}
+            >
               <LinearGradient
                 colors={["white", "#FFF8F8"]}
                 style={styles.cardGradient}
@@ -80,30 +145,101 @@ export default function Offers() {
                   <Text style={styles.cardTitle}>{offer.title}</Text>
                 </View>
                 <Text style={styles.cardDescription}>{offer.description}</Text>
-                <TouchableOpacity style={styles.claimButton}>
-                  <Text style={styles.claimButtonText}>View Offer</Text>
+                <View style={styles.claimButton}>
+                  <Text style={styles.claimButtonText}>View Details</Text>
                   <MaterialIcons
                     name="chevron-right"
                     size={20}
                     color={theme.colors.primary}
                   />
-                </TouchableOpacity>
+                </View>
               </LinearGradient>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
 
         {/* Footer CTA */}
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.ctaButton}
           onPress={() => router.push("/membership")}
         >
           <Text style={styles.ctaText}>Become a VIP Member</Text>
           <Ionicons name="sparkles" size={20} color="white" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <View style={styles.spacer} />
       </ScrollView>
+
+      {/* Offer Details Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={closeOfferModal}
+      >
+        <StatusBar backgroundColor="rgba(0,0,0,0.5)" barStyle="light-content" />
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            {selectedOffer && (
+              <>
+                {/* Modal Header */}
+                <View style={styles.modalHeader}>
+                  <View style={styles.modalHeaderContent}>
+                    <View
+                      style={[
+                        styles.modalIconContainer,
+                        { backgroundColor: selectedOffer.color },
+                      ]}
+                    >
+                      <MaterialIcons name={selectedOffer.icon} size={32} color="white" />
+                    </View>
+                    <View style={styles.modalTitleContainer}>
+                      <Text style={styles.modalTitle}>{selectedOffer.title}</Text>
+                      <Text style={styles.modalCategory}>{selectedOffer.category}</Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity onPress={closeOfferModal} style={styles.closeButton}>
+                    <MaterialIcons name="close" size={24} color="#666" />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Discount Badge */}
+                <View style={styles.discountBadge}>
+                  <Text style={styles.discountText}>{selectedOffer.discount}</Text>
+                </View>
+
+                {/* Modal Body */}
+                <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+                  <Text style={styles.modalDescription}>{selectedOffer.fullDescription}</Text>
+                  
+                  <View style={styles.validUntilContainer}>
+                    <MaterialIcons name="schedule" size={16} color="#666" />
+                    <Text style={styles.validUntilText}>Valid until: {selectedOffer.validUntil}</Text>
+                  </View>
+
+                  <View style={styles.termsContainer}>
+                    <Text style={styles.termsTitle}>Terms & Conditions:</Text>
+                    {selectedOffer.terms.map((term, index) => (
+                      <View key={index} style={styles.termItem}>
+                        <MaterialIcons name="check-circle" size={16} color={theme.colors.primary} />
+                        <Text style={styles.termText}>{term}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </ScrollView>
+
+                {/* Modal Footer */}
+                <View style={styles.modalFooter}>
+                  <TouchableOpacity style={styles.claimOfferButton}>
+                    <Text style={styles.claimOfferText}>Claim Offer</Text>
+                    <MaterialIcons name="arrow-forward" size={20} color="white" />
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -200,5 +336,129 @@ const styles = StyleSheet.create({
   },
   spacer: {
     height: 20,
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    minHeight: height * 0.7,
+    maxHeight: height * 0.9,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+  modalHeaderContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  modalIconContainer: {
+    borderRadius: 16,
+    padding: 12,
+    marginRight: 16,
+  },
+  modalTitleContainer: {
+    flex: 1,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: 4,
+  },
+  modalCategory: {
+    fontSize: 14,
+    color: "#666",
+  },
+  closeButton: {
+    padding: 8,
+  },
+  discountBadge: {
+    backgroundColor: theme.colors.primary,
+    alignSelf: "flex-start",
+    marginHorizontal: 20,
+    marginTop: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  discountText: {
+    color: "white",
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  modalBody: {
+    flex: 1,
+    padding: 20,
+  },
+  modalDescription: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: "#333",
+    marginBottom: 20,
+  },
+  validUntilContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F8F8F8",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  validUntilText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: "#666",
+  },
+  termsContainer: {
+    marginBottom: 20,
+  },
+  termsTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 12,
+  },
+  termItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 8,
+  },
+  termText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: "#666",
+    lineHeight: 20,
+    flex: 1,
+  },
+  modalFooter: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: "#F0F0F0",
+  },
+  claimOfferButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.primary,
+    paddingVertical: 16,
+    borderRadius: 12,
+  },
+  claimOfferText: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 16,
+    marginRight: 8,
   },
 });
