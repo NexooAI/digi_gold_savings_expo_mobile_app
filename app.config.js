@@ -44,6 +44,12 @@ export default {
           apiKey: "AIzaSyAkuOcNddEvozQR4D4yPdTrbwXCiPsuEFc",
         },
       },
+      edgeToEdgeEnabled: true,
+      notification: {
+        icon: "./assets/images/icon.png",
+        color: "#850111"
+      },
+      targetSdkVersion: 36,
     },
 
     ios: {
