@@ -18,6 +18,8 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import { useRouter } from "expo-router";
 import AppHeader from "@/app/components/AppHeader";
 import { theme } from "@/constants/theme";
+import { t } from "@/i18n";
+import useGlobalStore from "@/store/global.store";
 
 interface Store {
   id: number;
@@ -41,9 +43,14 @@ const stores: Store[] = [
 const StoreLocator = () => {
   const router = useRouter();
   const mapRef = useRef<MapView | null>(null);
-  const [selectedStore, setSelectedStore] = useState<any>(null);
+  const [selectedStore, setSelectedStore] = useState<any>(stores.length > 0 ? {
+    label: stores[0].address,
+    value: stores[0].id.toString(),
+    ...stores[0],
+  } : null);
   const [isFocus, setIsFocus] = useState(false);
   const insets = useSafeAreaInsets();
+  const { language } = useGlobalStore();
 
   const focusOnStore = (store: Store) => {
     if (mapRef.current) {
@@ -59,11 +66,26 @@ const StoreLocator = () => {
     }
   };
 
+  // Memoized translation for store addresses
   const dropdownData = stores.map((store) => ({
-    label: store.address,
+    label: t(`store_address_${store.id}`) || store.address,
     value: store.id.toString(),
     ...store,
   }));
+
+  // Update selectedStore if language changes
+  React.useEffect(() => {
+    if (stores.length > 0) {
+      const firstStore = {
+        label: t(`store_address_${stores[0].id}`) || stores[0].address,
+        value: stores[0].id.toString(),
+        ...stores[0],
+      };
+      setSelectedStore(firstStore);
+      focusOnStore(firstStore); // Focus map on first store when language changes
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language]);
 
   return (
     <KeyboardAvoidingView
@@ -81,7 +103,7 @@ const StoreLocator = () => {
             style={styles.imageBackground}
           >
             <View style={styles.headerContainer}>
-              <Text style={styles.headerText}>Our Stores</Text>
+              <Text style={styles.headerText}>{t("ourStoresTitle")}</Text>
             </View>
           </ImageBackground>
 
@@ -96,8 +118,8 @@ const StoreLocator = () => {
             maxHeight={700}
             labelField="label"
             valueField="value"
-            placeholder={!isFocus ? "Select Store Address" : "..."}
-            searchPlaceholder="Search addresses..."
+            placeholder={!isFocus ? t("selectStoreAddress") : "..."}
+            searchPlaceholder={t("searchAddresses")}
             value={selectedStore?.value}
             onFocus={() => setIsFocus(true)}
             onBlur={() => setIsFocus(false)}
@@ -143,7 +165,7 @@ const StoreLocator = () => {
             {stores.map((store) => (
               <View key={store.id} style={styles.storeListItem}>
                 <Text style={styles.storeName}>{store.name}</Text>
-                <Text style={styles.storeAddress}>{store.address}</Text>
+                <Text style={styles.storeAddress}>{t(`store_address_${store.id}`) || store.address}</Text>
               </View>
             ))}
           </View>

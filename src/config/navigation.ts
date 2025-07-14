@@ -24,7 +24,10 @@ export const HIDE_TABS_ROUTES = [
   'ourPolicies',
   'privacyPolicy',
   'termsAndConditionsPolicies',
-  'StoreLocator'
+  'StoreLocator',
+  'paymentNewOverView',
+  'payment-success',
+  'payment-failure',
 ] as const;
 
 // Helper function to check if current route should hide tabs

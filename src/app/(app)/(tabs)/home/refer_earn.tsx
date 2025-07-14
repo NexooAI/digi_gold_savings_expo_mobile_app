@@ -14,26 +14,28 @@ import useGlobalStore from "@/store/global.store";
 import AppHeader from "@/app/components/AppHeader";
 import { useRouter } from "expo-router";
 import { theme } from "@/constants/theme";
+import { t } from "@/i18n";
 
 export default function ReferCodeScreen() {
   // Retrieve referral code from your global store; fallback to a default value
   const { user } = useGlobalStore();
-  const code = user.referralCode || "DEFAULT123";
+  const code = user?.referralCode || t("defaultReferralCode") || "DEFAULT123";
 
   const router = useRouter();
 
   // Copy code to clipboard and notify user
   const copyToClipboard = async () => {
     await Clipboard.setStringAsync(code);
-    Alert.alert("Copied", "Referral code copied to clipboard!");
+    Alert.alert(t("copied"), t("referral_code_copied"));
   };
 
   // Share referral code using native share dialog
   const onShare = async () => {
     try {
       const result = await Share.share({
-        title: "Refer & Earn",
-        message: `Use my referral code ${code} to sign up and earn rewards! Download the app here: https://play.google.com/store/search?q=dcjewellers&c=apps`,
+        title: t("refer_earn_title"),
+        message:
+          (t("refer_earn_share_message") || "Use my referral code {code} to sign up and earn rewards! Download the app here: https://play.google.com/store/search?q=dcjewellers&c=apps").replace("{code}", code),
       });
       if (result.action === Share.sharedAction) {
         //console.log("Shared successfully");
@@ -41,7 +43,7 @@ export default function ReferCodeScreen() {
         //console.log("Share dismissed");
       }
     } catch (error: any) {
-      Alert.alert("Error", error.message);
+      Alert.alert(t("error"), error.message);
     }
   };
 
@@ -61,10 +63,9 @@ export default function ReferCodeScreen() {
         </TouchableOpacity>
       </View>
       <View style={styles.overlay}>
-        <Text style={styles.title}>Refer & Earn</Text>
+        <Text style={styles.title}>{t("refer_earn_title")}</Text>
         <Text style={styles.description}>
-          Share your referral code with your friends and earn rewards when they
-          join!
+          {t("refer_earn_description")}
         </Text>
 
         {/* Referral Code & Copy Button */}
@@ -72,13 +73,13 @@ export default function ReferCodeScreen() {
           <Text style={styles.codeText}>{code}</Text>
           <TouchableOpacity style={styles.copyButton} onPress={copyToClipboard}>
             <Ionicons name="copy-outline" size={20} color="#fff" />
-            <Text style={styles.copyButtonText}>Copy</Text>
+            <Text style={styles.copyButtonText}>{t("copy")}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Share Button */}
         <TouchableOpacity style={styles.shareButton} onPress={onShare}>
-          <Text style={styles.shareButtonText}>Share Code</Text>
+          <Text style={styles.shareButtonText}>{t("share_code")}</Text>
         </TouchableOpacity>
       </View>
     </ImageBackground>

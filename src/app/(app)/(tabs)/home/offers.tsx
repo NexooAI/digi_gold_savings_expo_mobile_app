@@ -17,6 +17,7 @@ import { useRouter } from "expo-router";
 import AppHeader from "@/app/components/AppHeader";
 import { moderateScale } from "react-native-size-matters";
 import { theme } from "@/constants/theme";
+import { t } from "@/i18n";
 
 const { width, height } = Dimensions.get('window');
 
@@ -41,54 +42,54 @@ export default function Offers() {
   const offers: Offer[] = [
     {
       id: 1,
-      title: "Festive Special",
-      description: "Enjoy up to 20% off on select gold jewelry",
+      title: t("festiveSpecial"),
+      description: t("enjoy20Off"),
       icon: "celebration",
       color: "#FFD700",
-      fullDescription: "Celebrate the festive season with our exclusive gold jewelry collection. Get up to 20% off on select pieces including necklaces, earrings, bangles, and rings. This limited-time offer is valid on all traditional and modern designs.",
-      validUntil: "December 31, 2024",
+      fullDescription: t("fullDescriptionFestive"),
+      validUntil: t("validUntil") + " December 31, 2024",
       terms: [
-        "Valid on select gold jewelry items only",
-        "Cannot be combined with other offers",
-        "Offer valid till December 31, 2024",
-        "Terms and conditions apply"
+        t("categoryGoldJewelry"),
+        t("exclusiveMemberOffers"),
+        t("validUntil") + " December 31, 2024",
+        t("termsAndConditions")
       ],
-      discount: "20% OFF",
-      category: "Gold Jewelry"
+      discount: t("discount20"),
+      category: t("categoryGoldJewelry")
     },
     {
       id: 2,
-      title: "New Arrivals",
-      description: "Flat 15% off on diamond collections",
+      title: t("newArrivals"),
+      description: t("flat15OffDiamond"),
       icon: "diamond",
       color: "#40E0D0",
-      fullDescription: "Discover our stunning new diamond collection featuring the latest designs in engagement rings, wedding bands, and luxury jewelry. Get a flat 15% discount on all new arrivals in our diamond category.",
-      validUntil: "January 15, 2025",
+      fullDescription: t("fullDescriptionDiamond"),
+      validUntil: t("validUntil") + " January 15, 2025",
       terms: [
-        "Valid on new diamond collection items only",
-        "Limited stock available",
-        "Offer valid till January 15, 2025",
-        "Cannot be combined with other promotions"
+        t("categoryDiamondCollection"),
+        t("exclusiveMemberOffers"),
+        t("validUntil") + " January 15, 2025",
+        t("termsAndConditions")
       ],
-      discount: "15% OFF",
-      category: "Diamond Collection"
+      discount: t("discount15"),
+      category: t("categoryDiamondCollection")
     },
     {
       id: 3,
-      title: "Exclusive Membership",
-      description: "Special offers all year round",
+      title: t("exclusiveMembership"),
+      description: t("specialOffersAllYear"),
       icon: "star",
       color: theme.colors.primary,
-      fullDescription: "Join our exclusive VIP membership program and enjoy special offers, early access to sales, personalized recommendations, and premium customer service throughout the year.",
-      validUntil: "Ongoing",
+      fullDescription: t("fullDescriptionMembership"),
+      validUntil: t("ongoing"),
       terms: [
-        "Annual membership fee applies",
-        "Exclusive member-only offers",
-        "Early access to sales and new collections",
-        "Priority customer service"
+        t("annualMembershipFee"),
+        t("exclusiveMemberOffers"),
+        t("earlyAccess"),
+        t("priorityCustomerService")
       ],
-      discount: "VIP Benefits",
-      category: "Membership"
+      discount: t("vipBenefitsDiscount"),
+      category: t("categoryMembership")
     },
   ];
 
@@ -114,10 +115,8 @@ export default function Offers() {
           end={{ x: 1, y: 0 }}
         >
           <FontAwesome name="tag" size={48} color="rgba(255,255,255,0.2)" />
-          <Text style={styles.heroTitle}>Special Deals Await!</Text>
-          <Text style={styles.heroSubtitle}>
-            Discover limited-time offers curated just for you
-          </Text>
+          <Text style={styles.heroTitle}>{t("specialDealsAwait")}</Text>
+          <Text style={styles.heroSubtitle}>{t("discoverLimitedTimeOffers")}</Text>
         </LinearGradient>
 
         {/* Offers List */}
@@ -146,7 +145,7 @@ export default function Offers() {
                 </View>
                 <Text style={styles.cardDescription}>{offer.description}</Text>
                 <View style={styles.claimButton}>
-                  <Text style={styles.claimButtonText}>View Details</Text>
+                  <Text style={styles.claimButtonText}>{t("viewDetails")}</Text>
                   <MaterialIcons
                     name="chevron-right"
                     size={20}
@@ -214,11 +213,11 @@ export default function Offers() {
                   
                   <View style={styles.validUntilContainer}>
                     <MaterialIcons name="schedule" size={16} color="#666" />
-                    <Text style={styles.validUntilText}>Valid until: {selectedOffer.validUntil}</Text>
+                    <Text style={styles.validUntilText}>{selectedOffer.validUntil}</Text>
                   </View>
 
                   <View style={styles.termsContainer}>
-                    <Text style={styles.termsTitle}>Terms & Conditions:</Text>
+                    <Text style={styles.termsTitle}>{t("termsAndConditions")}</Text>
                     {selectedOffer.terms.map((term, index) => (
                       <View key={index} style={styles.termItem}>
                         <MaterialIcons name="check-circle" size={16} color={theme.colors.primary} />
@@ -231,7 +230,7 @@ export default function Offers() {
                 {/* Modal Footer */}
                 <View style={styles.modalFooter}>
                   <TouchableOpacity style={styles.claimOfferButton}>
-                    <Text style={styles.claimOfferText}>Claim Offer</Text>
+                    <Text style={styles.claimOfferText}>{t("claimOffer")}</Text>
                     <MaterialIcons name="arrow-forward" size={20} color="white" />
                   </TouchableOpacity>
                 </View>

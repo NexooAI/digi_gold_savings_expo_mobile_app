@@ -24,6 +24,7 @@ import { useRouter } from "expo-router";
 import { moderateScale } from "react-native-size-matters";
 import { theme } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
+import { t } from "@/i18n";
 
 const { width, height } = Dimensions.get('window');
 
@@ -38,37 +39,37 @@ interface Milestone {
 const milestones: Milestone[] = [
   { 
     year: "2020", 
-    title: "Founded in Mumbai", 
+    title: "milestone_2020_title", // translation key
     icon: "storefront",
-    description: "Started our journey with a vision to create timeless jewelry",
+    description: "milestone_2020_desc", // translation key
     color: "#FF6B6B"
   },
   { 
     year: "2021", 
-    title: "First Store Expansion", 
+    title: "milestone_2021_title",
     icon: "store",
-    description: "Opened our second store and expanded our presence in Mumbai",
+    description: "milestone_2021_desc",
     color: "#4ECDC4"
   },
   { 
     year: "2022", 
-    title: "Luxury Collection Launch", 
+    title: "milestone_2022_title",
     icon: "diamond",
-    description: "Introduced our premium luxury jewelry collection",
+    description: "milestone_2022_desc",
     color: "#45B7D1"
   },
   { 
     year: "2023", 
-    title: "Digital Experience", 
+    title: "milestone_2023_title",
     icon: "smartphone",
-    description: "Embraced technology to enhance customer experience",
+    description: "milestone_2023_desc",
     color: "#96CEB4"
   },
   { 
     year: "2024", 
-    title: "National Expansion", 
+    title: "milestone_2024_title",
     icon: "public",
-    description: "Expanded to multiple cities across India",
+    description: "milestone_2024_desc",
     color: "#FFA726"
   },
 ];
@@ -120,55 +121,173 @@ export default function AboutUs() {
     ).start();
   }, []);
 
-  // Removed header opacity animation since header is now fixed
-
   const rotateInterpolate = rotateAnim.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '360deg'],
   });
 
-  const renderMilestone = ({ item, index }: { item: Milestone; index: number }) => (
-    <TouchableOpacity
-      onPress={() => setActiveMilestone(index)}
-      activeOpacity={0.8}
-    >
-      <Animated.View 
-        style={[
-          styles.milestoneCard,
-          { 
-            width: screenWidth * 0.8,
-            backgroundColor: activeMilestone === index ? item.color + '20' : item.color + '15',
-            borderLeftColor: item.color,
-            borderLeftWidth: activeMilestone === index ? 6 : 4,
-            transform: [
-              { scale: activeMilestone === index ? 1.02 : 1 },
-            ],
-          }
-        ]}
-      >
-        <View style={styles.milestoneHeader}>
-          <Animated.View 
-            style={[
-              styles.iconContainer, 
-              { 
-                backgroundColor: item.color,
-                transform: activeMilestone === index ? [{ rotate: rotateInterpolate }] : [],
-              }
-            ]}
-          >
-            <MaterialIcons name={item.icon as any} size={24} color="white" />
-          </Animated.View>
-          <View style={styles.milestoneText}>
-            <Text style={styles.milestoneYear}>{item.year}</Text>
-            <Text style={styles.milestoneTitle}>{item.title}</Text>
-          </View>
+  // Helper for unique icon backgrounds
+  const getIconBackground = (index: number, color: string) => {
+    switch (index % 5) {
+      case 0: // Circle
+        return { borderRadius: 24, backgroundColor: color + 'cc' };
+      case 1: // Hexagon (simulate with border)
+        return {
+          borderRadius: 24,
+          backgroundColor: color + 'cc',
+          borderWidth: 2,
+          borderColor: '#fff',
+        };
+      case 2: // Star (simulate with border)
+        return {
+          borderRadius: 24,
+          backgroundColor: color + 'cc',
+          borderWidth: 2,
+          borderColor: '#fff',
+          shadowColor: color,
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+          elevation: 6,
+        };
+      case 3: // Diamond
+        return {
+          backgroundColor: color + 'cc',
+          width: 48,
+          height: 48,
+          justifyContent: 'center' as const,
+          alignItems: 'center' as const,
+          transform: [{ rotate: '45deg' }],
+        };
+      case 4: // Rounded square
+        return {
+          borderRadius: 12,
+          backgroundColor: color + 'cc',
+        };
+      default:
+        return { borderRadius: 24, backgroundColor: color + 'cc' };
+    }
+  };
+
+  // MilestoneCard component to allow hooks
+  function MilestoneCard({ item, index, isActive, onPress }: { item: Milestone; index: number; isActive: boolean; onPress: () => void }) {
+    const bounceAnim = React.useRef(new Animated.Value(0.95)).current;
+    React.useEffect(() => {
+      if (isActive) {
+        Animated.spring(bounceAnim, {
+          toValue: 1.08,
+          friction: 3,
+          tension: 80,
+          useNativeDriver: true,
+        }).start(() => {
+          Animated.spring(bounceAnim, {
+            toValue: 1,
+            friction: 4,
+            tension: 60,
+            useNativeDriver: true,
+          }).start();
+        });
+      } else {
+        bounceAnim.setValue(0.95);
+      }
+    }, [isActive]);
+
+    // Alternate left/right for zig-zag effect
+    const isLeft = index % 2 === 0;
+
+    return (
+      <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', marginBottom: 40, position: 'relative' }}>
+        {/* Timeline and node */}
+        <View style={{ width: 90, alignItems: 'center', position: 'relative', height: 120 }}>
+          {/* Vertical line (full height, behind node) */}
+          <View style={{
+            position: 'absolute',
+            top: 0,
+            left: 44,
+            width: 4,
+            height: '100%',
+            backgroundColor: item.color + '55',
+            zIndex: 0,
+          }} />
+          {/* Node (year) */}
+          <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={{ zIndex: 2, position: 'absolute', top: 20, left: 10 }}>
+            <Animated.View style={{
+              width: 80,
+              height: 80,
+              borderRadius: 40,
+              backgroundColor: isActive ? item.color : '#fff',
+              borderWidth: 4,
+              borderColor: isActive ? '#fff' : item.color,
+              justifyContent: 'center',
+              alignItems: 'center',
+              shadowColor: item.color,
+              shadowOpacity: isActive ? 0.25 : 0.12,
+              shadowRadius: 10,
+              elevation: 8,
+              transform: [{ scale: isActive ? bounceAnim : 1 }],
+              overflow: 'visible',
+            }}>
+              <Text style={{
+                color: isActive ? '#fff' : item.color,
+                fontWeight: 'bold',
+                fontSize: 14,
+                letterSpacing: 1,
+                textAlign: 'center',
+                textAlignVertical: 'center',
+                minWidth: 40,
+                maxWidth: 80,
+                includeFontPadding: false,
+              }} numberOfLines={1} ellipsizeMode="clip">{item.year}</Text>
+            </Animated.View>
+          </TouchableOpacity>
         </View>
-        <Text style={styles.milestoneDescription}>{item.description}</Text>
-        {activeMilestone === index && (
-          <View style={[styles.activeIndicator, { backgroundColor: item.color }]} />
-        )}
-      </Animated.View>
-    </TouchableOpacity>
+        {/* Callout box for milestone details */}
+        <View style={{ flex: 1, alignItems: isLeft ? 'flex-start' : 'flex-end', paddingLeft: isLeft ? 16 : 0, paddingRight: isLeft ? 0 : 16, marginTop: 20 }}>
+          <Animated.View style={{
+            backgroundColor: isActive ? item.color + '18' : '#fff',
+            borderRadius: 18,
+            padding: 18,
+            minWidth: 180,
+            maxWidth: 320,
+            marginLeft: isLeft ? 0 : 24,
+            marginRight: isLeft ? 24 : 0,
+            shadowColor: item.color,
+            shadowOpacity: isActive ? 0.18 : 0.08,
+            shadowRadius: 8,
+            elevation: 3,
+            borderLeftWidth: isLeft ? 6 : 0,
+            borderRightWidth: isLeft ? 0 : 6,
+            borderLeftColor: isLeft ? item.color : undefined,
+            borderRightColor: isLeft ? undefined : item.color,
+            alignItems: isLeft ? 'flex-start' : 'flex-end',
+          }}>
+            {/* Icon */}
+            <View style={{
+              width: 48,
+              height: 48,
+              borderRadius: 24,
+              backgroundColor: item.color + 'cc',
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginBottom: 8,
+              alignSelf: isLeft ? 'flex-start' : 'flex-end',
+            }}>
+              <MaterialIcons name={item.icon as any} size={28} color="#fff" />
+            </View>
+            <Text style={{ fontSize: 18, fontWeight: '700', color: item.color, marginBottom: 4, textAlign: isLeft ? 'left' : 'right' }}>{t(item.title)}</Text>
+            <Text style={{ fontSize: 15, color: '#444', lineHeight: 22, textAlign: isLeft ? 'left' : 'right' }}>{t(item.description)}</Text>
+          </Animated.View>
+        </View>
+      </View>
+    );
+  }
+
+  const renderMilestone = ({ item, index }: { item: Milestone; index: number }) => (
+    <MilestoneCard
+      item={item}
+      index={index}
+      isActive={activeMilestone === index}
+      onPress={() => setActiveMilestone(index)}
+    />
   );
 
   const renderStat = ({ item, index }: { item: any; index: number }) => (
@@ -189,6 +308,185 @@ export default function AboutUs() {
     </Animated.View>
   );
 
+  // ListHeaderComponent for FlatList
+  const ListHeader = () => (
+    <>
+      {/* Hero Section */}
+      <LinearGradient
+        colors={['#7B0006', '#9B1B30', '#C44569']}
+        style={styles.heroSection}
+      >
+        {/* Floating Elements */}
+        <Animated.View 
+          style={[
+            styles.floatingElement,
+            styles.floatingGem1,
+            {
+              transform: [
+                { translateY: slideAnim },
+                { rotate: rotateInterpolate },
+              ],
+              opacity: fadeAnim,
+            }
+          ]}
+        >
+          <FontAwesome5 name="gem" size={20} color="rgba(255,255,255,0.3)" />
+        </Animated.View>
+        <Animated.View 
+          style={[
+            styles.floatingElement,
+            styles.floatingGem2,
+            {
+              transform: [
+                { translateY: slideAnim },
+                { rotate: rotateInterpolate },
+              ],
+              opacity: fadeAnim,
+            }
+          ]}
+        >
+          <FontAwesome5 name="diamond" size={16} color="rgba(255,255,255,0.2)" />
+        </Animated.View>
+        <Animated.View 
+          style={[
+            styles.heroContent,
+            {
+              opacity: fadeAnim,
+              transform: [
+                { translateY: slideAnim },
+                { scale: scaleAnim },
+              ],
+            }
+          ]}
+        >
+          <View style={styles.heroIconContainer}>
+            <FontAwesome5 name="crown" size={40} color="white" />
+          </View>
+          <Text style={styles.heroTitle}>{t('aboutus_hero_title')}</Text>
+          <Text style={styles.heroSubtitle}>{t('aboutus_hero_subtitle')}</Text>
+          <View style={styles.heroDivider} />
+        </Animated.View>
+      </LinearGradient>
+      {/* Stats Section */}
+      <View style={styles.statsContainer}>
+        <Text style={styles.statsTitle}>{t('aboutus_achievements')}</Text>
+        <FlatList
+          data={stats}
+          renderItem={renderStat}
+          keyExtractor={(item) => item.label}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.statsList}
+          style={styles.statsFlatList}
+        />
+      </View>
+      {/* Main Content */}
+      <View style={styles.mainContent}>
+        {/* Who We Are Section */}
+        <Animated.View 
+          style={[
+            styles.contentCard,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            }
+          ]}
+        >
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIconContainer}>
+              <FontAwesome5 name="gem" size={24} color="white" />
+            </View>
+            <Text style={styles.sectionTitle}>{t('aboutus_who_we_are')}</Text>
+          </View>
+          <Text style={styles.sectionText}>{t('aboutus_who_we_are_desc')}</Text>
+        </Animated.View>
+        {/* Image Section */}
+        <Animated.View 
+          style={[
+            styles.imageCard,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            }
+          ]}
+        >
+          <ImageBackground
+            source={theme.image.store_image}
+            style={styles.backgroundImage}
+            imageStyle={styles.backgroundImageStyle}
+          >
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.7)']}
+              style={styles.imageOverlay}
+            >
+              <Text style={styles.imageText}>{t('aboutus_our_legacy')}</Text>
+              <Text style={styles.imageSubtext}>{t('aboutus_legacy_years')}</Text>
+            </LinearGradient>
+          </ImageBackground>
+        </Animated.View>
+        {/* Journey Section Header */}
+        <View style={styles.journeySection}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIconContainer}>
+              <MaterialIcons name="timeline" size={24} color="white" />
+            </View>
+            <Text style={styles.sectionTitle}>{t('aboutus_our_journey')}</Text>
+          </View>
+        </View>
+      </View>
+    </>
+  );
+
+  // ListFooterComponent for FlatList
+  const ListFooter = () => (
+    <>
+      {/* Promise Section */}
+      <Animated.View 
+        style={[
+          styles.contentCard,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          }
+        ]}
+      >
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionIconContainer}>
+            <Ionicons name="diamond" size={24} color="white" />
+          </View>
+          <Text style={styles.sectionTitle}>{t('aboutus_our_promise')}</Text>
+        </View>
+        <Text style={styles.sectionText}>{t('aboutus_our_promise_desc')}</Text>
+      </Animated.View>
+      {/* CTA Button */}
+      <Animated.View
+        style={[
+          styles.ctaButton,
+          {
+            transform: [{ scale: scaleAnim }],
+          }
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.ctaTouchable}
+          onPress={() => router.push("/(tabs)/home/(storeInfo)/contact_us")}
+          activeOpacity={0.8}
+        >
+          <LinearGradient
+            colors={['#7B0006', '#9B1B30', '#C44569']}
+            style={styles.ctaGradient}
+          >
+            <View style={styles.ctaIconContainer}>
+              <FontAwesome5 name="store" size={16} color="white" />
+            </View>
+            <Text style={styles.ctaText}>{t('aboutus_visit_store')}</Text>
+            <AntDesign name="arrowright" size={20} color="white" />
+          </LinearGradient>
+        </TouchableOpacity>
+      </Animated.View>
+    </>
+  );
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -200,202 +498,16 @@ export default function AboutUs() {
         <View style={styles.fixedHeader}>
           <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false} />
         </View>
-
-        <Animated.ScrollView
+        {/* Main FlatList for scrollable content */}
+        <FlatList
+          data={milestones}
+          renderItem={renderMilestone}
+          keyExtractor={(item) => item.year}
           contentContainerStyle={styles.scrollContent}
+          ListHeaderComponent={ListHeader}
+          ListFooterComponent={ListFooter}
           showsVerticalScrollIndicator={false}
-        >
-          {/* Hero Section */}
-          <LinearGradient
-            colors={['#7B0006', '#9B1B30', '#C44569']}
-            style={styles.heroSection}
-          >
-            {/* Floating Elements */}
-            <Animated.View 
-              style={[
-                styles.floatingElement,
-                styles.floatingGem1,
-                {
-                  transform: [
-                    { translateY: slideAnim },
-                    { rotate: rotateInterpolate },
-                  ],
-                  opacity: fadeAnim,
-                }
-              ]}
-            >
-              <FontAwesome5 name="gem" size={20} color="rgba(255,255,255,0.3)" />
-            </Animated.View>
-            
-            <Animated.View 
-              style={[
-                styles.floatingElement,
-                styles.floatingGem2,
-                {
-                  transform: [
-                    { translateY: slideAnim },
-                    { rotate: rotateInterpolate },
-                  ],
-                  opacity: fadeAnim,
-                }
-              ]}
-            >
-              <FontAwesome5 name="diamond" size={16} color="rgba(255,255,255,0.2)" />
-            </Animated.View>
-
-            <Animated.View 
-              style={[
-                styles.heroContent,
-                {
-                  opacity: fadeAnim,
-                  transform: [
-                    { translateY: slideAnim },
-                    { scale: scaleAnim },
-                  ],
-                }
-              ]}
-            >
-              <View style={styles.heroIconContainer}>
-                <FontAwesome5 name="crown" size={40} color="white" />
-              </View>
-              <Text style={styles.heroTitle}>DC Jewellers</Text>
-              <Text style={styles.heroSubtitle}>Crafting Timeless Elegance Since 2020</Text>
-              <View style={styles.heroDivider} />
-            </Animated.View>
-          </LinearGradient>
-
-          {/* Stats Section */}
-          <View style={styles.statsContainer}>
-            <Text style={styles.statsTitle}>Our Achievements</Text>
-            <FlatList
-              data={stats}
-              renderItem={renderStat}
-              keyExtractor={(item) => item.label}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.statsList}
-              style={styles.statsFlatList}
-            />
-          </View>
-
-          {/* Main Content */}
-          <View style={styles.mainContent}>
-            {/* Who We Are Section */}
-            <Animated.View 
-              style={[
-                styles.contentCard,
-                {
-                  opacity: fadeAnim,
-                  transform: [{ translateY: slideAnim }],
-                }
-              ]}
-            >
-              <View style={styles.sectionHeader}>
-                <View style={styles.sectionIconContainer}>
-                  <FontAwesome5 name="gem" size={24} color="white" />
-                </View>
-                <Text style={styles.sectionTitle}>Who We Are</Text>
-              </View>
-              <Text style={styles.sectionText}>
-                DC Jewellers blends centuries-old craftsmanship with contemporary design. 
-                Our master artisans pour passion into every piece, creating heirlooms that 
-                transcend generations. We believe in the power of tradition meeting innovation.
-              </Text>
-            </Animated.View>
-
-            {/* Image Section */}
-            <Animated.View 
-              style={[
-                styles.imageCard,
-                {
-                  opacity: fadeAnim,
-                  transform: [{ translateY: slideAnim }],
-                }
-              ]}
-            >
-              <ImageBackground
-                source={theme.image.store_image}
-                style={styles.backgroundImage}
-                imageStyle={styles.backgroundImageStyle}
-              >
-                <LinearGradient
-                  colors={['transparent', 'rgba(0,0,0,0.7)']}
-                  style={styles.imageOverlay}
-                >
-                                     <Text style={styles.imageText}>Our Legacy</Text>
-                   <Text style={styles.imageSubtext}>Four years of excellence</Text>
-                </LinearGradient>
-              </ImageBackground>
-            </Animated.View>
-
-            {/* Journey Section */}
-            <View style={styles.journeySection}>
-              <View style={styles.sectionHeader}>
-                <View style={styles.sectionIconContainer}>
-                  <MaterialIcons name="timeline" size={24} color="white" />
-                </View>
-                <Text style={styles.sectionTitle}>Our Journey</Text>
-              </View>
-              <FlatList
-                data={milestones}
-                renderItem={renderMilestone}
-                keyExtractor={(item) => item.year}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.milestonesList}
-              />
-            </View>
-
-            {/* Promise Section */}
-            <Animated.View 
-              style={[
-                styles.contentCard,
-                {
-                  opacity: fadeAnim,
-                  transform: [{ translateY: slideAnim }],
-                }
-              ]}
-            >
-              <View style={styles.sectionHeader}>
-                <View style={styles.sectionIconContainer}>
-                  <Ionicons name="diamond" size={24} color="white" />
-                </View>
-                <Text style={styles.sectionTitle}>Our Promise</Text>
-              </View>
-              <Text style={styles.sectionText}>
-                We commit to delivering exceptional quality, innovative designs, and 
-                personalized service. Every piece tells a story, and we're honored to 
-                be part of yours. Your trust is our greatest treasure.
-              </Text>
-            </Animated.View>
-
-            {/* CTA Button */}
-            <Animated.View
-              style={[
-                styles.ctaButton,
-                {
-                  transform: [{ scale: scaleAnim }],
-                }
-              ]}
-            >
-              <TouchableOpacity
-                style={styles.ctaTouchable}
-                onPress={() => router.push("/(tabs)/home/(storeInfo)/contact_us")}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={['#7B0006', '#9B1B30', '#C44569']}
-                  style={styles.ctaGradient}
-                >
-                  <View style={styles.ctaIconContainer}>
-                    <FontAwesome5 name="store" size={16} color="white" />
-                  </View>
-                  <Text style={styles.ctaText}>Visit Our Store</Text>
-                  <AntDesign name="arrowright" size={20} color="white" />
-                </LinearGradient>
-              </TouchableOpacity>
-            </Animated.View>
-          </View>
-        </Animated.ScrollView>
+        />
       </SafeAreaView>
     </KeyboardAvoidingView>
   );

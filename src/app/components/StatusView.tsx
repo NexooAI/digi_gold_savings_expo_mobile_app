@@ -39,15 +39,24 @@ const StatusView: React.FC<StatusViewProps> = ({
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const touchStartX = useRef(0);
   const touchStartTime = useRef(0);
+  const [viewedStatus, setViewedStatus] = useState<boolean[]>([]);
 
-  // Reset and start animation when visibility changes
+  // Reset and start animation when visibility, collections, or index changes
   useEffect(() => {
-    if (isVisible) {
+    if (
+      isVisible &&
+      collections.length > 0 &&
+      initialCollectionIndex >= 0 &&
+      initialCollectionIndex < collections.length
+    ) {
       setCurrentCollection(collections[initialCollectionIndex]);
       setCurrentCollectionIndex(initialCollectionIndex);
       setCurrentImageIndex(0);
       setIsPaused(false);
       setImageLoading(true);
+      // Initialize viewedStatus: first image is true, rest are false
+      const images = collections[initialCollectionIndex]?.status_images || [];
+      setViewedStatus(images.map((_: any, idx: number) => idx === 0));
       startProgressAnimation();
     }
     return () => {
@@ -55,7 +64,20 @@ const StatusView: React.FC<StatusViewProps> = ({
         clearTimeout(timerRef.current);
       }
     };
-  }, [isVisible]);
+  }, [isVisible, collections, initialCollectionIndex]);
+
+  // Mark status as viewed when currentImageIndex changes
+  useEffect(() => {
+    if (isVisible && currentCollection?.status_images) {
+      setViewedStatus(prev => {
+        if (!prev.length) return [];
+        if (prev[currentImageIndex]) return prev; // already viewed
+        const updated = [...prev];
+        updated[currentImageIndex] = true;
+        return updated;
+      });
+    }
+  }, [currentImageIndex, isVisible, currentCollection]);
 
   // Handle image progression
   useEffect(() => {
@@ -156,11 +178,60 @@ const StatusView: React.FC<StatusViewProps> = ({
     }
   };
 
-  const getFullImageUrl = (path: string) => {
-    if (!path) return '';
-    if (path.startsWith('http')) return path;
-    return `${theme.baseUrl}/${path}`;
+  // Utility to get image source for local/remote/relative
+  const getImageSource = (path: string | number | undefined | null): import('react-native').ImageSourcePropType | undefined => {
+    if (!path) return undefined;
+    if (typeof path === 'number') return path; // local require
+    if (typeof path === 'string') {
+      if (path.startsWith('http')) return { uri: path };
+      // Prepend base URL for relative paths (avoid double slashes)
+      return { uri: `${theme.baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}` };
+    }
+    return undefined;
   };
+
+  // --- Add this useEffect to handle invalid collections/index ---
+  React.useEffect(() => {
+    if (
+      isVisible &&
+      (!collections || collections.length === 0 || initialCollectionIndex < 0 || initialCollectionIndex >= collections.length)
+    ) {
+      console.error('🔍 StatusView: Invalid collections data or index, closing modal', collections, initialCollectionIndex);
+      onClose();
+    }
+  }, [isVisible, collections, initialCollectionIndex, onClose]);
+
+  // --- Add this useEffect to handle missing status_images ---
+  React.useEffect(() => {
+    if (
+      isVisible &&
+      currentCollection &&
+      (!currentCollection.status_images || currentCollection.status_images.length === 0)
+    ) {
+      console.error('🔍 StatusView: No status_images in currentCollection:', currentCollection);
+      onClose();
+    }
+  }, [isVisible, currentCollection, onClose]);
+
+  // Don't render if no collections or invalid index
+  if (!collections || collections.length === 0 || initialCollectionIndex < 0 || initialCollectionIndex >= collections.length) {
+    // onClose() removed from here
+    return null;
+  }
+
+  // Use stateful currentCollection
+  if (!currentCollection) {
+    // Show a loading spinner while currentCollection is being set
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000000AA' }}>
+        <ActivityIndicator size="large" color="#FFD700" />
+      </View>
+    );
+  }
+  if (!currentCollection.status_images || currentCollection.status_images.length === 0) {
+    // onClose() removed from here
+    return null;
+  }
 
   return (
     <Modal
@@ -172,7 +243,7 @@ const StatusView: React.FC<StatusViewProps> = ({
       <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.progressContainer}>
-            {currentCollection?.status_images?.map((_, index) => (
+            {currentCollection?.status_images?.map((_: unknown, index: number) => (
               <View key={index} style={styles.progressBarContainer}>
                 <Animated.View
                   style={[
@@ -186,6 +257,8 @@ const StatusView: React.FC<StatusViewProps> = ({
                         : index < currentImageIndex
                         ? '100%'
                         : '0%',
+                      borderColor: !viewedStatus[index] ? '#00FF00' : 'rgba(255,255,255,0.3)', // green if not viewed
+                      borderWidth: 2,
                     },
                   ]}
                 />
@@ -194,11 +267,20 @@ const StatusView: React.FC<StatusViewProps> = ({
           </View>
           <View style={styles.headerContent}>
             <View style={styles.userInfo}>
-              <Image
-                source={{ uri: getFullImageUrl(currentCollection?.thumbnail) }}
-                style={styles.avatar}
-              />
-              <Text style={styles.username}>{currentCollection?.name}</Text>
+              {currentCollection?.thumbnail ? (
+                <Image
+                  source={getImageSource(currentCollection?.thumbnail) ?? undefined}
+                  style={styles.avatar}
+                  onError={e => {
+                    console.error('Avatar image failed to load:', getImageSource(currentCollection?.thumbnail), e.nativeEvent);
+                  }}
+                />
+              ) : (
+                <View style={[styles.avatar, { backgroundColor: '#666', justifyContent: 'center', alignItems: 'center' }]}> 
+                  <Ionicons name="image" size={20} color="#fff" />
+                </View>
+              )}
+              <Text style={styles.username}>{currentCollection?.name || 'Unknown Collection'}</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <Ionicons name="close" size={24} color="#fff" />
@@ -211,13 +293,23 @@ const StatusView: React.FC<StatusViewProps> = ({
           onPressOut={handleTouchEnd}
         >
           <View style={styles.imageContainer}>
-            <Image
-              source={{ uri: getFullImageUrl(currentCollection?.status_images?.[currentImageIndex]) }}
-              style={styles.statusImage}
-              resizeMode="contain"
-              onLoadStart={() => setImageLoading(true)}
-              onLoadEnd={() => setImageLoading(false)}
-            />
+            {currentCollection?.status_images?.[currentImageIndex] ? (
+              <Image
+                source={getImageSource(currentCollection?.status_images?.[currentImageIndex]) ?? undefined}
+                style={styles.statusImage}
+                resizeMode="contain"
+                onLoadStart={() => setImageLoading(true)}
+                onLoadEnd={() => setImageLoading(false)}
+                onError={e => {
+                  console.error('Status image failed to load:', getImageSource(currentCollection?.status_images?.[currentImageIndex]), e.nativeEvent);
+                  setImageLoading(false);
+                }}
+              />
+            ) : (
+              <View style={[styles.statusImage, { backgroundColor: '#333', justifyContent: 'center', alignItems: 'center' }]}> 
+                <Text style={{ color: '#fff', fontSize: 16 }}>No image available</Text>
+              </View>
+            )}
             {imageLoading && (
               <View style={styles.loadingOverlay}>
                 <ActivityIndicator size="large" color="#FFD700" accessibilityLabel="Loading image" />

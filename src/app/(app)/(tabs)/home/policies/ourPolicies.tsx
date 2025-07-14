@@ -220,6 +220,7 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+    paddingTop: 50, // Added to prevent AppHeader from hiding content
   },
   headerContainer: {
     position: "absolute",

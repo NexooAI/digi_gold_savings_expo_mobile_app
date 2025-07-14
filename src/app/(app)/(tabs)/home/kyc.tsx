@@ -610,7 +610,6 @@ export default function KycForm() {
                 </View>
                 <View style={styles.formContent}>
                   <View style={styles.formGroup}>
-                    <Text style={styles.label}>Date of Birth</Text>
                     <FormDatePicker
                       label="Date of Birth"
                       value={formData.dob}

@@ -94,6 +94,7 @@ const NotificationItem = React.memo(({
                 justifyContent: 'center',
                 marginRight: 14,
                 backgroundColor: `${getCategoryColor(item.category)}10`,
+                flexShrink: 0,
               }}
             >
               <Ionicons
@@ -102,27 +103,72 @@ const NotificationItem = React.memo(({
                 color={getCategoryColor(item.category)}
               />
             </View>
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ fontSize: 16, fontWeight: isUnread ? 'bold' : '600', color: '#222' }}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <View style={{ 
+                flexDirection: 'row', 
+                justifyContent: 'space-between', 
+                alignItems: 'flex-start',
+                marginBottom: 6,
+              }}>
+                <Text style={{ 
+                  fontSize: 16, 
+                  fontWeight: isUnread ? 'bold' : '600', 
+                  color: '#222',
+                  flex: 1,
+                  marginRight: 8,
+                  flexWrap: 'wrap',
+                }}>
                   {item.title}
                 </Text>
                 <TouchableOpacity 
                   onPress={() => onDelete(item.id)}
-                  style={{ padding: 6, marginRight: -8 }}
+                  style={{ 
+                    padding: 6, 
+                    marginRight: -8, 
+                    flexShrink: 0,
+                    alignSelf: 'flex-start',
+                  }}
                 >
                   <Ionicons name="close" size={18} color="#9E9E9E" />
                 </TouchableOpacity>
               </View>
-              <Text style={{ fontSize: 14, color: '#555', marginTop: 6, lineHeight: 20 }}>{item.message}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ 
+                fontSize: 14, 
+                color: '#555', 
+                lineHeight: 20,
+                marginRight: 8,
+                flexWrap: 'wrap',
+              }}>
+                {item.message}
+              </Text>
+              <View style={{ 
+                flexDirection: 'row', 
+                alignItems: 'center', 
+                justifyContent: 'space-between', 
+                marginTop: 10,
+                marginRight: 8,
+              }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                   <Ionicons name="time-outline" size={14} color="#9E9E9E" />
-                  <Text style={{ fontSize: 12, color: '#888', marginLeft: 6 }}>{item.time}</Text>
+                  <Text style={{ 
+                    fontSize: 12, 
+                    color: '#888', 
+                    marginLeft: 6,
+                    flexWrap: 'wrap',
+                  }}>
+                    {item.time}
+                  </Text>
                 </View>
                 {isUnread && (
                   <View 
-                    style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: getCategoryColor(item.category) }}
+                    style={{ 
+                      width: 8, 
+                      height: 8, 
+                      borderRadius: 4, 
+                      backgroundColor: getCategoryColor(item.category),
+                      flexShrink: 0,
+                      marginLeft: 8,
+                    }}
                   />
                 )}
               </View>
@@ -145,8 +191,16 @@ const NotificationSection = React.memo(({
   onNotificationPress: (id: string) => void;
   onNotificationDelete: (id: string) => void;
 }) => (
-  <View className="mt-6">
-    <Text className="text-base font-semibold text-gray-700 mb-3">{title}</Text>
+  <View style={{ marginTop: 24 }}>
+    <Text style={{
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#374151',
+      marginBottom: 16,
+      paddingHorizontal: 4,
+    }}>
+      {title}
+    </Text>
     {notifications.map((notification) => (
       <NotificationItem
         key={notification.id}
@@ -410,11 +464,11 @@ export default function NotificationsScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#f9fafb' }}>
       <ImageBackground
         source={theme.image.menu_bg}
         resizeMode="repeat"
-        className="flex-1"
+        style={{ flex: 1 }}
         imageStyle={{
           width: "100%",
           height: "100%",
@@ -423,43 +477,94 @@ export default function NotificationsScreen() {
         }}
       >
         {/* Fixed Header */}
-        <View className="absolute top-0 left-0 right-0 z-10 bg-transparent px-4">
+        <View style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 10,
+          backgroundColor: 'transparent',
+          paddingHorizontal: 16,
+        }}>
           <AppHeader showBackButton={false} backRoute="index" />
         </View>
 
         {/* Scrollable Content */}
         <ScrollView
+          style={{ flex: 1 }}
           contentContainerStyle={{
             flexGrow: 1,
             paddingTop: 100,
             paddingBottom: 80,
             paddingHorizontal: 20,
           }}
+          showsVerticalScrollIndicator={false}
         >
           {/* Header */}
-          <View className="flex-row justify-between items-center mb-8">
-            <View>
-              <View className="flex-row items-center">
-                <Text className="text-2xl font-bold text-gray-800">
+          <View style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            marginBottom: 32,
+          }}>
+            <View style={{ flex: 1, marginRight: 16 }}>
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginBottom: 8,
+              }}>
+                <Text style={{
+                  fontSize: 24,
+                  fontWeight: 'bold',
+                  color: '#1f2937',
+                }}>
                   Notifications
                 </Text>
                 {unreadCount > 0 && (
-                  <View className="ml-3 bg-red-500 rounded-full px-2.5 py-1">
-                    <Text className="text-white text-xs font-medium">
+                  <View style={{
+                    marginLeft: 12,
+                    backgroundColor: '#ef4444',
+                    borderRadius: 12,
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
+                    minWidth: 20,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    <Text style={{
+                      color: 'white',
+                      fontSize: 12,
+                      fontWeight: '500',
+                    }}>
                       {unreadCount}
                     </Text>
                   </View>
                 )}
               </View>
-              <Text className="text-sm text-gray-500 mt-2">
+              <Text style={{
+                fontSize: 14,
+                color: '#6b7280',
+              }}>
                 Stay updated with your Digi Gold activities
               </Text>
             </View>
             <TouchableOpacity 
               onPress={markAllAsRead}
-              className="bg-gray-100 px-5 py-2.5 rounded-md"
+              style={{
+                backgroundColor: '#f3f4f6',
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                borderRadius: 8,
+                flexShrink: 0,
+              }}
             >
-              <Text className="text-gray-700 font-medium">Mark All as Read</Text>
+              <Text style={{
+                color: '#374151',
+                fontWeight: '500',
+                fontSize: 14,
+              }}>
+                Mark All as Read
+              </Text>
             </TouchableOpacity>
           </View>
 

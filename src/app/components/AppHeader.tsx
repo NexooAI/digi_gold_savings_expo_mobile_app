@@ -129,7 +129,6 @@ const AppHeader: React.FC<AppHeaderProps> = ({
               size={20}
               color={theme.theme.colors.white}
             />
-            <Text style={styles.backButtonText}>{t('back')}</Text>
           </TouchableOpacity>
         )}
         {title ? (

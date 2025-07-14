@@ -147,8 +147,8 @@ export default function PaymentNewOverView() {
     try {
       const payload: PaymentInitPayload | any = {
         userId: userDetails.userId || user?.id,
-        // amount: currentAmount,
-        amount:1,
+        amount: currentAmount,
+        // amount:1,
         investmentId: userDetails.investmentId,
         schemeId: params?.schemeId,
         userEmail: userDetails?.email || user?.email,
@@ -246,11 +246,8 @@ export default function PaymentNewOverView() {
       </View>
 
       <ScrollView
-        style={styles.content}
-        contentContainerStyle={[
-          styles.contentContainer,
-          { paddingBottom: 250 }, // Increase padding to ensure all content is visible above footer
-        ]}
+        style={{ flex: 1 }}
+        contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={true}
       >
         {/* Amount Card */}
@@ -420,10 +417,8 @@ export default function PaymentNewOverView() {
             <Text style={styles.detailValue}>{userDetails?.email || user?.email}</Text>
           </View>
         </View>
-      </ScrollView>
 
-      {/* Pay Now Button and Terms */}
-      <View style={styles.footer}>
+        {/* Pay Now Button and Terms */}
         <View style={styles.termsContainer}>
           <TouchableOpacity
             style={styles.checkboxContainer}
@@ -444,7 +439,7 @@ export default function PaymentNewOverView() {
               )}
             </View>
             <Text style={styles.termsText}>
-              {t("iAccept")}{" "}
+              {t("iAccept")} {" "}
               <Text
                 style={styles.termsLink}
                 onPress={() => setShowTermsModal(true)}
@@ -464,7 +459,7 @@ export default function PaymentNewOverView() {
         >
           <Text style={styles.payButtonText}>{t("payNow")}</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
 
       <TermsAndConditionsModal />
     </SafeAreaView>

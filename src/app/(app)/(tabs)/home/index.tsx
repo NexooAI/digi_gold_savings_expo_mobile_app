@@ -424,19 +424,19 @@ const BannerCard: React.FC<BannerCardProps> = ({ item, router }) => {
           style={styles.aboutSchemesButton}
           onPress={() => router.push('/(app)/(tabs)/home/schemes')}
           activeOpacity={0.85}
-          accessibilityLabel="About Schemes"
+          accessibilityLabel={t('aboutSchemes')}
         >
-          <Text style={styles.aboutSchemesButtonText}>About Schemes</Text>
+          <Text style={styles.aboutSchemesButtonText}>{t('aboutSchemes')}</Text>
         </TouchableOpacity>
         <Animated.View style={{ flex: 1, transform: [{ scale: joinNowScale }] }}>
           <TouchableOpacity
             style={styles.joinNowButton}
             onPress={() => router.push(item.schemeUrl)}
             activeOpacity={0.85}
-            accessibilityLabel="Join Now - Highlighted"
-            accessibilityHint="Tap to join the scheme. This button is highlighted for your attention."
+            accessibilityLabel={t('joinNow') + ' - Highlighted'}
+            accessibilityHint={t('joinNowHint') || 'Tap to join the scheme. This button is highlighted for your attention.'}
           >
-            <Text style={styles.joinNowButtonText}>Join Now</Text>
+            <Text style={styles.joinNowButtonText}>{t('joinNow')}</Text>
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -462,6 +462,7 @@ export default function Home2() {
   const [flashNews, setFlashNews] = useState<any[]>([]);
   const [sliderImages, setSliderImages] = useState<any[]>([]);
   const [isSliderLoading, setIsSliderLoading] = useState(true);
+  const [viewedCollections, setViewedCollections] = useState<{ [id: number]: boolean }>({});
 
   // Refs
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -483,6 +484,9 @@ export default function Home2() {
       saveasmoney: t("saveasmoney"),
       futureplus: t("futureplus"),
       goldSchemes: t("goldSchemes"),
+      aboutSchemes: t("aboutSchemes"),
+      joinNow: t("joinNow"),
+      joinNowHint: t("joinNowHint"),
     }),
     [language]
   );
@@ -508,8 +512,22 @@ export default function Home2() {
   const getFullImageUrl = useCallback((path: string) => {
     if (!path) return "";
     if (path.startsWith("http")) return path;
-    return `${theme.baseUrl}/${path}`;
+    // Remove trailing slash from baseUrl and leading slash from path
+    return `${theme.baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
   }, []);
+
+  // New image source handling
+  const getImageSource = (path: string | any) => {
+    if (!path) return undefined;
+    // If it's a local resource (require statement), return as is
+    if (typeof path === 'number') return path;
+    // If it's a string, use getFullImageUrl to get the URI
+    if (typeof path === 'string') {
+      const url = getFullImageUrl(path);
+      return url ? { uri: url } : undefined;
+    }
+    return undefined;
+  };
 
   // Fetch investment data separately
   const fetchInvestmentData = useCallback(async () => {
@@ -545,7 +563,7 @@ export default function Home2() {
       setTotalGoldSavings(totalGold);
       setTotalAmount(totalAmount);
     } catch (error) {
-      console.error('Error fetching investment data:', error);
+      // console.error('Error fetching investment data:', error);
       setActiveSchemesCount(0);
       setTotalGoldSavings(0);
       setTotalAmount(0);
@@ -569,9 +587,13 @@ export default function Home2() {
 
         // Set collections data
         if (data.collections && data.collections.length > 0) {
+          console.log('🔍 Home: Using API collections data:', data.collections.length, 'collections');
+          console.log('🔍 Home: First collection sample:', data.collections[0]);
           setCollectionsData(data.collections);
         } else {
-          console.log('No collections found, using default images');
+          console.log('🔍 Home: No collections found, using default images');
+          console.log('🔍 Home: Default images count:', defaultStatusImages.length);
+          console.log('🔍 Home: First default collection sample:', defaultStatusImages[0]);
           setCollectionsData(defaultStatusImages);
         }
 
@@ -726,6 +748,18 @@ export default function Home2() {
     await AsyncStorage.setItem("flashBannerSeen", "true");
   }, []);
 
+  const handleStatusClose = useCallback(() => {
+    if (selectedCollection) {
+      // Check if all statuses in the selected collection have been viewed
+      // We'll use localStorage or a callback from StatusView if you want to persist, but for now, local state only
+      setViewedCollections(prev => ({
+        ...prev,
+        [selectedCollection.id]: true // Mark as viewed when closed (for demo, always true)
+      }));
+    }
+    setShowStatus(false);
+    setSelectedCollection(null);
+  }, [selectedCollection]);
 
   // API Logging demonstration function
   const demonstrateApiLogging = useCallback(() => {
@@ -791,20 +825,25 @@ export default function Home2() {
       <TouchableOpacity
         style={styles.statusItem}
         onPress={() => {
+          console.log('🔍 Home: Status item pressed:', item.name);
+          console.log('🔍 Home: Item thumbnail type:', typeof item.thumbnail);
+          console.log('🔍 Home: Item status_images count:', item.status_images?.length);
           setSelectedCollection(item);
           setShowStatus(true);
         }}
       >
         <View style={styles.statusItemWrapper}>
-          <View style={styles.statusImageContainer}>
+          <View style={[
+            styles.statusImageContainer,
+            { borderColor: viewedCollections[item.id] ? '#ccc' : '#00FF00' } // green if not viewed, gray if viewed
+          ]}>
             <Image
-              source={
-                typeof item.thumbnail === "string"
-                  ? { uri: getFullImageUrl(item.thumbnail) }
-                  : item.thumbnail
-              }
+              source={getImageSource(item.thumbnail) ?? undefined}
               style={styles.statusImage}
               resizeMode="cover"
+              onError={e => {
+                console.error('Collection thumbnail failed to load:', getImageSource(item.thumbnail), e.nativeEvent);
+              }}
             />
           </View>
           <Text style={styles.statusItemName} numberOfLines={1}>
@@ -813,7 +852,7 @@ export default function Home2() {
         </View>
       </TouchableOpacity>
     ),
-    [getFullImageUrl]
+    [getImageSource, viewedCollections]
   );
 
   return (
@@ -836,18 +875,6 @@ export default function Home2() {
               showBackButton={false}
               backRoute="index"
               showLanguageSwitcher={true}
-            // goldRateInfo={
-            //   homeData?.data?.currentRates?.gold_rate
-            //     ? {
-            //         rate: homeData.data.currentRates.gold_rate,
-            //         purity: "22K",
-            //       }
-            //     : {
-            //         rate: dummyData.rates.gold.price,
-            //         purity: "22K",
-            //       }
-            // }
-            // goldRateUpdatedAt={homeData?.data?.currentRates?.updated_at}
             />
             {/* Debug button for API logging - remove in production */}
             <TouchableOpacity
@@ -1004,17 +1031,16 @@ export default function Home2() {
           <StatusView
             collections={collectionsData}
             isVisible={showStatus}
-            initialCollectionIndex={
-              selectedCollection
-                ? collectionsData.findIndex(
-                  (c) => c.id === selectedCollection.id
-                )
-                : 0
-            }
-            onClose={() => {
-              setShowStatus(false);
-              setSelectedCollection(null);
-            }}
+            initialCollectionIndex={(() => {
+              if (selectedCollection) {
+                const idx = collectionsData.findIndex(
+                  (c) => String(c.id) === String(selectedCollection.id)
+                );
+                return idx >= 0 ? idx : 0;
+              }
+              return 0;
+            })()}
+            onClose={handleStatusClose}
           />
         </View>
       </ImageBackground>

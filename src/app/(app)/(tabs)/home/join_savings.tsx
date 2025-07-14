@@ -489,6 +489,39 @@ export default function JoinSavings() {
       successTitle: t("successTitle"),
       successMessage: t("successMessage"),
       confirmAndJoin: t("confirmAndJoin"),
+      amountInRupees: t("amountInRupees"),
+      quickSelect: t("quickSelect"),
+      accountDetails: t("accountDetails"),
+      accountHolderName: t("accountHolderName"),
+      useMyLoginName: t("useMyLoginName"),
+      branchName: t("branchName"),
+      savingSummary: t("savingSummary"),
+      schemeType: t("schemeType"),
+      fixedAmount: t("fixedAmount"),
+      flexiAmount: t("flexiAmount"),
+      kycDetails: t("kycDetails"),
+      addressDetails: t("addressDetails"),
+      idProof: t("idProof"),
+      nominee: t("nominee"),
+      details: t("details"),
+      summary: t("summary"),
+      goldWeight: t("goldWeight"),
+      goldLabel: t("goldLabel"),
+      goldSymbol: t("goldSymbol"),
+      goldRateToday: t("goldRateToday"),
+      loadingScheme: t("loadingScheme"),
+      loadingSchemeDetails: t("loadingSchemeDetails"),
+      error: t("error"),
+      failedToLoadSchemeDetails: t("failedToLoadSchemeDetails"),
+      goBack: t("goBack"),
+      loadingKycStatus: t("loadingKycStatus"),
+      useLoginName: t("useMyLoginName"),
+      branch: t("branchName"),
+      gold: t("gold"),
+      amount: t("amount"),
+      paymentFrequency: t("paymentFrequency"),
+      schemeName: t("schemeName"),
+      // Add more as needed
     }),
     [language]
   );
@@ -684,7 +717,7 @@ export default function JoinSavings() {
                 style={styles.amountCardBgImage}
                 resizeMode="contain"
               />
-              <Text style={styles.label}>Amount in Rupees</Text>
+              <Text style={styles.label}>{translations.amountInRupees}</Text>
               <View style={styles.amountDisplayContainer}>
                 {isTyping ? (
                   <View style={styles.amountInputContainer}>
@@ -739,7 +772,7 @@ export default function JoinSavings() {
             {/* Gold Weight Input Side */}
             <View style={[styles.inputSide, styles.goldCard]}>
               <View style={styles.goldShine} />
-              <Text style={styles.goldLabel}>Gold Weight</Text>
+              <Text style={styles.goldLabel}>{translations.goldWeight}</Text>
               <View style={styles.amountDisplayContainer}>
                 <View style={styles.goldInputContainer}>
                   <TextInput
@@ -758,7 +791,7 @@ export default function JoinSavings() {
           </View>
 
           <View style={styles.quickAmountContainer}>
-            <Text style={styles.quickAmountLabel}>Quick Select:</Text>
+            <Text style={styles.quickAmountLabel}>{translations.quickSelect}</Text>
             <View style={styles.quickAmountGrid}>
               {quickAmounts.map((quickAmount) => {
                 // Check if current amount is close to this quick amount (within 1 rupee tolerance)
@@ -806,8 +839,8 @@ export default function JoinSavings() {
   // Step 2 (originally step 4) - Account Details
   const renderStep2 = () => (
     <View style={styles.stepContainer}>
-      <Text style={styles.sectionTitle}>Account Details</Text>
-      <Text style={styles.label}>Account Holder Name</Text>
+      <Text style={styles.sectionTitle}>{translations.accountDetails}</Text>
+      <Text style={styles.label}>{translations.accountHolderName}</Text>
       <TextInput
         style={[
           styles.input,
@@ -836,12 +869,12 @@ export default function JoinSavings() {
             <Ionicons name="checkmark" size={16} color="#1a237e" />
           )}
         </View>
-        <Text style={styles.checkboxLabel}>Use my login name</Text>
+        <Text style={styles.checkboxLabel}>{translations.useMyLoginName}</Text>
       </TouchableOpacity>
       {errors.accountname && (
         <Text style={styles.errorText}>{errors.accountname}</Text>
       )}
-      <Text style={[styles.label, { marginTop: 12 }]}>Branch Name</Text>
+      <Text style={[styles.label, { marginTop: 12 }]}>{translations.branchName}</Text>
       <View style={{ marginBottom: errors.associated_branch ? 0 : 16 }}>
         <RNPickerSelect
           onValueChange={(value) => handleChange("associated_branch", value)}
@@ -883,20 +916,18 @@ export default function JoinSavings() {
               size={22}
               color="#FFC857"
             />
-            <Text style={styles.summaryCardTitle}>Saving Summary</Text>
+            <Text style={styles.summaryCardTitle}>{translations.savingSummary}</Text>
           </View>
           <View style={styles.summaryRowModern}>
-            <Text style={styles.summaryLabelModern}>Scheme Type</Text>
-            <Text style={styles.summaryValueModern}>
-              {schemeType === "fixed" ? "Fixed Amount" : "Flexi Amount"}
-            </Text>
+            <Text style={styles.summaryLabelModern}>{translations.schemeType}</Text>
+            <Text style={styles.summaryValueModern}>{schemeType === "fixed" ? translations.fixedAmount : translations.flexiAmount}</Text>
           </View>
           <View style={styles.summaryRowModern}>
-            <Text style={styles.summaryLabelModern}>Amount</Text>
+            <Text style={styles.summaryLabelModern}>{translations.amount}</Text>
             <Text style={styles.summaryAmountModern}>₹{formData.amount}</Text>
           </View>
           <View style={styles.summaryRowModern}>
-            <Text style={styles.summaryLabelModern}>Payment Frequency</Text>
+            <Text style={styles.summaryLabelModern}>{translations.paymentFrequency}</Text>
             <Text style={styles.summaryValueModern}>
               {selectedChit?.PAYMENT_FREQUENCY || ""}
             </Text>
@@ -921,7 +952,7 @@ export default function JoinSavings() {
                   flex: 1,
                 }}
               >
-                KYC Details
+                {translations.kycDetails}
               </Text>
               <TouchableOpacity
                 onPress={() => router.push("/(tabs)/home/kyc")}
@@ -974,7 +1005,7 @@ export default function JoinSavings() {
                     flex: 1,
                   }}
                 >
-                  Address Details
+                  {translations.addressDetails}
                 </Text>
               </View>
               <View style={{ gap: 12 }}>
@@ -1052,7 +1083,7 @@ export default function JoinSavings() {
                     flex: 1,
                   }}
                 >
-                  ID Proof
+                  {translations.idProof}
                 </Text>
               </View>
               <View style={{ gap: 12 }}>
@@ -1108,7 +1139,7 @@ export default function JoinSavings() {
                         flex: 1,
                       }}
                     >
-                      Nominee
+                      {translations.nominee}
                     </Text>
                   </View>
                   <View style={{ gap: 12 }}>
@@ -1325,11 +1356,11 @@ export default function JoinSavings() {
           >
             <Ionicons name="arrow-back" size={24} color="#FFC857" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Loading Scheme...</Text>
+          <Text style={styles.headerTitle}>{translations.loadingScheme}</Text>
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Loading scheme details...</Text>
+          <Text style={styles.loadingText}>{translations.loadingSchemeDetails}</Text>
         </View>
       </SafeAreaView>
     );
@@ -1346,7 +1377,7 @@ export default function JoinSavings() {
           >
             <Ionicons name="arrow-back" size={24} color="#FFC857" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Error</Text>
+          <Text style={styles.headerTitle}>{translations.error}</Text>
         </View>
         <View style={styles.loadingContainer}>
           <Ionicons
@@ -1354,9 +1385,9 @@ export default function JoinSavings() {
             size={48}
             color={theme.colors.primary}
           />
-          <Text style={styles.loadingText}>Failed to load scheme details</Text>
+          <Text style={styles.loadingText}>{translations.failedToLoadSchemeDetails}</Text>
           <TouchableOpacity style={styles.button} onPress={() => router.back()}>
-            <Text style={styles.buttonText}>Go Back</Text>
+            <Text style={styles.buttonText}>{translations.goBack}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -1429,7 +1460,7 @@ export default function JoinSavings() {
         {isKycLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text>Loading KYC status...</Text>
+            <Text>{translations.loadingKycStatus}</Text>
           </View>
         ) : (
           <ScrollView

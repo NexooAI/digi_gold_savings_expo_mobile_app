@@ -28,14 +28,20 @@ import { moderateScale } from "react-native-size-matters";
 
 const { width, height } = Dimensions.get("window");
 
+// Define a type for the policy object
+interface Policy {
+  title?: string;
+  // Add other fields as needed if used
+}
+
 export default function PrivacyPolicy() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { language } = useGlobalStore();
 
-  const [policy, setPolicy] = useState(null);
+  const [policy, setPolicy] = useState<Policy | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPolicy = async () => {
@@ -198,7 +204,7 @@ export default function PrivacyPolicy() {
                 <View style={styles.sectionContainer}>
                   <View style={styles.sectionHeader}>
                     <Ionicons
-                      name="data-usage"
+                      name="document-text-outline"
                       size={20}
                       color="#850111"
                     />
@@ -273,6 +279,7 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+    paddingTop: 50,
   },
   headerContainer: {
     position: "absolute",
