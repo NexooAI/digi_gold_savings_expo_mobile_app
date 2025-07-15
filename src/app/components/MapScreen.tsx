@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Text, Image, TouchableOpacity } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { View, StyleSheet, Text, Image, TouchableOpacity, Platform } from 'react-native';
 import * as Location from 'expo-location';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -33,6 +32,18 @@ export default function MapScreen() {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const bottomSheetRef = useRef(null);
   const mapRef = useRef(null);
+
+  let MapView, Marker, PROVIDER_GOOGLE;
+  if (Platform.OS === 'web') {
+    MapView = (props) => <div style={{width: '100%', height: '80%', background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center'}}><span>Map not supported on web</span></div>;
+    Marker = () => null;
+    PROVIDER_GOOGLE = undefined;
+  } else {
+    const maps = require('react-native-maps');
+    MapView = maps.default;
+    Marker = maps.Marker;
+    PROVIDER_GOOGLE = maps.PROVIDER_GOOGLE;
+  }
 
   // Get user location
   useEffect(() => {

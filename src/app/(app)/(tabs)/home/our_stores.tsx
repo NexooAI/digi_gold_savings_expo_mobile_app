@@ -12,7 +12,6 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import MapView, { Marker } from "react-native-maps";
 import { Dropdown } from "react-native-element-dropdown";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useRouter } from "expo-router";
@@ -40,9 +39,19 @@ const stores: Store[] = [
   },
 ];
 
+let MapView: React.ComponentType<any>, Marker: React.ComponentType<any>;
+if (Platform.OS === 'web') {
+  MapView = (props: any) => <div style={{width: '100%', height: 300, background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center'}}><span>Map not supported on web</span></div>;
+  Marker = () => null;
+} else {
+  const maps = require('react-native-maps');
+  MapView = maps.default;
+  Marker = maps.Marker;
+}
+
 const StoreLocator = () => {
   const router = useRouter();
-  const mapRef = useRef<MapView | null>(null);
+  const mapRef = useRef<any>(null);
   const [selectedStore, setSelectedStore] = useState<any>(stores.length > 0 ? {
     label: stores[0].address,
     value: stores[0].id.toString(),

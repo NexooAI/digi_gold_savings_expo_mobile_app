@@ -15,7 +15,6 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import MapView, { Marker } from "react-native-maps";
 import { Dropdown } from "react-native-element-dropdown";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useRouter } from "expo-router";
@@ -24,6 +23,16 @@ import { Ionicons } from "@expo/vector-icons";
 
 // Make sure you have AppHeader defined or imported
 // import AppHeader from './AppHeader';
+
+let MapView: React.ComponentType<any>, Marker: React.ComponentType<any>;
+if (Platform.OS === 'web') {
+  MapView = (props: any) => <div style={{width: '100%', height: 300, background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center'}}><span>Map not supported on web</span></div>;
+  Marker = () => null;
+} else {
+  const maps = require('react-native-maps');
+  MapView = maps.default;
+  Marker = maps.Marker;
+}
 
 const stores = [
   {
@@ -55,7 +64,7 @@ const StoreLocator = () => {
     extrapolate: "clamp",
   });
 
-  const mapRef = useRef(null);
+  const mapRef = useRef<any>(null);
   const [selectedStore, setSelectedStore] = useState(null);
   const [isFocus, setIsFocus] = useState(false);
   const insets = useSafeAreaInsets() || {
