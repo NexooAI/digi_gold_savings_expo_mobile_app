@@ -461,7 +461,7 @@ export default function Login() {
               text: t("createAccount"),
               onPress: () => {
                 // Handle create account navigation
-                router.push(`/register?mobile=${mobile}`);
+                router.push(`/userBasicDetails`);
                 setLoading(false);
               },
             },
@@ -627,7 +627,7 @@ export default function Login() {
                           <Text style={registerStyles.registerText}>
                             {t("dontHaveAccount")}{" "}
                           </Text>
-                          <TouchableOpacity onPress={() => router.push("/register")}> 
+                          <TouchableOpacity onPress={() => router.push("/userBasicDetails")}> 
                             <Text style={registerStyles.registerLink}>{t("register")}</Text>
                           </TouchableOpacity>
                         </View>

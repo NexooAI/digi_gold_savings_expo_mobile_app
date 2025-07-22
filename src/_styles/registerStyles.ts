@@ -1,4 +1,4 @@
-import { StyleSheet, Platform } from "react-native";
+import { StyleSheet, Platform, Dimensions } from "react-native";
 import { theme } from "@/constants/theme";
 
 export const registerStyles = StyleSheet.create({
@@ -394,4 +394,90 @@ export const registerStyles = StyleSheet.create({
     marginLeft: 5,
     opacity: 0.8,
   },
+ 
 }); 
+// You'll need to update your registerStyles.ts file with the new styles or add them here.
+// For demonstration, I'm adding them directly.
+// Ensure your existing registerStyles are merged with these new ones.
+export const newRegisterStyles = StyleSheet.create({
+  // Add or modify these styles in your _styles/registerStyles.ts file
+  mobileInputTopRight: {
+    alignSelf: 'flex-end', // Aligns the PhoneInput to the right
+    marginTop: -80, // Adjust as needed to move it up
+    marginBottom: 20, // Adjust spacing below it
+    width: 'auto', // Allow it to shrink to content
+    position: 'absolute', // Position it absolutely
+    top: 20, // Adjust top position
+    right: 20, // Adjust right position
+    zIndex: 5, // Bring it to front
+    backgroundColor: 'rgba(0,0,0,0.5)', // Optional: Add a background
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  textInput: {
+    height: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 10,
+    paddingHorizontal: 20,
+    fontSize: 16,
+    color: theme.colors.white,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  additionalDetailsContainer: {
+    width: "100%",
+    marginTop: 30, // Adjust spacing from OTP
+  },
+  otpInputsWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center', // Center the OTP inputs and eye icon
+    width: '100%',
+    marginBottom: 20,
+  },
+  otpInputsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '70%', // Adjust width for OTP inputs
+    marginRight: 10, // Space between OTP inputs and eye icon
+  },
+  otpInput: {
+    width: 50,
+    height: 50,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: 10,
+    textAlign: 'center',
+    fontSize: 24,
+    color: theme.colors.white,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  eyeButton: {
+    padding: 10,
+  },
+  // Ensure existing styles are compatible, e.g., registerStyles.formContainer
+  // might need adjustment for vertical alignment or padding if the mobile input shifts.
+  formContainer: {
+    width: "90%",
+    maxWidth: 500,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: Dimensions.get('window').height * 0.15, // Adjusted to make space for the floating phone input
+    marginBottom: 20,
+  },
+  cardContainer: {
+    borderRadius: 20,
+    overflow: "hidden",
+    width: "100%",
+    padding: 20, // Increased padding
+  },
+  cardContent: {
+    paddingTop: 30, // Increased top padding to give space for mobile input moving up
+    paddingBottom: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative", // Needed for absolute positioning of mobile input
+  },
+});

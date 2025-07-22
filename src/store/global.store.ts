@@ -141,6 +141,7 @@ const useGlobalStore = create<GlobalStore>()(
       },
       logout: async () => {
         await SecureStore.deleteItemAsync('authToken');
+        await SecureStore.deleteItemAsync('user_mpin');
         set({
           isLoggedIn: false,
           token: null,

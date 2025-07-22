@@ -15,6 +15,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import useGlobalStore from "@/store/global.store";
 import { theme } from "@/constants/theme";
 import { t } from "../../../i18n";
+import * as SecureStore from "expo-secure-store";
 // import { useAuth } from "../../../../contexts/AuthContext";
 
 const { width } = Dimensions.get("window");
@@ -88,7 +89,7 @@ export function CustomDrawerContent(props: CustomDrawerContentProps) {
           onPress: async () => {
             setIsNavigating(true);
             try {
-              await AsyncStorage.multiRemove(["userMpin"]);
+              await SecureStore.deleteItemAsync("user_mpin");
               logout();
               router.replace("/(auth)/login");
             } catch (error) {

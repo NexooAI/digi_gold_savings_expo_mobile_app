@@ -1,5 +1,4 @@
 import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { users } from '@/services/api';
@@ -48,6 +47,7 @@ class NotificationService {
   }
 
   private async storeLastSentToken(token: string) {
+    console.log('lastSentFcmToken', token);
     try {
       await AsyncStorage.setItem('lastSentFcmToken', token);
     } catch (error) {
@@ -68,52 +68,46 @@ class NotificationService {
       });
     }
 
-    if (Device.isDevice) {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
+    // Removed Device.isDevice check, use Platform.OS for platform logic
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
 
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    if (finalStatus !== 'granted') {
+      return;
+    }
+
+    try {
+      const projectId = Constants?.expoConfig?.extra?.eas?.projectId;
+      if (!projectId) {
+        throw new Error('Project ID not found');
       }
 
-      if (finalStatus !== 'granted') {
-        //console.log('Failed to get push token for push notification!');
-        return;
+      // Get the token
+      const expoPushToken = await Notifications.getExpoPushTokenAsync({
+        projectId,
+      });
+
+      if (!expoPushToken?.data) {
+        throw new Error('Failed to get push token');
       }
 
-      try {
-        const projectId = Constants?.expoConfig?.extra?.eas?.projectId;
-        if (!projectId) {
-          throw new Error('Project ID not found');
-        }
+      // Extract just the token part without ExponentPushToken[] wrapper
+      const cleanToken = expoPushToken.data.replace('ExponentPushToken[', '').replace(']', '');
 
-        // Get the token
-        const expoPushToken = await Notifications.getExpoPushTokenAsync({
-          projectId,
-        });
+      // Store the clean token locally
+      await this.storeFcmToken(cleanToken);
 
-        if (!expoPushToken?.data) {
-          throw new Error('Failed to get push token');
-        }
+      // Immediately try to send token to API
+      await this.sendTokenToApi();
 
-        // Extract just the token part without ExponentPushToken[] wrapper
-        const cleanToken = expoPushToken.data.replace('ExponentPushToken[', '').replace(']', '');
-        //console.log('Push token generated:', cleanToken);
-
-        // Store the clean token locally
-        await this.storeFcmToken(cleanToken);
-
-        // Immediately try to send token to API
-        await this.sendTokenToApi();
-
-        return cleanToken;
-      } catch (error) {
-        console.error('Error getting push token:', error);
-        return null;
-      }
-    } else {
-      //console.log('Must use physical device for Push Notifications');
+      return cleanToken;
+    } catch (error) {
+      console.error('Error getting push token:', error);
       return null;
     }
   }
@@ -135,6 +129,7 @@ class NotificationService {
         }
         // Token was generated and stored, continue with sending
         this.isSendingToken = false;
+        console.log(this.sendTokenToApi());
         return this.sendTokenToApi(); // Recursively call with the new token
       }
 
@@ -169,6 +164,7 @@ class NotificationService {
             // If token exists and is different, update it
             if (existingToken !== token) {
               const response = await users.updateFcmToken(token, userId, Platform.OS === 'ios' ? 'ios' : 'android');
+              console.log('responce for fcm tokern ', response);
               await this.storeLastSentToken(token);
             } else {
               //console.log('FCM token unchanged, skipping update');

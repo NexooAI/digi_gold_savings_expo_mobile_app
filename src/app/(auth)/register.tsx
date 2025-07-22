@@ -34,7 +34,7 @@ const INITIAL_TIMER = 20;
 // Simple Language Switcher Component
 const SimpleLanguageSwitcher = () => {
   const { language, setLanguage } = useGlobalStore();
-  
+
   const handleLanguageChange = () => {
     let newLang: AppLocale;
     switch (language) {
@@ -270,9 +270,9 @@ export default function Register() {
         },
         body: JSON.stringify({ mobile_number: mobile, otp }),
       });
-     
+
       const data = await response.json();
-      console.log('handle data',data)
+      console.log('handle data', data)
       if (response.ok && data.message && data.message.toLowerCase().includes('otp verified successfully')) {
         // await SecureStore.setItemAsync("authToken", data.token);
         router.push({
@@ -351,8 +351,8 @@ export default function Register() {
         <View style={registerStyles.darkOverlay} />
         <LinearGradient
           colors={["rgba(32, 1, 1, 0.55)",
-             "rgba(167, 0, 0, 0)", 
-             "rgba(118, 1, 1, 0)"]}
+            "rgba(167, 0, 0, 0)",
+            "rgba(118, 1, 1, 0)"]}
           style={registerStyles.gradient}
         >
           <SimpleLanguageSwitcher />
@@ -380,33 +380,33 @@ export default function Register() {
                 <View style={registerStyles.cardContainer}>
                   {/* Base fog layer */}
                   <LinearGradient
-                      colors={[
-                        "rgba(6, 2, 2, 0.78)",
-                        "rgba(34, 0, 0, 0.35)",
-                        "rgba(31, 3, 3, 0.54)",
-                      ]}
-                      style={StyleSheet.absoluteFill}
-                    />
-                    {/* Top fog highlight */}
-                    <LinearGradient
-                      colors={[
-                        "rgba(10, 2, 2, 0.38)",
-                        "rgba(76, 63, 63, 0.74)",
-                      ]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 0, y: 0.5 }}
-                      style={StyleSheet.absoluteFill}
-                    />
-                    {/* Bottom fog highlight */}
-                    <LinearGradient
-                      colors={[
-                        "rgba(0, 0, 0, 0.44)",
-                        "rgba(0, 0, 0, 0.28)",
-                      ]}
-                      start={{ x: 0, y: 0.5 }}
-                      end={{ x: 0, y: 1 }}
-                      style={StyleSheet.absoluteFill}
-                    />
+                    colors={[
+                      "rgba(6, 2, 2, 0.78)",
+                      "rgba(34, 0, 0, 0.35)",
+                      "rgba(31, 3, 3, 0.54)",
+                    ]}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  {/* Top fog highlight */}
+                  <LinearGradient
+                    colors={[
+                      "rgba(10, 2, 2, 0.38)",
+                      "rgba(76, 63, 63, 0.74)",
+                    ]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 0.5 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  {/* Bottom fog highlight */}
+                  <LinearGradient
+                    colors={[
+                      "rgba(0, 0, 0, 0.44)",
+                      "rgba(0, 0, 0, 0.28)",
+                    ]}
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 0, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
                   {/* Content */}
                   <View style={registerStyles.cardContent}>
                     <Text style={registerStyles.pageTitle}>{t("createAccount")}</Text>
@@ -530,7 +530,7 @@ export default function Register() {
           </KeyboardAvoidingView>
           <View style={registerStyles.poweredByContainer}>
             <Text style={registerStyles.poweredByText}>
-              {t("poweredBy")} <Text style={{textDecorationLine: 'underline', color: theme.colors.textLight}} onPress={() => Linking.openURL('https://agnisofterp.com/')}>Agni Soft ERP</Text>
+              {t("poweredBy")} <Text style={{ textDecorationLine: 'underline', color: theme.colors.textLight }} onPress={() => Linking.openURL('https://agnisofterp.com/')}>Agni Soft ERP</Text>
             </Text>
           </View>
         </LinearGradient>

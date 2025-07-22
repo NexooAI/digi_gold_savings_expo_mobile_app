@@ -10,6 +10,9 @@ import {
   Platform,
   Dimensions,
   Image,
+  Alert,
+  Modal,
+  Pressable,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useLocalSearchParams } from "expo-router";
@@ -17,10 +20,10 @@ import { theme } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import api from "@/services/api";
-
+import { t } from "@/i18n";
 
 const { width } = Dimensions.get("window");
-const logoWidth = width * 0.3;
+const logoWidth = width * 3;
 
 // Error Alert Component (matching login page)
 const ErrorAlert = ({ message, onClose }: { message: string; onClose: () => void }) => {
@@ -87,12 +90,23 @@ export default function BasicDetailsForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [referralCode, setReferralCode] = useState("");
+  const [mobileInput, setMobileInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [showError, setShowError] = useState(false);
   const [nameError, setNameError] = useState("");
   const [emailError, setEmailError] = useState("");
   const [referralError, setReferralError] = useState("");
+  const [mobileError, setMobileError] = useState("");
+  const [otpModalVisible, setOtpModalVisible] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [resendTimer, setResendTimer] = useState(120);
+  const [resendCount, setResendCount] = useState(0);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const resendLimit = 3;
+  const [otpErrorModalVisible, setOtpErrorModalVisible] = useState(false);
+  const [otpErrorMessage, setOtpErrorMessage] = useState("");
   
   const router = useRouter();
   const { mobile } = useLocalSearchParams();
@@ -103,10 +117,12 @@ export default function BasicDetailsForm() {
       setName("");
       setEmail("");
       setReferralCode("");
+      setMobileInput(mobileStr);
       setNameError("");
       setEmailError("");
       setReferralError("");
-    }, [])
+      setMobileError("");
+    }, [mobileStr])
   );
 
   const showErrorAlert = (message: string) => {
@@ -157,30 +173,47 @@ export default function BasicDetailsForm() {
     return true;
   };
 
+  const validateMobile = (value: string) => {
+    if (!value.trim()) {
+      setMobileError("Please enter your mobile number");
+      return false;
+    }
+    if (!/^\d{10}$/.test(value.trim())) {
+      setMobileError("Mobile number must be 10 digits");
+      return false;
+    }
+    setMobileError("");
+    return true;
+  };
+
   const validateForm = () => {
+    const isMobileValid = validateMobile(mobileInput);
     const isNameValid = validateName(name);
     const isEmailValid = validateEmail(email);
     const isReferralValid = validateReferralCode(referralCode);
 
-    return isNameValid && isEmailValid && isReferralValid;
+    return isMobileValid && isNameValid && isEmailValid && isReferralValid;
   };
 
   const handleSubmit =  () => {
+    if (!otpVerified) {
+      Alert.alert('OTP Not Verified', 'Please verify OTP before continuing.');
+      return;
+    }
     if (validateForm()) {
       setLoading(true);
       setTimeout(async() => {
-
         try {
           const response = await api.post("/register/complete", {
             name,
             email,
-            mobile_number: mobile,
+            mobile_number: mobileInput,
             mpin: '1234',
             password: 1234,
             referral_code:referralCode.trim()
           });
           if (response.status === 200) {
-            router.replace({ pathname: "/(auth)/login", params: { mobile } });
+            router.replace({ pathname: "/(auth)/login", params: { mobile: mobileInput } });
           } else {
             showErrorAlert(response.data.message || "Registration failed");
           }
@@ -189,15 +222,6 @@ export default function BasicDetailsForm() {
         } finally {
           setLoading(false);
         }
-        // router.push({
-        //   pathname: "/(auth)/setmpin",
-        //   params: {
-        //     name: name.trim(),
-        //     email: email.trim(),
-        //     mobile: mobile,
-        //     referral_code: referralCode.trim(),
-        //   },
-        // });
         setLoading(false);
       }, 500);
     }
@@ -208,6 +232,83 @@ export default function BasicDetailsForm() {
     const upperValue = formattedValue.slice(0, 6).toUpperCase();
     setReferralCode(upperValue);
     validateReferralCode(upperValue);
+  };
+
+  // Timer effect for resend
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (otpModalVisible && resendTimer > 0) {
+      timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [otpModalVisible, resendTimer]);
+
+  // Open OTP modal and reset timer/count
+  const handleGetOtp = async () => {
+    try {
+      const response = await fetch(`${theme.baseUrl}/register/mobile`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ mobile_number: mobileInput }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setOtp("");
+        setOtpModalVisible(true);
+        setResendTimer(120);
+        setResendCount(0);
+      } else {
+        setOtpErrorMessage(data?.error || t("failedToSendOtp"));
+        setOtpErrorModalVisible(true);
+      }
+    } catch (err) {
+      setOtpErrorMessage(t("failedToSendOtp"));
+      setOtpErrorModalVisible(true);
+    }
+  };
+
+  // Resend OTP logic
+  const handleResendOtp = () => {
+    if (resendCount < resendLimit) {
+      setResendCount(resendCount + 1);
+      setResendTimer(120);
+      setOtp("");
+      // TODO: Call API to resend OTP here
+      Alert.alert('OTP Sent', 'OTP resent to ' + `${mobileInput}`);
+    }
+  };
+
+  // OTP verification logic
+  const handleVerifyOtp = async () => {
+    if (otp.length !== 4) {
+      Alert.alert('Invalid OTP', 'Please enter a 4-digit OTP.');
+      return;
+    }
+    setOtpVerifying(true);
+    try {
+      const response = await fetch(`${theme.baseUrl}/register/verify-otp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ mobile_number: mobileInput, otp }),
+      });
+
+      const data = await response.json();
+      console.log('handle data', data)
+      if (response.ok && data.message && data.message.toLowerCase().includes('otp verified successfully')) {
+        setOtpVerified(true);
+        setOtpModalVisible(false);
+      }
+      setTimeout(() => {
+        setOtpVerifying(false);
+      }, 1000);
+    } catch (e) {
+      Alert.alert('Error', 'Failed to verify OTP.');
+      setOtpVerifying(false);
+    }
   };
 
   return (
@@ -236,26 +337,73 @@ export default function BasicDetailsForm() {
           </View> */}
 
           <View style={styles.formContainer}>
+            {/* App Logo above the form card */}
+            <View style={styles.logoContainerNew}>
+              <Image
+                source={theme.image.transparentLogo}
+                style={styles.logoNew}
+              />
+            </View>
             <GlassmorphismCard>
-              <Text style={styles.pageTitle}>Almost There!</Text>
-              <Text style={styles.subtitle}>Complete your registration details</Text>
+              {/* Page Title and Subtitle */}
+              <Text style={styles.pageTitle}>Create Your Account</Text>
+              <Text style={styles.subtitle}>Enter your details to get started</Text>
 
-              {/* Mobile Number (Read-only) */}
+              {/* Mobile Number (Editable) */}
               <View style={styles.inputContainer}>
                 <View style={styles.inputWrapper}>
                   <View style={styles.inputIcon}>
                     <Ionicons name="call" size={20} color={theme.colors.secondary} />
                   </View>
                   <View style={styles.inputContent}>
-                    <Text style={styles.inputLabel}>Registered Mobile</Text>
-                    <TextInput
-                      style={[styles.input, styles.disabledInput]}
-                      value={mobileStr}
-                      editable={false}
-                      placeholderTextColor="rgba(10, 1, 1, 0.6)"
-                    />
+                    <Text style={styles.inputLabel}>Registered Mobile *</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <TextInput
+                        style={[styles.input, otpVerified && { opacity: 0.6 }]}
+                        placeholder="Enter your mobile number"
+                        placeholderTextColor="rgba(10, 1, 1, 0.6)"
+                        value={mobileInput}
+                        onChangeText={(text) => {
+                          if (!otpVerified) {
+                            setMobileInput(text.replace(/[^0-9]/g, "").slice(0, 10));
+                            validateMobile(text.replace(/[^0-9]/g, "").slice(0, 10));
+                          }
+                        }}
+                        keyboardType="number-pad"
+                        maxLength={10}
+                        editable={!otpVerified}
+                      />
+                      {otpVerified && (
+                        <Ionicons name="checkmark-circle" size={20} color="#4CAF50" style={{ marginLeft: 6 }} />
+                      )}
+                    </View>
                   </View>
                 </View>
+                {mobileError ? (
+                  <Text style={styles.errorText}>{mobileError}</Text>
+                ) : null}
+                {/* Get OTP Button */}
+                {otpVerified ? (
+                  <TouchableOpacity
+                    style={[styles.getOtpButton, { backgroundColor: '#aaa' }]}
+                    onPress={() => {
+                      setOtpVerified(false);
+                      setMobileInput("");
+                      setOtp("");
+                      setMobileError("");
+                    }}
+                  >
+                    <Text style={styles.getOtpButtonText}>Reset</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={[styles.getOtpButton, (!mobileInput || !!mobileError) && styles.getOtpButtonDisabled]}
+                    onPress={handleGetOtp}
+                    disabled={!mobileInput || !!mobileError}
+                  >
+                    <Text style={styles.getOtpButtonText}>Get OTP</Text>
+                  </TouchableOpacity>
+                )}
               </View>
 
               {/* Full Name */}
@@ -370,7 +518,7 @@ export default function BasicDetailsForm() {
               </TouchableOpacity>
 
               {/* Info Section */}
-              <View style={styles.infoSection}>
+              {/* <View style={styles.infoSection}>
                 <View style={styles.infoItem}>
                   <Ionicons name="shield-checkmark" size={16} color={theme.colors.secondary} />
                   <Text style={styles.infoText}>Your data is secure and encrypted</Text>
@@ -379,20 +527,111 @@ export default function BasicDetailsForm() {
                   <Ionicons name="time-outline" size={16} color={theme.colors.secondary} />
                   <Text style={styles.infoText}>Quick 2-minute setup</Text>
                 </View>
-              </View>
+              </View> */}
 
               {/* Back Button */}
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 style={styles.backButton}
                 onPress={() => router.back()}
               >
                 <Ionicons name="arrow-back" size={20} color={theme.colors.white} />
                 <Text style={styles.backButtonText}>Back</Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
+
+            {/* Login Link at the Bottom */}
+            <TouchableOpacity
+              style={styles.loginLinkContainer}
+              onPress={() => router.replace({ pathname: "/(auth)/login" })}
+            >
+              <Text style={styles.loginLinkText}>
+                Already have an account? <Text style={{ textDecorationLine: 'underline', color: theme.colors.secondary, fontWeight: 'bold' }}>Login</Text>
+              </Text>
+            </TouchableOpacity>
             </GlassmorphismCard>
           </View>
         </KeyboardAvoidingView>
       </LinearGradient>
+
+      {/* OTP Modal */}
+      <Modal
+        visible={otpModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setOtpModalVisible(false)}
+      >
+        <View style={styles.otpModalOverlay}>
+          <View style={styles.otpModalContent}>
+            <Text style={styles.otpModalTitle}>Enter OTP</Text>
+            <Text style={styles.otpModalSubtitle}>Enter the 4-digit OTP sent to your mobile</Text>
+            <TextInput
+              style={styles.otpInput}
+              value={otp}
+              onChangeText={text => setOtp(text.replace(/[^0-9]/g, '').slice(0, 4))}
+              keyboardType="number-pad"
+              maxLength={4}
+              placeholder="----"
+              placeholderTextColor="#aaa"
+              editable={!otpVerifying}
+            />
+            <TouchableOpacity
+              style={[styles.verifyOtpButton, (otp.length !== 4 || otpVerifying) && styles.getOtpButtonDisabled]}
+              onPress={handleVerifyOtp}
+              disabled={otp.length !== 4 || otpVerifying}
+            >
+              <Text style={styles.getOtpButtonText}>{otpVerifying ? 'Verifying...' : 'Verify OTP'}</Text>
+            </TouchableOpacity>
+            <View style={styles.resendRow}>
+              <Text style={styles.resendText}>Didn't receive OTP?</Text>
+              <Pressable
+                onPress={handleResendOtp}
+                disabled={resendTimer > 0 || resendCount >= resendLimit}
+              >
+                <Text style={[styles.resendLink, (resendTimer > 0 || resendCount >= resendLimit) && styles.resendLinkDisabled]}>
+                  {resendTimer > 0 ? `Resend in ${resendTimer}s` : resendCount >= resendLimit ? 'Resend Limit Reached' : 'Resend OTP'}
+                </Text>
+              </Pressable>
+            </View>
+            <TouchableOpacity style={styles.closeOtpModalBtn} onPress={() => setOtpModalVisible(false)}>
+              <Text style={styles.closeOtpModalText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      {/* OTP Error Modal */}
+      <Modal
+        visible={otpErrorModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setOtpErrorModalVisible(false)}
+      >
+        <View style={styles.otpModalOverlay}>
+          <View style={[styles.otpModalContent, { alignItems: 'center' }]}> 
+            <Ionicons name="alert-circle" size={40} color="#ff4444" style={{ marginBottom: 10 }} />
+            <Text style={[styles.otpModalTitle, { color: '#ff4444' }]}>Error</Text>
+            <Text style={{ color: '#333', fontSize: 16, marginBottom: 24, textAlign: 'center' }}>{otpErrorMessage}</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+              <TouchableOpacity
+                style={[styles.verifyOtpButton, { backgroundColor: theme.colors.secondary, flex: 1, marginRight: 8 }]}
+                onPress={() => {
+                  setOtpErrorModalVisible(false);
+                  router.replace({ pathname: "/(auth)/login" });
+                }}
+              >
+                <Text style={styles.getOtpButtonText}>Login</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.verifyOtpButton, { backgroundColor: '#aaa', flex: 1, marginLeft: 8 }]}
+                onPress={() => {
+                  setOtpErrorModalVisible(false);
+                  setOtpVerified(false);
+                }}
+              >
+                <Text style={styles.getOtpButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ImageBackground>
   );
 }
@@ -625,5 +864,126 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: 5,
+  },
+  loginLinkContainer: {
+    marginTop: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loginLinkText: {
+    color: theme.colors.textLight,
+    fontSize: 15,
+    opacity: 0.85,
+  },
+  logoContainerNew: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 18,
+    marginTop: 10,
+  },
+  logoNew: {
+    width: 240,
+    height: 160,
+    resizeMode: 'contain',
+  },
+  getOtpButton: {
+    marginTop: 8,
+    alignSelf: 'flex-end',
+    backgroundColor: theme.colors.secondary,
+    paddingVertical: 8,
+    paddingHorizontal: 22,
+    borderRadius: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  getOtpButtonDisabled: {
+    backgroundColor: '#ccc',
+    opacity: 0.6,
+  },
+  getOtpButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+    textAlign: 'center',
+  },
+  otpModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  otpModalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 28,
+    width: '85%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  otpModalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: theme.colors.secondary,
+  },
+  otpModalSubtitle: {
+    fontSize: 15,
+    color: '#333',
+    marginBottom: 18,
+    textAlign: 'center',
+  },
+  otpInput: {
+    fontSize: 28,
+    letterSpacing: 16,
+    borderBottomWidth: 2,
+    borderColor: theme.colors.secondary,
+    width: 150,
+    textAlign: 'center',
+    marginBottom: 18,
+    color: '#222',
+    paddingVertical: 6,
+  },
+  verifyOtpButton: {
+    backgroundColor: theme.colors.secondary,
+    paddingVertical: 10,
+    paddingHorizontal: 32,
+    borderRadius: 18,
+    marginBottom: 16,
+  },
+  resendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  resendText: {
+    color: '#444',
+    fontSize: 14,
+    marginRight: 8,
+  },
+  resendLink: {
+    color: theme.colors.secondary,
+    fontWeight: 'bold',
+    fontSize: 14,
+    textDecorationLine: 'underline',
+  },
+  resendLinkDisabled: {
+    color: '#aaa',
+    textDecorationLine: 'none',
+  },
+  closeOtpModalBtn: {
+    marginTop: 8,
+    padding: 6,
+  },
+  closeOtpModalText: {
+    color: '#888',
+    fontSize: 14,
+    textDecorationLine: 'underline',
   },
 });
