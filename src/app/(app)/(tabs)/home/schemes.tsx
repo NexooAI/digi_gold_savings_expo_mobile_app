@@ -610,6 +610,10 @@ export default function SchemeList() {
                   </Text>
                 </View>
               }
+              removeClippedSubviews={true}
+              maxToRenderPerBatch={10}
+              windowSize={5}
+              initialNumToRender={10}
             />
           )}
         </View>

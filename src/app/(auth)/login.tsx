@@ -545,9 +545,9 @@ export default function Login() {
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={registerStyles.keyboardAvoidingView}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 80} // Increased offset for Android
           >
-            <ScrollView contentContainerStyle={registerStyles.scrollViewContent} keyboardShouldPersistTaps="handled">
+            <ScrollView contentContainerStyle={[registerStyles.scrollViewContent, { flexGrow: 1 }]} keyboardShouldPersistTaps="handled">
               <View style={registerStyles.logoContainer}>
                 <Image
                   source={theme.image.transparentLogo}
@@ -633,7 +633,7 @@ export default function Login() {
                         </View>
                       </>
                     ) : (
-                      <View style={registerStyles.otpContainer}>
+                      <View style={[registerStyles.otpContainer, { paddingVertical: 24 }]}>
                         <Text style={registerStyles.otpTitle}>{t("enterOTP")}</Text>
                         <Text style={registerStyles.otpSentText}>
                           {t("otpSentTo")}

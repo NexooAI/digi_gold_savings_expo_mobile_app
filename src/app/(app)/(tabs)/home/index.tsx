@@ -237,11 +237,12 @@ interface UserInfoCardProps {
   onPress: () => void;
   totalGoldSavings?: number;
   totalAmount?: number;
+  showTotalGold?: boolean;
 }
 
 // Components
 const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
-  ({ userName, activeSchemesCount, onPress, totalGoldSavings = 0, totalAmount = 0 }) => (
+  ({ userName, activeSchemesCount, onPress, totalGoldSavings = 0, totalAmount = 0, showTotalGold = true }) => (
     <TouchableOpacity
       style={styles.userInfoCard}
       onPress={onPress}
@@ -273,16 +274,20 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
               </View>
             </View>
             <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>{t('totalGold')}</Text>
-              <View style={styles.statValue}>
-                <Text style={styles.countText}>
-                  {totalGoldSavings.toFixed(2)}
-                </Text>
-                <Text style={styles.unitText}>g</Text>
-              </View>
-            </View>
-            <View style={styles.statDivider} />
+            {showTotalGold && (
+              <>
+                <View style={styles.statItem}>
+                  <Text style={styles.statLabel}>{t('totalGold')}</Text>
+                  <View style={styles.statValue}>
+                    <Text style={styles.countText}>
+                      {totalGoldSavings.toFixed(2)}
+                    </Text>
+                    <Text style={styles.unitText}>g</Text>
+                  </View>
+                </View>
+                <View style={styles.statDivider} />
+              </>
+            )}
             <View style={styles.statItem}>
               <Text style={styles.statLabel}>{t('totalAmount')}</Text>
               <View style={styles.statValue}>
@@ -463,6 +468,7 @@ export default function Home2() {
   const [sliderImages, setSliderImages] = useState<any[]>([]);
   const [isSliderLoading, setIsSliderLoading] = useState(true);
   const [viewedCollections, setViewedCollections] = useState<{ [id: number]: boolean }>({});
+  const [showTotalGold, setShowTotalGold] = useState(true);
 
   // Refs
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -547,26 +553,34 @@ export default function Home2() {
 
       setActiveSchemesCount(investments.length || 0);
 
-      const totalGold = investments.reduce((sum: number, investment: any) => {
-        const goldWeight = parseFloat(investment.totalgoldweight) || 0;
-        console.log(`Investment ${investment.investmentId} gold weight:`, goldWeight);
-        return sum + goldWeight;
-      }, 0);
+      // Filter investments by schemeType
+      const weightBased = investments.filter((inv: any) => inv.scheme.schemeType === 'weight');
+      const amountBased = investments.filter((inv: any) => inv.scheme.schemeType === 'amount');
 
+      if (weightBased.length > 0) {
+        // Calculate total gold only for weight-based schemes
+        const totalGold = weightBased.reduce((sum: number, investment: any) => {
+          const goldWeight = parseFloat(investment.totalgoldweight) || 0;
+          return sum + goldWeight;
+        }, 0);
+        setTotalGoldSavings(totalGold);
+        setShowTotalGold(true);
+      } else {
+        setTotalGoldSavings(0);
+        setShowTotalGold(false);
+      }
+
+      // Calculate total amount for all investments
       const totalAmount = investments.reduce((sum: number, investment: any) => {
         const amount = parseFloat(investment.total_paid) || 0;
-        console.log(`Investment ${investment.investmentId} total paid:`, amount);
         return sum + amount;
       }, 0);
-
-      console.log('Final calculations - Total Gold:', totalGold, 'Total Amount:', totalAmount);
-      setTotalGoldSavings(totalGold);
       setTotalAmount(totalAmount);
     } catch (error) {
-      // console.error('Error fetching investment data:', error);
       setActiveSchemesCount(0);
       setTotalGoldSavings(0);
       setTotalAmount(0);
+      setShowTotalGold(false);
     }
   }, [user]);
 
@@ -798,10 +812,11 @@ export default function Home2() {
     const errorProneEndpoints = apiLogManager.getErrorProneEndpoints(3);
     console.log('⚠️ Error-prone endpoints:', errorProneEndpoints);
 
-    // Export logs (for debugging)
-    const exportedLogs = apiLogManager.exportLogs();
-    console.log('📤 Exported logs length:', exportedLogs.length);
-
+    if (__DEV__) {
+      // Export logs (for debugging)
+      const exportedLogs = apiLogManager.exportLogs();
+      console.log('📤 Exported logs length:', exportedLogs.length);
+    }
     // Show alert with summary
     const summary = apiLogManager.getApiSummary();
     Alert.alert(
@@ -825,9 +840,11 @@ export default function Home2() {
       <TouchableOpacity
         style={styles.statusItem}
         onPress={() => {
-          console.log('🔍 Home: Status item pressed:', item.name);
-          console.log('🔍 Home: Item thumbnail type:', typeof item.thumbnail);
-          console.log('🔍 Home: Item status_images count:', item.status_images?.length);
+          if (__DEV__) {
+            console.log('🔍 Home: Status item pressed:', item.name);
+            console.log('🔍 Home: Item thumbnail type:', typeof item.thumbnail);
+            console.log('🔍 Home: Item status_images count:', item.status_images?.length);
+          }
           setSelectedCollection(item);
           setShowStatus(true);
         }}
@@ -970,6 +987,10 @@ export default function Home2() {
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.statusListContent}
+                removeClippedSubviews={true}
+                maxToRenderPerBatch={10}
+                windowSize={5}
+                initialNumToRender={10}
               />
             </View>
 
@@ -989,7 +1010,7 @@ export default function Home2() {
                 //   "🌟 Special offer for new users!",
                 // ]}
                 fallbackMessages={flashNews}
-                onPress={() => console.log("Flash news tapped")}
+                onPress={() => { if (__DEV__) { console.log("Flash news tapped"); } }}
                 textColor="#ffffff"
               />
 
@@ -998,6 +1019,7 @@ export default function Home2() {
                 activeSchemesCount={activeSchemesCount}
                 totalGoldSavings={totalGoldSavings}
                 totalAmount={totalAmount}
+                showTotalGold={showTotalGold}
                 onPress={() => router.push("/(tabs)/savings")}
               />
 
@@ -1018,6 +1040,10 @@ export default function Home2() {
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.bannerListContent}
+                  removeClippedSubviews={true}
+                  maxToRenderPerBatch={10}
+                  windowSize={5}
+                  initialNumToRender={10}
                 />
               </View>
 

@@ -50,6 +50,7 @@ export default {
         color: "#850111"
       },
       targetSdkVersion: 36,
+      jsEngine: "hermes",
     },
 
     ios: {

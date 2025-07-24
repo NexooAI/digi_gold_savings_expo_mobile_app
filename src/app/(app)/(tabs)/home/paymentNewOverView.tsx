@@ -247,7 +247,7 @@ export default function PaymentNewOverView() {
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[styles.contentContainer, { paddingBottom: 120 }]}
         showsVerticalScrollIndicator={true}
       >
         {/* Amount Card */}
@@ -418,7 +418,11 @@ export default function PaymentNewOverView() {
           </View>
         </View>
 
-        {/* Pay Now Button and Terms */}
+        {/* Remove Pay Now Button and Terms from here */}
+      </ScrollView>
+
+      {/* Fixed bottom bar */}
+      <View style={styles.footer}>
         <View style={styles.termsContainer}>
           <TouchableOpacity
             style={styles.checkboxContainer}
@@ -459,7 +463,7 @@ export default function PaymentNewOverView() {
         >
           <Text style={styles.payButtonText}>{t("payNow")}</Text>
         </TouchableOpacity>
-      </ScrollView>
+      </View>
 
       <TermsAndConditionsModal />
     </SafeAreaView>
@@ -606,7 +610,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     position: "absolute",
-    bottom: 80, // Lift the footer up to avoid tab bar overlap
+    bottom: 0, // Lift the footer up to avoid tab bar overlap
     left: 0,
     right: 0,
     padding: 16,

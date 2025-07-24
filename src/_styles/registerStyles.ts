@@ -113,8 +113,10 @@ export const registerStyles = StyleSheet.create({
   },
   otpContainer: {
     alignItems: "center",
-    marginVertical: 20,
+    marginVertical: 24,
     width: "100%",
+    paddingVertical: 16, // Added for more vertical space
+    minHeight: 220, // Ensures enough space for small screens
   },
   otpTitle: {
     color: "#ffffff",
@@ -129,28 +131,33 @@ export const registerStyles = StyleSheet.create({
     opacity: 0.8,
   },
   otpInputsWrapper: {
-    position: "relative",
-    width: "70%",
-    alignSelf: "center",
-    justifyContent: "center",
-    alignItems: "center",
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 8,
+    minHeight: 70,
   },
   otpInputsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    marginTop: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '80%', // Responsive width
+    maxWidth: 320,
+    minWidth: 180,
+    alignSelf: 'center',
+    gap: 8, // For RN 0.71+, otherwise use marginHorizontal in otpInput
   },
   otpInput: {
-    width: 50,
-    height: 50,
+    width: 48,
+    height: 48,
     borderWidth: 1,
-    borderColor: "rgba(0, 0, 0, 0.1)",
-    borderRadius: 12,
-    color: "#000000",
-    fontSize: 24,
-    backgroundColor: "#ffffff",
-    textAlign: "center",
+    borderColor: 'rgba(0,0,0,0.15)',
+    borderRadius: 10,
+    color: '#000',
+    fontSize: 22,
+    backgroundColor: '#fff',
+    textAlign: 'center',
+    marginHorizontal: 4, // For spacing if gap is not supported
   },
   eyeButton: {
     position: "absolute",

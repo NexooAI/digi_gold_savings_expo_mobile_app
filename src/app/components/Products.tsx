@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -46,8 +46,8 @@ const CardComponent = ({ item, index }: CardProps) => {
   const [pressed, setPressed] = useState(false);
 
   // Animation for card press
-  const scaleAnim = new Animated.Value(1);
-  const rotateAnim = new Animated.Value(0);
+  const scaleAnim = React.useRef(new Animated.Value(1)).current;
+  const rotateAnim = React.useRef(new Animated.Value(0)).current;
 
   const handlePressIn = () => {
     setPressed(true);
@@ -194,15 +194,19 @@ const InvestmentCards = ({ schemes }: InvestmentCardsProps) => {
     );
   }
 
+  // Memoized renderItem for FlatList
+  const renderCardItem = useCallback(
+    ({ item, index }) => <CardComponent item={item} index={index} />,
+    []
+  );
+
   return (
     <View className="flex-1 bg-white" style={{ margin: 0 }}>
       <FlatList
         data={schemes.data}
         horizontal
         keyExtractor={(item) => item.SCHEMEID.toString()}
-        renderItem={({ item, index }) => (
-          <CardComponent item={item} index={index} />
-        )}
+        renderItem={renderCardItem}
         contentContainerStyle={{
           paddingHorizontal: 16,
           paddingVertical: 24,
@@ -210,6 +214,10 @@ const InvestmentCards = ({ schemes }: InvestmentCardsProps) => {
         snapToInterval={CARD_WIDTH + 16}
         decelerationRate="fast"
         showsHorizontalScrollIndicator={false}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        initialNumToRender={5}
       />
     </View>
   );

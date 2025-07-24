@@ -347,12 +347,13 @@ export default function SavingsScreen() {
 
   const totalInvested = savings.reduce((acc, curr) => acc + curr.totalPaid, 0);
   const totalGold = savings.reduce((acc, curr) => acc + curr.goldWeight, 0);
+  const hasAmountType = savings.some(s => s.savingType === "amount");
 
   // Filtered savings based on selectedType
   const filteredSavings = useMemo(() => {
     return savings.filter((item:any) => {
       const schemeType = item.schemesData.paymentFrequencyName;
-      console.log(item, item.schemesData.paymentFrequencyName);
+      // console.log(item, item.schemesData.paymentFrequencyName);
       if (selectedType === 'Flexi') {
         return schemeType === 'Flexi';
       } else {
@@ -426,7 +427,7 @@ export default function SavingsScreen() {
 
     const handlePayNow = () => {
       if (!item) return;
-      console.log(item)
+      // console.log(item)
       // return
       router.push({
         pathname: "/(tabs)/savings/SavingsDetail",
@@ -767,65 +768,67 @@ export default function SavingsScreen() {
 
   const ListHeader = () => (
     <View style={styles.headerContainer}>
-      <LinearGradient
-        colors={["#1a1a2e", "#16213e", "#0f3460"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.portfolioCard}
-      >
-        {/* <View style={styles.portfolioHeader}>
-          <View style={styles.portfolioTitleContainer}>
-            <Text style={styles.portfolioTitle}>
-              {translations.yourGoldPortfolio}
-            </Text>
-            <View style={styles.portfolioBadge}>
-              <Ionicons name="star" size={12} color="#ffd700" />
-              <Text style={styles.portfolioBadgeText}>Premium</Text>
-            </View>
-          </View>
-          <View style={styles.portfolioIconContainer}>
-            <Ionicons name="albums" size={28} color="#ffd700" />
-          </View>
-        </View> */}
-
-        <View style={styles.portfolioStats}>
-          <View style={styles.statItem}>
-            <View style={styles.statIconContainer}>
-              {/* <Ionicons name="wallet-outline" size={20} color="#ffd700" /> */}
-              <Image source={require('../../../../../assets/images/saveasmoneyproduct.png')} style={{ width: 20, height: 20 }} />
-              {/* saveasmoneyproduct */}
-            </View>
-            <View style={styles.statInfo}>
-              <Text style={styles.statLabel}>{translations.totalInvested}</Text>
-              <Text style={styles.statValue}>
-                ₹{totalInvested.toLocaleString()}
+      {!hasAmountType && (
+        <LinearGradient
+          colors={["#1a1a2e", "#16213e", "#0f3460"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.portfolioCard}
+        >
+          {/* <View style={styles.portfolioHeader}>
+            <View style={styles.portfolioTitleContainer}>
+              <Text style={styles.portfolioTitle}>
+                {translations.yourGoldPortfolio}
               </Text>
+              <View style={styles.portfolioBadge}>
+                <Ionicons name="star" size={12} color="#ffd700" />
+                <Text style={styles.portfolioBadgeText}>Premium</Text>
+              </View>
             </View>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <View style={styles.statIconContainer}>
-              {/* <Ionicons name="cube-outline" size={20} color="#ffd700" /> */}
-              <Image source={require('../../../../../assets/images/savegold.png')} style={{ width: 20, height: 20 }} />
+            <View style={styles.portfolioIconContainer}>
+              <Ionicons name="albums" size={28} color="#ffd700" />
             </View>
-            <View style={styles.statInfo}>
-              <Text style={styles.statLabel}>{translations.gold}</Text>
-              <Text style={styles.statValue}>{totalGold.toFixed(2)} g</Text>
-            </View>
-          </View>
-        </View>
+          </View> */}
 
-        {/* <View style={styles.portfolioFooter}>
-          <View style={styles.footerItem}>
-            <Ionicons name="trending-up" size={14} color="#4ade80" />
-            <Text style={styles.footerText}>Growing Portfolio</Text>
+          <View style={styles.portfolioStats}>
+            <View style={styles.statItem}>
+              <View style={styles.statIconContainer}>
+                {/* <Ionicons name="wallet-outline" size={20} color="#ffd700" /> */}
+                <Image source={require('../../../../../assets/images/saveasmoneyproduct.png')} style={{ width: 20, height: 20 }} />
+                {/* saveasmoneyproduct */}
+              </View>
+              <View style={styles.statInfo}>
+                <Text style={styles.statLabel}>{translations.totalInvested}</Text>
+                <Text style={styles.statValue}>
+                  ₹{totalInvested.toLocaleString()}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <View style={styles.statIconContainer}>
+                {/* <Ionicons name="cube-outline" size={20} color="#ffd700" /> */}
+                <Image source={require('../../../../../assets/images/savegold.png')} style={{ width: 20, height: 20 }} />
+              </View>
+              <View style={styles.statInfo}>
+                <Text style={styles.statLabel}>{translations.gold}</Text>
+                <Text style={styles.statValue}>{totalGold.toFixed(2)} g</Text>
+              </View>
+            </View>
           </View>
-          <View style={styles.footerItem}>
-            <Ionicons name="shield-checkmark" size={14} color="#60a5fa" />
-            <Text style={styles.footerText}>Secure Investment</Text>
-          </View>
-        </View> */}
-      </LinearGradient>
+
+          {/* <View style={styles.portfolioFooter}>
+            <View style={styles.footerItem}>
+              <Ionicons name="trending-up" size={14} color="#4ade80" />
+              <Text style={styles.footerText}>Growing Portfolio</Text>
+            </View>
+            <View style={styles.footerItem}>
+              <Ionicons name="shield-checkmark" size={14} color="#60a5fa" />
+              <Text style={styles.footerText}>Secure Investment</Text>
+            </View>
+          </View> */}
+        </LinearGradient>
+      )}
       <Text style={styles.sectionTitle}>{translations.activeSavingsPlans}</Text>
       <FilterToggle />
     </View>
@@ -951,6 +954,12 @@ export default function SavingsScreen() {
     </View>
   );
 
+  // Memoized renderItem for FlatList
+  const renderSchemeItem = useCallback(
+    ({ item }) => <EnhancedSchemeCard item={item} />,
+    []
+  );
+
   if (!user) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center bg-white">
@@ -990,7 +999,7 @@ export default function SavingsScreen() {
             keyExtractor={(item, index) =>
               item.id && item.id !== "" ? item.id : index.toString()
             }
-            renderItem={({ item }) => <EnhancedSchemeCard item={item} />}
+            renderItem={renderSchemeItem}
             ListHeaderComponent={savings.length > 0 ? <ListHeader /> : null}
             ListEmptyComponent={<EmptyState />}
             contentContainerStyle={{
@@ -998,6 +1007,10 @@ export default function SavingsScreen() {
               paddingBottom: bottomPadding,
             }}
             showsVerticalScrollIndicator={false}
+            removeClippedSubviews={true}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            initialNumToRender={10}
           />
         </SafeAreaView>
       </ImageBackground>
