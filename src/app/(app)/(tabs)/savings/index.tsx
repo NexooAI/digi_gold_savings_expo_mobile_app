@@ -642,65 +642,109 @@ export default function SavingsScreen() {
                 },
               ]}
             >
-              <View style={styles.infoGrid}>
-                <View className="infoRow" style={styles.infoRow}>
-                  <View style={styles.infoItem}>
-                    <View style={styles.infoIconContainer}>
+              {/* Enhanced Info Grid with More Relevant Data */}
+              <View style={styles.enhancedInfoGrid}>
+                <View style={styles.enhancedInfoRow}>
+                  <View style={styles.enhancedInfoItem}>
+                    <View style={styles.enhancedInfoIconContainer}>
                       <Ionicons name="wallet-outline" size={20} color="#FFFFFF" />
                     </View>
-                    <Text style={styles.infoLabel}>Amount Paid</Text>
-                    <Text style={styles.infoValue}>
+                    <Text style={styles.enhancedInfoLabel}>Total Invested</Text>
+                    <Text style={styles.enhancedInfoValue}>
                       ₹{item.totalPaid.toLocaleString()}
                     </Text>
                   </View>
-                  {/* Show Months Paid card only for Flexi schemes */}
-                  {item.schemesData?.paymentFrequencyName === 'Flexi' && (
-                    <View style={styles.infoItem}>
-                      <View style={styles.infoIconContainer}>
-                        <Ionicons
-                          name="calendar-outline"
-                          size={20}
-                          color="#FFFFFF"
-                        />
-                      </View>
-                      <Text style={styles.infoLabel}>Months Paid</Text>
-                      <Text style={styles.infoValue}>
-                        {Number(item.noOfIns) !== 0 ? `${item.monthsPaid} / ${item.noOfIns}` : `${item.monthsPaid}` }
-                      </Text>
+                  
+                  <View style={styles.enhancedInfoItem}>
+                    <View style={styles.enhancedInfoIconContainer}>
+                      <Ionicons name="trending-up" size={20} color="#FFFFFF" />
                     </View>
-                  )}
-                  <View style={styles.infoItem}>
-                    <View style={styles.infoIconContainer}>
+                    <Text style={styles.enhancedInfoLabel}>Gold Weight</Text>
+                    <Text style={styles.enhancedInfoValue}>
+                      {item.goldWeight.toFixed(2)} g
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.enhancedInfoItem}>
+                    <View style={styles.enhancedInfoIconContainer}>
                       <Ionicons name="cash-outline" size={20} color="#FFFFFF" />
                     </View>
-                    <Text style={styles.infoLabel}>Installment</Text>
-                    <Text style={styles.infoValue}>₹{item.emiAmount}</Text>
+                    <Text style={styles.enhancedInfoLabel}>Monthly EMI</Text>
+                    <Text style={styles.enhancedInfoValue}>₹{item.emiAmount}</Text>
+                  </View>
+                </View>
+                
+                {/* Additional Row for More Details */}
+                <View style={styles.enhancedInfoRow}>
+                  <View style={styles.enhancedInfoItem}>
+                    <View style={styles.enhancedInfoIconContainer}>
+                      <Ionicons name="calendar-outline" size={20} color="#FFFFFF" />
+                    </View>
+                    <Text style={styles.enhancedInfoLabel}>Progress</Text>
+                    <Text style={styles.enhancedInfoValue}>
+                      {item.monthsPaid}/{item.noOfIns}
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.enhancedInfoItem}>
+                    <View style={styles.enhancedInfoIconContainer}>
+                      <Ionicons name="time-outline" size={20} color="#FFFFFF" />
+                    </View>
+                    <Text style={styles.enhancedInfoLabel}>Remaining</Text>
+                    <Text style={styles.enhancedInfoValue}>
+                      {Number(item.noOfIns) - Number(item.monthsPaid)} months
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.enhancedInfoItem}>
+                    <View style={styles.enhancedInfoIconContainer}>
+                      <Ionicons name="trophy-outline" size={20} color="#FFFFFF" />
+                    </View>
+                    <Text style={styles.enhancedInfoLabel}>Status</Text>
+                                         <Text style={[
+                       styles.enhancedInfoValue,
+                       { color: item.status === "ACTIVE" ? "#2E7D32" : "#D32F2F" }
+                     ]}>
+                       {item.status || "INACTIVE"}
+                     </Text>
                   </View>
                 </View>
               </View>
 
-              <View style={styles.dateContainer}>
-                <View style={styles.dateSection}>
-                  <View style={styles.dateIconContainer}>
-                    <Ionicons
-                      name="calendar-outline"
-                      size={20}
-                      color="#FFFFFF"
-                    />
-                  </View>
-                  <View style={styles.dateInfo}>
-                    <Text style={styles.dateLabel}>Date of Joining</Text>
-                    <Text style={styles.dateValue}>{item.joiningDate}</Text>
-                  </View>
+              {/* Smart Timeline Section */}
+              <View style={styles.smartTimelineContainer}>
+                <View style={styles.timelineHeader}>
+                  <Ionicons name="time-outline" size={18} color="#FFFFFF" />
+                  <Text style={styles.timelineTitle}>Investment Timeline</Text>
                 </View>
-                <View style={styles.dateDivider} />
-                <View style={styles.dateSection}>
-                  <View style={styles.dateIconContainer}>
-                    <Ionicons name="time-outline" size={20} color="#FFFFFF" />
+                
+                <View style={styles.timelineContent}>
+                  <View style={styles.timelineItem}>
+                    <View style={styles.timelineDot} />
+                    <View style={styles.timelineInfo}>
+                      <Text style={styles.timelineLabel}>Started</Text>
+                      <Text style={styles.timelineValue}>{item.joiningDate}</Text>
+                    </View>
                   </View>
-                  <View style={styles.dateInfo}>
-                    <Text style={styles.dateLabel}>Maturity Date</Text>
-                    <Text style={styles.dateValue}>{item.maturityDate}</Text>
+                  
+                  <View style={styles.timelineConnector} />
+                  
+                  <View style={styles.timelineItem}>
+                    <View style={[styles.timelineDot, { backgroundColor: progressPercentage > 50 ? "#4CAF50" : "#FF9800" }]} />
+                    <View style={styles.timelineInfo}>
+                      <Text style={styles.timelineLabel}>Current Progress</Text>
+                      <Text style={styles.timelineValue}>{progressPercentage}% Complete</Text>
+                    </View>
+                  </View>
+                  
+                  <View style={styles.timelineConnector} />
+                  
+                  <View style={styles.timelineItem}>
+                    <View style={[styles.timelineDot, { backgroundColor: "#FFD700" }]} />
+                    <View style={styles.timelineInfo}>
+                      <Text style={styles.timelineLabel}>Maturity</Text>
+                      <Text style={styles.timelineValue}>{item.maturityDate}</Text>
+                    </View>
                   </View>
                 </View>
               </View>
@@ -1680,5 +1724,101 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     marginLeft: 8,
+  },
+  enhancedInfoGrid: {
+    marginBottom: 16,
+  },
+  enhancedInfoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+    gap: 8,
+  },
+  enhancedInfoItem: {
+    flex: 1,
+    alignItems: "center",
+    padding: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+  },
+  enhancedInfoIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(133, 1, 17, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  enhancedInfoLabel: {
+    fontSize: 11,
+    color: "#000000",
+    marginBottom: 4,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  enhancedInfoValue: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#000000",
+    textAlign: "center",
+  },
+  smartTimelineContainer: {
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+  },
+  timelineHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+    gap: 8,
+  },
+  timelineTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#000000",
+  },
+  timelineContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  timelineItem: {
+    alignItems: "center",
+    flex: 1,
+  },
+  timelineDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#850111",
+    marginBottom: 8,
+  },
+  timelineInfo: {
+    alignItems: "center",
+  },
+  timelineLabel: {
+    fontSize: 10,
+    color: "#000000",
+    marginBottom: 2,
+    textAlign: "center",
+  },
+  timelineValue: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#000000",
+    textAlign: "center",
+  },
+  timelineConnector: {
+    flex: 1,
+    height: 2,
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    marginHorizontal: 8,
   },
 });

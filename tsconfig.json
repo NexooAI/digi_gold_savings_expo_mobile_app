@@ -7,7 +7,7 @@
       ]
     },
     "esModuleInterop": true,
-    "jsx": "react-native",
+    "jsx": "react-jsx",
     "types": [
       "react-native-reanimated",
       "node",

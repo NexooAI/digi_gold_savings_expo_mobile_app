@@ -113,7 +113,7 @@ export default function Register() {
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [pins, setPins] = useState(["", "", "", ""]);
-  const [timer, setTimer] = useState(INITIAL_TIMER);
+  const [timer, setTimer] = useState(0);
   const [resendCount, setResendCount] = useState(OTP_RESEND_LIMIT);
   const [showOtp, setShowOtp] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -175,7 +175,7 @@ export default function Register() {
 
       if (response.ok) {
         setOtpSent(true);
-        setResendCount(OTP_RESEND_LIMIT);
+        setResendCount(OTP_RESEND_LIMIT); // User has OTP_RESEND_LIMIT resend attempts left
         startTimer();
         Alert.alert(t("success"), t("otpResentSuccessfully"));
       } else {
@@ -332,7 +332,7 @@ export default function Register() {
       // If OTP fields are showing, hide them and go back to mobile input
       setOtpSent(false);
       setPins(["", "", "", ""]);
-      setTimer(INITIAL_TIMER);
+      setTimer(0);
       setResendCount(OTP_RESEND_LIMIT);
       if (intervalRef.current) clearInterval(intervalRef.current);
     } else {

@@ -70,14 +70,7 @@ export default {
       ["expo-router", { origin: "https://n" }],
       "expo-secure-store",
       "expo-localization",
-      [
-        "expo-notifications",
-        {
-          icon: "./assets/images/icon.png",
-          color: "#850111",
-          sounds: ["./assets/sound/notification.wav"]
-        }
-      ],
+      "expo-notifications",
       "./plugins/withAndroidManifest"
     ],
 

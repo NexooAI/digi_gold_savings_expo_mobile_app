@@ -136,6 +136,7 @@ const SavingsDetail = () => {
     "info"
   );
   const [selectedPayments, setSelectedPayments] = useState<any[]>([]);
+  const [showAdvancePayment, setShowAdvancePayment] = useState(false);
   const translations = useMemo(
     () => ({
       totalInvested: t("totalInvested"),
@@ -533,25 +534,54 @@ const SavingsDetail = () => {
           <Text style={styles.sectionTitle}>Account Details</Text>
           <View style={styles.detailsGrid}>
             <View style={styles.detailItem}>
-              <Ionicons name="person-outline" size={20} color="#8B4513" />
+              <Ionicons name="person-outline" size={16} color="#8B4513" />
               <Text style={styles.detailLabel}>
                 {translations.accountHolder}
               </Text>
               <Text style={styles.detailValue}>{params.accountHolder}</Text>
             </View>
             <View style={styles.detailItem}>
-              <Ionicons name="calendar-outline" size={20} color="#8B4513" />
+              <Ionicons name="card-outline" size={16} color="#8B4513" />
+              <Text style={styles.detailLabel}>
+                {translations.schemeCode}
+              </Text>
+              <Text style={styles.detailValue}>{params.schemeCode}</Text>
+            </View>
+            <View style={styles.detailItem}>
+              <Ionicons name="wallet-outline" size={16} color="#8B4513" />
               <Text style={styles.detailLabel}>{translations.monthlyEMI}</Text>
               <Text style={styles.detailValue}>
                 ₹{Number(params.emiAmount).toLocaleString()}
               </Text>
             </View>
             <View style={styles.detailItem}>
-              <Ionicons name="time-outline" size={20} color="#8B4513" />
+              <Ionicons name="time-outline" size={16} color="#8B4513" />
               <Text style={styles.detailLabel}>
                 {translations.maturityDate}
               </Text>
               <Text style={styles.detailValue}>{params.maturityDate}</Text>
+            </View>
+            <View style={styles.detailItem}>
+              <Ionicons name="calendar-outline" size={16} color="#8B4513" />
+              <Text style={styles.detailLabel}>Account No</Text>
+              <Text style={styles.detailValue}>{params.accNo}</Text>
+            </View>
+            <View style={styles.detailItem}>
+              <Ionicons name="diamond-outline" size={16} color="#8B4513" />
+              <Text style={styles.detailLabel}>Gold Weight</Text>
+              <Text style={styles.detailValue}>{params.goldWeight}g</Text>
+            </View>
+            <View style={styles.detailItem}>
+              <Ionicons name="trending-up-outline" size={16} color="#8B4513" />
+              <Text style={styles.detailLabel}>Total Paid</Text>
+              <Text style={styles.detailValue}>
+                ₹{Number(params.totalPaid).toLocaleString()}
+              </Text>
+            </View>
+            <View style={styles.detailItem}>
+              <Ionicons name="checkmark-circle-outline" size={16} color="#8B4513" />
+              <Text style={styles.detailLabel}>Months Paid</Text>
+              <Text style={styles.detailValue}>{params.monthsPaid}/{params.noOfIns}</Text>
             </View>
           </View>
         </View>
@@ -626,21 +656,39 @@ const SavingsDetail = () => {
           <View style={[styles.transactionsCard, { backgroundColor: '#FFF8DC', marginTop: 16 }]}> 
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <Text style={styles.sectionTitle}>Advance Payment</Text>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                <TouchableOpacity
-                  style={{ backgroundColor: '#850111', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}
-                  onPress={handleSelectAll}
-                >
-                  <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>Select All</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={{ backgroundColor: '#8B4513', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}
-                  onPress={handleUnselectAll}
-                >
-                  <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>Unselect All</Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                onPress={() => setShowAdvancePayment(!showAdvancePayment)}
+              >
+                <Text style={{ color: '#850111', fontSize: 12, fontWeight: '600' }}>
+                  {showAdvancePayment ? 'Hide' : 'Show'}
+                </Text>
+                <Ionicons 
+                  name={showAdvancePayment ? "chevron-up" : "chevron-down"} 
+                  size={16} 
+                  color="#850111" 
+                />
+              </TouchableOpacity>
             </View>
+            
+            {showAdvancePayment && (
+              <>
+                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 16 }}>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <TouchableOpacity
+                      style={{ backgroundColor: '#850111', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}
+                      onPress={handleSelectAll}
+                    >
+                      <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>Select All</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{ backgroundColor: '#8B4513', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}
+                      onPress={handleUnselectAll}
+                    >
+                      <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>Unselect All</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
             {advancePayments.filter(p => p.status === 'PENDING').map((pending, idx) => {
               const isSelected = selectedPayments.some(p => p.monthNumber === pending.monthNumber);
               return (
@@ -676,6 +724,8 @@ const SavingsDetail = () => {
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
+            )}
+              </>
             )}
           </View>
         )}
@@ -1032,23 +1082,23 @@ const styles = StyleSheet.create({
   detailsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 16,
+    gap: 8,
   },
   detailItem: {
     flex: 1,
-    minWidth: "45%",
+    minWidth: "48%",
     backgroundColor: "#F5DEB3",
-    padding: 16,
-    borderRadius: 12,
+    padding: 12,
+    borderRadius: 10,
   },
   detailLabel: {
-    fontSize: 12,
+    fontSize: 10,
     color: "#8B4513",
-    marginTop: 8,
-    marginBottom: 4,
+    marginTop: 6,
+    marginBottom: 2,
   },
   detailValue: {
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: "600",
     color: "#2C1810",
   },

@@ -635,7 +635,7 @@ export default function Home2() {
         // Set flash news
         if (data.flashNews && data.flashNews.length > 0) {
           console.log(data.flashNews)
-          const flashArray = data.flashNews.map((f:any) => f.title)
+          const flashArray = data.flashNews.map((f: any) => f.title)
           setFlashNews(flashArray);
         }
 
@@ -1013,7 +1013,6 @@ export default function Home2() {
                 onPress={() => { if (__DEV__) { console.log("Flash news tapped"); } }}
                 textColor="#ffffff"
               />
-
               <UserInfoCard
                 userName={user?.name}
                 activeSchemesCount={activeSchemesCount}

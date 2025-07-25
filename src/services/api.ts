@@ -7,7 +7,7 @@ import * as SecureStore from "expo-secure-store";
 import NetInfo from '@react-native-community/netinfo';
 import { showToast } from './notification';
 import { Alert } from 'react-native';
-import Toast from 'react-native-root-toast';
+// import Toast from 'react-native-root-toast';
 import LoadingService from './loadingServices';
 
 // API Logger Class
@@ -207,18 +207,34 @@ const checkNetworkState = async () => {
   }
 };
 
+// Check if endpoint is public (doesn't require authentication)
+const isPublicEndpoint = (url: string | undefined): boolean => {
+  if (!url) return false;
+  const publicEndpoints = ['/auth/login', '/auth/register', '/auth/refresh-token', '/auth/forgot-password'];
+  return publicEndpoints.some(endpoint => url.includes(endpoint));
+};
+
 const checkTokenValidity = async () => {
   try {
     const token = await SecureStore.getItem("authToken");
-    if (!token) {
-      // No token found, redirect to login
+    if (!token || typeof token !== 'string' || token.trim() === '') {
+      // No token found or invalid token, redirect to login
+      console.log('No valid token found, logging out');
+      handleLogout();
+      return null;
+    }
+
+    // Validate token format (should be a JWT with 3 parts separated by dots)
+    const tokenParts = token.split('.');
+    if (tokenParts.length !== 3) {
+      console.error("Invalid token format - not a valid JWT");
       handleLogout();
       return null;
     }
 
     // Check if token is expired
     try {
-      const tokenData = JSON.parse(atob(token.split('.')[1]));
+      const tokenData = JSON.parse(atob(tokenParts[1]));
       const expirationTime = tokenData.exp * 1000; // Convert to milliseconds
       
       if (Date.now() >= expirationTime) {
@@ -232,11 +248,13 @@ const checkTokenValidity = async () => {
             return newToken;
           } catch (error) {
             // Refresh failed, logout user
+            console.log('Token refresh failed, logging out');
             handleLogout();
             return null;
           }
         } else {
           // No refresh token, logout user
+          console.log('No refresh token available, logging out');
           handleLogout();
           return null;
         }
@@ -293,6 +311,12 @@ api.interceptors.request.use(
       if (token) {
         config.headers = config.headers || new axios.AxiosHeaders();
         config.headers.Authorization = `Bearer ${token}`;
+      } else {
+        // If no valid token and this is not a public endpoint, reject the request
+        if (!isPublicEndpoint(config.url)) {
+          console.log('No valid token for protected endpoint, rejecting request');
+          return Promise.reject(new Error('NO_VALID_TOKEN'));
+        }
       }
       
       // Store start time for response logging
@@ -305,6 +329,9 @@ api.interceptors.request.use(
       
       if (error.message === 'NO_INTERNET') {
         showToast('No internet connection. Please check your network.', 'error');
+      } else if (error.message === 'NO_VALID_TOKEN') {
+        console.log('No valid token - user should be logged out already');
+        // Don't show toast as logout should handle this
       }
       return Promise.reject(error);
     }
@@ -368,15 +395,28 @@ api.interceptors.response.use(
 
       switch (status) {
         case 401:
-          showToast('Session expired. Please login again.', 'error');
-          Alert.alert(
-            'Session Expired',
-            'Your session has expired. Please login again.',
-            [{
-              text: 'OK',
-              onPress: () => handleLogout()
-            }]
-          );
+          // Handle 401 Unauthorized - immediate logout for token issues
+          const errorMessage = message.toLowerCase();
+          if (errorMessage.includes('no token provided') || 
+              errorMessage.includes('access denied') || 
+              errorMessage.includes('token') ||
+              errorMessage.includes('unauthorized')) {
+            console.log('401 Unauthorized - Token issue detected, logging out immediately');
+            showToast('Authentication failed. Please login again.', 'error');
+            // Immediate logout without alert for token-related issues
+            handleLogout();
+          } else {
+            // For other 401 errors, show alert first
+            showToast('Session expired. Please login again.', 'error');
+            Alert.alert(
+              'Session Expired',
+              'Your session has expired. Please login again.',
+              [{
+                text: 'OK',
+                onPress: () => handleLogout()
+              }]
+            );
+          }
           break;
         case 403:
           if (message.toLowerCase().includes('token') || message.toLowerCase().includes('authorization')) {
@@ -425,12 +465,33 @@ export const users = {
   updateFcmToken: (token: string, userId: number, device_type: 'ios' | 'android') => {
     return api.post('/notifications/token', { 
       userId,
-      token,
+      deviceToken: token, // Changed from 'token' to 'deviceToken' to match server expectation
       device_type
     });
   },
   getFcmToken: (userId: number) => {
     return api.get(`/notifications/tokens/${userId}`);
+  },
+  // Updated method to send complete FCM data to existing endpoint
+  updateFcmTokenWithCompleteData: (fcmData: {
+    type: string;
+    deviceId: string;
+    development: boolean;
+    appId: string;
+    deviceToken: string;
+    projectId: string;
+  }, userId: number, device_type: 'ios' | 'android') => {
+    return api.post('/notifications/token', { 
+      userId,
+      deviceToken: fcmData.deviceToken,
+      device_type,
+      // Include additional FCM data as extra fields
+      fcmType: fcmData.type,
+      deviceId: fcmData.deviceId,
+      development: fcmData.development,
+      appId: fcmData.appId,
+      projectId: fcmData.projectId
+    });
   }
 };
 

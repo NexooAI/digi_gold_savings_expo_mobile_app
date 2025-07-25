@@ -210,7 +210,7 @@ export default function Login() {
   // OTP related state
   const [pins, setPins] = useState(["", "", "", ""]);
   const [timer, setTimer] = useState(120);
-  const [resendAttempts, setResendAttempts] = useState(3);
+  const [resendAttempts, setResendAttempts] = useState(0);
   const [isShowOtp, setIsShowOtp] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
@@ -491,8 +491,8 @@ export default function Login() {
       const data = await response.json();
 
       if (response.ok) {
-        setResendAttempts((prev) => prev - 1);
-        // setTimer(INITIAL_TIMER);
+        setResendAttempts((prev) => prev + 1);
+        setTimer(120);
         setPins(["", "", "", ""]);
         Alert.alert(t("success"), t("otpResentSuccess"));
         // Auto-focus first OTP input
@@ -677,14 +677,17 @@ export default function Login() {
                           />
                           <Text style={registerStyles.timerText}>{t("resendIn")} {timer}s</Text>
                         </View>
-                        {timer === 0 && resendAttempts < 3 && (
-                          <TouchableOpacity
-                            onPress={handleResendOtp}
-                            style={registerStyles.resendButton}
-                          >
-                            <Text style={registerStyles.resendText}>{t("resendOTP")}</Text>
-                          </TouchableOpacity>
-                        )}
+                                {timer === 0 && resendAttempts < 3 && (
+          <TouchableOpacity
+            onPress={handleResendOtp}
+            style={registerStyles.resendButton}
+            disabled={loading}
+          >
+            <Text style={registerStyles.resendText}>
+              {loading ? t("resending") : t("resendOTP")}
+            </Text>
+          </TouchableOpacity>
+        )}
                         <TouchableOpacity
                           style={[
                             registerStyles.loginButton,

@@ -131,12 +131,12 @@ export function CustomDrawerContent(props: CustomDrawerContentProps) {
 
         {/* Explore & Benefits Section */}
         {/* <Text style={styles.sectionHeader}>Explore & Benefits</Text> */}
-        <DrawerMenuItem
+        {/* <DrawerMenuItem
           label={t("offers")}
           iconName="flash-outline"
           onPress={() => handleNavigation("/(tabs)/home/offers")}
           disabled={isNavigating}
-        />
+        /> */}
         <DrawerMenuItem
           label={t("referAndEarn")}
           iconName="gift-outline"
@@ -179,12 +179,12 @@ export function CustomDrawerContent(props: CustomDrawerContentProps) {
 
         {/* Legal & Policies Section */}
         {/* <Text style={styles.sectionHeader}>Legal & Policies</Text> */}
-        <DrawerMenuItem
+        {/* <DrawerMenuItem
           label={t("ourPolicies")}
           iconName="shield-checkmark-outline"
           onPress={() => handleNavigation("/(tabs)/home/policies/ourPolicies")}
           disabled={isNavigating}
-        />
+        /> */}
         <DrawerMenuItem
           label={t("privacyPolicy")}
           iconName="lock-closed-outline"
