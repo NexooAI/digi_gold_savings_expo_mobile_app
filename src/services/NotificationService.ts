@@ -4,6 +4,8 @@ import { Platform } from 'react-native';
 import { users } from '@/services/api';
 import useGlobalStore from '@/store/global.store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as FileSystem from 'expo-file-system';
+import * as Device from 'expo-device';
 
 // Configure how notifications appear when the app is in foreground
 Notifications.setNotificationHandler({
@@ -19,45 +21,70 @@ Notifications.setNotificationHandler({
 class NotificationService {
   private isSendingToken = false;
 
-  private async storeFcmToken(token: string) {
+  // Helper method to check Google Services configuration
+  private async checkGoogleServicesConfig() {
     try {
-      await AsyncStorage.setItem('fcmToken', token);
-      //console.log('FCM token stored locally');
+      const googleServicesPath = FileSystem.documentDirectory + 'google-services.json';
+      const fileInfo = await FileSystem.getInfoAsync(googleServicesPath);
+      
+      console.log('📱 Google Services Configuration Check:', {
+        fileExists: fileInfo.exists,
+        fileSize: fileInfo.exists ? (fileInfo as any).size : 'N/A',
+        fileUri: fileInfo.uri,
+        platform: Platform.OS,
+        projectId: Constants?.expoConfig?.extra?.eas?.projectId,
+        expoConfig: {
+          extra: Constants?.expoConfig?.extra,
+          eas: Constants?.expoConfig?.extra?.eas
+        }
+      });
+
+      return fileInfo.exists;
     } catch (error) {
-      console.error('Error storing FCM token:', error);
+      console.error('❌ Error checking Google Services config:', error);
+      return false;
     }
   }
 
-  private async getStoredFcmToken(): Promise<string | null> {
+  private async storeDeviceToken(token: string) {
     try {
-      return await AsyncStorage.getItem('fcmToken');
+      await AsyncStorage.setItem('deviceToken', token);
+      console.log('Device token stored locally');
     } catch (error) {
-      console.error('Error getting stored FCM token:', error);
+      console.error('Error storing device token:', error);
+    }
+  }
+
+  private async getStoredDeviceToken(): Promise<string | null> {
+    try {
+      return await AsyncStorage.getItem('deviceToken');
+    } catch (error) {
+      console.error('Error getting stored device token:', error);
       return null;
     }
   }
 
-  private async getLastSentToken(): Promise<string | null> {
+  private async getLastSentDeviceToken(): Promise<string | null> {
     try {
-      return await AsyncStorage.getItem('lastSentFcmToken');
+      return await AsyncStorage.getItem('lastSentDeviceToken');
     } catch (error) {
-      console.error('Error getting last sent FCM token:', error);
+      console.error('Error getting last sent device token:', error);
       return null;
     }
   }
 
-  private async storeLastSentToken(token: string) {
-    console.log('lastSentFcmToken', token);
+  private async storeLastSentDeviceToken(token: string) {
+    console.log('lastSentDeviceToken', token);
     try {
-      await AsyncStorage.setItem('lastSentFcmToken', token);
+      await AsyncStorage.setItem('lastSentDeviceToken', token);
     } catch (error) {
-      console.error('Error storing last sent FCM token:', error);
+      console.error('Error storing last sent device token:', error);
     }
   }
 
-  // Register for push notifications
-  async registerForPushNotificationsAsync() {
-    let token;
+  // Get device token for notifications
+  async getDeviceTokenAsync() {
+    let deviceToken;
 
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('default', {
@@ -68,7 +95,7 @@ class NotificationService {
       });
     }
 
-    // Removed Device.isDevice check, use Platform.OS for platform logic
+    // Get notification permissions
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
@@ -78,59 +105,91 @@ class NotificationService {
     }
 
     if (finalStatus !== 'granted') {
-      return;
+      console.log('❌ Notification permissions not granted');
+      return null;
     }
 
     try {
-      const projectId = Constants?.expoConfig?.extra?.eas?.projectId;
-      if (!projectId) {
-        throw new Error('Project ID not found');
-      }
+      // Debugger: Add breakpoint before device token generation
+      debugger;
+      
+      // Check Google Services configuration
+      await this.checkGoogleServicesConfig();
+      
+      // Get device information
+      const deviceInfo = {
+        deviceId: Device.deviceName || Device.modelName || 'unknown',
+        deviceType: Platform.OS,
+        deviceBrand: Device.brand || 'unknown',
+        deviceModel: Device.modelName || 'unknown',
+        deviceYear: Device.deviceYearClass || 'unknown',
+        deviceName: Device.deviceName || 'unknown'
+      };
 
-      // Get the token
-      const expoPushToken = await Notifications.getExpoPushTokenAsync({
-        projectId,
+      // Log device token generation details
+      console.log('🔍 Device Token Generation Debug Info:', {
+        deviceInfo,
+        platform: Platform.OS,
+        permissionsStatus: finalStatus
       });
 
-      if (!expoPushToken?.data) {
-        throw new Error('Failed to get push token');
-      }
+      // Generate a unique device token using device information
+      const deviceTokenData = {
+        deviceId: deviceInfo.deviceId,
+        deviceType: deviceInfo.deviceType,
+        deviceBrand: deviceInfo.deviceBrand,
+        deviceModel: deviceInfo.deviceModel,
+        timestamp: Date.now(),
+        randomId: Math.random().toString(36).substring(2, 15)
+      };
 
-      // Extract just the token part without ExponentPushToken[] wrapper
-      const cleanToken = expoPushToken.data.replace('ExponentPushToken[', '').replace(']', '');
+      // Create a unique device token string
+      deviceToken = `${deviceInfo.deviceType}_${deviceInfo.deviceId}_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
 
-      // Store the clean token locally
-      await this.storeFcmToken(cleanToken);
+      // Store the device token locally
+      await this.storeDeviceToken(deviceToken);
 
-      // Immediately try to send token to API
-      await this.sendTokenToApi();
+      // Immediately try to send device token to API
+      await this.sendDeviceTokenToApi();
 
-      return cleanToken;
+      console.log('✅ Device token generated and stored:', deviceToken);
+      return deviceToken;
     } catch (error) {
-      console.error('Error getting push token:', error);
+      // Debugger: Add breakpoint for device token generation errors
+      debugger;
+      console.error('❌ Error getting device token:', error);
+      console.log('🔍 Error details for debugging:', {
+        error: error,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorStack: error instanceof Error ? error.stack : 'No stack trace',
+        platform: Platform.OS
+      });
       return null;
     }
   }
 
-  // New method to send token to API when user info is available
-  async sendTokenToApi(): Promise<void> {
+  // New method to send device token to API when user info is available
+  async sendDeviceTokenToApi(): Promise<void> {
     if (this.isSendingToken) return;
     this.isSendingToken = true;
     try {
-      const token = await this.getStoredFcmToken();
-      if (!token) {
-        //console.log('No FCM token available to send');
-        // Try to generate a new token if none exists
-        const newToken = await this.registerForPushNotificationsAsync();
-        if (!newToken) {
-          //console.log('Failed to generate new FCM token');
+      const deviceToken = await this.getStoredDeviceToken();
+      if (!deviceToken) {
+        console.log('🔄 No device token found, attempting to generate new device token...');
+        
+        // Debugger: Add breakpoint before generating new device token
+        debugger;
+        
+        // Try to generate a new device token if none exists
+        const newDeviceToken = await this.getDeviceTokenAsync();
+        if (!newDeviceToken) {
+          console.log('❌ Failed to generate new device token');
           this.isSendingToken = false;
           return;
         }
-        // Token was generated and stored, continue with sending
+        // Device token was generated and stored, continue with sending
         this.isSendingToken = false;
-        console.log(this.sendTokenToApi());
-        return this.sendTokenToApi(); // Recursively call with the new token
+        return this.sendDeviceTokenToApi(); // Recursively call with the new device token
       }
 
       // Get user data from store or storage
@@ -148,47 +207,67 @@ class NotificationService {
       }
 
       if (userId > 0) {
-        // Check last sent token to avoid redundant API calls
-        const lastSentToken = await this.getLastSentToken();
-        if (lastSentToken === token) {
-          //console.log('FCM token already sent, skipping update');
+        // Check last sent device token to avoid redundant API calls
+        const lastSentDeviceToken = await this.getLastSentDeviceToken();
+        if (lastSentDeviceToken === deviceToken) {
+          console.log('✅ Device token already sent, skipping update');
           this.isSendingToken = false;
           return;
         }
         try {
           // First, check if there's an existing token
-          const existingTokenResponse = await users.getFcmToken(userId);
+          const existingTokenResponse = await users.getDeviceToken(userId);
           const existingToken = existingTokenResponse.data?.token;
 
           if (existingToken) {
             // If token exists and is different, update it
-            if (existingToken !== token) {
-              const response = await users.updateFcmToken(token, userId, Platform.OS === 'ios' ? 'ios' : 'android');
-              console.log('responce for fcm tokern ', response);
-              await this.storeLastSentToken(token);
+            if (existingToken !== deviceToken) {
+              const deviceType = Platform.OS === 'ios' ? 'ios' : 'android';
+              console.log('📤 Sending device token update payload:', {
+                userId,
+                token: deviceToken,
+                device_type: deviceType
+              });
+              const response = await users.updateDeviceToken(deviceToken, userId, deviceType);
+              console.log('✅ Device token update response:', response);
+              await this.storeLastSentDeviceToken(deviceToken);
             } else {
-              //console.log('FCM token unchanged, skipping update');
-              await this.storeLastSentToken(token); // Mark as sent to avoid future redundant calls
+              console.log('✅ Device token unchanged, skipping update');
+              await this.storeLastSentDeviceToken(deviceToken); // Mark as sent to avoid future redundant calls
             }
           } else {
-            // If no token exists, send new token
-            const response = await users.updateFcmToken(token, userId, Platform.OS === 'ios' ? 'ios' : 'android');
-            await this.storeLastSentToken(token);
+            // If no token exists, send new device token
+            const deviceType = Platform.OS === 'ios' ? 'ios' : 'android';
+            console.log('📤 Sending new device token payload:', {
+              userId,
+              token: deviceToken,
+              device_type: deviceType
+            });
+            const response = await users.updateDeviceToken(deviceToken, userId, deviceType);
+            console.log('✅ New device token response:', response);
+            await this.storeLastSentDeviceToken(deviceToken);
           }
         } catch (error: any) {
           if (error.response?.status === 404) {
-            // If token endpoint returns 404, send new token
-            const response = await users.updateFcmToken(token, userId, Platform.OS === 'ios' ? 'ios' : 'android');
-            await this.storeLastSentToken(token);
+            // If token endpoint returns 404, send new device token
+            const deviceType = Platform.OS === 'ios' ? 'ios' : 'android';
+            console.log('📤 Sending device token (404 fallback) payload:', {
+              userId,
+              token: deviceToken,
+              device_type: deviceType
+            });
+            const response = await users.updateDeviceToken(deviceToken, userId, deviceType);
+            console.log('✅ Device token (404 fallback) response:', response);
+            await this.storeLastSentDeviceToken(deviceToken);
           } else {
             throw error;
           }
         }
       } else {
-        //console.log('Skipping FCM token update - No valid user ID found');
+        console.log('⚠️ Skipping device token update - No valid user ID found');
       }
     } catch (error: any) {
-      console.error('Error handling FCM token:', {
+      console.error('❌ Error handling device token:', {
         status: error.response?.status,
         data: error.response?.data,
         message: error.message

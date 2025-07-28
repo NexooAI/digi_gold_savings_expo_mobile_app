@@ -142,7 +142,7 @@ const anotherApiCall = async () => {
 ### 👤 User Profile
 - `apiWithLoader.user.getProfile()` - "Loading your profile..."
 - `apiWithLoader.user.updateProfile(data)` - "Updating your profile..."
-- `apiWithLoader.user.updateFcmToken(token, userId, deviceType)` - "Updating notifications..."
+- `apiWithLoader.user.updateDeviceToken(deviceToken, userId, deviceType)` - "Updating notifications..."
 
 ### 📰 Content
 - `apiWithLoader.content.getNews()` - "Loading latest news..."
