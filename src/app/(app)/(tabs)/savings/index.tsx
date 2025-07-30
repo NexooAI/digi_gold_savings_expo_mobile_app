@@ -32,6 +32,7 @@ import useGlobalStore from "@/store/global.store";
 import api from "@/services/api";
 import { moderateScale } from "react-native-size-matters";
 import { theme } from "@/constants/theme";
+import AuthGuard from "@/components/AuthGuard";
 
 type Transaction = {
   id: string;
@@ -92,12 +93,6 @@ interface InvestmentResponse {
 export default function SavingsScreen() {
   const router = useRouter();
   const { language, user } = useGlobalStore();
-
-  useEffect(() => {
-    if (!user) {
-      router.replace("/(auth)/login");
-    }
-  }, [user, router]);
 
   const [savings, setSavings] = useState<Scheme[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -1022,12 +1017,13 @@ export default function SavingsScreen() {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <ImageBackground
-        source={require("../../../../../assets/images/bg_new.jpg")}
-        style={{ flex: 1 }}
-        resizeMode="cover"
-      >
+    <AuthGuard>
+      <View style={{ flex: 1 }}>
+        <ImageBackground
+          source={require("../../../../../assets/images/bg_new.jpg")}
+          style={{ flex: 1 }}
+          resizeMode="cover"
+        >
         <LinearGradient
           colors={["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.02)", "rgba(0, 0, 0, 0.01)"]}
           style={StyleSheet.absoluteFillObject}
@@ -1059,6 +1055,7 @@ export default function SavingsScreen() {
         </SafeAreaView>
       </ImageBackground>
     </View>
+    </AuthGuard>
   );
 }
 

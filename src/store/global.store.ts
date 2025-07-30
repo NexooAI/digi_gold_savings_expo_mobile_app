@@ -137,11 +137,21 @@ const useGlobalStore = create<GlobalStore>()(
       // Auth functions
       login: async (token, user) => {
         await SecureStore.setItemAsync('authToken', token);
-        set({ isLoggedIn: true, token, user })
+        const userWithDefaults = {
+          profileImage: "",
+          idProof: "",
+          referralCode: "",
+          rewards: 0,
+          ...user
+        };
+        set({ isLoggedIn: true, token, user: userWithDefaults })
       },
       logout: async () => {
         await SecureStore.deleteItemAsync('authToken');
-        await SecureStore.deleteItemAsync('user_mpin');
+        await SecureStore.deleteItemAsync('accessToken');
+        await SecureStore.deleteItemAsync('token');
+        await SecureStore.deleteItemAsync('refreshToken');
+        // Note: user_mpin is no longer stored locally, it's on server
         set({
           isLoggedIn: false,
           token: null,
@@ -155,7 +165,16 @@ const useGlobalStore = create<GlobalStore>()(
         await changeLocale(lang);
         set({ language: lang });
       },
-      updateUser: (user: any) => set((state) => ({ user: { ...state.user, ...user } })),
+      updateUser: (user: any) => set((state) => ({ 
+        user: { 
+          profileImage: "",
+          idProof: "",
+          referralCode: "",
+          rewards: 0,
+          ...state.user, 
+          ...user 
+        } 
+      })),
 
       // Payment retry functions
       storePaymentRetryData: (data: PaymentRetryData) => {

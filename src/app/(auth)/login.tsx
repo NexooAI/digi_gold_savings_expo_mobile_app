@@ -16,6 +16,7 @@ import {
   TextInputKeyPressEventData,
   Linking,
   ScrollView,
+  Modal,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import NetInfo from "@react-native-community/netinfo";
@@ -30,12 +31,88 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { t } from "@/i18n";
 import { registerStyles } from "../../_styles/registerStyles";
-import { useAuth } from "@/contexts/AuthContext";
+// import { useAuth } from "@/contexts/AuthContext";
 import LanguageSwitcher from "@/contexts/LanguageSwitcher";
 import { AppLocale } from "@/i18n";
 
 const { width } = Dimensions.get("window");
 const logoWidth = width * 0.3;
+
+// Custom Modal Component for Invalid Mobile Number
+const InvalidMobileModal = ({
+  visible,
+  onClose,
+  onCreateAccount,
+  mobileNumber,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onCreateAccount: () => void;
+  mobileNumber: string;
+}) => {
+  return (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <View style={styles.modalIconContainer}>
+              <Ionicons name="alert-circle" size={32} color="#ff6b35" />
+            </View>
+            <Text style={styles.modalTitle}>{t("invalidMobile")}</Text>
+            <Text style={styles.modalSubtitle}>{mobileNumber}</Text>
+          </View>
+          
+          <View style={styles.modalContent}>
+            <Text style={styles.modalMessage}>
+              {t("createNewAccountMessage")}
+            </Text>
+            
+            <View style={styles.modalDetails}>
+              <View style={styles.detailRow}>
+                <Ionicons name="information-circle" size={16} color="#666" />
+                <Text style={styles.detailText}>
+                  {t("invalidMobileDetail1")}
+                </Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+                <Text style={styles.detailText}>
+                  {t("invalidMobileDetail2")}
+                </Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Ionicons name="star" size={16} color="#FFD700" />
+                <Text style={styles.detailText}>
+                  {t("invalidMobileDetail3")}
+                </Text>
+              </View>
+            </View>
+          </View>
+          
+          <View style={styles.modalButtonContainer}>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.cancelButton]}
+              onPress={onClose}
+            >
+              <Text style={styles.cancelButtonText}>{t("cancel")}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.createButton]}
+              onPress={onCreateAccount}
+            >
+              <Text style={styles.createButtonText}>{t("createAccount")}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
 
 const ErrorAlert = ({
   message,
@@ -210,7 +287,7 @@ export default function Login() {
   // OTP related state
   const [pins, setPins] = useState(["", "", "", ""]);
   const [timer, setTimer] = useState(120);
-  const [resendAttempts, setResendAttempts] = useState(0);
+  const [resendAttempts, setResendAttempts] = useState(3);
   const [isShowOtp, setIsShowOtp] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
@@ -222,6 +299,9 @@ export default function Login() {
     useRef<TextInput>(null),
     useRef<TextInput>(null),
   ];
+
+  // Modal state
+  const [showInvalidMobileModal, setShowInvalidMobileModal] = useState(false);
 
   // Global state and error handling
   const { login, isLoggedIn } = useGlobalStore();
@@ -328,7 +408,80 @@ export default function Login() {
   const hideErrorAlert = () => {
     setShowError(false);
   };
-
+  // const verifyOtp = (otp: string) => {
+  //     setLoading(true);
+  //     fetch(`${theme.baseUrl}/auth/verify-otp`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Accept: "application/json",
+  //       },
+  //       body: JSON.stringify({ mobile_number: mobile, otp }),
+  //     })
+  //       .then(async (response) => {
+  //         const data = await response.json();
+  //         // console.log("OTP verification response:", data);
+  //         if (data.success) {
+  //           // Store all tokens securely like in registration flow
+  //           // await SecureStore.setItemAsync("authToken", data.token);
+  //           // await SecureStore.setItemAsync("accessToken", data.accessToken);
+  //           // await SecureStore.setItemAsync("token", data.token);
+  //           // await SecureStore.setItemAsync("refreshToken", data.refreshtoken);
+  //           // await AsyncStorage.setItem("userData", JSON.stringify(data.user));
+            
+  //           login(data.token, {
+  //             id: data.user.user_id,
+  //             name: data.user.name,
+  //             email: data.user.email,
+  //             mobile: data.user.mobile_number,
+  //             referralCode: data.user.referralCode,
+  //           });
+  
+  //           // Navigate to MPIN verification after successful OTP verification
+  //           router.replace("/(auth)/mpin_verify");
+  //           setIsShowOtp(false);
+  //         } else {
+  //           setPins(["", "", "", ""]);
+  //           // Alert.alert(
+  //           //   t("error"),
+  //           //   data.message || data.error,
+  //           //   [{ text: t("ok") }]
+  //           // );
+  //         }
+  //       })
+  //       .catch((error) => {
+  //         setPins(["", "", "", ""]);
+  //         if (error.response) {
+  //           if (error.response.status === 400) {
+  //             Alert.alert(
+  //               t("invalidOtp"),
+  //               error.response.data.message || t("invalidOtpMessage"),
+  //               [{ text: t("ok") }]
+  //             );
+  //           } 
+  //           // else {
+  //           //   Alert.alert(
+  //           //     t("error"),
+  //           //     error.response.data.message || t("somethingWentWrong"),
+  //           //     [{ text: t("ok") }]
+  //           //   );
+  //           // }
+  //         } else if (error.request) {
+  //           Alert.alert(
+  //             t("networkError"),
+  //             t("checkInternetConnection"),
+  //             [{ text: t("ok") }]
+  //           );
+  //         } else {
+  //           Alert.alert(
+  //             t("error"),
+  //             t("anUnexpectedError"),
+  //             [{ text: t("ok") }]
+  //           );
+  //         }
+  //       })
+  //       .finally(() => setLoading(false));
+  //   };
   const verifyOtp = (otp: string) => {
     setLoading(true);
     fetch(`${theme.baseUrl}/auth/verify-otp`, {
@@ -341,53 +494,68 @@ export default function Login() {
     })
       .then(async (response) => {
         const data = await response.json();
-        // console.log("OTP verification response:", data);
+        console.log("OTP verification response:", data);
         if (data.success) {
-          await SecureStore.setItemAsync("authToken", data.token);
-          await AsyncStorage.setItem("userData", JSON.stringify(data.user));
-          login(data.token, {
-            id: data.user.user_id,
-            name: data.user.name,
-            email: data.user.email,
-            mobile: data.user.mobile_number,
-            referralCode: data.user.referralCode,
-          });
+          try {
+            // Store all tokens securely
+            await SecureStore.setItemAsync("authToken", data.token);
+            await SecureStore.setItemAsync("accessToken", data.accessToken);
+            await SecureStore.setItemAsync("token", data.token);
+            await SecureStore.setItemAsync("refreshToken", data.refreshtoken);
+            await AsyncStorage.setItem("userData", JSON.stringify(data.user));
+            
+            // Login to global store
+            login(data.token, {
+              id: data.user.user_id,
+              name: data.user.name,
+              email: data.user.email,
+              mobile: data.user.mobile_number,
+              referralCode: data.user.referralCode,
+            });
 
-          const storedHashedMPIN = await SecureStore.getItemAsync("user_mpin");
-          router.push({
-            pathname: storedHashedMPIN ? "/mpin_verify" : "/reset_mpin",
-            params: {
-              mode: "create",
-              from: "login",
-            },
-          });
-          setIsShowOtp(false);
+            // Navigate to home page after successful OTP verification
+            router.replace("/(app)/(tabs)/home");
+            setIsShowOtp(false);
+          } catch (storageError) {
+            console.error("Error storing authentication data:", storageError);
+            Alert.alert(
+              t("error"),
+              t("failedToStoreAuthData"),
+              [{ text: t("ok") }]
+            );
+          }
         } else {
           setPins(["", "", "", ""]);
           Alert.alert(
             t("error"),
-            data.message || data.error,
+            data.message || data.error || t("invalidOtp"),
             [{ text: t("ok") }]
           );
         }
       })
       .catch((error) => {
         setPins(["", "", "", ""]);
-        if (error.response) {
-          if (error.response.status === 400) {
-            Alert.alert(
-              t("invalidOtp"),
-              error.response.data.message || t("invalidOtpMessage"),
-              [{ text: t("ok") }]
-            );
-          } else {
-            Alert.alert(
-              t("error"),
-              error.response.data.message || t("somethingWentWrong"),
-              [{ text: t("ok") }]
-            );
-          }
-        } else if (error.request) {
+        console.error("OTP verification error:", error);
+        
+        let errorMessage = t("anUnexpectedError");
+        
+        // Handle fetch API error structure
+        if (error.message) {
+          errorMessage = error.message;
+        } else if (error.error) {
+          errorMessage = error.error;
+        }
+        
+        // Check for specific error types
+        if (errorMessage.toLowerCase().includes("invalid") || 
+            errorMessage.toLowerCase().includes("otp")) {
+          Alert.alert(
+            t("invalidOtp"),
+            errorMessage || t("invalidOtpMessage"),
+            [{ text: t("ok") }]
+          );
+        } else if (errorMessage.toLowerCase().includes("network") || 
+                   errorMessage.toLowerCase().includes("connection")) {
           Alert.alert(
             t("networkError"),
             t("checkInternetConnection"),
@@ -396,7 +564,7 @@ export default function Login() {
         } else {
           Alert.alert(
             t("error"),
-            t("anUnexpectedError"),
+            errorMessage,
             [{ text: t("ok") }]
           );
         }
@@ -434,6 +602,7 @@ export default function Login() {
         // Show OTP screen
         setIsShowOtp(true);
         setTimer(120);
+        setResendAttempts(3); // Reset resend attempts when first OTP is sent
         // Auto-focus first OTP input
         setTimeout(() => inputRefs[0]?.current?.focus(), 100);
       } else {
@@ -446,27 +615,25 @@ export default function Login() {
       // }
       setLoading(false);
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || error.message || t("youAreNotRegistered");
-      if (errorMessage.toLowerCase().includes(t("invalidMobileNumber"))) {
-        Alert.alert(
-          t("invalidMobile"),
-          t("createNewAccountMessage"),
-          [
-            {
-              text: t("cancel"),
-              style: "cancel",
-              onPress: () => setLoading(false),
-            },
-            {
-              text: t("createAccount"),
-              onPress: () => {
-                // Handle create account navigation
-                router.push(`/userBasicDetails`);
-                setLoading(false);
-              },
-            },
-          ]
-        );
+      console.log('🔍 Login - Error caught:', error);
+      
+      // Handle fetch API error structure
+      let errorMessage = t("youAreNotRegistered");
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.error) {
+        errorMessage = error.error;
+      }
+      
+      console.log('🔍 Login - Error message:', errorMessage);
+      
+      // Check if the error message contains "Invalid mobile number" (case insensitive)
+      if (errorMessage.toLowerCase().includes("invalid mobile number") || 
+          errorMessage.toLowerCase().includes(t("invalidMobileNumber").toLowerCase())) {
+        console.log('🔍 Login - Showing invalid mobile modal for mobile:', mobile);
+        setShowInvalidMobileModal(true);
+        setLoading(false);
       } else {
         showErrorAlert(errorMessage);
         setLoading(false);
@@ -475,7 +642,10 @@ export default function Login() {
   };
 
   const handleResendOtp = async () => {
-    if (resendAttempts <= 0) return;
+    if (resendAttempts <= 0) {
+      Alert.alert(t("error"), t("resendLimitReached"));
+      return;
+    }
 
     setLoading(true);
     try {
@@ -491,7 +661,7 @@ export default function Login() {
       const data = await response.json();
 
       if (response.ok) {
-        setResendAttempts((prev) => prev + 1);
+        setResendAttempts((prev) => prev - 1);
         setTimer(120);
         setPins(["", "", "", ""]);
         Alert.alert(t("success"), t("otpResentSuccess"));
@@ -500,9 +670,19 @@ export default function Login() {
       } else {
         throw new Error(data?.error || t("failedToResendOtp"));
       }
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : t("failedToResendOtp");
+    } catch (error: any) {
+      console.log('🔍 Resend OTP - Error caught:', error);
+      
+      let errorMessage = t("failedToResendOtp");
+      
+      // Handle fetch API error structure
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.error) {
+        errorMessage = error.error;
+      }
+      
+      console.log('🔍 Resend OTP - Error message:', errorMessage);
       showErrorAlert(errorMessage);
     } finally {
       setLoading(false);
@@ -515,7 +695,7 @@ export default function Login() {
       setIsShowOtp(false);
       setPins(["", "", "", ""]);
       setTimer(120);
-      setResendAttempts(0);
+              setResendAttempts(3);
       // Stop SMS listener when going back to mobile input
       // stopSmsListener();
     } else {
@@ -677,17 +857,29 @@ export default function Login() {
                           />
                           <Text style={registerStyles.timerText}>{t("resendIn")} {timer}s</Text>
                         </View>
-                                {timer === 0 && resendAttempts < 3 && (
+                                {timer === 0 && resendAttempts > 0 && (
           <TouchableOpacity
             onPress={handleResendOtp}
             style={registerStyles.resendButton}
             disabled={loading}
           >
             <Text style={registerStyles.resendText}>
-              {loading ? t("resending") : t("resendOTP")}
+              {loading ? t("resending") : t("resendOTP")} ({resendAttempts} {t("left")})
             </Text>
           </TouchableOpacity>
         )}
+                        {timer === 0 && resendAttempts === 0 && (
+                          <View style={registerStyles.timerContainer}>
+                            <Ionicons
+                              name="alert-circle"
+                              size={20}
+                              color="#ff6b6b"
+                            />
+                            <Text style={[registerStyles.timerText, { color: "#ff6b6b" }]}>
+                              {t("resendLimitReached")}
+                            </Text>
+                          </View>
+                        )}
                         <TouchableOpacity
                           style={[
                             registerStyles.loginButton,
@@ -722,7 +914,129 @@ export default function Login() {
           </View>
         </LinearGradient>
       </ImageBackground>
+
+      {/* Invalid Mobile Modal */}
+      <InvalidMobileModal
+        visible={showInvalidMobileModal}
+        onClose={() => setShowInvalidMobileModal(false)}
+        onCreateAccount={() => {
+          console.log('🔍 Login - Creating account with mobile:', mobile);
+          setShowInvalidMobileModal(false);
+          // Test with hardcoded mobile number to see if the issue is with the mobile state
+          const testMobile = mobile || "9876543210";
+          console.log('🔍 Login - Using mobile for navigation:', testMobile);
+          router.push({
+            pathname: '/userBasicDetails',
+            params: { mobile: testMobile }
+          });
+        }}
+        mobileNumber={mobile}
+      />
     </SafeAreaView>
   );
 }
+
+// Modal Styles
+const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  modalContainer: {
+    backgroundColor: "white",
+    borderRadius: 16,
+    width: "100%",
+    maxWidth: 400,
+    overflow: "hidden",
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  modalHeader: {
+    alignItems: "center",
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  modalIconContainer: {
+    marginBottom: 12,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    textAlign: "center",
+  },
+  modalSubtitle: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#666",
+    textAlign: "center",
+    marginTop: 4,
+  },
+  modalContent: {
+    padding: 20,
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 20,
+    lineHeight: 24,
+  },
+  modalDetails: {
+    backgroundColor: "#f8f9fa",
+    borderRadius: 12,
+    padding: 16,
+  },
+  detailRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 12,
+  },
+  detailText: {
+    fontSize: 14,
+    color: "#555",
+    marginLeft: 8,
+    flex: 1,
+    lineHeight: 20,
+  },
+  modalButtonContainer: {
+    flexDirection: "row",
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cancelButton: {
+    backgroundColor: "#f8f9fa",
+    borderRightWidth: 0.5,
+    borderRightColor: "#f0f0f0",
+  },
+  createButton: {
+    backgroundColor: "#ff6b35",
+    borderLeftWidth: 0.5,
+    borderLeftColor: "#f0f0f0",
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#666",
+  },
+  createButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "white",
+  },
+});
 

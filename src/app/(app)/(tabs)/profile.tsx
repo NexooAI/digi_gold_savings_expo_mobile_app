@@ -14,6 +14,7 @@ import {
   Animated,
   StyleSheet,
   Share,
+  Modal,
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import {
@@ -30,18 +31,21 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { theme } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
+import AuthGuard from "@/components/AuthGuard";
+import { uploadProfileImage } from "@/services/api.service";
+import { API_BASE_URL } from "@/config/api";
+import apiWithLoader from "@/services/apiWithLoader";
 
 const ProfileScreen = () => {
   const { isLoggedIn, user, language, logout, setLanguage, updateUser } =
     useGlobalStore();
   const [editing, setEditing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [editData, setEditData] = useState({
     name: user?.name || "",
     email: user?.email || "",
     mobile: user?.mobile?.toString() || "",
-    firstName: user?.firstName || "",
-    lastName: user?.lastName || "",
-    username: user?.username || "",
   });
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -67,35 +71,24 @@ const ProfileScreen = () => {
     ).start();
   }, []);
 
-  if (!user) {
-    return (
-      <SafeAreaView className="flex-1 justify-center items-center bg-white">
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </SafeAreaView>
-    );
-  }
+
 
   const handleLogout = () => {
-    Alert.alert(
-      t("logout_confirmation_title") || "Confirm Logout",
-      t("logout_confirmation_message") || "Are you sure you want to logout?",
-      [
-        { text: t("cancel"), style: "cancel" },
-        {
-          text: t("logout"),
-          style: "destructive",
-          onPress: async () => {
-            try {
-              logout();
-              router.replace("/(auth)/login");
-            } catch (error) {
-              console.error("Logout error:", error);
-            }
-          },
-        },
-      ],
-      { cancelable: false }
-    );
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = async () => {
+    try {
+      logout();
+      router.replace("/(auth)/login");
+      setShowLogoutModal(false);
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutModal(false);
   };
 
   const handleImageUpload = async () => {
@@ -115,20 +108,87 @@ const ProfileScreen = () => {
       quality: 0.8,
     });
     if (!result.canceled) {
-      updateUser({ ...user, profileImage: result.assets[0].uri });
+      try {
+        // Check if user ID exists
+        if (!user?.id) {
+          Alert.alert(
+            "Error", 
+            "User ID not found. Please login again."
+          );
+          return;
+        }
+        
+        // Set local loading state
+        setIsUploading(true);
+        
+        // Upload the image to server
+        console.log("result.assets[0].uri", result.assets[0].uri);
+        const uploadResponse = await uploadProfileImage(user.id, result.assets[0].uri);
+        console.log("uploadResponse", uploadResponse);
+        if (uploadResponse.success && uploadResponse.url) {
+          // Construct the full URL with base URL prefix
+          const fullImageUrl = `${API_BASE_URL}${uploadResponse.url}`;
+          
+          // Update user profile with the uploaded image URL
+          updateUser({ ...user, profileImage: fullImageUrl });
+          
+          Alert.alert(
+            "Success", 
+            "Profile image updated successfully!"
+          );
+        } else {
+          Alert.alert(
+            "Upload Failed", 
+            uploadResponse.message || "Failed to upload profile image. Please try again."
+          );
+        }
+      } catch (error) {
+        console.error('Profile image upload error:', error);
+        Alert.alert(
+          "Upload Error", 
+          "Failed to upload profile image. Please check your internet connection and try again."
+        );
+      } finally {
+        // Reset loading state
+        setIsUploading(false);
+      }
     }
   };
 
-  const handleSave = () => {
-    updateUser({
-      ...user,
-      name: editData.name,
-      email: editData.email,
-      mobile: editData.mobile,
-    });
-    setEditing(false);
-    Alert.alert(t("successTitle") || "Success", "Profile updated successfully");
-    
+  const handleSave = async () => {
+    try {
+      // Prepare the data to send to API
+      const profileData = {
+        name: editData.name,
+        email: editData.email,
+        mobile: editData.mobile,
+      };
+
+      // Call the API to update profile
+      const response = await apiWithLoader.user.updateProfile(profileData);
+
+      if (response && response.data) {
+        // Update local user state with the response data
+        updateUser({
+          ...user,
+          ...response.data, // Use the data returned from API
+        });
+        setEditing(false);
+        Alert.alert(t("successTitle") || "Success", "Profile updated successfully");
+      } else {
+        // Handle API error response
+        Alert.alert(
+          t("errorTitle") || "Error", 
+          "Failed to update profile. Please try again."
+        );
+      }
+    } catch (error) {
+      console.error('Profile update error:', error);
+      Alert.alert(
+        t("errorTitle") || "Error", 
+        "Failed to update profile. Please check your internet connection and try again."
+      );
+    }
   };
 
   const handleEditToggle = () => {
@@ -138,9 +198,6 @@ const ProfileScreen = () => {
         name: user?.name || "",
         email: user?.email || "",
         mobile: user?.mobile?.toString() || "",
-        firstName: user?.firstName || "",
-        lastName: user?.lastName || "",
-        username: user?.username || "",
       });
     }
     setEditing(!editing);
@@ -208,8 +265,9 @@ const ProfileScreen = () => {
   });
 
   return (
-    <SafeAreaView style={{ flex: 1, paddingTop: 0 }}>
-      <View style={styles.backgroundImage}>
+    <AuthGuard>
+      <SafeAreaView style={{ flex: 1, paddingTop: 0 }}>
+        <View style={styles.backgroundImage}>
         <LinearGradient
           colors={[
             theme.colors.primary + "E6",
@@ -245,7 +303,7 @@ const ProfileScreen = () => {
             <View style={styles.editFormContainer}>
               <View style={styles.editFormHeader}>
                 <Text style={styles.editFormTitle}>{t('editProfile')}</Text>
-                <View style={styles.editFormActions}>
+                {/* <View style={styles.editFormActions}>
                   <TouchableOpacity
                     style={styles.cancelButton}
                     onPress={handleEditToggle}
@@ -258,7 +316,7 @@ const ProfileScreen = () => {
                   >
                     <Icon name="check" size={20} color="white" />
                   </TouchableOpacity>
-                </View>
+                </View> */}
               </View>
 
               {/* Profile Image Edit */}
@@ -266,6 +324,7 @@ const ProfileScreen = () => {
                 <TouchableOpacity
                   onPress={handleImageUpload}
                   style={styles.editImageContainer}
+                  disabled={isUploading}
                 >
                   {user?.profileImage ? (
                     <Image
@@ -278,10 +337,16 @@ const ProfileScreen = () => {
                     </View>
                   )}
                   <View style={styles.editImageOverlay}>
-                    <Icon name="camera-alt" size={20} color="white" />
+                    {isUploading ? (
+                      <ActivityIndicator size="small" color="white" />
+                    ) : (
+                      <Icon name="camera-alt" size={20} color="white" />
+                    )}
                   </View>
                 </TouchableOpacity>
-                <Text style={styles.editImageText}>{t('tapToChangePhoto')}</Text>
+                <Text style={styles.editImageText}>
+                  {isUploading ? "Uploading..." : t('tapToChangePhoto')}
+                </Text>
               </View>
 
               {/* Edit Form Fields */}
@@ -320,17 +385,6 @@ const ProfileScreen = () => {
                   />
                 </View>
 
-                {/* <View style={styles.formField}>
-                  <Text style={styles.formLabel}>Username</Text>
-                  <TextInput
-                    style={styles.formInput}
-                    value={editData.username}
-                    onChangeText={(value) => updateEditField('username', value)}
-                    placeholder="Enter username"
-                    placeholderTextColor="#999"
-                  />
-                </View> */}
-
                 <View style={styles.formField}>
                   <Text style={styles.formLabel}>{t('emailAddress')}</Text>
                   <TextInput
@@ -360,7 +414,7 @@ const ProfileScreen = () => {
                 <View style={styles.formActions}>
                   <TouchableOpacity
                     style={styles.cancelFormButton}
-                    onPress={handleEditToggle}
+                    onPress={() => setEditing(!editing)}
                   >
                     <Text style={styles.cancelFormButtonText}>{t('cancel')}</Text>
                   </TouchableOpacity>
@@ -374,54 +428,103 @@ const ProfileScreen = () => {
               </View>
             </View>
           ) : (
-            // Normal Profile View
-            <Animated.View
-              style={[
-                styles.profileHeader,
-                { transform: [{ scale: profileImageScale }] },
-              ]}
-            >
-              <TouchableOpacity onPress={handleImageUpload} activeOpacity={0.8}>
-                <View style={styles.profileImageContainer}>
-                  {user?.profileImage ? (
-                    <Image
-                      source={{ uri: user.profileImage }}
-                      style={styles.profileImage}
-                    />
-                  ) : (
-                    <View style={styles.profileImagePlaceholder}>
-                      <Icon name="person" size={60} color="#ffffff" />
+            // ID Card Style Profile View
+            <View style={styles.idCardContainer}>
+              <LinearGradient
+                colors={[
+                  theme.colors.primary,
+                  theme.colors.support_container[1],
+                  theme.colors.support_container[2],
+                ]}
+                style={styles.idCardGradient}
+              >
+                {/* ID Card Header */}
+                <View style={styles.idCardHeader}>
+                  <View style={styles.idCardLogo}>
+                    <Icon name="verified" size={24} color="white" />
+                  </View>
+                  <Text style={styles.idCardTitle}>DC JEWELLERS</Text>
+                  <Text style={styles.idCardSubtitle}>DIGITAL ID CARD</Text>
+                </View>
+
+                {/* ID Card Content */}
+                <View style={styles.idCardContent}>
+                  <View style={styles.idCardLeft}>
+                    <TouchableOpacity 
+                      onPress={handleImageUpload} 
+                      activeOpacity={0.8} 
+                      disabled={isUploading}
+                      style={styles.idCardImageContainer}
+                    >
+                      {user?.profileImage ? (
+                        <Image
+                          source={{ uri: user.profileImage }}
+                          style={styles.idCardImage}
+                        />
+                      ) : (
+                        <View style={styles.idCardImagePlaceholder}>
+                          <Icon name="person" size={40} color="white" />
+                        </View>
+                      )}
+                      {!isUploading && (
+                        <View style={styles.idCardImageOverlay}>
+                          <Icon name="edit" size={16} color="white" />
+                        </View>
+                      )}
+                      {isUploading && (
+                        <View style={styles.idCardImageOverlay}>
+                          <ActivityIndicator size="small" color="white" />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.idCardRight}>
+                    <View style={styles.idCardInfoRow}>
+                      <Text style={styles.idCardLabel}>NAME : </Text>
+                      <Text style={styles.idCardValue}>{user?.name || 'Not Provided'}</Text>
                     </View>
-                  )}
-                  <View style={styles.editBadge}>
-                    <Icon name="edit" size={18} color={theme.colors.primary} />
+                    
+                    <View style={styles.idCardInfoRow}>
+                      <Text style={styles.idCardLabel}>EMAIL : </Text>
+                      <Text style={styles.idCardValue}>{user?.email || 'Not Provided'}</Text>
+                    </View>
+                    
+                    <View style={styles.idCardInfoRow}>
+                      <Text style={styles.idCardLabel}>MOBILE : </Text>
+                      <Text style={styles.idCardValue}> {user?.mobile || t('notProvided')}</Text>
+                    </View>
+                    
+                    <View style={styles.idCardInfoRow}>
+                      <Text style={styles.idCardLabel}>USER ID : </Text>
+                      <Text style={styles.idCardValue}>{user?.id || 'N/A'}</Text>
+                    </View>
                   </View>
                 </View>
-              </TouchableOpacity>
 
-              <Text style={styles.userName}>{user?.name}</Text>
-              <Text style={styles.userEmail}>{user?.email}</Text>
-
-              {/* Edit Button */}
-              <TouchableOpacity
-                style={styles.editProfileButton}
-                onPress={handleEditToggle}
-              >
-                <Icon
-                  name="edit"
-                  size={18}
-                  color="white"
-                  style={{ marginRight: 8 }}
-                />
-                <Text style={styles.editProfileButtonText}>{t('editProfile')}</Text>
-              </TouchableOpacity>
-            </Animated.View>
+                {/* ID Card Footer */}
+                <View style={styles.idCardFooter}>
+                  <View style={styles.idCardFooterLeft}>
+                    <Text style={styles.idCardFooterText}>Valid Until: Lifetime</Text>
+                  </View>
+                  <View style={styles.idCardFooterRight}>
+                    <TouchableOpacity
+                      style={styles.editIdCardButton}
+                      onPress={handleEditToggle}
+                    >
+                      <Icon name="edit" size={16} color="white" />
+                      <Text style={styles.editIdCardButtonText}>EDIT</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </LinearGradient>
+            </View>
           )}
 
           {/* Main Content */}
           <View style={styles.contentContainer}>
             {/* Personal Info Card */}
-            <View style={styles.card}>
+            {/* <View style={styles.card}>
               <View style={styles.cardHeader}>
                 <Icon
                   name="person-outline"
@@ -453,7 +556,7 @@ const ProfileScreen = () => {
                 <Text style={styles.infoLabel}>{t('user_id')}</Text>
                 <Text style={styles.infoValue}>{user?.id}</Text>
               </View>
-            </View>
+            </View> */}
 
             {/* Referral Card */}
             <View style={[styles.card, styles.referralCard]}>
@@ -486,7 +589,7 @@ const ProfileScreen = () => {
                     <View style={styles.referralCodeLeft}>
                       <Text style={styles.referralCodeLabel}>{t('yourCode')}</Text>
                       <Text style={styles.referralCode}>
-                        {user?.referralCode || "GOLD123"}
+                        {user?.referralCode|| 'N/A'}
                       </Text>
                     </View>
                     <View style={styles.copyIconContainer}>
@@ -613,7 +716,38 @@ const ProfileScreen = () => {
           </View>
         </ScrollView>
       </View>
+
+      <Modal
+        visible={showLogoutModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={cancelLogout}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{t("logout_confirmation_title")}</Text>
+            <Text style={styles.modalMessage}>
+              {t("logout_confirmation_message")}
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={cancelLogout}
+              >
+                <Text style={styles.modalCancelButtonText}>{t("cancel")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalConfirmButton}
+                onPress={confirmLogout}
+              >
+                <Text style={styles.modalConfirmButtonText}>{t("logout")}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
+    </AuthGuard>
   );
 };
 
@@ -1078,6 +1212,205 @@ const styles = StyleSheet.create({
     marginTop: 15,
   },
   editProfileButtonText: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  idCardContainer: {
+    margin: 16,
+    borderRadius: 20,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  idCardGradient: {
+    padding: 20,
+    borderRadius: 20,
+  },
+  idCardHeader: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  idCardLogo: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  idCardTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "white",
+    marginBottom: 4,
+  },
+  idCardSubtitle: {
+    fontSize: 14,
+    color: "rgba(255,255,255,0.8)",
+  },
+  idCardContent: {
+    flexDirection: "column",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  idCardLeft: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 3,
+    borderColor: "rgba(255,255,255,0.3)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  idCardImageContainer: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 50,
+    position: "relative",
+  },
+  idCardImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 50,
+  },
+  idCardImagePlaceholder: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.2)",
+  },
+  idCardImageOverlay: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    borderRadius: 15,
+    padding: 5,
+    
+  },
+  idCardRight: {
+    width: "100%",
+    paddingTop: 20,
+  },
+  idCardInfoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  idCardLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "rgba(255,255,255,0.9)",
+  },
+  idCardValue: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "rgba(255,255,255,0.9)",
+    flex: 1,
+    flexWrap: "wrap",
+    textAlign: "right",
+  },
+  idCardFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  idCardFooterLeft: {
+    flex: 1,
+  },
+  idCardFooterText: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.8)",
+  },
+  idCardFooterRight: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  editIdCardButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.2)",
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 20,
+  },
+  editIdCardButtonText: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "bold",
+    marginLeft: 5,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    borderRadius: 15,
+    padding: 25,
+    alignItems: "center",
+    width: "80%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 10,
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
+  },
+  modalCancelButton: {
+    flex: 1,
+    marginRight: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: "#F5F5F5",
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  modalCancelButtonText: {
+    color: "#666",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  modalConfirmButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: theme.colors.primary,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  modalConfirmButtonText: {
     color: "white",
     fontSize: 14,
     fontWeight: "bold",

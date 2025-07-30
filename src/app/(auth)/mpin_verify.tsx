@@ -17,6 +17,7 @@ import {
   TextInputKeyPressEventData,
   TouchableWithoutFeedback,
   Keyboard,
+  Modal,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -29,6 +30,7 @@ import { BlurView } from "expo-blur";
 import Icon from "@expo/vector-icons/MaterialIcons";
 import { t } from "@/i18n";
 import { AppLocale } from "@/i18n";
+import { apiClient } from "@/services/api.service";
 
 // Simple Language Switcher Component
 const SimpleLanguageSwitcher = () => {
@@ -88,15 +90,133 @@ const SimpleLanguageSwitcher = () => {
   );
 };
 
+// Custom Modal Component
+const CustomModal = ({ 
+  visible, 
+  title, 
+  message, 
+  onClose, 
+  type = 'error' 
+}: {
+  visible: boolean;
+  title: string;
+  message: string;
+  onClose: () => void;
+  type?: 'error' | 'success' | 'warning';
+}) => {
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 100,
+        friction: 8,
+      }).start();
+    } else {
+      Animated.timing(scaleAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible]);
+
+  const getModalColors = () => {
+    switch (type) {
+      case 'error':
+        return {
+          background: 'rgba(220, 53, 69, 0.95)',
+          border: '#dc3545',
+          icon: 'error',
+          iconColor: '#ffffff'
+        };
+      case 'success':
+        return {
+          background: 'rgba(40, 167, 69, 0.95)',
+          border: '#28a745',
+          icon: 'check-circle',
+          iconColor: '#ffffff'
+        };
+      case 'warning':
+        return {
+          background: 'rgba(255, 193, 7, 0.95)',
+          border: '#ffc107',
+          icon: 'warning',
+          iconColor: '#000000'
+        };
+      default:
+        return {
+          background: 'rgba(220, 53, 69, 0.95)',
+          border: '#dc3545',
+          icon: 'error',
+          iconColor: '#ffffff'
+        };
+    }
+  };
+
+  const colors = getModalColors();
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <View style={styles.modalOverlay}>
+        <Animated.View
+          style={[
+            styles.modalContainer,
+            {
+              backgroundColor: colors.background,
+              borderColor: colors.border,
+              transform: [{ scale: scaleAnim }]
+            }
+          ]}
+        >
+          <View style={styles.modalHeader}>
+            <Icon 
+              name={colors.icon as any} 
+              size={32} 
+              color={colors.iconColor} 
+            />
+          </View>
+          <Text style={styles.modalTitle}>{title}</Text>
+          <Text style={styles.modalMessage}>{message}</Text>
+          <TouchableOpacity
+            style={[styles.modalButton, { borderColor: colors.border }]}
+            onPress={onClose}
+          >
+            <Text style={styles.modalButtonText}>OK</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
+    </Modal>
+  );
+};
+
 export default function MpinVerify() {
   const [mpinPins, setMpinPins] = useState(["", "", "", ""]);
   const [loading, setLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true);
+  const [attempts, setAttempts] = useState(0);
+  const [showModal, setShowModal] = useState(false);
+  const [modalData, setModalData] = useState({
+    title: '',
+    message: '',
+    type: 'error' as 'error' | 'success' | 'warning'
+  });
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockdownTimer, setLockdownTimer] = useState(0);
   const router = useRouter();
   const { login, isLoggedIn, logout } = useGlobalStore();
   const { width } = Dimensions.get("window");
   const logoWidth = width * 0.3;
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Animation for button press
   const animatePress = () => {
@@ -140,68 +260,270 @@ export default function MpinVerify() {
     ]).start();
   };
 
-  // Redirect immediately if already logged in
+  // Check token validity and user data on component mount
   useEffect(() => {
-    if (isLoggedIn) {
-      router.replace("/(tabs)/home");
-    }
-  }, [isLoggedIn, router]);
+    const validateTokenAndUser = async () => {
+      try {
+        // Check if already logged in
+        if (isLoggedIn) {
+          router.replace("/(tabs)/home");
+          return;
+        }
 
-  // Create refs for each of the 4 MPIN input fields
+        // Get stored token and user data
+        const token = await SecureStore.getItemAsync("authToken");
+        const userData = await AsyncStorage.getItem("userData");
+
+        if (!token) {
+          // No token found, redirect to login
+          console.log("No auth token found, redirecting to login");
+          await logout();
+          router.replace("/(auth)/login");
+          return;
+        }
+
+        if (!userData) {
+          // Token exists but no user data, clear token and redirect to login
+          console.log("Token exists but no user data, redirecting to login");
+          await logout();
+          router.replace("/(auth)/login");
+          return;
+        }
+
+        // Validate token by checking if it's expired
+        const isTokenValid = await validateToken(token);
+        if (!isTokenValid) {
+          console.log("Token is invalid/expired, redirecting to login");
+          await logout();
+          router.replace("/(auth)/login");
+          return;
+        }
+
+        // Token and user data are valid, show MPIN screen
+        setInitializing(false);
+      } catch (error) {
+        console.error("Error validating token and user:", error);
+        await logout();
+        router.replace("/(auth)/login");
+      }
+    };
+
+    validateTokenAndUser();
+  }, [isLoggedIn, router, logout]);
+
+  // Timer effect for lockdown countdown
+  useEffect(() => {
+    if (isLocked && lockdownTimer > 0) {
+      timerRef.current = setTimeout(() => {
+        setLockdownTimer(prev => {
+          if (prev <= 1) {
+            setIsLocked(false);
+            setAttempts(0);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [isLocked, lockdownTimer]);
+
+  // Cleanup timer on component unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
+
+  // Validate token by checking expiration
+  const validateToken = async (token: string): Promise<boolean> => {
+    try {
+      // Simple JWT expiration check
+      const tokenParts = token.split('.');
+      if (tokenParts.length !== 3) {
+        return false;
+      }
+
+      const payload = JSON.parse(atob(tokenParts[1]));
+      const currentTime = Date.now() / 1000;
+      
+      // Check if token is expired (with 5 minute buffer)
+      if (payload.exp && payload.exp < currentTime + 300) {
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error validating token:", error);
+      return false;
+    }
+  };
+
+  // Create refs for each of the 5 MPIN input fields
   const mpinInputRefs = [
+    useRef<TextInput>(null),
     useRef<TextInput>(null),
     useRef<TextInput>(null),
     useRef<TextInput>(null),
     useRef<TextInput>(null),
   ];
 
-  const verifyMPINCheck = async (inputMPIN: string): Promise<boolean> => {
-    try {
-      const salt = "someRandomSaltValue";
-      const storedHashedMPIN = await SecureStore.getItemAsync("user_mpin");
-      if (!storedHashedMPIN) {
-        console.error("No hashed MPIN found. Please set up your MPIN first.");
-        return false;
-      }
-      const inputHashedMPIN = await Crypto.digestStringAsync(
-        Crypto.CryptoDigestAlgorithm.SHA256,
-        salt + inputMPIN
-      );
-      return storedHashedMPIN === inputHashedMPIN;
-    } catch (error) {
-      console.error("Error verifying MPIN:", error);
-      return false;
-    }
+  const showErrorModal = (title: string, message: string) => {
+    setModalData({ title, message, type: 'error' });
+    setShowModal(true);
+  };
+
+  const showWarningModal = (title: string, message: string) => {
+    setModalData({ title, message, type: 'warning' });
+    setShowModal(true);
+  };
+
+  const resetMpinAndFocus = () => {
+    setMpinPins(["", "", "", ""]);
+    // Focus on first input after a short delay
+    setTimeout(() => {
+      mpinInputRefs[0].current?.focus();
+    }, 100);
   };
 
   const verifyMpin = async (enteredMpin: string) => {
     setLoading(true);
     try {
-      const isValid = await verifyMPINCheck(enteredMpin);
-      if (isValid) {
-        const token = await SecureStore.getItem("authToken");
-        const userData = JSON.parse(
-          (await AsyncStorage.getItem("userData")) || "{}"
-        );
-
-        if (token) {
-          useGlobalStore.getState().login(token, {
-            id: userData.user_id,
-            name: userData.name,
-            email: userData.email,
-            mobile: userData.mobile_number,
-            referralCode: userData.referralCode,
-          });
-          router.replace("/(tabs)/home");
-        }
-      } else {
-        shakeError();
-        Alert.alert(t("error"), t("incorrectMpin"));
-        setMpinPins(["", "", "", ""]);
+      // Get user data from storage
+      const userData = JSON.parse(
+        (await AsyncStorage.getItem("userData")) || "{}"
+      );
+      
+      if (!userData.mobile_number) {
+        showErrorModal(t("error"), "User mobile number not found");
+        return;
       }
-    } catch (error) {
+
+      console.log('🔐 Verifying MPIN for mobile:', userData.mobile_number);
+
+      // Call the auth/login-mpin API endpoint using apiClient
+      const response = await apiClient.post('/auth/login-mpin', {
+        mobileNumber: userData.mobile_number,
+        mpin: enteredMpin
+      });
+
+      const data = response.data;
+      console.log('🔐 Response data:', data);
+
+      if (data.success) {
+        console.log('🔐 MPIN verification successful');
+        
+        // Store updated tokens if provided
+        if (data.accessToken) {
+          await SecureStore.setItemAsync("accessToken", data.accessToken);
+        }
+        if (data.token) {
+          await SecureStore.setItemAsync("token", data.token);
+        }
+        if (data.refreshtoken) {
+          await SecureStore.setItemAsync("refreshToken", data.refreshtoken);
+        }
+        if (data.token) {
+          await SecureStore.setItemAsync("authToken", data.token);
+        }
+
+        // Update user data if provided
+        if (data.user) {
+          await AsyncStorage.setItem("userData", JSON.stringify(data.user));
+        }
+
+        // Login to global store
+        useGlobalStore.getState().login(data.token || data.accessToken, {
+          id: data.user?.user_id || userData.user_id,
+          name: data.user?.name || userData.name,
+          email: data.user?.email || userData.email,
+          mobile: data.user?.mobile_number || userData.mobile_number,
+          referralCode: data.user?.referralCode || userData.referralCode,
+        });
+
+        // Navigate to home
+        router.replace("/(app)/(tabs)/home");
+      } else {
+        console.log('🔐 MPIN verification failed:', data);
+        shakeError();
+        
+        // Increment attempts
+        const newAttempts = attempts + 1;
+        setAttempts(newAttempts);
+        console.log('🔐 New attempts:', newAttempts);
+        // Check if max attempts reached
+        if (newAttempts >= 3) {
+          // Start lockdown for 120 seconds
+          setIsLocked(true);
+          setLockdownTimer(120);
+          showWarningModal(
+            t("error"), 
+            "Maximum attempts reached. Please wait 2 minutes before trying again."
+          );
+        } else {
+          showErrorModal(
+            t("error"), 
+            `${data.message || t("incorrectMpin")} (${3 - newAttempts} attempts remaining)`
+          );
+        }
+        
+        resetMpinAndFocus();
+      }
+    } catch (error: any) {
       console.error("Error verifying MPIN:", error);
-      Alert.alert(t("error"), t("failedToVerifyMpin"));
+      
+      // Handle 400 Bad Request specifically for MPIN verification
+      if (error.response?.status === 400) {
+        const errorData = error.response.data;
+        console.log('🔐 400 Bad Request - MPIN verification failed:', errorData);
+        
+        shakeError();
+        
+        // Increment attempts
+        const newAttempts = attempts + 1;
+        setAttempts(newAttempts);
+        console.log('🔐 New attempts:', newAttempts);
+        
+        // Check if max attempts reached
+        if (newAttempts >= 3) {
+          // Start lockdown for 120 seconds
+          setIsLocked(true);
+          setLockdownTimer(120);
+          showWarningModal(
+            t("error"), 
+            "Maximum attempts reached. Please wait 2 minutes before trying again."
+          );
+        } else {
+          // Show the specific error message from the API
+          const errorMessage = errorData.message || t("incorrectMpin");
+          showErrorModal(
+            t("error"), 
+            `${errorMessage} (${3 - newAttempts} attempts remaining)`
+          );
+        }
+        
+        resetMpinAndFocus();
+        return;
+      }
+      
+      // Handle other network errors
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('Network request failed')) {
+        showErrorModal(t("error"), "Network error. Please check your internet connection.");
+      } else if (errorMessage.includes('fetch')) {
+        showErrorModal(t("error"), "Unable to connect to server. Please try again.");
+      } else {
+        showErrorModal(t("error"), t("failedToVerifyMpin"));
+      }
+      
+      resetMpinAndFocus();
     } finally {
       setLoading(false);
     }
@@ -212,7 +534,7 @@ export default function MpinVerify() {
     newPins[index] = text;
     setMpinPins(newPins);
 
-    if (text.length === 1 && index < 3) {
+    if (text.length === 1 && index < 4) {
       mpinInputRefs[index + 1].current?.focus();
     }
   };
@@ -228,6 +550,34 @@ export default function MpinVerify() {
       mpinInputRefs[index - 1].current?.focus();
     }
   };
+
+  // Show loading screen while initializing
+  if (initializing) {
+    return (
+      <ImageBackground
+        source={theme.image.bg_image}
+        style={styles.backgroundImage}
+      >
+        <LinearGradient
+          colors={["rgba(32, 1, 1, 0)", "rgba(167, 0, 0, 0)", "rgba(118, 1, 1, 0.02)"]}
+          style={styles.gradient}
+        >
+          <View style={styles.container}>
+            <View style={styles.logoContainer}>
+              <Image
+                source={theme.image.transparentLogo}
+                style={[styles.logo, { width: logoWidth }]}
+                resizeMode="contain"
+              />
+            </View>
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>{t("verifyingCredentials")}</Text>
+            </View>
+          </View>
+        </LinearGradient>
+      </ImageBackground>
+    );
+  }
 
   return (
     <ImageBackground
@@ -289,6 +639,15 @@ export default function MpinVerify() {
                     <Text style={styles.mpinSubtitle}>
                       {t("enterMpinSubtitle")}
                     </Text>
+                    
+                    {isLocked && (
+                      <View style={styles.lockdownContainer}>
+                        <Icon name="lock" size={20} color="#ff6b6b" />
+                        <Text style={styles.lockdownText}>
+                          Account locked for {Math.floor(lockdownTimer / 60)}:{(lockdownTimer % 60).toString().padStart(2, '0')}
+                        </Text>
+                      </View>
+                    )}
 
                     <Animated.View 
                       style={[
@@ -304,7 +663,8 @@ export default function MpinVerify() {
                             ref={mpinInputRefs[index]}
                             style={[
                               styles.otpInput,
-                              pin ? styles.otpInputFilled : styles.otpInputEmpty
+                              pin ? styles.otpInputFilled : styles.otpInputEmpty,
+                              isLocked && styles.otpInputDisabled
                             ]}
                             keyboardType="numeric"
                             maxLength={1}
@@ -313,6 +673,7 @@ export default function MpinVerify() {
                             onKeyPress={(e) => handleMpinKeyPress(e, index)}
                             secureTextEntry={true}
                             autoFocus={index === 0}
+                            editable={!isLocked}
                           />
                           {pin !== "" && (
                             <View style={styles.inputDot} />
@@ -321,6 +682,38 @@ export default function MpinVerify() {
                       ))}
                     </Animated.View>
 
+                    {/* View MPIN and Clear Button */}
+                    <View style={styles.actionButtonsContainer}>
+                      <TouchableOpacity
+                        style={styles.viewMpinButton}
+                        onPress={() => {
+                          // Show current MPIN in modal or alert
+                          const currentMpin = mpinPins.join("");
+                          if (currentMpin) {
+                            showErrorModal("Current MPIN", `Your entered MPIN: ${currentMpin}`);
+                          } else {
+                            showErrorModal("No MPIN", "Please enter your MPIN first");
+                          }
+                        }}
+                        disabled={loading || isLocked}
+                      >
+                        <Icon name="visibility" size={20} color={isLocked ? "#cccccc" : "#ffffff"} />
+                        <Text style={[styles.viewMpinButtonText, isLocked && { color: "#cccccc" }]}>View MPIN</Text>
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity
+                        style={styles.clearButton}
+                        onPress={() => {
+                          resetMpinAndFocus();
+                          setAttempts(0);
+                        }}
+                        disabled={loading || isLocked}
+                      >
+                        <Icon name="clear" size={20} color={isLocked ? "#cccccc" : "#ffffff"} />
+                        <Text style={[styles.clearButtonText, isLocked && { color: "#cccccc" }]}>Clear</Text>
+                      </TouchableOpacity>
+                    </View>
+
                     <Animated.View
                       style={{
                         transform: [{ scale: scaleAnim }],
@@ -328,19 +721,29 @@ export default function MpinVerify() {
                       }}
                     >
                       <TouchableOpacity
-                        style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+                        style={[
+                          styles.loginButton, 
+                          (loading || isLocked) && styles.loginButtonDisabled
+                        ]}
                         onPress={() => {
-                          animatePress();
-                          verifyMpin(mpinPins.join(""));
+                          if (!isLocked) {
+                            animatePress();
+                            verifyMpin(mpinPins.join(""));
+                          }
                         }}
-                        disabled={loading || mpinPins.includes("")}
+                        disabled={loading || mpinPins.includes("") || isLocked}
                       >
                         <LinearGradient
-                          colors={["#ffc90c", "#ffd700"]}
+                          colors={isLocked ? ["#cccccc", "#dddddd"] : ["#ffc90c", "#ffd700"]}
                           style={styles.buttonGradient}
                         >
                           <Text style={styles.loginButtonText}>
-                            {loading ? t("processing") : t("login")}
+                            {loading 
+                              ? t("processing") 
+                              : isLocked 
+                                ? `Locked (${Math.floor(lockdownTimer / 60)}:${(lockdownTimer % 60).toString().padStart(2, '0')})`
+                                : t("login") + " " + attempts + "/3"
+                            }
                           </Text>
                         </LinearGradient>
                       </TouchableOpacity>
@@ -349,16 +752,13 @@ export default function MpinVerify() {
                     <TouchableOpacity
                       style={styles.forgotContainer}
                       onPress={async () => {
-                        await SecureStore.deleteItemAsync("authToken");
-                        await SecureStore.deleteItemAsync("user_mpin");
-                        logout();
-                        setMpinPins(["", "", "", ""]);
-                        router.replace("/login");
+                        // Navigate to MPIN reset flow instead of just logging out
+                        router.push("/(auth)/forgot_mpin");
                       }}
                     >
                       <Icon name="help-outline" size={20} color={theme.colors.secondary} />
                       <Text style={styles.loginLink}>
-                        {t("forgotMpinText")}
+                        {t("Forgot_MPIN")}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -369,6 +769,15 @@ export default function MpinVerify() {
         </KeyboardAvoidingView>
       </LinearGradient>
       <SimpleLanguageSwitcher />
+      
+      {/* Custom Modal */}
+      <CustomModal
+        visible={showModal}
+        title={modalData.title}
+        message={modalData.message}
+        type={modalData.type}
+        onClose={() => setShowModal(false)}
+      />
     </ImageBackground>
   );
 }
@@ -393,6 +802,17 @@ const styles = StyleSheet.create({
   },
   logo: {
     aspectRatio: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "600",
+    textAlign: "center",
   },
   formContainer: {
     flex: 1,
@@ -447,13 +867,13 @@ const styles = StyleSheet.create({
   otpInputsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: "70%",
+    width: "85%",
     alignSelf: "center",
     marginBottom: 30,
   },
   inputWrapper: {
     position: "relative",
-    width: 50,
+    width: 45,
     height: 50,
   },
   otpInput: {
@@ -475,6 +895,11 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.secondary,
     backgroundColor: "#ffffff",
     color: "#000000",
+  },
+  otpInputDisabled: {
+    borderColor: "#cccccc",
+    backgroundColor: "#f5f5f5",
+    color: "#999999",
   },
   inputDot: {
     position: "absolute",
@@ -528,5 +953,121 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 16,
     fontWeight: "600",
+  },
+  lockdownContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255, 107, 107, 0.1)",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#ff6b6b",
+  },
+  lockdownText: {
+    color: "#ff6b6b",
+    fontSize: 14,
+    fontWeight: "600",
+    marginLeft: 8,
+  },
+  
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  modalContainer: {
+    width: '100%',
+    maxWidth: 320,
+    borderRadius: 20,
+    padding: 24,
+    borderWidth: 2,
+    alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.3,
+        shadowRadius: 20,
+      },
+      android: {
+        elevation: 15,
+      },
+    }),
+  },
+  modalHeader: {
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: '#ffffff',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  modalButton: {
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 25,
+    borderWidth: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  modalButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  
+  // Action buttons styles
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 10,
+  },
+  viewMpinButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(40, 167, 69, 0.8)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(40, 167, 69, 0.5)',
+  },
+  viewMpinButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  clearButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(220, 53, 69, 0.8)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(220, 53, 69, 0.5)',
+  },
+  clearButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 4,
   },
 });

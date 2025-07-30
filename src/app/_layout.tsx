@@ -29,7 +29,7 @@ export default function RootLayout() {
   const router = useRouter();
   const navigation = useNavigation();
   const [overallLoading, setOverallLoading] = useState<boolean>(false);
-  const { user, setUser, setLanguage } = useGlobalStore();
+  const { user, updateUser, setLanguage } = useGlobalStore();
 
   // Initialize language on app start
   useEffect(() => {
@@ -69,10 +69,31 @@ export default function RootLayout() {
   useEffect(() => {
     const checkStoredUser = async () => {
       try {
+        const token = await SecureStore.getItemAsync("authToken");
         const storedUser = await SecureStore.getItemAsync("user");
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
+        
+        if (token && storedUser) {
+          try {
+            const parsedUser = JSON.parse(storedUser);
+            // Convert AuthContext user data to global store format
+            const globalStoreUser = {
+              id: parsedUser.id,
+              name: parsedUser.name || parsedUser.email,
+              email: parsedUser.email,
+              mobile: parsedUser.mobile ? parseInt(parsedUser.mobile) : undefined,
+              profileImage: "",
+              idProof: "",
+              referralCode: "",
+              rewards: 0,
+              ...parsedUser // Keep any additional fields
+            };
+            updateUser(globalStoreUser);
+            
+            // If token exists, redirect to MPIN screen instead of home
+            router.replace("/mpin_verify");
+          } catch (parseError) {
+            console.error("Error parsing stored user data:", parseError);
+          }
         }
       } catch (error) {
         console.error("Error retrieving stored user:", error);
@@ -80,7 +101,7 @@ export default function RootLayout() {
     };
 
     checkStoredUser();
-  }, [setUser]);
+  }, [updateUser, router]);
 
   // Register loading service
   useEffect(() => {

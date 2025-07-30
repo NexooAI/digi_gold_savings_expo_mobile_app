@@ -26,6 +26,30 @@ export default function AuthGuard() {
     checkAuthenticationStatus();
   }, []);
 
+  // Validate token by checking expiration
+  const validateToken = async (token: string): Promise<boolean> => {
+    try {
+      // Simple JWT expiration check
+      const tokenParts = token.split('.');
+      if (tokenParts.length !== 3) {
+        return false;
+      }
+
+      const payload = JSON.parse(atob(tokenParts[1]));
+      const currentTime = Date.now() / 1000;
+      
+      // Check if token is expired (with 5 minute buffer)
+      if (payload.exp && payload.exp < currentTime + 300) {
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error validating token:", error);
+      return false;
+    }
+  };
+
   const checkAuthenticationStatus = async () => {
     try {
       // Check if user is already logged in from global state
@@ -38,34 +62,57 @@ export default function AuthGuard() {
       const token = await SecureStore.getItemAsync("authToken");
       
       if (token) {
-        // Token exists, check if user data is available
+        // Validate token expiration
+        const isTokenValid = await validateToken(token);
+        
+        if (!isTokenValid) {
+          console.log("Token is invalid/expired, redirecting to login");
+          // Clear invalid token and redirect to login
+          await SecureStore.deleteItemAsync("authToken");
+          await SecureStore.deleteItemAsync("accessToken");
+          await SecureStore.deleteItemAsync("token");
+          await SecureStore.deleteItemAsync("refreshToken");
+          await AsyncStorage.removeItem("userData");
+          router.replace("/(auth)/login");
+          return;
+        }
+
+        // Token exists and is valid, check if user data is available
         const userData = await AsyncStorage.getItem("userData");
         
         if (userData) {
           const parsedUserData = JSON.parse(userData);
           
-          // Check if MPIN is set up
-          const storedMPIN = await SecureStore.getItemAsync("user_mpin");
-          
-          if (storedMPIN) {
-            // User has token and MPIN set up → Go to MPIN verification
-            router.replace("/(auth)/mpin_verify");
-          } else {
-            // User has token but no MPIN → Go to MPIN setup
-            router.replace("/(auth)/reset_mpin");
-          }
+          // Check if MPIN is set up (this is now handled on server)
+          // Since MPIN is stored on server, we can directly go to MPIN verification
+          console.log("Valid token and user data found, redirecting to MPIN verification");
+          router.replace("/(auth)/mpin_verify");
         } else {
           // Token exists but no user data → Go to login
+          console.log("Token exists but no user data, redirecting to login");
           await SecureStore.deleteItemAsync("authToken");
+          await SecureStore.deleteItemAsync("accessToken");
+          await SecureStore.deleteItemAsync("token");
+          await SecureStore.deleteItemAsync("refreshToken");
           router.replace("/(auth)/login");
         }
       } else {
         // No token → Go to login
+        console.log("No auth token found, redirecting to login");
         router.replace("/(auth)/login");
       }
     } catch (error) {
       console.error("Authentication check error:", error);
-      // On error, go to login screen
+      // On error, clear all stored data and go to login screen
+      try {
+        await SecureStore.deleteItemAsync("authToken");
+        await SecureStore.deleteItemAsync("accessToken");
+        await SecureStore.deleteItemAsync("token");
+        await SecureStore.deleteItemAsync("refreshToken");
+        await AsyncStorage.removeItem("userData");
+      } catch (clearError) {
+        console.error("Error clearing stored data:", clearError);
+      }
       router.replace("/(auth)/login");
     } finally {
       setIsChecking(false);

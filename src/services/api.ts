@@ -210,13 +210,26 @@ const checkNetworkState = async () => {
 // Check if endpoint is public (doesn't require authentication)
 const isPublicEndpoint = (url: string | undefined): boolean => {
   if (!url) return false;
-  const publicEndpoints = ['/auth/login', '/auth/register', '/auth/refresh-token', '/auth/forgot-password'];
+  const publicEndpoints = [
+    '/auth/login', 
+    '/auth/register', 
+    '/auth/refresh-token', 
+    '/auth/forgot-password',
+    '/register/mobile',
+    '/register/verify-otp',
+    '/register/complete'
+  ];
   return publicEndpoints.some(endpoint => url.includes(endpoint));
 };
 
 const checkTokenValidity = async () => {
   try {
-    const token = await SecureStore.getItem("authToken");
+    // Try to get the main token first, then fallback to accessToken
+    let token = await SecureStore.getItem("token");
+    if (!token) {
+      token = await SecureStore.getItem("accessToken");
+    }
+    
     if (!token || typeof token !== 'string' || token.trim() === '') {
       // No token found or invalid token, redirect to login
       console.log('No valid token found, logging out');
@@ -244,7 +257,15 @@ const checkTokenValidity = async () => {
           try {
             const response = await api.post('/auth/refresh-token', { refreshToken });
             const newToken = response.data.token;
+            const newAccessToken = response.data.accessToken;
+            const newRefreshToken = response.data.refreshtoken;
+            
+            // Store all updated tokens
+            await SecureStore.setItem("token", newToken);
+            await SecureStore.setItem("accessToken", newAccessToken);
+            await SecureStore.setItem("refreshToken", newRefreshToken);
             await SecureStore.setItem("authToken", newToken);
+            
             return newToken;
           } catch (error) {
             // Refresh failed, logout user
@@ -286,6 +307,10 @@ const api = axios.create({
 const handleLogout = async () => {
   try {
     await SecureStore.deleteItemAsync("authToken");
+    await SecureStore.deleteItemAsync("token");
+    await SecureStore.deleteItemAsync("accessToken");
+    await SecureStore.deleteItemAsync("refreshToken");
+    // Note: user_mpin is no longer stored locally, it's on server
     await AsyncStorage.removeItem("userData");
     router.replace("/(auth)/login");
   } catch (error) {

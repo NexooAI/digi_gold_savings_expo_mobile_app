@@ -46,6 +46,7 @@ import { Ionicons } from "@expo/vector-icons";
 import StatusView from "@/app/components/StatusView";
 import NotificationService from "@/services/NotificationService";
 import { AppLocale } from "@/i18n";
+import AuthGuard from "@/components/AuthGuard";
 // Import API logging utilities
 import {
   logApiSummary,
@@ -238,11 +239,36 @@ interface UserInfoCardProps {
   totalGoldSavings?: number;
   totalAmount?: number;
   showTotalGold?: boolean;
+  userId: number;
 }
 
 // Components
 const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
-  ({ userName, activeSchemesCount, onPress, totalGoldSavings = 0, totalAmount = 0, showTotalGold = true }) => (
+  ({ userName, activeSchemesCount, onPress, userId,totalGoldSavings = 0, totalAmount = 0, showTotalGold = true }) => {
+    const arrowOpacity = useRef(new Animated.Value(1)).current;
+
+    useEffect(() => {
+      const blink = Animated.loop(
+        Animated.sequence([
+          Animated.timing(arrowOpacity, {
+            toValue: 0.3,
+            duration: 800,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(arrowOpacity, {
+            toValue: 1,
+            duration: 800,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      blink.start();
+      return () => blink.stop();
+    }, [arrowOpacity]);
+
+    return (
     <TouchableOpacity
       style={styles.userInfoCard}
       onPress={onPress}
@@ -257,7 +283,9 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
         <View style={styles.userInfoTopRow}>
           <View style={styles.welcomeContainer}>
             <Text style={styles.welcomeText}>{t('welcomeBack')}</Text>
-            <Text style={styles.userName}>{userName?.toUpperCase()}</Text>
+            <Text style={styles.userName}>{userName?.toUpperCase()}
+              <Text style={styles.userIdText}>( {userId} )</Text>
+            </Text>
           </View>
           <View style={styles.userAvatarContainer}>
             <Ionicons name="person-circle" size={45} color="#FFD700" />
@@ -306,14 +334,18 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
             end={{ x: 1, y: 0 }}
             style={styles.viewDetailsGradient}
           >
-            <Ionicons name="eye-outline" size={18} color="#850111" />
+            {/* <Ionicons name="eye-outline" size={20} color="#850111" /> */}
             <Text style={styles.viewDetailsText}>{t('viewInvestmentDetails')}</Text>
-            <Ionicons name="chevron-forward" size={18} color="#850111" />
+            <Animated.View style={[styles.doubleArrowContainer, { opacity: arrowOpacity }]}>
+              <Ionicons name="chevron-forward" size={16} color="#850111" />
+              <Ionicons name="chevron-forward" size={16} color="#850111" style={styles.secondArrow} />
+            </Animated.View>
           </LinearGradient>
         </View>
       </LinearGradient>
     </TouchableOpacity>
-  )
+    );
+  }
 );
 
 // AnimatedGoldRate: Decorative gold rate label with theme color, 22KT, live dot, and last updated timestamp
@@ -544,23 +576,42 @@ export default function Home2() {
       const response = await api.get(`investments/user_investments/${user.id}`);
       console.log('Investment API response:', response.data);
 
-      let investments = response.data.data;
+      // Handle different possible response structures
+      let investments = [];
+      
+      if (response.data && response.data.data) {
+        // If response has data.data structure
+        investments = response.data.data;
+      } else if (response.data && Array.isArray(response.data)) {
+        // If response.data is directly an array
+        investments = response.data;
+      } else if (response.data && response.data.investments) {
+        // If response has investments property
+        investments = response.data.investments;
+      }
+
+      // Ensure investments is an array
       if (!Array.isArray(investments)) {
         console.warn('Expected investments to be an array, got:', investments);
         investments = [];
       }
+      
       console.log('Total investments found:', investments.length);
 
       setActiveSchemesCount(investments.length || 0);
 
-      // Filter investments by schemeType
-      const weightBased = investments.filter((inv: any) => inv.scheme.schemeType === 'weight');
-      const amountBased = investments.filter((inv: any) => inv.scheme.schemeType === 'amount');
+      // Safely filter investments by schemeType
+      const weightBased = investments.filter((inv: any) => 
+        inv && inv.scheme && inv.scheme.schemeType === 'weight'
+      );
+      const amountBased = investments.filter((inv: any) => 
+        inv && inv.scheme && inv.scheme.schemeType === 'amount'
+      );
 
       if (weightBased.length > 0) {
         // Calculate total gold only for weight-based schemes
         const totalGold = weightBased.reduce((sum: number, investment: any) => {
-          const goldWeight = parseFloat(investment.totalgoldweight) || 0;
+          const goldWeight = parseFloat(investment?.totalgoldweight || '0') || 0;
           return sum + goldWeight;
         }, 0);
         setTotalGoldSavings(totalGold);
@@ -572,11 +623,12 @@ export default function Home2() {
 
       // Calculate total amount for all investments
       const totalAmount = investments.reduce((sum: number, investment: any) => {
-        const amount = parseFloat(investment.total_paid) || 0;
+        const amount = parseFloat(investment?.total_paid || '0') || 0;
         return sum + amount;
       }, 0);
       setTotalAmount(totalAmount);
     } catch (error) {
+      console.error('Error fetching investment data:', error);
       setActiveSchemesCount(0);
       setTotalGoldSavings(0);
       setTotalAmount(0);
@@ -615,10 +667,10 @@ export default function Home2() {
         if (data.posters && data.posters.length > 0) {
           const images = data.posters.map((poster: Poster) => ({
             id: poster.id,
-            image: poster.image.startsWith("http")
+            image: poster.image && poster.image.startsWith("http")
               ? poster.image
-              : `${theme.baseUrl}${poster.image}`,
-            title: poster.title,
+              : poster.image ? `${theme.baseUrl}${poster.image}` : '',
+            title: poster.title || '',
           }));
           setSliderImages(images);
         } else {
@@ -635,7 +687,7 @@ export default function Home2() {
         // Set flash news
         if (data.flashNews && data.flashNews.length > 0) {
           console.log(data.flashNews)
-          const flashArray = data.flashNews.map((f: any) => f.title)
+          const flashArray = data.flashNews.map((f: any) => f.title || '').filter((title:any) => title);
           setFlashNews(flashArray);
         }
 
@@ -647,7 +699,7 @@ export default function Home2() {
         }
 
         // Store gold rate in AsyncStorage
-        if (data.currentRates?.gold_rate) {
+        if (data.currentRates?.gold_rate && typeof data.currentRates.gold_rate === 'string') {
           await AsyncStorage.setItem("gold_rate", data.currentRates.gold_rate);
         }
       } else {
@@ -872,8 +924,28 @@ export default function Home2() {
     [getImageSource, viewedCollections]
   );
 
+    // Show loading screen while data is being fetched
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
+        <ImageBackground
+          source={require("../../../../../assets/images/bg_new.jpg")}
+          style={styles.backgroundImage}
+          resizeMode="contain"
+        >
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#FFD700" />
+            <Text style={styles.loadingText}>{t("loading")}</Text>
+          </View>
+        </ImageBackground>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <AuthGuard>
+      <SafeAreaView style={styles.safeArea}>
       <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
       <ImageBackground
         source={require("../../../../../assets/images/bg_new.jpg")}
@@ -1020,6 +1092,7 @@ export default function Home2() {
                 totalAmount={totalAmount}
                 showTotalGold={showTotalGold}
                 onPress={() => router.push("/(tabs)/savings")}
+                userId={Number(user?.id) || 0}
               />
 
               <View style={styles.sectionHeader}>
@@ -1070,6 +1143,7 @@ export default function Home2() {
         </View>
       </ImageBackground>
     </SafeAreaView>
+    </AuthGuard>
   );
 }
 
@@ -1256,6 +1330,12 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(18),
     fontWeight: "700",
     color: "#FFFFFF",
+  },
+  userIdText: {
+    fontSize: moderateScale(12),
+    fontWeight: "400",
+    color: "rgba(255, 255, 255, 0.7)",
+    marginLeft: 8,
   },
   userAvatarContainer: {
     width: 40,
@@ -1541,24 +1621,32 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   viewDetailsContainer: {
-    marginTop: 12,
+    marginTop: 16,
     borderRadius: 12,
     overflow: "hidden",
     alignSelf: "flex-end",
-    width: "50%",
+    width: "55%",
   },
   viewDetailsGradient: {
-    padding: 8,
+    padding: 12,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
+    gap: 8,
   },
   viewDetailsText: {
     fontSize: moderateScale(10),
     fontWeight: "bold",
     color: "#850111",
     textAlign: "center",
+  },
+  doubleArrowContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 4,
+  },
+  secondArrow: {
+    marginLeft: -8,
   },
   goldRateLabelContainer: {
     width: '90%',
@@ -1624,5 +1712,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
     textAlign: 'center',
     fontStyle: 'italic',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
 }); 

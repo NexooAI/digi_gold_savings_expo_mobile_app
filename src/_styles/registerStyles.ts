@@ -252,7 +252,7 @@ export const registerStyles = StyleSheet.create({
   logoContainer: {
     width: "100%",
     alignItems: "center",
-    paddingTop: Platform.OS === "ios" ? 20 : 10,
+    paddingTop: Platform.OS === "ios" ? 20 : 1,
     marginBottom: 0,
   },
   logo: {

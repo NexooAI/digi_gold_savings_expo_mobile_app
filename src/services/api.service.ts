@@ -189,14 +189,22 @@ apiClient.interceptors.response.use(
     apiServiceLogger.logError(error, startTime);
     
     LoadingService.hide();
-    if (error.response) {
-      Alert.alert('Error', (error.response.data && (error.response.data as any).message) || 'Something went wrong!');
-    } else if (error.request) {
-      console.log(error)
-      Alert.alert('Network Error', 'Please check your internet connection.');
-    } else {
-      Alert.alert('Error', error.message);
+    
+    // Don't show automatic alerts for MPIN verification endpoint
+    // Let the component handle the error display
+    const isMpinVerification = error.config?.url?.includes('/auth/login-mpin');
+    
+    if (!isMpinVerification) {
+      if (error.response) {
+        Alert.alert('Error', (error.response.data && (error.response.data as any).message) || 'Something went wrong!');
+      } else if (error.request) {
+        console.log(error)
+        Alert.alert('Network Error', 'Please check your internet connection.');
+      } else {
+        Alert.alert('Error', error.message);
+      }
     }
+    
     return Promise.reject(error);
   }
 );
@@ -225,10 +233,42 @@ export const processPayment = async (amount: number | string): Promise<any> => {
   }
 };
 
+/**
+ * Uploads a profile image for a user.
+ * @param userId The ID of the user
+ * @param fileUri The local file URI of the image to upload
+ * @returns A promise that resolves with the upload response data
+ */
+export const uploadProfileImage = async (userId: number | string, fileUri: string): Promise<any> => {
+  try {
+    // Create form data for file upload
+    const formData = new FormData();
+    formData.append('userId', userId.toString());
+    formData.append('file', {
+      uri: fileUri,
+      type: 'image/jpeg', // You can make this dynamic based on file extension
+      name: 'profile_image.jpg'
+    } as any);
+console.log("formData", formData);
+    const response: AxiosResponse = await apiClient.post('/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export default {
   getInvestmentsByUser,
-  processPayment
+  processPayment,
+  uploadProfileImage
 };
 
 // Export the logger for external access
 export { apiServiceLogger };
+
+// Export the apiClient for external access
+export { apiClient };

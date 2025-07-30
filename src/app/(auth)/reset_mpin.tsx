@@ -30,6 +30,7 @@ import { t } from "@/i18n";
 import { AppLocale } from "@/i18n";
 import useGlobalStore from "@/store/global.store";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
 const logoWidth = width * 0.3;
@@ -198,6 +199,7 @@ export default function ResetMpin() {
   const { name, email, mobile, mode, from } = useLocalSearchParams();
 
   const router = useRouter();
+  const [currentMpin, setCurrentMpin] = useState("");
   const [mpin, setMpin] = useState("");
   const [confirmMpin, setConfirmMpin] = useState("");
   const [loading, setLoading] = useState(false);
@@ -220,23 +222,71 @@ export default function ResetMpin() {
   };
 
   useEffect(() => {
-    if (mpin.length === 4 && confirmMpin.length === 4) {
+    if (!isCreatingMPIN && currentMpin.length === 4 && mpin.length === 4 && confirmMpin.length === 4) {
+      if (mpin !== confirmMpin) {
+        setError(t("mpinMismatch"));
+      } else if (currentMpin === mpin) {
+        setError(t("newMpinSameAsCurrent"));
+      } else {
+        setError("");
+      }
+    } else if (isCreatingMPIN && mpin.length === 4 && confirmMpin.length === 4) {
       setError(mpin !== confirmMpin ? t("mpinMismatch") : "");
     } else {
       setError("");
     }
-  }, [mpin, confirmMpin, language]);
+  }, [currentMpin, mpin, confirmMpin, language, isCreatingMPIN]);
 
   const handleSubmit = async () => {
+    if (!isCreatingMPIN && currentMpin.length !== 4) {
+      showErrorAlert(t("enterCurrentMpin"));
+      return;
+    }
+    
     if (mpin !== confirmMpin) {
       showErrorAlert(t("mpinsDoNotMatch"));
       return;
     }
+
+    if (!isCreatingMPIN && currentMpin === mpin) {
+      showErrorAlert(t("newMpinSameAsCurrent"));
+      return;
+    }
+
     setLoading(true);
     try {
-      await hashMPIN(mpin);
-      showErrorAlert(t("mpinResetSuccess"));
-      setTimeout(() => router.replace("/(tabs)/home"), 1000);
+      // Get user data to send with MPIN update
+      const userData = JSON.parse(
+        (await AsyncStorage.getItem("userData")) || "{}"
+      );
+      
+      if (!userData.mobile_number) {
+        showErrorAlert("User mobile number not found");
+        return;
+      }
+
+      // Call API to update MPIN on server
+      const response = await fetch(`${theme.baseUrl}/auth/update-mpin`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          mobileNumber: userData.mobile_number,
+          currentMpin: !isCreatingMPIN ? currentMpin : undefined,
+          mpin: mpin
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        showErrorAlert(t("mpinResetSuccess"));
+        setTimeout(() => router.replace("/(app)/(tabs)"), 1000);
+      } else {
+        showErrorAlert(data.message || t("resetFailed"));
+      }
     } catch (error: any) {
       showErrorAlert(error.response?.data?.message || t("resetFailed"));
     } finally {
@@ -321,6 +371,19 @@ export default function ResetMpin() {
                         ? t("createMpinSubtitle")
                         : t("resetMpinSubtitle")}
                     </Text>
+                    
+                    {!isCreatingMPIN && (
+                      <>
+                        <Text style={styles.label}>{t("currentMpin")}</Text>
+                        <MpinInput
+                          length={4}
+                          onComplete={setCurrentMpin}
+                          secureTextEntry={!showPin}
+                        />
+                        <View style={{ height: 16 }} />
+                      </>
+                    )}
+                    
                     <Text style={styles.label}>{t("newMpin")}</Text>
                     <MpinInput
                       length={4}
@@ -359,6 +422,7 @@ export default function ResetMpin() {
                         styles.loginButton,
                         (error ||
                           loading ||
+                          (!isCreatingMPIN && currentMpin.length < 4) ||
                           mpin.length < 4 ||
                           confirmMpin.length < 4) &&
                           styles.loginButtonDisabled,
@@ -367,6 +431,7 @@ export default function ResetMpin() {
                       disabled={
                         !!error ||
                         loading ||
+                        (!isCreatingMPIN && currentMpin.length < 4) ||
                         mpin.length < 4 ||
                         confirmMpin.length < 4
                       }

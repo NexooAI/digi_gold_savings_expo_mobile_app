@@ -8,6 +8,7 @@ export default function AuthLayout() {
       <Stack.Screen name="mpin" />
       <Stack.Screen name="mpin_verify" />
       <Stack.Screen name="reset_mpin" />
+      <Stack.Screen name="forgot_mpin" />
       <Stack.Screen name="setmpin" />
       <Stack.Screen name="userBasicDetails" />
       <Stack.Screen name="AuthScreen" />
