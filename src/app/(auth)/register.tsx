@@ -21,7 +21,6 @@ import { theme } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
-import { API_BASE_URL } from "@/config/api";
 import { registerStyles } from "../../_styles/registerStyles";
 import { t } from "@/i18n";
 import LanguageSwitcher from "@/contexts/LanguageSwitcher";

@@ -24,6 +24,7 @@ import * as SecureStore from "expo-secure-store";
 import * as Crypto from "expo-crypto";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { t } from "@/i18n";
+import useGlobalStore from "@/store/global.store";
 
 const { width } = Dimensions.get("window");
 const salt = "someRandomSaltValue";
@@ -131,10 +132,54 @@ export default function SetMpinPage() {
         password: mpinValue,
         referral_code
       });
-      if (response.status === 200) {
-        router.replace({ pathname: "/(auth)/login", params: { mobile } });
+      const data = response.data;
+      console.log('🔍 Set MPIN response:', data);
+      
+      if (data.success) {
+        try {
+          // Store all tokens securely like in login flow
+          await SecureStore.setItemAsync("authToken", data.token);
+          await SecureStore.setItemAsync("accessToken", data.accessToken);
+          await SecureStore.setItemAsync("token", data.token);
+          await SecureStore.setItemAsync("refreshToken", data.refreshtoken);
+          
+          // Store user data in AsyncStorage like in login flow
+          await AsyncStorage.setItem("userData", JSON.stringify(data.user));
+          
+                     // Login to global store like in login flow
+           console.log('🔍 Setting user data in global store (Set MPIN):', {
+             id: data.user.user_id,
+             name: data.user.name,
+             email: data.user.email,
+             mobile: data.user.mobile_number,
+             referralCode: data.user.referralCode,
+             profile_photo: data.user.profile_photo,
+             mpinStatus: data.user.mpinStatus,
+             usertype: data.user.userType,
+           });
+           useGlobalStore.getState().login(data.token, {
+             id: data.user.user_id,
+             name: data.user.name,
+             email: data.user.email,
+             mobile: data.user.mobile_number,
+             referralCode: data.user.referralCode,
+             profile_photo: data.user.profile_photo,
+             mpinStatus: data.user.mpinStatus,
+             usertype: data.user.userType,
+           });
+          
+          // Store registration timestamp to bypass MPIN verification
+          await SecureStore.setItemAsync("registrationTimestamp", Date.now().toString());
+          
+          // Navigate directly to home page after successful registration
+          console.log('🔍 Set MPIN successful, navigating to home');
+          router.replace("/(app)/(tabs)/home");
+        } catch (storageError) {
+          console.error("Error storing authentication data:", storageError);
+          showErrorAlert("Failed to store authentication data");
+        }
       } else {
-        showErrorAlert(response.data.message || t("registrationFailed"));
+        showErrorAlert(data.message || t("registrationFailed"));
       }
     } catch (error: any) {
       showErrorAlert(error.response?.data?.message || t("registrationFailed"));

@@ -569,5 +569,8 @@
   "failedToResendOtp": "OTP വീണ്ടും അയയ്ക്കാൻ കഴിഞ്ഞില്ല. ദയവായി വീണ്ടും ശ്രമിക്കുക.",
   "otpResentSuccessfully": "OTP വീണ്ടും വിജയകരമായി അയച്ചു",
   "backToMpin": "MPIN-ലേക്ക് തിരികെ",
-  "ok": "ശരി"
+  "ok": "ശരി",
+  "errorTitle": "പിഴവ്",
+  "failedToStoreAuthData": "ഓഥന്റിക്കേഷൻ ഡാറ്റ സംഭരിക്കാൻ കഴിഞ്ഞില്ല",
+  "invalidPincode": "അസാധുവായ പിൻകോഡ്"
 }

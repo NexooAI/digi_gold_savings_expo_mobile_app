@@ -111,7 +111,6 @@ class NotificationService {
 
     try {
       // Debugger: Add breakpoint before device token generation
-      debugger;
       
       // Check Google Services configuration
       await this.checkGoogleServicesConfig();
@@ -156,7 +155,6 @@ class NotificationService {
       return deviceToken;
     } catch (error) {
       // Debugger: Add breakpoint for device token generation errors
-      debugger;
       console.error('❌ Error getting device token:', error);
       console.log('🔍 Error details for debugging:', {
         error: error,
@@ -178,7 +176,6 @@ class NotificationService {
         console.log('🔄 No device token found, attempting to generate new device token...');
         
         // Debugger: Add breakpoint before generating new device token
-        debugger;
         
         // Try to generate a new device token if none exists
         const newDeviceToken = await this.getDeviceTokenAsync();
@@ -317,6 +314,17 @@ class NotificationService {
   // Add notification response received listener
   addNotificationResponseReceivedListener(callback: (response: Notifications.NotificationResponse) => void) {
     return Notifications.addNotificationResponseReceivedListener(callback);
+  }
+
+  // Setup notifications - initialize device token and permissions
+  async setupNotifications() {
+    try {
+      console.log('🔧 Setting up notifications...');
+      await this.getDeviceTokenAsync();
+      console.log('✅ Notifications setup completed');
+    } catch (error) {
+      console.error('❌ Error setting up notifications:', error);
+    }
   }
 }
 

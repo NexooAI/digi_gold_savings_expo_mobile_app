@@ -1,7 +1,8 @@
 import { Drawer } from "expo-router/drawer";
 import { Stack, useRouter, useNavigation } from "expo-router";
-import { AuthProvider } from "@/contexts/AuthContext";
+// // import { AuthProvider } from "@/contexts/AuthContext";
 import { useFirstLaunch } from "@/common/hooks/useFirstLaunch";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   ActivityIndicator,
   View,
@@ -70,30 +71,40 @@ export default function RootLayout() {
     const checkStoredUser = async () => {
       try {
         const token = await SecureStore.getItemAsync("authToken");
-        const storedUser = await SecureStore.getItemAsync("user");
+        const storedUserData = await AsyncStorage.getItem("userData");
         
-        if (token && storedUser) {
+        if (token && storedUserData) {
           try {
-            const parsedUser = JSON.parse(storedUser);
-            // Convert AuthContext user data to global store format
-            const globalStoreUser = {
-              id: parsedUser.id,
-              name: parsedUser.name || parsedUser.email,
-              email: parsedUser.email,
-              mobile: parsedUser.mobile ? parseInt(parsedUser.mobile) : undefined,
-              profileImage: "",
-              idProof: "",
-              referralCode: "",
-              rewards: 0,
-              ...parsedUser // Keep any additional fields
-            };
-            updateUser(globalStoreUser);
+            const parsedUser = JSON.parse(storedUserData);
+            console.log('🔍 Layout: Found stored user data:', parsedUser);
             
-            // If token exists, redirect to MPIN screen instead of home
-            router.replace("/mpin_verify");
+            // Only update global store if we have valid user data
+            if (parsedUser.user_id) {
+              const globalStoreUser = {
+                id: parsedUser.user_id,
+                name: parsedUser.name,
+                email: parsedUser.email,
+                mobile: parsedUser.mobile_number,
+                profileImage: parsedUser.profile_photo || "",
+                idProof: "",
+                referralCode: parsedUser.referralCode || "",
+                rewards: 0,
+                mpinStatus: parsedUser.mpinStatus,
+                usertype: parsedUser.userType,
+              };
+              updateUser(globalStoreUser);
+              console.log('🔍 Layout: Updated global store with user data');
+              
+              // If token exists, redirect to MPIN screen instead of home
+              router.replace("/mpin_verify");
+            } else {
+              console.log('🔍 Layout: No valid user_id found in stored data');
+            }
           } catch (parseError) {
             console.error("Error parsing stored user data:", parseError);
           }
+        } else {
+          console.log('🔍 Layout: No token or user data found');
         }
       } catch (error) {
         console.error("Error retrieving stored user:", error);
@@ -176,37 +187,35 @@ export default function RootLayout() {
   return (
     <RootSiblingParent>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <AuthProvider>
-          <LanguageProvider1>
-            <GlobalLoadingProvider>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen
-                  name="intro"
-                  options={{ gestureEnabled: false }}
-                />
-                <Stack.Screen
-                  name="(app)"
-                  options={{ gestureEnabled: false }}
-                />
-                <Stack.Screen
-                  name="(auth)"
-                  options={{ gestureEnabled: false }}
-                />
-                <Stack.Screen
-                  name="login"
-                  options={{ gestureEnabled: false }}
-                />
-                <Stack.Screen
-                  name="[...missing]"
-                  options={{
-                    gestureEnabled: false,
-                    animation: "fade",
-                  }}
-                />
-              </Stack>
-            </GlobalLoadingProvider>
-          </LanguageProvider1>
-        </AuthProvider>
+        <LanguageProvider1>
+          <GlobalLoadingProvider>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen
+                name="intro"
+                options={{ gestureEnabled: false }}
+              />
+              <Stack.Screen
+                name="(app)"
+                options={{ gestureEnabled: false }}
+              />
+              <Stack.Screen
+                name="(auth)"
+                options={{ gestureEnabled: false }}
+              />
+              <Stack.Screen
+                name="login"
+                options={{ gestureEnabled: false }}
+              />
+              <Stack.Screen
+                name="[...missing]"
+                options={{
+                  gestureEnabled: false,
+                  animation: "fade",
+                }}
+              />
+            </Stack>
+          </GlobalLoadingProvider>
+        </LanguageProvider1>
       </GestureHandlerRootView>
     </RootSiblingParent>
   );

@@ -351,7 +351,9 @@ export default function MpinVerify() {
         return false;
       }
 
-      const payload = JSON.parse(atob(tokenParts[1]));
+      // Use a simple base64 decode approach
+      const base64 = tokenParts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const payload = JSON.parse(atob(base64));
       const currentTime = Date.now() / 1000;
       
       // Check if token is expired (with 5 minute buffer)
@@ -366,9 +368,8 @@ export default function MpinVerify() {
     }
   };
 
-  // Create refs for each of the 5 MPIN input fields
+  // Create refs for each of the 4 MPIN input fields
   const mpinInputRefs = [
-    useRef<TextInput>(null),
     useRef<TextInput>(null),
     useRef<TextInput>(null),
     useRef<TextInput>(null),
@@ -389,13 +390,41 @@ export default function MpinVerify() {
     setMpinPins(["", "", "", ""]);
     // Focus on first input after a short delay
     setTimeout(() => {
-      mpinInputRefs[0].current?.focus();
+      if (mpinInputRefs[0]) {
+        mpinInputRefs[0].current?.focus();
+      }
     }, 100);
   };
 
   const verifyMpin = async (enteredMpin: string) => {
+    // Prevent multiple simultaneous calls
+    if (loading) {
+      return;
+    }
     setLoading(true);
     try {
+      // Validate MPIN input
+      if (!enteredMpin || enteredMpin.length !== 4) {
+        showErrorModal(t("error"), "Please enter a valid 4-digit MPIN");
+        setLoading(false);
+        return;
+      }
+      
+      // Check if already logged in
+      if (isLoggedIn) {
+        console.log('🔐 User already logged in, redirecting to home');
+        router.replace("/(app)/(tabs)/home");
+        return;
+      }
+      
+      // Check if account is locked
+      if (isLocked) {
+        console.log('🔐 Account is locked, cannot verify MPIN');
+        showWarningModal(t("error"), "Account is locked. Please wait before trying again.");
+        setLoading(false);
+        return;
+      }
+      
       // Get user data from storage
       const userData = JSON.parse(
         (await AsyncStorage.getItem("userData")) || "{}"
@@ -403,6 +432,15 @@ export default function MpinVerify() {
       
       if (!userData.mobile_number) {
         showErrorModal(t("error"), "User mobile number not found");
+        setLoading(false);
+        return;
+      }
+      
+      // Validate mobile number format
+      const mobileRegex = /^[6-9]\d{9}$/;
+      if (!mobileRegex.test(userData.mobile_number)) {
+        showErrorModal(t("error"), "Invalid mobile number format");
+        setLoading(false);
         return;
       }
 
@@ -412,44 +450,65 @@ export default function MpinVerify() {
       const response = await apiClient.post('/auth/login-mpin', {
         mobileNumber: userData.mobile_number,
         mpin: enteredMpin
+      }, {
+        timeout: 15000 // 15 second timeout
       });
 
       const data = response.data;
       console.log('🔐 Response data:', data);
 
-      if (data.success) {
+      // Handle different response structures
+      const isSuccess = data.success || data.status === 'success' || response.status === 200;
+      const responseMessage = data.message || data.msg || '';
+
+      if (isSuccess) {
         console.log('🔐 MPIN verification successful');
         
-        // Store updated tokens if provided
-        if (data.accessToken) {
-          await SecureStore.setItemAsync("accessToken", data.accessToken);
-        }
-        if (data.token) {
-          await SecureStore.setItemAsync("token", data.token);
-        }
-        if (data.refreshtoken) {
-          await SecureStore.setItemAsync("refreshToken", data.refreshtoken);
-        }
-        if (data.token) {
+        try {
+          // Validate required fields in response
+          if (!data.token) {
+            throw new Error('Token not received from server');
+          }
+          
+          if (!data.user) {
+            throw new Error('User data not received from server');
+          }
+          
+          // Store all tokens securely like in login flow
           await SecureStore.setItemAsync("authToken", data.token);
-        }
-
-        // Update user data if provided
-        if (data.user) {
+          await SecureStore.setItemAsync("accessToken", data.accessToken || data.token);
+          await SecureStore.setItemAsync("token", data.token);
+          await SecureStore.setItemAsync("refreshToken", data.refreshtoken || '');
+          
+          // Store user data in AsyncStorage like in login flow
           await AsyncStorage.setItem("userData", JSON.stringify(data.user));
+          
+          // Prepare user data with safe defaults
+          const userData = {
+            id: data.user.user_id || data.user.id,
+            name: data.user.name || '',
+            email: data.user.email || '',
+            mobile: data.user.mobile_number || data.user.mobile || '',
+            referralCode: data.user.referralCode || '',
+            profile_photo: data.user.profile_photo || '',
+            mpinStatus: data.user.mpinStatus || false,
+            usertype: data.user.userType || data.user.usertype || '',
+          };
+          
+          // Login to global store like in login flow
+          console.log('🔍 Setting user data in global store (MPIN verify):', userData);
+          login(data.token, userData);
+
+          // Navigate to home page after successful MPIN verification
+          router.replace("/(app)/(tabs)/home");
+        } catch (storageError) {
+          console.error("Error storing authentication data:", storageError);
+          Alert.alert(
+            t("error"),
+            t("failedToStoreAuthData"),
+            [{ text: t("ok") }]
+          );
         }
-
-        // Login to global store
-        useGlobalStore.getState().login(data.token || data.accessToken, {
-          id: data.user?.user_id || userData.user_id,
-          name: data.user?.name || userData.name,
-          email: data.user?.email || userData.email,
-          mobile: data.user?.mobile_number || userData.mobile_number,
-          referralCode: data.user?.referralCode || userData.referralCode,
-        });
-
-        // Navigate to home
-        router.replace("/(app)/(tabs)/home");
       } else {
         console.log('🔐 MPIN verification failed:', data);
         shakeError();
@@ -470,7 +529,7 @@ export default function MpinVerify() {
         } else {
           showErrorModal(
             t("error"), 
-            `${data.message || t("incorrectMpin")} (${3 - newAttempts} attempts remaining)`
+            `${responseMessage || t("incorrectMpin")} (${3 - newAttempts} attempts remaining)`
           );
         }
         
@@ -515,7 +574,9 @@ export default function MpinVerify() {
       
       // Handle other network errors
       const errorMessage = error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes('Network request failed')) {
+      if (error.code === 'ECONNABORTED' || errorMessage.includes('timeout')) {
+        showErrorModal(t("error"), "Request timed out. Please check your internet connection and try again.");
+      } else if (errorMessage.includes('Network request failed')) {
         showErrorModal(t("error"), "Network error. Please check your internet connection.");
       } else if (errorMessage.includes('fetch')) {
         showErrorModal(t("error"), "Unable to connect to server. Please try again.");
@@ -534,7 +595,8 @@ export default function MpinVerify() {
     newPins[index] = text;
     setMpinPins(newPins);
 
-    if (text.length === 1 && index < 4) {
+    // Move to next input if current input is filled and not the last one
+    if (text.length === 1 && index < mpinPins.length - 1 && mpinInputRefs[index + 1]) {
       mpinInputRefs[index + 1].current?.focus();
     }
   };
@@ -547,7 +609,9 @@ export default function MpinVerify() {
       const newPins = [...mpinPins];
       newPins[index - 1] = "";
       setMpinPins(newPins);
-      mpinInputRefs[index - 1].current?.focus();
+      if (mpinInputRefs[index - 1]) {
+        mpinInputRefs[index - 1].current?.focus();
+      }
     }
   };
 
@@ -749,18 +813,51 @@ export default function MpinVerify() {
                       </TouchableOpacity>
                     </Animated.View>
 
-                    <TouchableOpacity
-                      style={styles.forgotContainer}
-                      onPress={async () => {
-                        // Navigate to MPIN reset flow instead of just logging out
-                        router.push("/(auth)/forgot_mpin");
-                      }}
-                    >
-                      <Icon name="help-outline" size={20} color={theme.colors.secondary} />
-                      <Text style={styles.loginLink}>
-                        {t("Forgot_MPIN")}
-                      </Text>
-                    </TouchableOpacity>
+                    <View style={styles.bottomButtonsContainer}>
+                      <TouchableOpacity
+                        style={styles.logoutContainer}
+                        onPress={async () => {
+                          Alert.alert(
+                            t("logout_confirmation_title") || "Logout",
+                            t("logout_confirmation_message") || "Are you sure you want to logout?",
+                            [
+                              { text: t("cancel") || "Cancel", style: "cancel" },
+                              {
+                                text: t("logout") || "Logout",
+                                onPress: async () => {
+                                  try {
+                                    await SecureStore.deleteItemAsync("user_mpin");
+                                    logout();
+                                    router.replace("/(auth)/login");
+                                  } catch (error) {
+                                    console.error("Logout error:", error);
+                                  }
+                                },
+                              },
+                            ],
+                            { cancelable: false }
+                          );
+                        }}
+                      >
+                        <Icon name="logout" size={20} color={theme.colors.error || "#ff4444"} />
+                        <Text style={styles.logoutLink}>
+                          {t("logout") || "Logout"}
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.forgotContainer}
+                        onPress={async () => {
+                          // Navigate to MPIN reset flow instead of just logging out
+                          router.push("/(auth)/forgot_mpin");
+                        }}
+                      >
+                        <Icon name="help-outline" size={20} color={theme.colors.secondary} />
+                        <Text style={styles.loginLink}>
+                          {t("Forgot_MPIN")}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
               </View>
@@ -942,14 +1039,31 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
+  bottomButtonsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 20,
+    paddingHorizontal: 10,
+  },
   forgotContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 20,
   },
   loginLink: {
     color: theme.colors.secondary,
+    marginLeft: 8,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  logoutContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logoutLink: {
+    color: theme.colors.error || "#ff4444",
     marginLeft: 8,
     fontSize: 16,
     fontWeight: "600",

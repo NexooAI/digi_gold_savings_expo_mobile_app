@@ -190,7 +190,7 @@ const MpinInput = ({
 };
 
 export default function ForgotMpin() {
-  const [step, setStep] = useState<'mobile' | 'otp' | 'newMpin'>('mobile');
+  const [step, setStep] = useState<'verifyOtp' | 'createMpin'>('verifyOtp');
   const [mobileNumber, setMobileNumber] = useState("");
   const [otp, setOtp] = useState("");
   const [newMpin, setNewMpin] = useState("");
@@ -259,10 +259,8 @@ export default function ForgotMpin() {
             console.log('📱 Auto-filling mobile number:', parsedUserData.mobile_number);
             setMobileNumber(parsedUserData.mobile_number);
             
-            // Automatically trigger OTP send after a short delay
-            setTimeout(() => {
-              handleSendOtp(parsedUserData.mobile_number);
-            }, 500);
+            // Automatically trigger OTP send immediately
+            handleSendOtp(parsedUserData.mobile_number);
           } else {
             console.log('📱 No mobile number found in user data');
             setInitializing(false);
@@ -309,13 +307,12 @@ export default function ForgotMpin() {
     try {
       console.log('📱 Sending OTP to:', numberToUse);
       
-      const response = await apiClient.post('/auth/forgot-mpin-otp', {
-        mobileNumber: numberToUse
+      const response = await apiClient.post('/auth/check-mobile', {
+        mobile_number: numberToUse
       });
 
       if (response.data.success) {
         console.log('📱 OTP sent successfully');
-        setStep('otp');
         setCountdown(30);
         setInitializing(false);
         Alert.alert(t("success"), t("otpSentSuccessfully"));
@@ -346,7 +343,7 @@ export default function ForgotMpin() {
   };
 
   const handleVerifyOtp = async () => {
-    if (otp.length !== 6) {
+    if (otp.length !== 4) {
       setError(t("pleaseEnterValidOtp"));
       shakeError();
       return;
@@ -358,14 +355,15 @@ export default function ForgotMpin() {
     try {
       console.log('📱 Verifying OTP for:', mobileNumber);
       
-      const response = await apiClient.post('/auth/verify-forgot-mpin-otp', {
-        mobileNumber: mobileNumber,
+      const response = await apiClient.post('/auth/reset-verify-otp', {
+        mobile_number: mobileNumber,
         otp: otp
       });
 
       if (response.data.success) {
         console.log('📱 OTP verified successfully');
-        setStep('newMpin');
+        setStep('createMpin');
+        setError("");
       } else {
         console.log('📱 OTP verification failed:', response.data.message);
         setError(response.data.message || t("invalidOtp"));
@@ -379,6 +377,85 @@ export default function ForgotMpin() {
         setError(errorData.message || t("invalidOtp"));
       } else {
         setError(t("failedToVerifyOtp"));
+      }
+      
+      shakeError();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyAndResetMpin = async () => {
+    if (otp.length !== 4) {
+      setError(t("pleaseEnterValidOtp"));
+      shakeError();
+      return;
+    }
+
+    if (newMpin.length !== 4) {
+      setError(t("pleaseEnterValidMpin"));
+      shakeError();
+      return;
+    }
+
+    if (newMpin !== confirmMpin) {
+      setError(t("mpinMismatch"));
+      shakeError();
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      console.log('📱 Verifying OTP and resetting MPIN for:', mobileNumber);
+      
+      // First verify OTP
+      const otpResponse = await apiClient.post('/auth/verify-forgot-mpin-otp', {
+        mobileNumber: mobileNumber,
+        otp: otp
+      });
+
+      if (!otpResponse.data.success) {
+        console.log('📱 OTP verification failed:', otpResponse.data.message);
+        setError(otpResponse.data.message || t("invalidOtp"));
+        shakeError();
+        return;
+      }
+
+      console.log('📱 OTP verified successfully, now resetting MPIN');
+      
+      // Then reset MPIN
+      const resetResponse = await apiClient.post('/auth/reset-mpin', {
+        mobileNumber: mobileNumber,
+        newMpin: newMpin
+      });
+
+      if (resetResponse.data.success) {
+        console.log('📱 MPIN reset successfully');
+        Alert.alert(
+          t("success"), 
+          t("mpinResetSuccess"),
+          [
+            {
+              text: t("ok"),
+              onPress: () => router.replace("/(auth)/login")
+            }
+          ]
+        );
+      } else {
+        console.log('📱 MPIN reset failed:', resetResponse.data.message);
+        setError(resetResponse.data.message || t("resetFailed"));
+        shakeError();
+      }
+    } catch (error: any) {
+      console.error("📱 Error in verify and reset process:", error);
+      
+      if (error.response?.status === 400) {
+        const errorData = error.response.data;
+        setError(errorData.message || t("resetFailed"));
+      } else {
+        setError(t("resetFailed"));
       }
       
       shakeError();
@@ -407,11 +484,11 @@ export default function ForgotMpin() {
       console.log('📱 Resetting MPIN for:', mobileNumber);
       
       const response = await apiClient.post('/auth/reset-mpin', {
-        mobileNumber: mobileNumber,
+        mobile: mobileNumber,
         newMpin: newMpin
       });
-
-      if (response.data.success) {
+      console.log(response);
+      if (response.data.message ==="MPIN reset successfully") {
         console.log('📱 MPIN reset successfully');
         Alert.alert(
           t("success"), 
@@ -419,7 +496,7 @@ export default function ForgotMpin() {
           [
             {
               text: t("ok"),
-              onPress: () => router.replace("/(auth)/login")
+              onPress: () => router.replace("/(auth)/mpin_verify")
             }
           ]
         );
@@ -451,8 +528,8 @@ export default function ForgotMpin() {
     try {
       console.log('📱 Resending OTP to:', mobileNumber);
       
-      const response = await apiClient.post('/auth/forgot-mpin-otp', {
-        mobileNumber: mobileNumber
+      const response = await apiClient.post('/auth/check-mobile', {
+        mobile_number: mobileNumber
       });
 
       if (response.data.success) {
@@ -508,57 +585,9 @@ export default function ForgotMpin() {
     );
   }
 
-  const renderMobileStep = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>{t("forgotMpinTitle")}</Text>
-      <Text style={styles.stepSubtitle}>{t("forgotMpinSubtitle")}</Text>
-      
-      <Animated.View style={[styles.inputContainer, { transform: [{ translateX: shakeAnim }] }]}>
-        <Text style={styles.inputLabel}>{t("mobileNumber")}</Text>
-        <TextInput
-          style={styles.textInput}
-          placeholder={t("enterMobileNumber")}
-          placeholderTextColor="rgba(255, 255, 255, 0.6)"
-          value={mobileNumber}
-          onChangeText={(text) => {
-            setMobileNumber(text.replace(/[^0-9]/g, ''));
-            setError("");
-          }}
-          keyboardType="numeric"
-          maxLength={10}
-        />
-      </Animated.View>
 
-      {error ? (
-        <View style={styles.errorContainer}>
-          <Icon name="error" size={16} color="#FF6B6B" />
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      ) : null}
 
-      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-        <TouchableOpacity
-          style={[styles.actionButton, loading && styles.actionButtonDisabled]}
-          onPress={() => {
-            animatePress();
-            handleSendOtp();
-          }}
-          disabled={loading || !validateMobileNumber(mobileNumber)}
-        >
-          <LinearGradient
-            colors={["#ffc90c", "#ffd700"]}
-            style={styles.buttonGradient}
-          >
-            <Text style={styles.actionButtonText}>
-              {loading ? t("sending") : t("sendOtp")}
-            </Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </Animated.View>
-    </View>
-  );
-
-  const renderOtpStep = () => (
+  const renderVerifyOtpStep = () => (
     <View style={styles.stepContainer}>
       <Text style={styles.stepTitle}>{t("verifyOtpTitle")}</Text>
       <Text style={styles.stepSubtitle}>
@@ -568,7 +597,7 @@ export default function ForgotMpin() {
       <Animated.View style={[styles.inputContainer, { transform: [{ translateX: shakeAnim }] }]}>
         <Text style={styles.inputLabel}>{t("enterOtp")}</Text>
         <MpinInput
-          length={6}
+          length={4}
           onComplete={setOtp}
           secureTextEntry={false}
           autoFocus={true}
@@ -589,7 +618,7 @@ export default function ForgotMpin() {
             animatePress();
             handleVerifyOtp();
           }}
-          disabled={loading || otp.length !== 6}
+          disabled={loading || otp.length !== 4}
         >
           <LinearGradient
             colors={["#ffc90c", "#ffd700"]}
@@ -617,7 +646,7 @@ export default function ForgotMpin() {
     </View>
   );
 
-  const renderNewMpinStep = () => (
+  const renderCreateMpinStep = () => (
     <View style={styles.stepContainer}>
       <Text style={styles.stepTitle}>{t("createNewMpinTitle")}</Text>
       <Text style={styles.stepSubtitle}>{t("createNewMpinSubtitle")}</Text>
@@ -684,6 +713,8 @@ export default function ForgotMpin() {
     </View>
   );
 
+
+
   return (
     <ImageBackground
       source={theme.image.bg_image}
@@ -708,50 +739,44 @@ export default function ForgotMpin() {
                 />
               </View>
 
-              <ScrollView 
-                contentContainerStyle={styles.scrollContainer}
-                keyboardShouldPersistTaps="handled"
-              >
-                <View style={styles.formContainer}>
-                  <View style={styles.cardContainer}>
-                    {/* Base fog layer */}
-                    <LinearGradient
-                      colors={[
-                        "rgba(6, 2, 2, 0.78)",
-                        "rgba(34, 0, 0, 0.35)",
-                        "rgba(31, 3, 3, 0.54)",
-                      ]}
-                      style={StyleSheet.absoluteFill}
-                    />
-                    {/* Top fog highlight */}
-                    <LinearGradient
-                      colors={[
-                        "rgba(10, 2, 2, 0.38)",
-                        "rgba(76, 63, 63, 0.74)",
-                      ]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 0, y: 0.5 }}
-                      style={StyleSheet.absoluteFill}
-                    />
-                    {/* Bottom fog highlight */}
-                    <LinearGradient
-                      colors={[
-                        "rgba(0, 0, 0, 0.44)",
-                        "rgba(0, 0, 0, 0.28)",
-                      ]}
-                      start={{ x: 0, y: 0.5 }}
-                      end={{ x: 0, y: 1 }}
-                      style={StyleSheet.absoluteFill}
-                    />
-                    {/* Content */}
-                    <View style={styles.cardContent}>
-                      {step === 'mobile' && renderMobileStep()}
-                      {step === 'otp' && renderOtpStep()}
-                      {step === 'newMpin' && renderNewMpinStep()}
-                    </View>
-                  </View>
-                </View>
-              </ScrollView>
+                               <View style={styles.formContainer}>
+                   <View style={styles.cardContainer}>
+                     {/* Base fog layer */}
+                     <LinearGradient
+                       colors={[
+                         "rgba(6, 2, 2, 0.78)",
+                         "rgba(34, 0, 0, 0.35)",
+                         "rgba(31, 3, 3, 0.54)",
+                       ]}
+                       style={StyleSheet.absoluteFill}
+                     />
+                     {/* Top fog highlight */}
+                     <LinearGradient
+                       colors={[
+                         "rgba(10, 2, 2, 0.38)",
+                         "rgba(76, 63, 63, 0.74)",
+                       ]}
+                       start={{ x: 0, y: 0 }}
+                       end={{ x: 0, y: 0.5 }}
+                       style={StyleSheet.absoluteFill}
+                     />
+                     {/* Bottom fog highlight */}
+                     <LinearGradient
+                       colors={[
+                         "rgba(0, 0, 0, 0.44)",
+                         "rgba(0, 0, 0, 0.28)",
+                       ]}
+                       start={{ x: 0, y: 0.5 }}
+                       end={{ x: 0, y: 1 }}
+                       style={StyleSheet.absoluteFill}
+                     />
+                     {/* Content */}
+                     <View style={styles.cardContent}>
+                       {step === 'verifyOtp' && renderVerifyOtpStep()}
+                       {step === 'createMpin' && renderCreateMpinStep()}
+                     </View>
+                   </View>
+                 </View>
             </View>
           </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
@@ -794,14 +819,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   scrollContainer: {
-    flexGrow: 1,
+    flex: 1,
     justifyContent: "center",
   },
   formContainer: {
     flex: 1,
     justifyContent: "center",
     paddingHorizontal: 20,
-    paddingBottom: Platform.OS === "ios" ? 40 : 0,
+    paddingVertical: 20,
   },
   cardContainer: {
     borderRadius: 20,
@@ -978,4 +1003,18 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     flex: 1,
   },
+  mpinSection: {
+    marginTop: 20,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.2)",
+  },
+  sectionTitle: {
+    color: "#ffffff",
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 15,
+    textAlign: "center",
+  },
+
 }); 

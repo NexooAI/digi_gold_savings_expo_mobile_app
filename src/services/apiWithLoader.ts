@@ -133,13 +133,13 @@ export const apiWithLoader = {
   user: {
     getProfile: async () => {
       return LoadingService.withLoading(
-        () => api.get('/user/profile'),
+        () => api.get('/users/profile'),
         'Loading your profile...'
       );
     },
-    updateProfile: async (userData: any) => {
+    updateProfile: async (userId: number, userData: any) => {
       return LoadingService.withLoading(
-        () => api.put('/user/profile', userData),
+        () => api.put(`/users/${userId}`, userData),
         'Updating your profile...'
       );
     },

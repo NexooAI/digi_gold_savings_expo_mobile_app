@@ -560,5 +560,6 @@
   "failedToResendOtp": "Failed to resend OTP. Please try again.",
   "otpResentSuccessfully": "OTP resent successfully",
   "backToMpin": "Back to MPIN",
-  "ok": "OK"
+  "ok": "OK",
+  "errorTitle": "Error"
 }

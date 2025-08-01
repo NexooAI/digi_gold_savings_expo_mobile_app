@@ -17,6 +17,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import api from "@/services/api";
 import * as SecureStore from "expo-secure-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import useGlobalStore from "@/store/global.store";
 
 const { width } = Dimensions.get("window");
 
@@ -95,17 +97,54 @@ export default function CompleteRegistration() {
         mpin: mpinValue
       });
 
-      if (response.data.success) {
-        // Store MPIN securely
-        await SecureStore.setItemAsync("user_mpin", mpinValue);
-        
-        // Navigate to login with mobile number
-        router.replace({
-          pathname: "/(auth)/login",
-          params: { mobile }
-        });
+      const data = response.data;
+      console.log('🔍 Registration completion response:', data);
+      
+      if (data.success) {
+        try {
+          // Store all tokens securely like in login flow
+          await SecureStore.setItemAsync("authToken", data.token);
+          await SecureStore.setItemAsync("accessToken", data.accessToken);
+          await SecureStore.setItemAsync("token", data.token);
+          await SecureStore.setItemAsync("refreshToken", data.refreshtoken);
+          
+          // Store user data in AsyncStorage like in login flow
+          await AsyncStorage.setItem("userData", JSON.stringify(data.user));
+          
+                     // Login to global store like in login flow
+           console.log('🔍 Setting user data in global store (Register complete):', {
+             id: data.user.user_id,
+             name: data.user.name,
+             email: data.user.email,
+             mobile: data.user.mobile_number,
+             referralCode: data.user.referralCode,
+             profile_photo: data.user.profile_photo,
+             mpinStatus: data.user.mpinStatus,
+             usertype: data.user.userType,
+           });
+           useGlobalStore.getState().login(data.token, {
+             id: data.user.user_id,
+             name: data.user.name,
+             email: data.user.email,
+             mobile: data.user.mobile_number,
+             referralCode: data.user.referralCode,
+             profile_photo: data.user.profile_photo,
+             mpinStatus: data.user.mpinStatus,
+             usertype: data.user.userType,
+           });
+          
+          // Store registration timestamp to bypass MPIN verification
+          await SecureStore.setItemAsync("registrationTimestamp", Date.now().toString());
+          
+          // Navigate directly to home page after successful registration
+          console.log('🔍 Registration completion successful, navigating to home');
+          router.replace("/(app)/(tabs)/home");
+        } catch (storageError) {
+          console.error("Error storing authentication data:", storageError);
+          showErrorAlert("Failed to store authentication data");
+        }
       } else {
-        showErrorAlert(response.data.message || "Registration failed");
+        showErrorAlert(data.message || "Registration failed");
       }
     } catch (error: any) {
       showErrorAlert(error.response?.data?.message || "Registration failed");

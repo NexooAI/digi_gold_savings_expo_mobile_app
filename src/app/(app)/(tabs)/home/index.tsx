@@ -47,6 +47,7 @@ import StatusView from "@/app/components/StatusView";
 import NotificationService from "@/services/NotificationService";
 import { AppLocale } from "@/i18n";
 import AuthGuard from "@/components/AuthGuard";
+import { getFullImageUrl } from "@/utils/imageUtils";
 // Import API logging utilities
 import {
   logApiSummary,
@@ -240,11 +241,12 @@ interface UserInfoCardProps {
   totalAmount?: number;
   showTotalGold?: boolean;
   userId: number;
+  profilePhoto?: string;
 }
 
 // Components
 const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
-  ({ userName, activeSchemesCount, onPress, userId,totalGoldSavings = 0, totalAmount = 0, showTotalGold = true }) => {
+  ({ userName, activeSchemesCount, onPress, userId, totalGoldSavings = 0, totalAmount = 0, showTotalGold = true, profilePhoto }) => {
     const arrowOpacity = useRef(new Animated.Value(1)).current;
 
     useEffect(() => {
@@ -288,7 +290,15 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
             </Text>
           </View>
           <View style={styles.userAvatarContainer}>
-            <Ionicons name="person-circle" size={45} color="#FFD700" />
+            {profilePhoto ? (
+              <Image
+                source={{ uri: profilePhoto }}
+                style={styles.userAvatar}
+                resizeMode="cover"
+              />
+            ) : (
+              <Ionicons name="person-circle" size={45} color="#FFD700" />
+            )}
           </View>
         </View>
 
@@ -483,7 +493,13 @@ const BannerCard: React.FC<BannerCardProps> = ({ item, router }) => {
 
 export default function Home2() {
   // State
-  const { language, user } = useGlobalStore();
+  const { language, user, debugState } = useGlobalStore();
+  
+  // Debug: Check global store state on component mount
+  useEffect(() => {
+    console.log('🔍 Home: Component mounted, checking global store state...');
+    debugState();
+  }, [debugState]);
   const router = useRouter();
   const [homeData, setHomeData] = useState<HomeApiResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -501,6 +517,7 @@ export default function Home2() {
   const [isSliderLoading, setIsSliderLoading] = useState(true);
   const [viewedCollections, setViewedCollections] = useState<{ [id: number]: boolean }>({});
   const [showTotalGold, setShowTotalGold] = useState(true);
+  const [localProfilePhoto, setLocalProfilePhoto] = useState<string | null>(null);
 
   // Refs
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -547,12 +564,38 @@ export default function Home2() {
     []
   );
 
-  const getFullImageUrl = useCallback((path: string) => {
-    if (!path) return "";
-    if (path.startsWith("http")) return path;
-    // Remove trailing slash from baseUrl and leading slash from path
-    return `${theme.baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
-  }, []);
+
+
+  // Get profile photo from local storage
+  const getLocalProfilePhoto = async () => {
+    try {
+      const userData = await AsyncStorage.getItem("userData");
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        if (parsedUser.profile_photo) {
+          setLocalProfilePhoto(parsedUser.profile_photo);
+        }
+      }
+    } catch (error) {
+      console.error("Error getting local profile photo:", error);
+    }
+  };
+
+  // Function to get the best available profile image
+  const getProfileImageSource = () => {
+    // Priority: 1. Server profileImage, 2. Local profile_photo, 3. null
+    if (user?.profileImage) {
+      return getFullImageUrl(user.profileImage);
+    } else if (localProfilePhoto) {
+      return getFullImageUrl(localProfilePhoto);
+    }
+    return undefined;
+  };
+
+  // Load local profile photo on component mount and when user changes
+  useEffect(() => {
+    getLocalProfilePhoto();
+  }, [user]);
 
   // New image source handling
   const getImageSource = (path: string | any) => {
@@ -569,7 +612,10 @@ export default function Home2() {
 
   // Fetch investment data separately
   const fetchInvestmentData = useCallback(async () => {
-    if (!user) return;
+    if (!user || !user.id) {
+      console.log('⚠️ No user or userId available, skipping investment data fetch');
+      return;
+    }
 
     try {
       console.log('🔍 Fetching investment data for user:', user.id);
@@ -640,9 +686,21 @@ export default function Home2() {
   const fetchHomeData = useCallback(async (isRefreshing = false) => {
     try {
       console.log('Starting single API data fetch...');
+      console.log('🔍 Current user object:', user);
+      console.log('🔍 User ID from global store:', user?.id);
+      
+      const userId = user?.id;
+      console.log('🔍 Using userId for API call:', userId);
+      
+      // Only make API call if userId is present
+      if (!userId) {
+        console.log('⚠️ No userId available, skipping API call');
+        isRefreshing ? setRefreshing(false) : setIsLoading(false);
+        setIsSliderLoading(false);
+        return;
+      }
+      
       isRefreshing ? setRefreshing(true) : setIsLoading(true);
-
-      const userId = user?.id || 436; // Default to 436 if no user
       const response = await api.get(`/home?userId=${userId}`);
 
       if (response.data.success) {
@@ -685,10 +743,20 @@ export default function Home2() {
         }
 
         // Set flash news
+        console.log('🔍 FlashNews Debug: Checking data.flashNews:', data.flashNews);
         if (data.flashNews && data.flashNews.length > 0) {
-          console.log(data.flashNews)
+          console.log('🔍 FlashNews Debug: Found flashNews data:', data.flashNews);
           const flashArray = data.flashNews.map((f: any) => f.title || '').filter((title:any) => title);
+          console.log('🔍 FlashNews Debug: Processed flashArray:', flashArray);
           setFlashNews(flashArray);
+        } else {
+          console.log('🔍 FlashNews Debug: No flashNews data found, using fallback');
+          // Set fallback flash news messages
+          setFlashNews([
+            "🎉 Welcome to Digital Gold Savings!",
+            "🔥 Gold price updates available!",
+            "🌟 Special offers for new users!"
+          ]);
         }
 
         // Log videos data
@@ -738,10 +806,14 @@ export default function Home2() {
 
   // Effects
   useEffect(() => {
-    console.log('Initial home data fetch...');
+    console.log('🔍 Home: Initial useEffect triggered');
+    console.log('🔍 Home: User object:', user);
+    console.log('🔍 Home: User ID:', user?.id);
+    console.log('🔍 Home: Is user logged in:', !!user);
+    
     fetchHomeData();
     fetchInvestmentData();
-  }, [fetchHomeData, fetchInvestmentData]);
+  }, [fetchHomeData, fetchInvestmentData, user]);
 
   useEffect(() => {
     if (user) {
@@ -943,6 +1015,31 @@ export default function Home2() {
     );
   }
 
+  // Show message if no user data is available
+  if (!user || !user.id) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
+        <ImageBackground
+          source={require("../../../../../assets/images/bg_new.jpg")}
+          style={styles.backgroundImage}
+          resizeMode="contain"
+        >
+          <View style={styles.loadingContainer}>
+            <Ionicons name="person-circle-outline" size={60} color="#FFD700" />
+            <Text style={styles.loadingText}>Please login to view your dashboard</Text>
+            <TouchableOpacity
+              style={styles.loginButton}
+              onPress={() => router.push("/(auth)/login")}
+            >
+              <Text style={styles.loginButtonText}>Go to Login</Text>
+            </TouchableOpacity>
+          </View>
+        </ImageBackground>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <AuthGuard>
       <SafeAreaView style={styles.safeArea}>
@@ -1093,6 +1190,7 @@ export default function Home2() {
                 showTotalGold={showTotalGold}
                 onPress={() => router.push("/(tabs)/savings")}
                 userId={Number(user?.id) || 0}
+                profilePhoto={getProfileImageSource()}
               />
 
               <View style={styles.sectionHeader}>
@@ -1345,6 +1443,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 10,
+  },
+  userAvatar: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
   },
   statsRow: {
     flexDirection: "row",
@@ -1718,5 +1821,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  loginButton: {
+    backgroundColor: '#FFD700',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  loginButtonText: {
+    color: '#850111',
+    fontSize: moderateScale(16),
+    fontWeight: '700',
+    textAlign: 'center',
   },
 }); 

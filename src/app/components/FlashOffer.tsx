@@ -36,20 +36,21 @@ const FlashOffer: React.FC<FlashOfferProps> = ({
 
   // Sync newsMessages with fallbackMessages prop
   useEffect(() => {
+    console.log('🔍 FlashOffer Debug: Received fallbackMessages:', fallbackMessages);
     setNewsMessages(fallbackMessages);
     setCurrentNewsIndex(0);
   }, [fallbackMessages]);
 
   // Rotate flash messages
-  // useEffect(() => {
-  //   if (newsMessages.length <= 1) return;
+  useEffect(() => {
+    if (newsMessages.length <= 1) return;
 
-  //   const interval = setInterval(() => {
-  //     setCurrentNewsIndex((prev) => (prev + 1) % newsMessages.length);
-  //   }, duration);
+    const interval = setInterval(() => {
+      setCurrentNewsIndex((prev) => (prev + 1) % newsMessages.length);
+    }, duration);
 
-  //   return () => clearInterval(interval);
-  // }, [newsMessages, duration]);
+    return () => clearInterval(interval);
+  }, [newsMessages, duration]);
 
   // Animate scrolling effect
   useEffect(() => {
@@ -79,7 +80,11 @@ const FlashOffer: React.FC<FlashOfferProps> = ({
   }, [currentNewsIndex, newsMessages]);
   
 
-  if (newsMessages.length === 0) return null;
+  console.log('🔍 FlashOffer Debug: newsMessages length:', newsMessages.length);
+  if (newsMessages.length === 0) {
+    console.log('🔍 FlashOffer Debug: No messages, returning null');
+    return null;
+  }
 
   const handlePress = () => {
     if (onPress) onPress();

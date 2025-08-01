@@ -25,7 +25,7 @@ import * as Crypto from "expo-crypto";
 import { theme } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { t } from "@/i18n";
-import { useAuth } from "@/contexts/AuthContext";
+// import { useAuth } from "@/contexts/AuthContext";
 import useGlobalStore from "@/store/global.store";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { registerStyles } from "../../_styles/registerStyles";
@@ -184,7 +184,7 @@ const MpinInput: React.FC<MpinInputProps> = ({
 export default function MpinSetup() {
   const { name, email, mobile, referral_code } = useLocalSearchParams();
   const router = useRouter();
-  const { register } = useAuth();
+  // const { register } = useAuth();
   const [mpin, setMpin] = useState("");
   const [confirmMpin, setConfirmMpin] = useState("");
   const [loading, setLoading] = useState(false);
@@ -229,41 +229,63 @@ export default function MpinSetup() {
       console.log('🔍 Registration API response data:', response.data);
 
       if (response.status === 200) {
-        const { accessToken, token, refreshtoken, user } = response.data;
+        const data = response.data;
         
-        console.log('🔍 Registration successful, response data:', response.data);
+        console.log('🔍 Registration successful, response data:', data);
         
         // Validate response structure
-        if (!accessToken || !token || !refreshtoken || !user) {
-          console.error('🔍 Invalid response structure:', response.data);
+        if (!data.success || !data.accessToken || !data.token || !data.refreshtoken || !data.user) {
+          console.error('🔍 Invalid response structure:', data);
           Alert.alert(t("error"), "Invalid response from server");
           return;
         }
         
-        // Store tokens securely like in login flow
-        await SecureStore.setItemAsync("authToken", token);
-        await SecureStore.setItemAsync("accessToken", accessToken);
-        await SecureStore.setItemAsync("token", token);
-        await SecureStore.setItemAsync("refreshToken", refreshtoken);
-        
-        // Store user data in AsyncStorage like in login flow
-        await AsyncStorage.setItem("userData", JSON.stringify(user));
-        
-        // Login to global store like in login flow
-        useGlobalStore.getState().login(token, {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          mobile: user.mobile_number,
-          referralCode: user.referral_code,
-        });
-        
-        // Store registration timestamp to bypass MPIN verification
-        await SecureStore.setItemAsync("registrationTimestamp", Date.now().toString());
-        
-        // Directly navigate to home page after successful registration
-        console.log('🔍 Registration successful, navigating directly to home page');
-        router.replace("/(app)/(tabs)/home");
+        try {
+          // Store all tokens securely like in login flow
+          await SecureStore.setItemAsync("authToken", data.token);
+          await SecureStore.setItemAsync("accessToken", data.accessToken);
+          await SecureStore.setItemAsync("token", data.token);
+          await SecureStore.setItemAsync("refreshToken", data.refreshtoken);
+          
+          // Store user data in AsyncStorage like in login flow
+          await AsyncStorage.setItem("userData", JSON.stringify(data.user));
+          
+                     // Login to global store like in login flow
+           console.log('🔍 Setting user data in global store (MPIN):', {
+            id: data.user.user_id || data.user.id,
+             name: data.user.name,
+             email: data.user.email,
+             mobile: data.user.mobile_number,
+             referralCode: data.user.referralCode || data.user.referral_code,
+             profile_photo: data.user.profile_photo,
+             mpinStatus: data.user.mpinStatus,
+             usertype: data.user.userType || data.user.user_type,
+           });
+           useGlobalStore.getState().login(data.token, {
+             id: data.user.user_id || data.user.id,
+             name: data.user.name,
+             email: data.user.email,
+             mobile: data.user.mobile_number,
+             referralCode: data.user.referralCode || data.user.referral_code,
+             profile_photo: data.user.profile_photo,
+             mpinStatus: data.user.mpinStatus,
+             usertype: data.user.userType || data.user.user_type,
+           });
+          
+          // Store registration timestamp to bypass MPIN verification
+          await SecureStore.setItemAsync("registrationTimestamp", Date.now().toString());
+          
+          // Directly navigate to home page after successful registration
+          console.log('🔍 Registration successful, navigating directly to home page');
+          router.replace("/(app)/(tabs)/home");
+        } catch (storageError) {
+          console.error("Error storing authentication data:", storageError);
+          Alert.alert(
+            t("error"),
+            t("failedToStoreAuthData"),
+            [{ text: t("ok") }]
+          );
+        }
       }
     } catch (error: any) {
       console.error('🔍 Registration error:', error);

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View, TouchableOpacity, Text, StyleSheet, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, usePathname } from "expo-router";
@@ -30,6 +30,8 @@ export default function CustomBottomBar() {
   // Animation refs for each tab
   const tabAnimations = useRef([0, 1, 2, 3, 4].map(() => new Animated.Value(1))).current;
   const badgeAnimations = useRef([0, 1, 2, 3, 4].map(() => new Animated.Value(1))).current;
+  
+
 
   const tabs: Tab[] = [
     {
@@ -121,7 +123,7 @@ export default function CustomBottomBar() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { position: 'absolute', bottom: 10 }]}>
       <LinearGradient
         colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.98)']}
         style={styles.gradientContainer}
@@ -189,7 +191,8 @@ const styles = StyleSheet.create({
     right: 10,
     bottom: 10,
     height: 80,
-    zIndex: 100,
+    zIndex: 9999,
+    elevation: 9999,
   },
   gradientContainer: {
     flex: 1,

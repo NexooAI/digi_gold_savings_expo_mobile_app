@@ -3,6 +3,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError, In
 import { Alert } from 'react-native';
 import LoadingService from './loadingServices';
 import { theme } from '@/constants/theme';
+import * as SecureStore from "expo-secure-store";
 
 // API Logger for this service
 class ApiServiceLogger {
@@ -151,14 +152,32 @@ apiClient.interceptors.request.use(
     apiServiceLogger.logRequest(config, startTime);
     
     LoadingService.show();
-    // Example: if you have an auth token, attach it
-    // const token = await AsyncStorage.getItem('userToken');
-    // if (token) {
-    //   config.headers = {
-    //     ...config.headers,
-    //     Authorization: `Bearer ${token}`,
-    //   };
-    // }
+    
+    // Add authentication token
+    try {
+      let token = await SecureStore.getItemAsync("token");
+      console.log('🔑 Token from SecureStore (token):', token);
+      
+      if (!token) {
+        token = await SecureStore.getItemAsync("accessToken");
+        console.log('🔑 Token from SecureStore (accessToken):', token);
+      }
+      
+      if (!token) {
+        token = await SecureStore.getItemAsync("authToken");
+        console.log('🔑 Token from SecureStore (authToken):', token);
+      }
+      
+      if (token) {
+        config.headers = config.headers || new axios.AxiosHeaders();
+        config.headers.Authorization = `Bearer ${token}`;
+        console.log('✅ Authorization header set:', config.headers.Authorization);
+      } else {
+        console.log('❌ No token found in SecureStore');
+      }
+    } catch (error) {
+      console.error('Error adding auth token:', error);
+    }
     
     // Store start time for response logging
     (config as any).startTime = startTime;
@@ -249,14 +268,26 @@ export const uploadProfileImage = async (userId: number | string, fileUri: strin
       type: 'image/jpeg', // You can make this dynamic based on file extension
       name: 'profile_image.jpg'
     } as any);
-console.log("formData", formData);
+    
+    console.log("📤 Upload request - userId:", userId);
+    console.log("📤 Upload request - fileUri:", fileUri);
+    console.log("📤 Upload request - formData:", formData);
+    
     const response: AxiosResponse = await apiClient.post('/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
+    
+    console.log("✅ Upload response:", response.data);
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
+    console.error("❌ Upload error details:", {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      headers: error.config?.headers
+    });
     throw error;
   }
 };

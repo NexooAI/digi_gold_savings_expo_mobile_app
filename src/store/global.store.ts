@@ -120,6 +120,9 @@ interface GlobalStore {
   // Tab visibility
   isTabVisible: boolean;
   setTabVisibility: (visible: boolean) => void;
+
+  // Debug function
+  debugState: () => GlobalStore;
 }
 
 const useGlobalStore = create<GlobalStore>()(
@@ -136,17 +139,23 @@ const useGlobalStore = create<GlobalStore>()(
 
       // Auth functions
       login: async (token, user) => {
+        console.log('🔍 Global Store: Login called with token:', token ? 'present' : 'missing');
+        console.log('🔍 Global Store: Login called with user:', user);
         await SecureStore.setItemAsync('authToken', token);
         const userWithDefaults = {
           profileImage: "",
           idProof: "",
           referralCode: "",
           rewards: 0,
-          ...user
+          ...user,
+          // Handle profile_photo field from local storage
+          profileImage: user.profile_photo || user.profileImage || ""
         };
+        console.log('🔍 Global Store: Setting user with defaults:', userWithDefaults);
         set({ isLoggedIn: true, token, user: userWithDefaults })
       },
       logout: async () => {
+        console.log('🔍 Global Store: Logout called');
         await SecureStore.deleteItemAsync('authToken');
         await SecureStore.deleteItemAsync('accessToken');
         await SecureStore.deleteItemAsync('token');
@@ -172,7 +181,9 @@ const useGlobalStore = create<GlobalStore>()(
           referralCode: "",
           rewards: 0,
           ...state.user, 
-          ...user 
+          ...user,
+          // Handle profile_photo field from local storage
+          profileImage: user.profile_photo || user.profileImage || state.user?.profileImage || ""
         } 
       })),
 
@@ -215,6 +226,17 @@ const useGlobalStore = create<GlobalStore>()(
       // Tab visibility
       isTabVisible: true,
       setTabVisibility: (visible: boolean) => set({ isTabVisible: visible }),
+
+      // Debug function to check current state
+      debugState: () => {
+        const state = get();
+        console.log('🔍 Global Store Debug State:');
+        console.log('  isLoggedIn:', state.isLoggedIn);
+        console.log('  token:', state.token ? 'present' : 'missing');
+        console.log('  user:', state.user);
+        console.log('  user.id:', state.user?.id);
+        return state;
+      },
     }),
     {
       name: 'global-storage',

@@ -505,12 +505,25 @@ export default function Login() {
             await AsyncStorage.setItem("userData", JSON.stringify(data.user));
             
             // Login to global store
+            console.log('🔍 Setting user data in global store:', {
+              id: data.user.user_id,
+              name: data.user.name,
+              email: data.user.email,
+              mobile: data.user.mobile_number,
+              referralCode: data.user.referralCode,
+              profile_photo: data.user.profile_photo,
+              mpinStatus: data.user.mpinStatus,
+              usertype: data.user.userType,
+            });
             login(data.token, {
               id: data.user.user_id,
               name: data.user.name,
               email: data.user.email,
               mobile: data.user.mobile_number,
               referralCode: data.user.referralCode,
+              profile_photo: data.user.profile_photo,
+              mpinStatus: data.user.mpinStatus,
+              usertype: data.user.userType,
             });
 
             // Navigate to home page after successful OTP verification

@@ -15,6 +15,7 @@ import {
   StyleSheet,
   Share,
   Modal,
+  KeyboardAvoidingView,
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import {
@@ -33,8 +34,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import AuthGuard from "@/components/AuthGuard";
 import { uploadProfileImage } from "@/services/api.service";
-import { API_BASE_URL } from "@/config/api";
 import apiWithLoader from "@/services/apiWithLoader";
+import { getFullImageUrl } from "@/utils/imageUtils";
 
 const ProfileScreen = () => {
   const { isLoggedIn, user, language, logout, setLanguage, updateUser } =
@@ -42,6 +43,7 @@ const ProfileScreen = () => {
   const [editing, setEditing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [localProfilePhoto, setLocalProfilePhoto] = useState<string | null>(null);
   const [editData, setEditData] = useState({
     name: user?.name || "",
     email: user?.email || "",
@@ -49,9 +51,40 @@ const ProfileScreen = () => {
   });
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const bottomPadding = height * 0.1;
+  const bottomPadding = 100; // Fixed padding to account for bottom bar
   const profileImageScale = useRef(new Animated.Value(1)).current;
   const waveAnim = useRef(new Animated.Value(0)).current;
+
+  // Get profile photo from local storage
+  const getLocalProfilePhoto = async () => {
+    try {
+      const userData = await AsyncStorage.getItem("userData");
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        if (parsedUser.profile_photo) {
+          setLocalProfilePhoto(parsedUser.profile_photo);
+        }
+      }
+    } catch (error) {
+      console.error("Error getting local profile photo:", error);
+    }
+  };
+
+  // Load local profile photo on component mount and when user changes
+  useEffect(() => {
+    getLocalProfilePhoto();
+  }, [user]);
+
+  // Function to get the best available profile image
+  const getProfileImageSource = () => {
+    // Priority: 1. Server profileImage, 2. Local profile_photo, 3. undefined
+    if (user?.profileImage) {
+      return { uri: getFullImageUrl(user.profileImage) };
+    } else if (localProfilePhoto) {
+      return { uri: getFullImageUrl(localProfilePhoto) };
+    }
+    return undefined;
+  };
 
   // Wave animation effect
   useEffect(() => {
@@ -94,6 +127,7 @@ const ProfileScreen = () => {
   const handleImageUpload = async () => {
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
+      console.log("permissionResult", permissionResult);
     if (!permissionResult.granted) {
       Alert.alert(
         "Permission Required",
@@ -107,8 +141,10 @@ const ProfileScreen = () => {
       aspect: [1, 1],
       quality: 0.8,
     });
+    console.log("result", result , !result.canceled);
     if (!result.canceled) {
       try {
+        console.log("user", user);
         // Check if user ID exists
         if (!user?.id) {
           Alert.alert(
@@ -120,17 +156,28 @@ const ProfileScreen = () => {
         
         // Set local loading state
         setIsUploading(true);
-        
-        // Upload the image to server
         console.log("result.assets[0].uri", result.assets[0].uri);
         const uploadResponse = await uploadProfileImage(user.id, result.assets[0].uri);
         console.log("uploadResponse", uploadResponse);
         if (uploadResponse.success && uploadResponse.url) {
           // Construct the full URL with base URL prefix
-          const fullImageUrl = `${API_BASE_URL}${uploadResponse.url}`;
+          const fullImageUrl = `${theme.baseUrl}${uploadResponse.url}`;
+          console.log("fullImageUrl", fullImageUrl);
+          
+          // Update local storage with the new profile photo
+          try {
+            const userData = await AsyncStorage.getItem("userData");
+            if (userData) {
+              const parsedUser = JSON.parse(userData);
+              parsedUser.profile_photo = uploadResponse.url;
+              await AsyncStorage.setItem("userData", JSON.stringify(parsedUser));
+            }
+          } catch (error) {
+            console.error("Error updating local storage:", error);
+          }
           
           // Update user profile with the uploaded image URL
-          updateUser({ ...user, profileImage: fullImageUrl });
+          updateUser({ ...user, profile_photo: uploadResponse.url });
           
           Alert.alert(
             "Success", 
@@ -157,21 +204,46 @@ const ProfileScreen = () => {
 
   const handleSave = async () => {
     try {
+      // Check if user ID exists
+      console.log("user", user);
+      if (!user?.id) {
+        Alert.alert(
+          t("errorTitle") || "Error", 
+          "User ID not found. Please login again."
+        );
+        return;
+      }
+
       // Prepare the data to send to API
       const profileData = {
         name: editData.name,
         email: editData.email,
-        mobile: editData.mobile,
+        mobile_number: editData.mobile,
       };
 
       // Call the API to update profile
-      const response = await apiWithLoader.user.updateProfile(profileData);
+      const response = await apiWithLoader.user.updateProfile(Number(user.id), profileData);
 
       if (response && response.data) {
-        // Update local user state with the response data
+        // Update local storage with the new profile data
+        try {
+          const userData = await AsyncStorage.getItem("userData");
+          if (userData) {
+            const parsedUser = JSON.parse(userData);
+            const updatedUserData = {
+              ...parsedUser,
+              ...profileData,
+            };
+            await AsyncStorage.setItem("userData", JSON.stringify(updatedUserData));
+          }
+        } catch (error) {
+          console.error("Error updating local storage:", error);
+        }
+
+        // Update global user state with the response data
         updateUser({
           ...user,
-          ...response.data, // Use the data returned from API
+          ...profileData, // Use the data returned from API
         });
         setEditing(false);
         Alert.alert(t("successTitle") || "Success", "Profile updated successfully");
@@ -191,7 +263,7 @@ const ProfileScreen = () => {
     }
   };
 
-  const handleEditToggle = () => {
+  const handleEditToggle = async () => {
     if (editing) {
       // Cancel editing - reset to original values
       setEditData({
@@ -199,6 +271,34 @@ const ProfileScreen = () => {
         email: user?.email || "",
         mobile: user?.mobile?.toString() || "",
       });
+    } else {
+      // Load data from local storage when entering edit mode
+      try {
+        const userData = await AsyncStorage.getItem("userData");
+        if (userData) {
+          const parsedUser = JSON.parse(userData);
+          setEditData({
+            name: parsedUser.name || user?.name || "",
+            email: parsedUser.email || user?.email || "",
+            mobile: parsedUser.mobile?.toString() || user?.mobile?.toString() || "",
+          });
+        } else {
+          // Fallback to global state if local storage is empty
+          setEditData({
+            name: user?.name || "",
+            email: user?.email || "",
+            mobile: user?.mobile?.toString() || "",
+          });
+        }
+      } catch (error) {
+        console.error("Error loading local user data:", error);
+        // Fallback to global state
+        setEditData({
+          name: user?.name || "",
+          email: user?.email || "",
+          mobile: user?.mobile?.toString() || "",
+        });
+      }
     }
     setEditing(!editing);
   };
@@ -267,36 +367,41 @@ const ProfileScreen = () => {
   return (
     <AuthGuard>
       <SafeAreaView style={{ flex: 1, paddingTop: 0 }}>
-        <View style={styles.backgroundImage}>
-        <LinearGradient
-          colors={[
-            theme.colors.primary + "E6",
-            theme.colors.support_container[1] + "E6",
-            theme.colors.support_container[2] + "E6",
-          ]}
-          style={StyleSheet.absoluteFill}
-        />
-
-        <View className="absolute top-0 left-0 right-0 z-10 px-4">
-          <AppHeader showBackButton={false} backRoute="index" />
-        </View>
-
-        <Animated.View
-          style={[
-            styles.waveEffect,
-            { transform: [{ rotate: waveInterpolation }] },
-          ]}
-        />
-
-        <ScrollView
-          contentContainerStyle={{
-            flexGrow: 1,
-            paddingTop: 80,
-            paddingBottom: bottomPadding,
-            paddingHorizontal: 16,
-          }}
-          showsVerticalScrollIndicator={false}
+        <KeyboardAvoidingView 
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
         >
+          <View style={styles.backgroundImage}>
+            <LinearGradient
+              colors={[
+                theme.colors.primary + "E6",
+                theme.colors.support_container[1] + "E6",
+                theme.colors.support_container[2] + "E6",
+              ]}
+              style={StyleSheet.absoluteFill}
+            />
+
+            <View className="absolute top-0 left-0 right-0 z-10 px-4">
+              <AppHeader showBackButton={false} backRoute="index" />
+            </View>
+
+            <Animated.View
+              style={[
+                styles.waveEffect,
+                { transform: [{ rotate: waveInterpolation }] },
+              ]}
+            />
+
+            <ScrollView
+              contentContainerStyle={{
+                flexGrow: 1,
+                paddingTop: 80,
+                paddingBottom: bottomPadding,
+                paddingHorizontal: 16,
+              }}
+              showsVerticalScrollIndicator={false}
+            >
           {/* Floating Profile Section */}
           {editing ? (
             // Edit Profile Form
@@ -320,15 +425,15 @@ const ProfileScreen = () => {
               </View>
 
               {/* Profile Image Edit */}
-              <View style={styles.editImageSection}>
+              {/* <View style={styles.editImageSection}>
                 <TouchableOpacity
                   onPress={handleImageUpload}
                   style={styles.editImageContainer}
                   disabled={isUploading}
                 >
-                  {user?.profileImage ? (
+                  {getProfileImageSource() ? (
                     <Image
-                      source={{ uri: user.profileImage }}
+                      source={getProfileImageSource()}
                       style={styles.editProfileImage}
                     />
                   ) : (
@@ -347,7 +452,7 @@ const ProfileScreen = () => {
                 <Text style={styles.editImageText}>
                   {isUploading ? "Uploading..." : t('tapToChangePhoto')}
                 </Text>
-              </View>
+              </View> */}
 
               {/* Edit Form Fields */}
               <View style={styles.editFormFields}>
@@ -456,9 +561,9 @@ const ProfileScreen = () => {
                       disabled={isUploading}
                       style={styles.idCardImageContainer}
                     >
-                      {user?.profileImage ? (
+                      {getProfileImageSource() ? (
                         <Image
-                          source={{ uri: user.profileImage }}
+                          source={getProfileImageSource()}
                           style={styles.idCardImage}
                         />
                       ) : (
@@ -716,6 +821,7 @@ const ProfileScreen = () => {
           </View>
         </ScrollView>
       </View>
+      </KeyboardAvoidingView>
 
       <Modal
         visible={showLogoutModal}
