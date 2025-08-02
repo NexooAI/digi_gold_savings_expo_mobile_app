@@ -818,7 +818,7 @@ export default function Home2() {
   useEffect(() => {
     if (user) {
       console.log('Setting up notifications...');
-      NotificationService.sendDeviceTokenToApi();
+              NotificationService.sendFcmTokenToApi();
     }
   }, [user]);
 

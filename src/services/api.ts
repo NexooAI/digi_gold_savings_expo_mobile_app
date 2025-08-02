@@ -487,14 +487,14 @@ export const rates = {
 };
 
 export const users = {
-  updateDeviceToken: (deviceToken: string, userId: number, device_type: 'ios' | 'android') => {
+  updateFcmToken: (fcmToken: string, userId: number, device_type: 'ios' | 'android') => {
     return api.post('/notifications/token', { 
       userId,
-      token: deviceToken, // Using 'token' key as backend expects device token in this field
+      token: fcmToken, // Using 'token' key as backend expects FCM token in this field
       device_type
     });
   },
-  getDeviceToken: (userId: number) => {
+  getFcmToken: (userId: number) => {
     return api.get(`/notifications/tokens/${userId}`);
   },
   // Updated method to send complete FCM data to existing endpoint
@@ -506,17 +506,7 @@ export const users = {
     deviceToken: string;
     projectId: string;
   }, userId: number, device_type: 'ios' | 'android') => {
-    return api.post('/notifications/token', { 
-      userId,
-      token: fcmData.deviceToken, // Using 'token' key as backend expects device token in this field
-      device_type,
-      // Include additional FCM data as extra fields
-      fcmType: fcmData.type,
-      deviceId: fcmData.deviceId,
-      development: fcmData.development,
-      appId: fcmData.appId,
-      projectId: fcmData.projectId
-    });
+    return api.post('/notifications/token', fcmData);
   }
 };
 

@@ -143,9 +143,9 @@ export const apiWithLoader = {
         'Updating your profile...'
       );
     },
-    updateDeviceToken: async (deviceToken: string, userId: number, deviceType: string) => {
+    updateFcmToken: async (fcmToken: string, userId: number, deviceType: string) => {
       return LoadingService.withLoading(
-        () => api.post('/notifications/token', { userId, token: deviceToken, device_type: deviceType }),
+        () => api.post('/notifications/token', { userId, token: fcmToken, device_type: deviceType }),
         'Updating notifications...'
       );
     },
