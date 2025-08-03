@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing, Share, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -72,6 +72,46 @@ export default function PaymentSuccess() {
       useNativeDriver: true
     }).start(() => router.replace('/(tabs)/savings'));
   };
+
+  const handleSharePress = async () => {
+    try {
+      const amount = new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(Number(params.amount) || 0);
+
+      const shareMessage = `🎉 Payment Successful!
+
+💰 Amount: ${amount}
+🆔 Transaction ID: ${params.txnId}
+📋 Order ID: ${params.orderId}
+
+Thank you for using our service!`;
+
+      const result = await Share.share({
+        message: shareMessage,
+        title: 'Payment Success Details'
+      });
+
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          // shared with activity type of result.activityType
+          console.log('Shared with activity type:', result.activityType);
+        } else {
+          // shared
+          console.log('Shared successfully');
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // dismissed
+        console.log('Share dismissed');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to share payment details');
+    }
+  };
+
   const checkmarkScale = checkmarkAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 1]
@@ -79,6 +119,19 @@ export default function PaymentSuccess() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header with Share Icon */}
+      <View style={styles.header}>
+        <View style={styles.headerSpacer} />
+        <Text style={styles.headerTitle}>{t('paymentSuccessful')}</Text>
+        <TouchableOpacity 
+          style={styles.shareButton}
+          onPress={handleSharePress}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="share-outline" size={24} color={theme.colors.primary} />
+        </TouchableOpacity>
+      </View>
+
       <Animated.View style={[
         styles.content, 
         { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }
@@ -171,6 +224,35 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9ff',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#edf2f7',
+  },
+  headerSpacer: {
+    width: 24,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#2d3748',
+    fontFamily: 'Inter_600SemiBold',
+  },
+  shareButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#f7fafc',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   content: {
     flex: 1,

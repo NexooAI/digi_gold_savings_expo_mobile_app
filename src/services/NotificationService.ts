@@ -1,7 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
-import { users } from '@/services/api';
+import { userAPI } from '@/services/api';
 import useGlobalStore from '@/store/global.store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
@@ -158,9 +158,7 @@ class NotificationService {
     }
 
     try {
-      // Debugger: Add breakpoint before FCM token generation
-      debugger;
-      
+    
       // Check Google Services configuration
       await this.checkGoogleServicesConfig();
       
@@ -270,10 +268,6 @@ class NotificationService {
       
       if (!fcmToken) {
         console.log('🔄 No FCM token found, attempting to generate new FCM token...');
-        
-        // Debugger: Add breakpoint before generating new FCM token
-        debugger;
-        
         // Try to generate a new FCM token if none exists
         const newFcmToken = await this.getFcmTokenAsync();
         if (!newFcmToken) {
@@ -348,8 +342,8 @@ class NotificationService {
          console.log('📤 Sending FCM token with complete payload structure:', finalPayload);
          
          try {
-           // Send FCM token with complete payload structure
-           const response = await users.updateFcmTokenWithCompleteData(finalPayload, userId, deviceType);
+                     // Send FCM token with complete payload structure
+          const response = await userAPI.updateFcmTokenWithCompleteData(finalPayload, userId, deviceType);
           console.log('✅ FCM token with complete data response:', response);
           await this.storeLastSentFcmToken(fcmToken);
         } catch (error: any) {

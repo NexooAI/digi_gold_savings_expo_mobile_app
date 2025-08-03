@@ -229,7 +229,7 @@ const SavingsDetail = () => {
           paymentFrequencyName: params.paymentFrequency || "Monthly"
         };
       }
-
+      console.log("params---------------",params)
       router.push({
         pathname: "/(tabs)/home/paymentNewOverView",
         params: {
@@ -237,8 +237,9 @@ const SavingsDetail = () => {
           schemeName: params.schemeName,
           schemeId: responce?.data.data.schemeId,
           chitId: responce?.data.data?.chitId,
-          paymentFrequency: params.paymentFrequency,
+          paymentFrequency: parseSchemes.paymentFrequencyName || params.paymentFrequency, // Use the correct paymentFrequency
           schemeType: parseSchemes.schemeTypeName,
+          source: params.source || "savings_detail", // Track source
           userDetails: JSON.stringify({
             amount: params.emiAmount,
             accountname: params.accountHolder,
@@ -248,7 +249,7 @@ const SavingsDetail = () => {
             schemeId: responce?.data.data?.schemeId,
             schemeType: parseSchemes.schemeTypeName,
             schemeName: params?.schemeName, // Also inside userDetails for redundancy
-            paymentFrequency: params?.paymentFrequency,
+            paymentFrequency: parseSchemes.paymentFrequencyName || params.paymentFrequency, // Use the correct paymentFrequency
             chitId: responce?.data.data?.chitId,
 
           }),
@@ -357,73 +358,6 @@ const SavingsDetail = () => {
     setAlertType("info");
     setAlertVisible(true);
     return;
-
-    // Commented out the API call for now
-    /*
-    setIsLoading(true);
-
-    try {
-      const payload = {
-        userId: user.id,
-        investmentId: params.id,
-        months: selectedPayments.map(p => p.monthNumber)?.length, // Array of month numbers
-      };
-
-      // IMPORTANT: Using a new endpoint for bulk payment as requested.
-      // Please ensure this endpoint exists on your backend.
-      const responce = await api.post("investments/bulk-check-payment", payload);
-
-      if (responce?.data?.success === false) {
-        setAlertMessage(responce?.data.message || "Something went wrong with bulk payment.");
-        setAlertType("error");
-        setAlertVisible(true);
-        return;
-      }
-
-      let parseSchemes;
-      try {
-        parseSchemes = JSON.parse(params.schemesData);
-      } catch (parseError) {
-        parseSchemes = {
-          schemeTypeName: "Fixed",
-          paymentFrequencyName: params.paymentFrequency || "Monthly"
-        };
-      }
-
-      router.push({
-        pathname: "/(tabs)/home/paymentNewOverView",
-        params: {
-          amount: totalSelectedAmount.toString(),
-          schemeName: params.schemeName,
-          schemeId: responce?.data.data.schemeId,
-          chitId: responce?.data.data?.chitId,
-          paymentFrequency: params.paymentFrequency,
-          schemeType: parseSchemes.schemeTypeName,
-          userDetails: JSON.stringify({
-            amount: totalSelectedAmount.toString(),
-            accountname: params.accountHolder,
-            accNo: params.accNo,
-            associated_branch: 1,
-            investmentId: responce?.data.data?.investmentId,
-            schemeId: responce?.data.data?.schemeId,
-            schemeType: parseSchemes.schemeTypeName,
-            schemeName: params?.schemeName,
-            paymentFrequency: params?.paymentFrequency,
-            chitId: responce?.data.data?.chitId,
-            months: JSON.stringify(selectedPayments.map(p => p.monthNumber)),
-          }),
-        },
-      });
-
-    } catch (error) {
-      console.error("Error in handleBulkPayment:", error);
-      setAlertMessage("An error occurred during bulk payment. Please try again.");
-      setAlertType("error");
-      setAlertVisible(true);
-    } finally {
-      setIsLoading(false);
-    }
-    */
   };
 
   const handleSelectAll = () => {

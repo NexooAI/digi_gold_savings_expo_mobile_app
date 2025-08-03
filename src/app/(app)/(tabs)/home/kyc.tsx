@@ -169,9 +169,7 @@ export default function KycForm() {
             state: kycData.state || "",
             country: kycData.country || "India",
             pincode: kycData.pincode || "",
-            dob: kycData.dob
-              ? new Date(kycData.dob).toLocaleDateString("en-GB")
-              : "",
+            dob: kycData.dob,
             addressprooftype: kycData.addressproof || "",
             idNumber: kycData.enternumber || "",
             nominee_name: kycData.nominee_name || "",
@@ -194,8 +192,8 @@ export default function KycForm() {
     error,
   }) => {
     const [showPicker, setShowPicker] = useState(false);
-    const [selectedDate, setSelectedDate] = useState(
-      value ? new Date(value.split("/").reverse().join("-")) : new Date()
+    const [selectedDate, setSelectedDate] = useState<Date | null>(
+      value ? new Date(value.split("/").reverse().join("-")) : null
     );
 
     const handleDateChange = (event: any, date?: Date) => {
@@ -210,7 +208,9 @@ export default function KycForm() {
 
     const handleIosConfirmation = () => {
       setShowPicker(false);
-      onDateChange(formatDate(selectedDate));
+      if (selectedDate) {
+        onDateChange(formatDate(selectedDate));
+      }
     };
 
     const formatDate = (date: Date): string => {
@@ -243,7 +243,7 @@ export default function KycForm() {
             style={styles.dateInput}
             pointerEvents="none"
             editable={false}
-            value={formatDate(selectedDate)}
+            value={selectedDate ? formatDate(selectedDate) : ""}
             placeholder="DD/MM/YYYY"
           />
           <Ionicons
@@ -257,7 +257,7 @@ export default function KycForm() {
         {showPicker && (
           <View>
             <DateTimePicker
-              value={selectedDate}
+              value={selectedDate || new Date()}
               mode="date"
               display={Platform.OS === "ios" ? "inline" : "default"}
               onChange={handleDateChange}
@@ -313,6 +313,28 @@ export default function KycForm() {
       !/^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/.test(formData.dob)
     ) {
       newErrors.dob = "Date of Birth must be in DD/MM/YYYY format";
+    }
+
+    // Validate age - must be 18 or older
+    if (formData.dob) {
+      try {
+        const parts = formData.dob.split("/");
+        const dobDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+        const today = new Date();
+        const age = today.getFullYear() - dobDate.getFullYear();
+        const monthDiff = today.getMonth() - dobDate.getMonth();
+        
+        // Adjust age if birthday hasn't occurred this year
+        const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < dobDate.getDate()) 
+          ? age - 1 
+          : age;
+        
+        if (actualAge < 18) {
+          newErrors.dob = "You must be at least 18 years old to proceed";
+        }
+      } catch (error) {
+        newErrors.dob = "Invalid date format";
+      }
     }
 
     // Validate Pincode (must be 6 digits)

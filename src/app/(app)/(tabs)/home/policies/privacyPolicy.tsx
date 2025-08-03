@@ -43,6 +43,31 @@ export default function PrivacyPolicy() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const translations = useMemo(
+    () => ({
+      defaultTitle: t("privacyPolicyTitle"), // e.g., "Privacy Policy"
+      defaultContent: t("privacyPolicyContent"),
+      defaultDiscription: t("privacyPolicyDiscription"),
+      defaultPrivacyPolicyDiscription: t("privacyPolicyDiscription"),
+      defaultprivacyMidTitle: t("privacyMidTitle"),
+      defaultPrivacyPolicyDiscription2: t("privacyPolicyDiscription2"),
+      yourPrivacyMatters: t("yourPrivacyMatters"),
+      dataCollection: t("dataCollection"),
+      dataCollectionDescription: t("dataCollectionDescription"),
+      howWeUseYourData: t("howWeUseYourData"),
+      dataUsageDescription: t("dataUsageDescription"),
+      dataProtection: t("dataProtection"),
+      dataProtectionDescription: t("dataProtectionDescription"),
+      questionsAboutPrivacy: t("questionsAboutPrivacy"),
+      privacyContactDescription: t("privacyContactDescription"),
+      loadingPrivacyPolicy: t("loadingPrivacyPolicy"),
+      oopsSomethingWentWrong: t("oopsSomethingWentWrong"),
+      tryAgain: t("tryAgain"),
+      failedToLoadPrivacyPolicy: t("failedToLoadPrivacyPolicy"),
+    }),
+    [language]
+  );
+
   useEffect(() => {
     const fetchPolicy = async () => {
       try {
@@ -56,20 +81,20 @@ export default function PrivacyPolicy() {
           })
           .catch((err: any) => {
             console.error("Error fetching Privacy Policy:", err);
-            setError("Failed to load Privacy Policy.");
+            setError(translations.failedToLoadPrivacyPolicy);
           })
           .finally(() => {
             setLoading(false);
           });
       } catch (err: any) {
         console.error("Error in fetchPolicy:", err);
-        setError("Failed to load Privacy Policy.");
+        setError(translations.failedToLoadPrivacyPolicy);
         setLoading(false);
       }
     };
 
     fetchPolicy();
-  }, []);
+  }, [translations.failedToLoadPrivacyPolicy]);
 
   // Function to retry fetching policy data
   const retryFetchPolicy = async () => {
@@ -81,23 +106,11 @@ export default function PrivacyPolicy() {
       //console.log("Privacy Policy retried and loaded successfully:", response.data.data);
     } catch (err: any) {
       console.error("Error retrying Privacy Policy:", err);
-      setError("Failed to load Privacy Policy.");
+      setError(translations.failedToLoadPrivacyPolicy);
     } finally {
       setLoading(false);
     }
   };
-
-  const translations = useMemo(
-    () => ({
-      defaultTitle: t("privacyPolicyTitle"), // e.g., "Privacy Policy"
-      defaultContent: t("privacyPolicyContent"),
-      defaultDiscription: t("privacyPolicyDiscription"),
-      defaultPrivacyPolicyDiscription: t("privacyPolicyDiscription"),
-      defaultprivacyMidTitle: t("privacyMidTitle"),
-      defaultPrivacyPolicyDiscription2: t("privacyPolicyDiscription2"),
-    }),
-    [language]
-  );
 
   if (loading) {
     return (
@@ -108,7 +121,7 @@ export default function PrivacyPolicy() {
           style={styles.loadingGradient}
         >
           <ActivityIndicator size="large" color="#FFD700" />
-          <Text style={styles.loadingText}>Loading Privacy Policy...</Text>
+          <Text style={styles.loadingText}>{translations.loadingPrivacyPolicy}</Text>
         </LinearGradient>
       </SafeAreaView>
     );
@@ -123,13 +136,13 @@ export default function PrivacyPolicy() {
           style={styles.errorGradient}
         >
           <Ionicons name="alert-circle-outline" size={60} color="#FFD700" />
-          <Text style={styles.errorTitle}>Oops! Something went wrong</Text>
+          <Text style={styles.errorTitle}>{translations.oopsSomethingWentWrong}</Text>
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity
             style={styles.retryButton}
             onPress={retryFetchPolicy}
           >
-            <Text style={styles.retryButtonText}>Try Again</Text>
+            <Text style={styles.retryButtonText}>{translations.tryAgain}</Text>
           </TouchableOpacity>
         </LinearGradient>
       </SafeAreaView>
@@ -151,7 +164,7 @@ export default function PrivacyPolicy() {
         <SafeAreaView style={styles.safeArea}>
           {/* Fixed Header */}
           <View style={styles.headerContainer}>
-            <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false} />
+            <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false} showLanguageSwitcher={true}/>
           </View>
 
           {/* Hero Section */}
@@ -192,7 +205,7 @@ export default function PrivacyPolicy() {
                 <View style={styles.contentHeader}>
                   <Ionicons name="lock-closed" size={24} color="#850111" />
                   <Text style={styles.contentHeaderText}>
-                    Your Privacy Matters
+                    {translations.yourPrivacyMatters}
                   </Text>
                 </View>
 
@@ -208,11 +221,12 @@ export default function PrivacyPolicy() {
                       size={20}
                       color="#850111"
                     />
-                    <Text style={styles.sectionTitle}>Data Collection</Text>
+                    <Text style={styles.sectionTitle}>
+                      {translations.dataCollection}
+                    </Text>
                   </View>
                   <Text style={styles.sectionText}>
-                    We collect only the information necessary to provide you with
-                    our services and improve your experience.
+                    {translations.dataCollectionDescription}
                   </Text>
                 </View>
 
@@ -220,11 +234,12 @@ export default function PrivacyPolicy() {
                 <View style={styles.sectionContainer}>
                   <View style={styles.sectionHeader}>
                     <Ionicons name="analytics" size={20} color="#850111" />
-                    <Text style={styles.sectionTitle}>How We Use Your Data</Text>
+                    <Text style={styles.sectionTitle}>
+                      {translations.howWeUseYourData}
+                    </Text>
                   </View>
                   <Text style={styles.sectionText}>
-                    Your information is used solely for service delivery,
-                    communication, and improving our offerings.
+                    {translations.dataUsageDescription}
                   </Text>
                 </View>
 
@@ -232,11 +247,12 @@ export default function PrivacyPolicy() {
                 <View style={styles.sectionContainer}>
                   <View style={styles.sectionHeader}>
                     <Ionicons name="shield-checkmark" size={20} color="#850111" />
-                    <Text style={styles.sectionTitle}>Data Protection</Text>
+                    <Text style={styles.sectionTitle}>
+                      {translations.dataProtection}
+                    </Text>
                   </View>
                   <Text style={styles.sectionText}>
-                    We implement industry-standard security measures to protect
-                    your personal information.
+                    {translations.dataProtectionDescription}
                   </Text>
                 </View>
 
@@ -252,10 +268,10 @@ export default function PrivacyPolicy() {
                       color="#FFD700"
                     />
                     <Text style={styles.contactTitle}>
-                      Questions About Privacy?
+                      {translations.questionsAboutPrivacy}
                     </Text>
                     <Text style={styles.contactText}>
-                      Contact us if you have any concerns about your privacy
+                      {translations.privacyContactDescription}
                     </Text>
                   </LinearGradient>
                 </View>

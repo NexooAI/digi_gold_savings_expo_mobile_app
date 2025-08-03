@@ -1,5 +1,4 @@
 import { apiLogger } from '@/services/api';
-import { apiServiceLogger } from '@/services/api.service';
 import { paymentLogger } from '@/services/payment.service';
 
 export interface ApiLogEntry {
@@ -67,10 +66,9 @@ class ApiLogManager {
    */
   getAllLogs(): ApiLogEntry[] {
     const mainLogs = apiLogger.getLogs().map(log => ({ ...log, service: 'main' }));
-    const serviceLogs = apiServiceLogger.getLogs().map(log => ({ ...log, service: 'apiService' }));
     const paymentLogs = paymentLogger.getLogs().map(log => ({ ...log, service: 'payment' }));
 
-    return [...mainLogs, ...serviceLogs, ...paymentLogs].sort((a, b) => 
+    return [...mainLogs, ...paymentLogs].sort((a, b) => 
       new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
   }
@@ -78,12 +76,10 @@ class ApiLogManager {
   /**
    * Get logs for a specific service
    */
-  getLogsByService(service: 'main' | 'apiService' | 'payment'): ApiLogEntry[] {
+  getLogsByService(service: 'main' | 'payment'): ApiLogEntry[] {
     switch (service) {
       case 'main':
         return apiLogger.getLogs().map(log => ({ ...log, service }));
-      case 'apiService':
-        return apiServiceLogger.getLogs().map(log => ({ ...log, service }));
       case 'payment':
         return paymentLogger.getLogs().map(log => ({ ...log, service }));
       default:
@@ -188,7 +184,6 @@ class ApiLogManager {
    */
   clearAllLogs(): void {
     apiLogger.clearLogs();
-    apiServiceLogger.clearLogs();
     paymentLogger.clearLogs();
     console.log('🗑️ All API logs cleared');
   }

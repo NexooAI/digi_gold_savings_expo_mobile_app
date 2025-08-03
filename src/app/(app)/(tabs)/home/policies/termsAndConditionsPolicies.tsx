@@ -102,7 +102,7 @@ export default function TermsAndConditions() {
           style={styles.loadingGradient}
         >
           <ActivityIndicator size="large" color="#FFD700" />
-          <Text style={styles.loadingText}>Loading Terms & Conditions...</Text>
+          <Text style={styles.loadingText}>{t("loadingTermsAndConditions")}</Text>
         </LinearGradient>
       </SafeAreaView>
     );
@@ -117,15 +117,15 @@ export default function TermsAndConditions() {
           style={styles.errorGradient}
         >
           <Ionicons name="alert-circle-outline" size={60} color="#FFD700" />
-          <Text style={styles.errorTitle}>Oops! Something went wrong</Text>
+          <Text style={styles.errorTitle}>{t("oopsSomethingWentWrong")}</Text>
           <Text style={styles.errorText}>
-            Error loading policy: {error.message}
+            {t("errorLoadingPolicy")} {error.message}
           </Text>
           <TouchableOpacity
             style={styles.retryButton}
             onPress={retryFetchPolicy}
           >
-            <Text style={styles.retryButtonText}>Try Again</Text>
+            <Text style={styles.retryButtonText}>{t("tryAgain")}</Text>
           </TouchableOpacity>
         </LinearGradient>
       </SafeAreaView>
@@ -147,7 +147,7 @@ export default function TermsAndConditions() {
         <SafeAreaView style={styles.safeArea}>
           {/* Fixed Header */}
           <View style={styles.headerContainer}>
-            <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false} />
+            <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false}  showLanguageSwitcher={true}/>
           </View>
 
           {/* Hero Section */}
@@ -192,7 +192,7 @@ export default function TermsAndConditions() {
                 <View style={styles.contentHeader}>
                   <Ionicons name="shield-checkmark" size={24} color="#850111" />
                   <Text style={styles.contentHeaderText}>
-                    Our Commitment to You
+                    {t("ourCommitmentToYou")}
                   </Text>
                 </View>
 
@@ -208,11 +208,10 @@ export default function TermsAndConditions() {
                       size={20}
                       color="#850111"
                     />
-                    <Text style={styles.sectionTitle}>Service Terms</Text>
+                    <Text style={styles.sectionTitle}>{t("serviceTerms")}</Text>
                   </View>
                   <Text style={styles.sectionText}>
-                    By using our digital gold investment services, you agree to
-                    comply with all applicable terms and conditions.
+                    {t("serviceTermsDescription")}
                   </Text>
                 </View>
 
@@ -220,11 +219,10 @@ export default function TermsAndConditions() {
                 <View style={styles.sectionContainer}>
                   <View style={styles.sectionHeader}>
                     <Ionicons name="person-outline" size={20} color="#850111" />
-                    <Text style={styles.sectionTitle}>User Responsibilities</Text>
+                    <Text style={styles.sectionTitle}>{t("userResponsibilities")}</Text>
                   </View>
                   <Text style={styles.sectionText}>
-                    Users are responsible for maintaining the security of their
-                    accounts and providing accurate information.
+                    {t("userResponsibilitiesDescription")}
                   </Text>
                 </View>
 
@@ -240,10 +238,10 @@ export default function TermsAndConditions() {
                       color="#FFD700"
                     />
                     <Text style={styles.contactTitle}>
-                      Questions About Terms?
+                      {t("questionsAboutTerms")}
                     </Text>
                     <Text style={styles.contactText}>
-                      Contact us for clarification on any terms and conditions
+                      {t("contactForClarification")}
                     </Text>
                   </LinearGradient>
                 </View>

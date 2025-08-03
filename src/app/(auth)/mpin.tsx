@@ -234,7 +234,7 @@ export default function MpinSetup() {
         console.log('🔍 Registration successful, response data:', data);
         
         // Validate response structure
-        if (!data.success || !data.accessToken || !data.token || !data.refreshtoken || !data.user) {
+        if (!data.accessToken || !data.token || !data.refreshtoken || !data.user) {
           console.error('🔍 Invalid response structure:', data);
           Alert.alert(t("error"), "Invalid response from server");
           return;

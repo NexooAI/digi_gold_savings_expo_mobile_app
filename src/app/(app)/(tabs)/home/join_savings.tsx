@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   StyleSheet,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Dimensions,
@@ -29,6 +28,7 @@ import api from "@/services/api";
 import { theme } from "@/constants/theme";
 import RNPickerSelect from "react-native-picker-select";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import CustomAlert from "../../../components/Alert";
 
 const { width } = Dimensions.get("window");
 
@@ -195,6 +195,15 @@ export default function JoinSavings() {
   const [goldRate, setGoldRate] = useState(5847); // Default fallback
   const [useLoginName, setUseLoginName] = useState(false);
 
+  // Custom modal states
+  const [kycModalVisible, setKycModalVisible] = useState(false);
+  const [kycModalData, setKycModalData] = useState({
+    title: "",
+    message: "",
+    type: "info" as "success" | "error" | "info",
+    buttons: [{ text: "OK", onPress: () => {}, style: "default" as "default" | "cancel" | "destructive" }]
+  });
+
   // Slider animation value
   const sliderValue = useRef(new Animated.Value(0)).current;
   const sliderWidth = useRef(0);
@@ -300,10 +309,13 @@ export default function JoinSavings() {
               setKycDetails(response.data.data);
             } else {
               setKycDetails(null);
-              Alert.alert(
-                "KYC Status",
-                "Your KYC is not completed. Please submit the details."
-              );
+              setKycModalData({
+                title: "KYC Status",
+                message: "Your KYC is not completed. Please submit the details.",
+                type: "error",
+                buttons: [{ text: "OK", onPress: () => {}, style: "default" }]
+              });
+              setKycModalVisible(true);
             }
           } else {
             console.warn("No KYC data found");
@@ -312,7 +324,13 @@ export default function JoinSavings() {
           }
         } catch (error) {
           console.error("Error fetching KYC status:", error);
-          Alert.alert("Error", "Failed to fetch KYC status. Please try again.");
+          setKycModalData({
+            title: "Error",
+            message: "Failed to fetch KYC status. Please try again.",
+            type: "error",
+            buttons: [{ text: "OK", onPress: () => {}, style: "default" }]
+          });
+          setKycModalVisible(true);
         } finally {
           setIsKycLoading(false);
         }
@@ -350,7 +368,13 @@ export default function JoinSavings() {
       setGoldWeight(maxGoldWeight);
       handleChange("amount", String(maxAmount));
 
-      Alert.alert("Maximum Limit", "Maximum amount allowed is ₹1,00,000");
+      setKycModalData({
+        title: "Maximum Limit",
+        message: "Maximum amount allowed is ₹1,00,000",
+        type: "error",
+        buttons: [{ text: "OK", onPress: () => {}, style: "default" }]
+      });
+      setKycModalVisible(true);
 
       // Update slider position for max amount
       const minAmount = getMinAmount();
@@ -424,12 +448,15 @@ export default function JoinSavings() {
       setInputValue(String(maxAmount));
       handleChange("amount", String(maxAmount));
 
-      Alert.alert(
-        "Maximum Limit",
-        `Maximum gold weight allowed is ${maxWeight.toFixed(
+      setKycModalData({
+        title: "Maximum Limit",
+        message: `Maximum gold weight allowed is ${maxWeight.toFixed(
           3
-        )}g based on current rate`
-      );
+        )}g based on current rate`,
+        type: "error",
+        buttons: [{ text: "OK", onPress: () => {}, style: "default" }]
+      });
+      setKycModalVisible(true);
 
       // Update slider position for max amount
       const minAmount = getMinAmount();
@@ -1171,25 +1198,35 @@ export default function JoinSavings() {
       if (!validate("amount", formData.amount)) return;
 
       if (isKycLoading) {
-        Alert.alert("Please wait", "Checking KYC status...");
+        setKycModalData({
+          title: "Please wait",
+          message: "Checking KYC status...",
+          type: "info",
+          buttons: [{ text: "OK", onPress: () => {}, style: "default" }]
+        });
+        setKycModalVisible(true);
         return;
       }
 
       if (kycStatus !== "Completed") {
-        Alert.alert(
-          "KYC Not Completed",
-          "Your KYC is not complete. Do you want to complete it now?",
-          [
+        setKycModalData({
+          title: "KYC Not Completed",
+          message: "Your KYC is not complete. Do you want to complete it now?",
+          type: "error",
+          buttons: [
             {
               text: "Cancel",
-              style: "cancel",
+              onPress: () => {},
+              style: "cancel"
             },
             {
               text: "Complete Now",
               onPress: () => router.push("/(tabs)/home/kyc"),
+              style: "default"
             },
           ]
-        );
+        });
+        setKycModalVisible(true);
         return;
       }
 
@@ -1212,7 +1249,13 @@ export default function JoinSavings() {
     // Step 3: Final submission
     if (step === 3) {
       if (!user) {
-        Alert.alert("Error", "User not found. Please log in again.");
+        setKycModalData({
+          title: "Error",
+          message: "User not found. Please log in again.",
+          type: "error",
+          buttons: [{ text: "OK", onPress: () => {}, style: "default" }]
+        });
+        setKycModalVisible(true);
         return;
       }
       console.log("formData ,selectedChit", formData ,selectedChit)
@@ -1289,10 +1332,13 @@ export default function JoinSavings() {
         })
         .catch((error: any) => {
           console.error("Error creating savings scheme:", error);
-          Alert.alert(
-            "Error",
-            "There was an error creating the savings scheme. Please try again."
-          );
+          setKycModalData({
+            title: "Error",
+            message: "There was an error creating the savings scheme. Please try again.",
+            type: "error",
+            buttons: [{ text: "OK", onPress: () => {}, style: "default" }]
+          });
+          setKycModalVisible(true);
         });
     }
   };
@@ -1481,6 +1527,16 @@ export default function JoinSavings() {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
+      
+      {/* Custom KYC Modal */}
+      <CustomAlert
+        visible={kycModalVisible}
+        title={kycModalData.title}
+        message={kycModalData.message}
+        type={kycModalData.type}
+        buttons={kycModalData.buttons}
+        onClose={() => setKycModalVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 }

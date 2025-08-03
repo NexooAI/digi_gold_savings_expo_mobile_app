@@ -30,7 +30,7 @@ import { BlurView } from "expo-blur";
 import Icon from "@expo/vector-icons/MaterialIcons";
 import { t } from "@/i18n";
 import { AppLocale } from "@/i18n";
-import { apiClient } from "@/services/api.service";
+import apiClient from "@/services/api";
 
 // Simple Language Switcher Component
 const SimpleLanguageSwitcher = () => {
@@ -96,13 +96,17 @@ const CustomModal = ({
   title, 
   message, 
   onClose, 
-  type = 'error' 
+  onConfirm,
+  type = 'error',
+  showCancelButton = false
 }: {
   visible: boolean;
   title: string;
   message: string;
   onClose: () => void;
+  onConfirm?: () => void;
   type?: 'error' | 'success' | 'warning';
+  showCancelButton?: boolean;
 }) => {
   const scaleAnim = useRef(new Animated.Value(0)).current;
 
@@ -127,29 +131,29 @@ const CustomModal = ({
     switch (type) {
       case 'error':
         return {
-          background: 'rgba(220, 53, 69, 0.95)',
-          border: '#dc3545',
+          background: 'rgba(133, 1, 17, 0.95)',
+          border: theme.colors.primary,
           icon: 'error',
           iconColor: '#ffffff'
         };
       case 'success':
         return {
-          background: 'rgba(40, 167, 69, 0.95)',
-          border: '#28a745',
+          background: 'rgba(76, 175, 80, 0.95)',
+          border: theme.colors.success,
           icon: 'check-circle',
           iconColor: '#ffffff'
         };
       case 'warning':
         return {
-          background: 'rgba(255, 193, 7, 0.95)',
-          border: '#ffc107',
+          background: 'rgba(255, 201, 12, 0.95)',
+          border: theme.colors.secondary,
           icon: 'warning',
           iconColor: '#000000'
         };
       default:
         return {
-          background: 'rgba(220, 53, 69, 0.95)',
-          border: '#dc3545',
+          background: 'rgba(133, 1, 17, 0.95)',
+          border: theme.colors.primary,
           icon: 'error',
           iconColor: '#ffffff'
         };
@@ -185,12 +189,45 @@ const CustomModal = ({
           </View>
           <Text style={styles.modalTitle}>{title}</Text>
           <Text style={styles.modalMessage}>{message}</Text>
-          <TouchableOpacity
-            style={[styles.modalButton, { borderColor: colors.border }]}
-            onPress={onClose}
-          >
-            <Text style={styles.modalButtonText}>OK</Text>
-          </TouchableOpacity>
+          <View style={styles.modalButtonContainer}>
+            {showCancelButton && (
+              <TouchableOpacity
+                style={[
+                  styles.modalButton, 
+                  styles.modalCancelButton, 
+                  { 
+                    borderColor: type === 'warning' ? theme.colors.grey : colors.border,
+                    backgroundColor: type === 'warning' ? 'rgba(128, 128, 128, 0.3)' : 'rgba(255, 255, 255, 0.1)'
+                  }
+                ]}
+                onPress={onClose}
+              >
+                <Text style={[
+                  styles.modalCancelButtonText,
+                  { color: type === 'warning' ? theme.colors.white : '#ffffff' }
+                ]}>
+                  {t("cancel") || "Cancel"}
+                </Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={[
+                styles.modalButton, 
+                { 
+                  borderColor: colors.border,
+                  backgroundColor: type === 'warning' ? theme.colors.primary : theme.colors.secondary
+                }
+              ]}
+              onPress={onConfirm || onClose}
+            >
+              <Text style={[
+                styles.modalButtonText,
+                { color: type === 'warning' ? '#ffffff' : theme.colors.textDark }
+              ]}>
+                {showCancelButton ? (t("logout") || "Logout") : "OK"}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </Animated.View>
       </View>
     </Modal>
@@ -274,37 +311,36 @@ export default function MpinVerify() {
         const token = await SecureStore.getItemAsync("authToken");
         const userData = await AsyncStorage.getItem("userData");
 
+        // Only logout if absolutely no token exists (critical security issue)
         if (!token) {
-          // No token found, redirect to login
           console.log("No auth token found, redirecting to login");
           await logout();
           router.replace("/(auth)/login");
           return;
         }
 
+        // Don't logout for missing user data - just continue with MPIN verification
         if (!userData) {
-          // Token exists but no user data, clear token and redirect to login
-          console.log("Token exists but no user data, redirecting to login");
-          await logout();
-          router.replace("/(auth)/login");
+          console.log("Token exists but no user data, continuing with MPIN verification");
+          setInitializing(false);
           return;
         }
 
-        // Validate token by checking if it's expired
+        // Validate token by checking if it's expired - be more lenient
         const isTokenValid = await validateToken(token);
         if (!isTokenValid) {
-          console.log("Token is invalid/expired, redirecting to login");
-          await logout();
-          router.replace("/(auth)/login");
+          console.log("Token is invalid/expired, but not logging out automatically");
+          // Don't automatically logout for expired tokens - let user try MPIN verification
+          setInitializing(false);
           return;
         }
 
         // Token and user data are valid, show MPIN screen
         setInitializing(false);
       } catch (error) {
-        console.error("Error validating token and user:", error);
-        await logout();
-        router.replace("/(auth)/login");
+        console.error("Error validating token and user, but not logging out automatically:", error);
+        // Don't automatically logout on error - let user continue
+        setInitializing(false);
       }
     };
 
@@ -762,7 +798,7 @@ export default function MpinVerify() {
                         disabled={loading || isLocked}
                       >
                         <Icon name="visibility" size={20} color={isLocked ? "#cccccc" : "#ffffff"} />
-                        <Text style={[styles.viewMpinButtonText, isLocked && { color: "#cccccc" }]}>View MPIN</Text>
+                        <Text style={[styles.viewMpinButtonText, isLocked && { color: "#cccccc" }]}>{t("View_MPIN")}</Text>
                       </TouchableOpacity>
                       
                       <TouchableOpacity
@@ -774,7 +810,7 @@ export default function MpinVerify() {
                         disabled={loading || isLocked}
                       >
                         <Icon name="clear" size={20} color={isLocked ? "#cccccc" : "#ffffff"} />
-                        <Text style={[styles.clearButtonText, isLocked && { color: "#cccccc" }]}>Clear</Text>
+                        <Text style={[styles.clearButtonText, isLocked && { color: "#cccccc" }]}>{t("clear")}</Text>
                       </TouchableOpacity>
                     </View>
 
@@ -817,26 +853,12 @@ export default function MpinVerify() {
                       <TouchableOpacity
                         style={styles.logoutContainer}
                         onPress={async () => {
-                          Alert.alert(
-                            t("logout_confirmation_title") || "Logout",
-                            t("logout_confirmation_message") || "Are you sure you want to logout?",
-                            [
-                              { text: t("cancel") || "Cancel", style: "cancel" },
-                              {
-                                text: t("logout") || "Logout",
-                                onPress: async () => {
-                                  try {
-                                    await SecureStore.deleteItemAsync("user_mpin");
-                                    logout();
-                                    router.replace("/(auth)/login");
-                                  } catch (error) {
-                                    console.error("Logout error:", error);
-                                  }
-                                },
-                              },
-                            ],
-                            { cancelable: false }
-                          );
+                          setModalData({
+                            title: t("logout_confirmation_title") || "Logout",
+                            message: t("logout_confirmation_message") || "Are you sure you want to logout?",
+                            type: "warning"
+                          });
+                          setShowModal(true);
                         }}
                       >
                         <Icon name="logout" size={20} color={theme.colors.error || "#ff4444"} />
@@ -873,7 +895,20 @@ export default function MpinVerify() {
         title={modalData.title}
         message={modalData.message}
         type={modalData.type}
+        showCancelButton={modalData.type === 'warning'}
         onClose={() => setShowModal(false)}
+        onConfirm={async () => {
+          if (modalData.type === 'warning') {
+            try {
+              await SecureStore.deleteItemAsync("user_mpin");
+              logout();
+              router.replace("/(auth)/login");
+            } catch (error) {
+              console.error("Logout error:", error);
+            }
+          }
+          setShowModal(false);
+        }}
       />
     </ImageBackground>
   );
@@ -1131,17 +1166,31 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: 24,
   },
+  modalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    gap: 12,
+  },
   modalButton: {
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 25,
     borderWidth: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    flex: 1,
+  },
+  modalCancelButton: {
+    // Background and text colors are set dynamically
   },
   modalButtonText: {
-    color: '#ffffff',
     fontSize: 16,
     fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  modalCancelButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   
   // Action buttons styles

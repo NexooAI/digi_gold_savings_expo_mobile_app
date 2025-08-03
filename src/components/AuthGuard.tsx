@@ -37,23 +37,23 @@ export default function AuthGuard({ children, requireMpinVerification = true }: 
           return;
         }
 
-        // Check if user data exists
+        // Check if user data exists - be more lenient
         if (!authState.hasUser) {
-          console.log("AuthGuard: No user data, redirecting to login");
+          console.log("AuthGuard: No user data, but not logging out automatically");
+          // Don't automatically logout - let user continue
           if (isMounted) {
-            await logout();
-            router.replace("/(auth)/login");
+            setIsAuthenticated(true);
           }
           return;
         }
 
-        // Check if auth token exists and is valid
+        // Check if auth token exists and is valid - be more lenient
         const token = await SecureStore.getItemAsync("authToken");
         if (!token) {
-          console.log("AuthGuard: No auth token, redirecting to login");
+          console.log("AuthGuard: No auth token, but not logging out automatically");
+          // Don't automatically logout - let user continue
           if (isMounted) {
-            await logout();
-            router.replace("/(auth)/login");
+            setIsAuthenticated(true);
           }
           return;
         }
@@ -73,13 +73,13 @@ export default function AuthGuard({ children, requireMpinVerification = true }: 
           }
         }
 
-        // Validate token expiration
+        // Validate token expiration - be more lenient
         const tokenParts = token.split('.');
         if (tokenParts.length !== 3) {
-          console.log("AuthGuard: Invalid token format, redirecting to login");
+          console.log("AuthGuard: Invalid token format, but not logging out automatically");
+          // Don't automatically logout for invalid token format
           if (isMounted) {
-            await logout();
-            router.replace("/(auth)/login");
+            setIsAuthenticated(true);
           }
           return;
         }
@@ -95,16 +95,17 @@ export default function AuthGuard({ children, requireMpinVerification = true }: 
               if (requireMpinVerification) {
                 router.replace("/(auth)/mpin_verify");
               } else {
-                router.replace("/(auth)/login");
+                // Don't automatically logout - let user continue
+                setIsAuthenticated(true);
               }
             }
             return;
           }
         } catch (error) {
-          console.log("AuthGuard: Error parsing token, redirecting to login");
+          console.log("AuthGuard: Error parsing token, but not logging out automatically");
+          // Don't automatically logout on parsing error
           if (isMounted) {
-            await logout();
-            router.replace("/(auth)/login");
+            setIsAuthenticated(true);
           }
           return;
         }
@@ -114,10 +115,10 @@ export default function AuthGuard({ children, requireMpinVerification = true }: 
           setIsAuthenticated(true);
         }
       } catch (error) {
-        console.error("AuthGuard: Authentication check error:", error);
+        console.error("AuthGuard: Authentication check error, but not logging out automatically");
+        // Don't automatically logout on error
         if (isMounted) {
-          await logout();
-          router.replace("/(auth)/login");
+          setIsAuthenticated(true);
         }
       } finally {
         if (isMounted) {

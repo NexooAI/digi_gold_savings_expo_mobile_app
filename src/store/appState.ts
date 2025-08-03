@@ -5,7 +5,8 @@ import * as SecureStore from 'expo-secure-store';
 
 let appStateTimeout: NodeJS.Timeout;
 let backgroundTime: number = 0;
-const BACKGROUND_TIMEOUT = 30000; // 30 seconds - adjust based on your security requirements
+// Increased timeout to prevent automatic logout - set to 30 minutes instead of 30 seconds
+const BACKGROUND_TIMEOUT = 1800000; // 30 minutes - much longer to prevent unwanted logouts
 
 const setupAppStateListener = () => {
   const subscription = AppState.addEventListener('change', async (nextAppState: AppStateStatus) => {
@@ -15,15 +16,15 @@ const setupAppStateListener = () => {
       // Record when app goes to background
       backgroundTime = Date.now();
       
-      // Set timeout for automatic logout after extended background time
-      appStateTimeout = setTimeout(() => {
-        if (isLoggedIn) {
-          useGlobalStore.getState().logout();
-          // Clear sensitive data
-          SecureStore.deleteItemAsync("authToken");
-          router.replace("/(auth)/login");
-        }
-      }, 300000); // 5 minutes
+      // Commented out automatic logout - keeping user logged in
+      // appStateTimeout = setTimeout(() => {
+      //   if (isLoggedIn) {
+      //     useGlobalStore.getState().logout();
+      //     // Clear sensitive data
+      //     SecureStore.deleteItemAsync("authToken");
+      //     router.replace("/(auth)/login");
+      //   }
+      // }, 300000); // 5 minutes
     }
 
     if (nextAppState === 'active') {
@@ -34,7 +35,7 @@ const setupAppStateListener = () => {
       if (isLoggedIn && backgroundTime > 0) {
         const timeInBackground = Date.now() - backgroundTime;
         
-        // If app was in background for more than the threshold, require MPIN
+        // Only require MPIN if app was in background for a very long time (30 minutes)
         if (timeInBackground > BACKGROUND_TIMEOUT) {
           try {
             // Check if user has valid token and MPIN
@@ -42,20 +43,20 @@ const setupAppStateListener = () => {
             const storedMPIN = await SecureStore.getItemAsync("user_mpin");
             
             if (token && storedMPIN) {
-              // Force MPIN verification for security
+              // Force MPIN verification for security only after very long background time
               router.replace("/(auth)/mpin_verify");
-            } else {
-              // No valid authentication, go to login
+            } else if (!token) {
+              // Only logout if no token exists
               useGlobalStore.getState().logout();
               router.replace("/(auth)/login");
             }
+            // If token exists but no MPIN, just continue without logout
           } catch (error) {
             console.error("Error checking authentication on app resume:", error);
-            // On error, logout for security
-            useGlobalStore.getState().logout();
-            router.replace("/(auth)/login");
+            // Don't automatically logout on error - let user continue
           }
         }
+        // If background time is less than threshold, just continue without any action
       }
       
       // Reset background time

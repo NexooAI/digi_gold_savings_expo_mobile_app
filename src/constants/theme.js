@@ -47,6 +47,7 @@ const theme = {
     savings_bg: require("../../assets/images/savingsbg.jpg"),
     digigoldproduct: require("../../assets/images/digigoldproduct.png"),
     translate: require("../../assets/images/translate/mal.png"),
+    bg_new: require("../../assets/images/bg_new.jpg"),
   },
   constants: {
     customerName: "DC Jewellers",

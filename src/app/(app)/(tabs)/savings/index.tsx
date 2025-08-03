@@ -443,6 +443,7 @@ export default function SavingsScreen() {
           transactions: JSON.stringify(item.transactions || []),
           paymentFrequency: item.schemesData.paymentFrequencyName,
           autoPayNow: "1",
+          source: "savings_index", // Track source
         },
       });
     };
@@ -995,7 +996,7 @@ export default function SavingsScreen() {
 
   // Memoized renderItem for FlatList
   const renderSchemeItem = useCallback(
-    ({ item }) => <EnhancedSchemeCard item={item} />,
+    ({ item }: { item: any }) => <EnhancedSchemeCard item={item} />,
     []
   );
 

@@ -38,6 +38,80 @@ import { AppLocale } from "@/i18n";
 const { width } = Dimensions.get("window");
 const logoWidth = width * 0.3;
 
+// Debug Modal Component
+const DebugModal = ({
+  visible,
+  onClose,
+  storageData,
+  onRefreshToken,
+  isRefreshing,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  storageData: { [key: string]: any };
+  onRefreshToken: () => void;
+  isRefreshing: boolean;
+}) => {
+  return (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View style={styles.debugModalOverlay}>
+        <View style={styles.debugModalContainer}>
+          <View style={styles.debugModalHeader}>
+            <Text style={styles.debugModalTitle}>🔍 Debug - Local Storage</Text>
+            <TouchableOpacity onPress={onClose} style={styles.debugCloseButton}>
+              <Ionicons name="close" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
+          
+          {/* Action Buttons */}
+          <View style={styles.debugActionButtons}>
+            <TouchableOpacity
+              onPress={onRefreshToken}
+              disabled={isRefreshing}
+              style={[
+                styles.debugActionButton,
+                isRefreshing && styles.debugActionButtonDisabled
+              ]}
+            >
+              <Ionicons 
+                name={isRefreshing ? "refresh" : "refresh-outline"} 
+                size={16} 
+                color={isRefreshing ? "#999" : "#007AFF"} 
+              />
+              <Text style={[
+                styles.debugActionButtonText,
+                isRefreshing && styles.debugActionButtonTextDisabled
+              ]}>
+                {isRefreshing ? "Refreshing..." : "Refresh Token"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView style={styles.debugModalContent}>
+            {Object.keys(storageData).length === 0 ? (
+              <Text style={styles.debugEmptyText}>No storage data found</Text>
+            ) : (
+              Object.entries(storageData).map(([key, value]) => (
+                <View key={key} style={styles.debugItemContainer}>
+                  <Text style={styles.debugItemKey}>{key}:</Text>
+                  <Text style={styles.debugItemValue}>
+                    {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                  </Text>
+                </View>
+              ))
+            )}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
 // Custom Modal Component for Invalid Mobile Number
 const InvalidMobileModal = ({
   visible,
@@ -66,12 +140,12 @@ const InvalidMobileModal = ({
             <Text style={styles.modalTitle}>{t("invalidMobile")}</Text>
             <Text style={styles.modalSubtitle}>{mobileNumber}</Text>
           </View>
-          
+
           <View style={styles.modalContent}>
             <Text style={styles.modalMessage}>
               {t("createNewAccountMessage")}
             </Text>
-            
+
             <View style={styles.modalDetails}>
               <View style={styles.detailRow}>
                 <Ionicons name="information-circle" size={16} color="#666" />
@@ -93,7 +167,7 @@ const InvalidMobileModal = ({
               </View>
             </View>
           </View>
-          
+
           <View style={styles.modalButtonContainer}>
             <TouchableOpacity
               style={[styles.modalButton, styles.cancelButton]}
@@ -218,7 +292,7 @@ const GlassmorphismCard = ({ children }: { children: React.ReactNode }) => {
 // Simple Language Switcher Component
 const SimpleLanguageSwitcher = () => {
   const { language, setLanguage } = useGlobalStore();
-  
+
   const handleLanguageChange = () => {
     let newLang: AppLocale;
     switch (language) {
@@ -302,6 +376,9 @@ export default function Login() {
 
   // Modal state
   const [showInvalidMobileModal, setShowInvalidMobileModal] = useState(false);
+  const [showDebugModal, setShowDebugModal] = useState(false);
+  const [debugStorageData, setDebugStorageData] = useState<{ [key: string]: any }>({});
+  const [isRefreshingToken, setIsRefreshingToken] = useState(false);
 
   // Global state and error handling
   const { login, isLoggedIn } = useGlobalStore();
@@ -428,7 +505,7 @@ export default function Login() {
   //           // await SecureStore.setItemAsync("token", data.token);
   //           // await SecureStore.setItemAsync("refreshToken", data.refreshtoken);
   //           // await AsyncStorage.setItem("userData", JSON.stringify(data.user));
-            
+
   //           login(data.token, {
   //             id: data.user.user_id,
   //             name: data.user.name,
@@ -436,7 +513,7 @@ export default function Login() {
   //             mobile: data.user.mobile_number,
   //             referralCode: data.user.referralCode,
   //           });
-  
+
   //           // Navigate to MPIN verification after successful OTP verification
   //           router.replace("/(auth)/mpin_verify");
   //           setIsShowOtp(false);
@@ -503,7 +580,7 @@ export default function Login() {
             await SecureStore.setItemAsync("token", data.token);
             await SecureStore.setItemAsync("refreshToken", data.refreshtoken);
             await AsyncStorage.setItem("userData", JSON.stringify(data.user));
-            
+
             // Login to global store
             console.log('🔍 Setting user data in global store:', {
               id: data.user.user_id,
@@ -549,26 +626,26 @@ export default function Login() {
       .catch((error) => {
         setPins(["", "", "", ""]);
         console.error("OTP verification error:", error);
-        
+
         let errorMessage = t("anUnexpectedError");
-        
+
         // Handle fetch API error structure
         if (error.message) {
           errorMessage = error.message;
         } else if (error.error) {
           errorMessage = error.error;
         }
-        
+
         // Check for specific error types
-        if (errorMessage.toLowerCase().includes("invalid") || 
-            errorMessage.toLowerCase().includes("otp")) {
+        if (errorMessage.toLowerCase().includes("invalid") ||
+          errorMessage.toLowerCase().includes("otp")) {
           Alert.alert(
             t("invalidOtp"),
             errorMessage || t("invalidOtpMessage"),
             [{ text: t("ok") }]
           );
-        } else if (errorMessage.toLowerCase().includes("network") || 
-                   errorMessage.toLowerCase().includes("connection")) {
+        } else if (errorMessage.toLowerCase().includes("network") ||
+          errorMessage.toLowerCase().includes("connection")) {
           Alert.alert(
             t("networkError"),
             t("checkInternetConnection"),
@@ -629,21 +706,21 @@ export default function Login() {
       setLoading(false);
     } catch (error: any) {
       console.log('🔍 Login - Error caught:', error);
-      
+
       // Handle fetch API error structure
       let errorMessage = t("youAreNotRegistered");
-      
+
       if (error.message) {
         errorMessage = error.message;
       } else if (error.error) {
         errorMessage = error.error;
       }
-      
+
       console.log('🔍 Login - Error message:', errorMessage);
-      
+
       // Check if the error message contains "Invalid mobile number" (case insensitive)
-      if (errorMessage.toLowerCase().includes("invalid mobile number") || 
-          errorMessage.toLowerCase().includes(t("invalidMobileNumber").toLowerCase())) {
+      if (errorMessage.toLowerCase().includes("invalid mobile number") ||
+        errorMessage.toLowerCase().includes(t("invalidMobileNumber").toLowerCase())) {
         console.log('🔍 Login - Showing invalid mobile modal for mobile:', mobile);
         setShowInvalidMobileModal(true);
         setLoading(false);
@@ -685,16 +762,16 @@ export default function Login() {
       }
     } catch (error: any) {
       console.log('🔍 Resend OTP - Error caught:', error);
-      
+
       let errorMessage = t("failedToResendOtp");
-      
+
       // Handle fetch API error structure
       if (error.message) {
         errorMessage = error.message;
       } else if (error.error) {
         errorMessage = error.error;
       }
-      
+
       console.log('🔍 Resend OTP - Error message:', errorMessage);
       showErrorAlert(errorMessage);
     } finally {
@@ -708,12 +785,154 @@ export default function Login() {
       setIsShowOtp(false);
       setPins(["", "", "", ""]);
       setTimer(120);
-              setResendAttempts(3);
+      setResendAttempts(3);
       // Stop SMS listener when going back to mobile input
       // stopSmsListener();
     } else {
       // If mobile input is showing, navigate back to previous route
       router.back();
+    }
+  };
+
+    const handleDebugButton = async () => {
+    try {
+      // Get all AsyncStorage keys
+      const keys = await AsyncStorage.getAllKeys();
+      const storageData: { [key: string]: any } = {};
+      
+      // Get all values
+      for (const key of keys) {
+        const value = await AsyncStorage.getItem(key);
+        try {
+          storageData[key] = value ? JSON.parse(value) : value;
+        } catch {
+          storageData[key] = value;
+        }
+      }
+
+      // Get SecureStore data
+      const secureKeys = ['authToken', 'accessToken', 'token', 'refreshToken'];
+      for (const key of secureKeys) {
+        try {
+          const value = await SecureStore.getItemAsync(key);
+          if (value) {
+            storageData[`secure_${key}`] = value;
+          }
+        } catch (error) {
+          console.log(`Error getting secure key ${key}:`, error);
+        }
+      }
+
+      // Add token analysis
+      const tokenAnalysis: { [key: string]: any } = {};
+      
+      // Check main token
+      const mainToken = await SecureStore.getItemAsync('token');
+      if (mainToken) {
+        try {
+          const tokenParts = mainToken.split('.');
+          if (tokenParts.length === 3) {
+            const payload = JSON.parse(atob(tokenParts[1]));
+            const expirationTime = payload.exp * 1000;
+            const currentTime = Date.now();
+            const isExpired = currentTime >= expirationTime;
+            
+            tokenAnalysis['token_status'] = {
+              exists: true,
+              format: 'valid',
+              expires_at: new Date(expirationTime).toLocaleString(),
+              is_expired: isExpired,
+              time_until_expiry: isExpired ? 'EXPIRED' : `${Math.round((expirationTime - currentTime) / 1000)}s`,
+              payload: payload
+            };
+          } else {
+            tokenAnalysis['token_status'] = {
+              exists: true,
+              format: 'invalid',
+              error: 'Not a valid JWT format'
+            };
+          }
+                 } catch (error) {
+            tokenAnalysis['token_status'] = {
+              exists: true,
+              format: 'error',
+              error: error instanceof Error ? error.message : 'Unknown error'
+            };
+          }
+      } else {
+        tokenAnalysis['token_status'] = {
+          exists: false,
+          format: 'none',
+          error: 'No token found'
+        };
+      }
+
+      // Check global store state
+      const globalState = useGlobalStore.getState();
+      tokenAnalysis['global_store'] = {
+        isLoggedIn: globalState.isLoggedIn,
+        hasToken: !!globalState.token,
+        hasUser: !!globalState.user,
+        user: globalState.user
+      };
+
+      // Merge all data
+      const finalData = {
+        ...storageData,
+        ...tokenAnalysis
+      };
+
+      setDebugStorageData(finalData);
+      setShowDebugModal(true);
+    } catch (error) {
+      console.error('Error getting debug data:', error);
+      Alert.alert('Debug Error', 'Failed to get storage data');
+    }
+  };
+
+  const handleRefreshToken = async () => {
+    setIsRefreshingToken(true);
+    try {
+      const refreshToken = await SecureStore.getItemAsync('refreshToken');
+      if (!refreshToken) {
+        Alert.alert('Error', 'No refresh token available');
+        return;
+      }
+
+      const response = await fetch(`${theme.baseUrl}/auth/refresh-token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Store new tokens
+        await SecureStore.setItemAsync('token', data.token);
+        await SecureStore.setItemAsync('accessToken', data.accessToken);
+        await SecureStore.setItemAsync('refreshToken', data.refreshtoken);
+        await SecureStore.setItemAsync('authToken', data.token);
+
+        // Update global store
+        const globalState = useGlobalStore.getState();
+        globalState.login(data.token, globalState.user || {});
+
+        Alert.alert('Success', 'Token refreshed successfully!');
+        
+        // Refresh debug data
+        handleDebugButton();
+      } else {
+        Alert.alert('Error', data.message || 'Failed to refresh token');
+      }
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      Alert.alert('Error', 'Failed to refresh token. Please try again.');
+    } finally {
+      setIsRefreshingToken(false);
     }
   };
 
@@ -732,13 +951,37 @@ export default function Login() {
           style={registerStyles.gradient}
         >
           <SimpleLanguageSwitcher />
+          
+          {/* Debug Button */}
+          <TouchableOpacity
+            onPress={handleDebugButton}
+            style={{
+              position: 'absolute',
+              top: Platform.OS === 'ios' ? 120 : 100,
+              right: 20,
+              zIndex: 1000,
+              backgroundColor: 'rgba(255, 0, 0, 0.8)',
+              padding: 12,
+              borderRadius: 25,
+              flexDirection: 'row',
+              alignItems: 'center',
+              borderWidth: 1,
+              borderColor: 'rgba(255, 255, 255, 0.3)',
+            }}
+          >
+            <Ionicons name="bug" size={20} color="#ffffff" />
+            <Text style={{ color: '#ffffff', fontSize: 12, fontWeight: 'bold', marginLeft: 4 }}>
+              DEBUG
+            </Text>
+          </TouchableOpacity>
+          
           {showError && (
             <ErrorAlert message={errorMessage} onClose={hideErrorAlert} />
           )}
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={registerStyles.keyboardAvoidingView}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 80} // Increased offset for Android
+            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0} // Increased offset for Android
           >
             <ScrollView contentContainerStyle={[registerStyles.scrollViewContent, { flexGrow: 1 }]} keyboardShouldPersistTaps="handled">
               <View style={registerStyles.logoContainer}>
@@ -753,33 +996,33 @@ export default function Login() {
                 <View style={registerStyles.cardContainer}>
                   {/* Base fog layer */}
                   <LinearGradient
-                      colors={[
-                        "rgba(6, 2, 2, 0.78)",
-                        "rgba(34, 0, 0, 0.35)",
-                        "rgba(31, 3, 3, 0.54)",
-                      ]}
-                      style={StyleSheet.absoluteFill}
-                    />
-                    {/* Top fog highlight */}
-                    <LinearGradient
-                      colors={[
-                        "rgba(10, 2, 2, 0.38)",
-                        "rgba(76, 63, 63, 0.74)",
-                      ]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 0, y: 0.5 }}
-                      style={StyleSheet.absoluteFill}
-                    />
-                    {/* Bottom fog highlight */}
-                    <LinearGradient
-                      colors={[
-                        "rgba(0, 0, 0, 0.44)",
-                        "rgba(0, 0, 0, 0.28)",
-                      ]}
-                      start={{ x: 0, y: 0.5 }}
-                      end={{ x: 0, y: 1 }}
-                      style={StyleSheet.absoluteFill}
-                    />
+                    colors={[
+                      "rgba(6, 2, 2, 0.78)",
+                      "rgba(34, 0, 0, 0.35)",
+                      "rgba(31, 3, 3, 0.54)",
+                    ]}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  {/* Top fog highlight */}
+                  <LinearGradient
+                    colors={[
+                      "rgba(10, 2, 2, 0.38)",
+                      "rgba(76, 63, 63, 0.74)",
+                    ]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 0.5 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  {/* Bottom fog highlight */}
+                  <LinearGradient
+                    colors={[
+                      "rgba(0, 0, 0, 0.44)",
+                      "rgba(0, 0, 0, 0.28)",
+                    ]}
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 0, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
                   {/* Content */}
                   <View style={registerStyles.cardContent}>
                     <Text style={registerStyles.pageTitle}>{t("welcomeBack")}!</Text>
@@ -820,7 +1063,7 @@ export default function Login() {
                           <Text style={registerStyles.registerText}>
                             {t("dontHaveAccount")}{" "}
                           </Text>
-                          <TouchableOpacity onPress={() => router.push("/userBasicDetails")}> 
+                          <TouchableOpacity onPress={() => router.push("/userBasicDetails")}>
                             <Text style={registerStyles.registerLink}>{t("register")}</Text>
                           </TouchableOpacity>
                         </View>
@@ -870,17 +1113,17 @@ export default function Login() {
                           />
                           <Text style={registerStyles.timerText}>{t("resendIn")} {timer}s</Text>
                         </View>
-                                {timer === 0 && resendAttempts > 0 && (
-          <TouchableOpacity
-            onPress={handleResendOtp}
-            style={registerStyles.resendButton}
-            disabled={loading}
-          >
-            <Text style={registerStyles.resendText}>
-              {loading ? t("resending") : t("resendOTP")} ({resendAttempts} {t("left")})
-            </Text>
-          </TouchableOpacity>
-        )}
+                        {timer === 0 && resendAttempts > 0 && (
+                          <TouchableOpacity
+                            onPress={handleResendOtp}
+                            style={registerStyles.resendButton}
+                            disabled={loading}
+                          >
+                            <Text style={registerStyles.resendText}>
+                              {loading ? t("resending") : t("resendOTP")} ({resendAttempts} {t("left")})
+                            </Text>
+                          </TouchableOpacity>
+                        )}
                         {timer === 0 && resendAttempts === 0 && (
                           <View style={registerStyles.timerContainer}>
                             <Ionicons
@@ -897,7 +1140,7 @@ export default function Login() {
                           style={[
                             registerStyles.loginButton,
                             (loading || !pins.every((pin) => pin.trim() !== "")) &&
-                              registerStyles.loginButtonDisabled,
+                            registerStyles.loginButtonDisabled,
                           ]}
                           onPress={() => verifyOtp(pins.join(""))}
                           disabled={
@@ -920,11 +1163,11 @@ export default function Login() {
               </View>
             </ScrollView>
           </KeyboardAvoidingView>
-          <View style={registerStyles.poweredByContainer}>
+          {/* <View style={registerStyles.poweredByContainer}>
             <Text style={registerStyles.poweredByText}>
               {t("poweredBy")} <Text style={{textDecorationLine: 'underline', color: theme.colors.textLight}} onPress={() => Linking.openURL('https://agnisofterp.com/')}>Agni Soft ERP</Text>
             </Text>
-          </View>
+          </View> */}
         </LinearGradient>
       </ImageBackground>
 
@@ -944,6 +1187,15 @@ export default function Login() {
           });
         }}
         mobileNumber={mobile}
+      />
+
+      {/* Debug Modal */}
+      <DebugModal
+        visible={showDebugModal}
+        onClose={() => setShowDebugModal(false)}
+        storageData={debugStorageData}
+        onRefreshToken={handleRefreshToken}
+        isRefreshing={isRefreshingToken}
       />
     </SafeAreaView>
   );
@@ -1050,6 +1302,94 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "white",
+  },
+  debugModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  debugModalContainer: {
+    backgroundColor: "white",
+    borderRadius: 16,
+    width: "100%",
+    maxWidth: 400,
+    overflow: "hidden",
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  debugModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  debugModalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  debugCloseButton: {
+    padding: 8,
+  },
+  debugModalContent: {
+    padding: 20,
+  },
+  debugEmptyText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    paddingVertical: 20,
+  },
+  debugItemContainer: {
+    marginBottom: 15,
+  },
+  debugItemKey: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#555",
+    marginBottom: 5,
+  },
+  debugItemValue: {
+    fontSize: 14,
+    color: "#333",
+    lineHeight: 22,
+  },
+  debugActionButtons: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    backgroundColor: '#f8f9fa',
+  },
+  debugActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginRight: 10,
+  },
+  debugActionButtonDisabled: {
+    backgroundColor: '#e0e0e0',
+  },
+  debugActionButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 6,
+  },
+  debugActionButtonTextDisabled: {
+    color: '#999999',
   },
 });
 

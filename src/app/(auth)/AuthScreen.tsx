@@ -13,7 +13,7 @@ import * as SecureStore from "expo-secure-store";
 // Key for storing MPIN
 const MPIN_KEY = "user_mpin";
 
-export default function AuthScreen({ navigation }) {
+export default function AuthScreen({ navigation }: { navigation: any }) {
   const [isMpinSet, setIsMpinSet] = useState(false);
   const [mpin, setMpin] = useState(""); // For setting a new MPIN
   const [enteredMpin, setEnteredMpin] = useState(""); // For verifying MPIN

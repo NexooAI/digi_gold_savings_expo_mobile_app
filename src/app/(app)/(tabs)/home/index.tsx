@@ -35,6 +35,7 @@ import ProductsList from "@/app/components/Products";
 import FlashOffer from "@/app/components/FlashOffer";
 import YouTubeVideo from "@/app/components/YouTubeVideo";
 import SupportContactCard from "@/app/components/SupportContactCard";
+import SocialMediaCard from "@/app/components/SocialMediaCard";
 import useGlobalStore from "@/store/global.store";
 import api from "@/services/api";
 import NetInfo from "@react-native-community/netinfo";
@@ -1219,6 +1220,8 @@ export default function Home2() {
 
               <YouTubeVideo videos={homeData?.data?.videos} />
 
+              <SocialMediaCard />
+              
               <SupportContactCard />
               <View style={styles.spacer} />
             </View>

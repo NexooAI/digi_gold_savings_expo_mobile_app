@@ -143,7 +143,6 @@ const useGlobalStore = create<GlobalStore>()(
         console.log('🔍 Global Store: Login called with user:', user);
         await SecureStore.setItemAsync('authToken', token);
         const userWithDefaults = {
-          profileImage: "",
           idProof: "",
           referralCode: "",
           rewards: 0,
@@ -176,7 +175,6 @@ const useGlobalStore = create<GlobalStore>()(
       },
       updateUser: (user: any) => set((state) => ({ 
         user: { 
-          profileImage: "",
           idProof: "",
           referralCode: "",
           rewards: 0,

@@ -291,7 +291,7 @@ export default function FAQScreen() {
     >
       <SafeAreaView style={styles.safeArea}>
         <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
-        <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false} />
+        <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false}  showLanguageSwitcher={true}/>
         
         <LinearGradient
           colors={['#f8f9fa', '#ffffff']}

@@ -34,7 +34,9 @@ export default function PaymentNewOverView() {
   const [weightPerGram, setWeightPerGram] = useState(0);
   const [isEditingAmount, setIsEditingAmount] = useState(false);
   const [amountError, setAmountError] = useState("");
-  const isFlexi = params.paymentFrequency?.toString().toLowerCase() === "flexi";
+  // Check for Flexi type using both paymentFrequency and schemeType parameters
+  const isFlexi = params.paymentFrequency?.toString().toLowerCase() === "flexi" || 
+                  params.schemeType?.toString().toLowerCase() === "flexi";
   const MAX_AMOUNT = 100000; // 1 lakh rupees
 
   // Parse user details only once when component mounts
@@ -233,7 +235,16 @@ export default function PaymentNewOverView() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => {
+            // Navigate back based on source
+            const source = params.source?.toString();
+            if (source === "savings_index") {
+              router.replace("/(tabs)/savings");
+            } else {
+              // Default: go back to savings detail
+              router.back();
+            }
+          }}
           style={styles.backButton}
         >
           <Ionicons

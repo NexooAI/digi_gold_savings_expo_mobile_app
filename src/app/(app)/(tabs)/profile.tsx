@@ -33,7 +33,7 @@ import { theme } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import AuthGuard from "@/components/AuthGuard";
-import { uploadProfileImage } from "@/services/api.service";
+import { userAPI } from "@/services/api";
 import apiWithLoader from "@/services/apiWithLoader";
 import { getFullImageUrl } from "@/utils/imageUtils";
 
@@ -157,11 +157,12 @@ const ProfileScreen = () => {
         // Set local loading state
         setIsUploading(true);
         console.log("result.assets[0].uri", result.assets[0].uri);
-        const uploadResponse = await uploadProfileImage(user.id, result.assets[0].uri);
+        const uploadResponse = await userAPI.uploadProfileImage(user.id, result.assets[0].uri);
         console.log("uploadResponse", uploadResponse);
-        if (uploadResponse.success && uploadResponse.url) {
+        const responseData = uploadResponse.data;
+        if (responseData.success && responseData.url) {
           // Construct the full URL with base URL prefix
-          const fullImageUrl = `${theme.baseUrl}${uploadResponse.url}`;
+          const fullImageUrl = `${theme.baseUrl}${responseData.url}`;
           console.log("fullImageUrl", fullImageUrl);
           
           // Update local storage with the new profile photo
@@ -169,7 +170,7 @@ const ProfileScreen = () => {
             const userData = await AsyncStorage.getItem("userData");
             if (userData) {
               const parsedUser = JSON.parse(userData);
-              parsedUser.profile_photo = uploadResponse.url;
+              parsedUser.profile_photo = responseData.url;
               await AsyncStorage.setItem("userData", JSON.stringify(parsedUser));
             }
           } catch (error) {
@@ -177,7 +178,7 @@ const ProfileScreen = () => {
           }
           
           // Update user profile with the uploaded image URL
-          updateUser({ ...user, profile_photo: uploadResponse.url });
+          updateUser({ ...user, profile_photo: responseData.url });
           
           Alert.alert(
             "Success", 
@@ -186,7 +187,7 @@ const ProfileScreen = () => {
         } else {
           Alert.alert(
             "Upload Failed", 
-            uploadResponse.message || "Failed to upload profile image. Please try again."
+            responseData.message || "Failed to upload profile image. Please try again."
           );
         }
       } catch (error) {

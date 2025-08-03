@@ -28,7 +28,7 @@ import { BlurView } from "expo-blur";
 import Icon from "@expo/vector-icons/MaterialIcons";
 import { t } from "@/i18n";
 import { AppLocale } from "@/i18n";
-import { apiClient } from "@/services/api.service";
+import apiClient from "@/services/api";
 import useGlobalStore from "@/store/global.store";
 
 const { width } = Dimensions.get("window");
@@ -198,6 +198,7 @@ export default function ForgotMpin() {
   const [loading, setLoading] = useState(false);
   const [showPin, setShowPin] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [countdown, setCountdown] = useState(0);
   const [initializing, setInitializing] = useState(true);
   const router = useRouter();
@@ -303,6 +304,7 @@ export default function ForgotMpin() {
 
     setLoading(true);
     setError("");
+    setSuccess("");
 
     try {
       console.log('📱 Sending OTP to:', numberToUse);
@@ -315,7 +317,8 @@ export default function ForgotMpin() {
         console.log('📱 OTP sent successfully');
         setCountdown(30);
         setInitializing(false);
-        Alert.alert(t("success"), t("otpSentSuccessfully"));
+        setSuccess(t("otpSentSuccessfully"));
+        setError("");
       } else {
         console.log('📱 Failed to send OTP:', response.data.message);
         setError(response.data.message || t("failedToSendOtp"));
@@ -351,6 +354,7 @@ export default function ForgotMpin() {
 
     setLoading(true);
     setError("");
+    setSuccess("");
 
     try {
       console.log('📱 Verifying OTP for:', mobileNumber);
@@ -364,6 +368,7 @@ export default function ForgotMpin() {
         console.log('📱 OTP verified successfully');
         setStep('createMpin');
         setError("");
+        setSuccess("");
       } else {
         console.log('📱 OTP verification failed:', response.data.message);
         setError(response.data.message || t("invalidOtp"));
@@ -385,84 +390,84 @@ export default function ForgotMpin() {
     }
   };
 
-  const handleVerifyAndResetMpin = async () => {
-    if (otp.length !== 4) {
-      setError(t("pleaseEnterValidOtp"));
-      shakeError();
-      return;
-    }
+  // const handleVerifyAndResetMpin = async () => {
+  //   if (otp.length !== 4) {
+  //     setError(t("pleaseEnterValidOtp"));
+  //     shakeError();
+  //     return;
+  //   }
 
-    if (newMpin.length !== 4) {
-      setError(t("pleaseEnterValidMpin"));
-      shakeError();
-      return;
-    }
+  //   if (newMpin.length !== 4) {
+  //     setError(t("pleaseEnterValidMpin"));
+  //     shakeError();
+  //     return;
+  //   }
 
-    if (newMpin !== confirmMpin) {
-      setError(t("mpinMismatch"));
-      shakeError();
-      return;
-    }
+  //   if (newMpin !== confirmMpin) {
+  //     setError(t("mpinMismatch"));
+  //     shakeError();
+  //     return;
+  //   }
 
-    setLoading(true);
-    setError("");
+  //   setLoading(true);
+  //   setError("");
 
-    try {
-      console.log('📱 Verifying OTP and resetting MPIN for:', mobileNumber);
+  //   try {
+  //     console.log('📱 Verifying OTP and resetting MPIN for:', mobileNumber);
       
-      // First verify OTP
-      const otpResponse = await apiClient.post('/auth/verify-forgot-mpin-otp', {
-        mobileNumber: mobileNumber,
-        otp: otp
-      });
+  //     // First verify OTP
+  //     const otpResponse = await apiClient.post('/auth/verify-forgot-mpin-otp', {
+  //       mobileNumber: mobileNumber,
+  //       otp: otp
+  //     });
 
-      if (!otpResponse.data.success) {
-        console.log('📱 OTP verification failed:', otpResponse.data.message);
-        setError(otpResponse.data.message || t("invalidOtp"));
-        shakeError();
-        return;
-      }
+  //     if (!otpResponse.data.success) {
+  //       console.log('📱 OTP verification failed:', otpResponse.data.message);
+  //       setError(otpResponse.data.message || t("invalidOtp"));
+  //       shakeError();
+  //       return;
+  //     }
 
-      console.log('📱 OTP verified successfully, now resetting MPIN');
+  //     console.log('📱 OTP verified successfully, now resetting MPIN');
       
-      // Then reset MPIN
-      const resetResponse = await apiClient.post('/auth/reset-mpin', {
-        mobileNumber: mobileNumber,
-        newMpin: newMpin
-      });
+  //     // Then reset MPIN
+  //     const resetResponse = await apiClient.post('/auth/reset-mpin', {
+  //       mobile: mobileNumber,
+  //       newMpin: newMpin
+  //     });
 
-      if (resetResponse.data.success) {
-        console.log('📱 MPIN reset successfully');
-        Alert.alert(
-          t("success"), 
-          t("mpinResetSuccess"),
-          [
-            {
-              text: t("ok"),
-              onPress: () => router.replace("/(auth)/login")
-            }
-          ]
-        );
-      } else {
-        console.log('📱 MPIN reset failed:', resetResponse.data.message);
-        setError(resetResponse.data.message || t("resetFailed"));
-        shakeError();
-      }
-    } catch (error: any) {
-      console.error("📱 Error in verify and reset process:", error);
+  //     if (resetResponse.data.success) {
+  //       console.log('📱 MPIN reset successfully');
+  //       Alert.alert(
+  //         t("success"), 
+  //         t("mpinResetSuccess"),
+  //         [
+  //           {
+  //             text: t("ok"),
+  //             onPress: () => router.replace("/(auth)/login")
+  //           }
+  //         ]
+  //       );
+  //     } else {
+  //       console.log('📱 MPIN reset failed:', resetResponse.data.message);
+  //       setError(resetResponse.data.message || t("resetFailed"));
+  //       shakeError();
+  //     }
+  //   } catch (error: any) {
+  //     console.error("📱 Error in verify and reset process:", error);
       
-      if (error.response?.status === 400) {
-        const errorData = error.response.data;
-        setError(errorData.message || t("resetFailed"));
-      } else {
-        setError(t("resetFailed"));
-      }
+  //     if (error.response?.status === 400) {
+  //       const errorData = error.response.data;
+  //       setError(errorData.message || t("resetFailed"));
+  //     } else {
+  //       setError(t("resetFailed"));
+  //     }
       
-      shakeError();
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     shakeError();
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleResetMpin = async () => {
     if (newMpin.length !== 4) {
@@ -525,6 +530,8 @@ export default function ForgotMpin() {
     if (countdown > 0) return;
     
     setLoading(true);
+    setError("");
+    setSuccess("");
     try {
       console.log('📱 Resending OTP to:', mobileNumber);
       
@@ -535,7 +542,8 @@ export default function ForgotMpin() {
       if (response.data.success) {
         console.log('📱 OTP resent successfully');
         setCountdown(30);
-        Alert.alert(t("success"), t("otpResentSuccessfully"));
+        setSuccess(t("otpResentSuccessfully"));
+        setError("");
       } else {
         console.log('📱 Failed to resend OTP:', response.data.message);
         setError(response.data.message || t("failedToResendOtp"));
@@ -608,6 +616,13 @@ export default function ForgotMpin() {
         <View style={styles.errorContainer}>
           <Icon name="error" size={16} color="#FF6B6B" />
           <Text style={styles.errorText}>{error}</Text>
+        </View>
+      ) : null}
+
+      {success ? (
+        <View style={styles.successContainer}>
+          <Icon name="check-circle" size={16} color="#4CAF50" />
+          <Text style={styles.successText}>{success}</Text>
         </View>
       ) : null}
 
@@ -686,8 +701,15 @@ export default function ForgotMpin() {
 
       {error ? (
         <View style={styles.errorContainer}>
-          <Icon name="error" size={16} color="#FF6B6B" />
+          <Icon name="error" size={16} color="#96fc88" />
           <Text style={styles.errorText}>{error}</Text>
+        </View>
+      ) : null}
+
+      {success ? (
+        <View style={styles.successContainer}>
+          <Icon name="check-circle" size={16} color="#4CAF50" />
+          <Text style={styles.successText}>{success}</Text>
         </View>
       ) : null}
 
@@ -998,7 +1020,21 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   errorText: {
-    color: "#FF6B6B",
+    color: "#a3f55b",
+    fontSize: 14,
+    marginLeft: 8,
+    flex: 1,
+  },
+  successContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(76, 175, 80, 0.1)",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 15,
+  },
+  successText: {
+    color: "#4CAF50",
     fontSize: 14,
     marginLeft: 8,
     flex: 1,
