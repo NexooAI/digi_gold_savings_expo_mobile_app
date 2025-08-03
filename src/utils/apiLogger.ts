@@ -76,12 +76,14 @@ class ApiLogManager {
   /**
    * Get logs for a specific service
    */
-  getLogsByService(service: 'main' | 'payment'): ApiLogEntry[] {
+  getLogsByService(service: 'main' | 'payment' | 'apiService'): ApiLogEntry[] {
     switch (service) {
       case 'main':
         return apiLogger.getLogs().map(log => ({ ...log, service }));
       case 'payment':
         return paymentLogger.getLogs().map(log => ({ ...log, service }));
+        case 'apiService':
+          return paymentLogger.getLogs().map(log => ({ ...log, service }));
       default:
         return [];
     }

@@ -2,7 +2,7 @@ import { Tabs } from "expo-router";
 import CustomBottomBar from "@/common/components/navigation/CustomBottomBar";
 import { Slot } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 
 function MyTabBar(props: BottomTabBarProps) {
@@ -12,7 +12,11 @@ function MyTabBar(props: BottomTabBarProps) {
 export default function TabsLayout() {
   return (
     <SafeAreaProvider>
-      <View style={{ flex: 1 }}>
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+      >
         <Tabs
           screenOptions={{
             headerShown: false,
@@ -25,7 +29,7 @@ export default function TabsLayout() {
           <Tabs.Screen name="notifications" />
           <Tabs.Screen name="profile" />
         </Tabs>
-      </View>
+      </KeyboardAvoidingView>
     </SafeAreaProvider>
   );
 }

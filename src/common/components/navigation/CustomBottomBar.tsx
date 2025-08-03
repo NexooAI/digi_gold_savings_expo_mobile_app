@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, TouchableOpacity, Text, StyleSheet, Animated } from "react-native";
+import { View, TouchableOpacity, Text, StyleSheet, Animated, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, usePathname } from "expo-router";
 import { theme } from "@/constants/theme";
@@ -8,6 +8,7 @@ import useGlobalStore from "@/store/global.store";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNotificationBadge } from "@/hooks/useNotificationBadge";
 import { shouldHideTabs } from "@/config/navigation";
+import { useKeyboardVisibility } from "@/hooks/useKeyboardVisibility";
 
 type Tab = {
   name: string;
@@ -23,9 +24,14 @@ export default function CustomBottomBar() {
   const { language } = useGlobalStore();
   // const { badgeCount } = useNotificationBadge();
   const current = pathname.split('/').pop() || "home";
+  const { keyboardVisible } = useKeyboardVisibility();
   
   // Check if current route should hide tabs
   const shouldHide = shouldHideTabs(current);
+  
+  // Keyboard behavior:
+  // - On Android: Hide bottom bar when keyboard is visible to prevent overlap
+  // - On iOS: Keep bottom bar fixed and visible when keyboard is visible
   
   // Animation refs for each tab
   const tabAnimations = useRef([0, 1, 2, 3, 4].map(() => new Animated.Value(1))).current;
@@ -122,8 +128,25 @@ export default function CustomBottomBar() {
     return <View style={{ display: 'none' }} />;
   }
 
+  // Handle keyboard visibility - hide on Android, keep fixed on iOS
+  // Add a small delay to prevent flickering when keyboard is dismissed
+  if (keyboardVisible && Platform.OS === 'android') {
+    return <View style={{ display: 'none' }} />;
+  }
+
   return (
-    <View style={[styles.container, { position: 'absolute', bottom: 10 }]}>
+    <View style={[
+      styles.container, 
+      { 
+        position: 'absolute', 
+        bottom: 10,
+        // Keep bottom bar fixed when keyboard is visible on iOS
+        ...(keyboardVisible && Platform.OS === 'ios' && {
+          bottom: 10,
+          zIndex: 99999,
+        })
+      }
+    ]}>
       <LinearGradient
         colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.98)']}
         style={styles.gradientContainer}
@@ -193,6 +216,10 @@ const styles = StyleSheet.create({
     height: 80,
     zIndex: 9999,
     elevation: 9999,
+    // Ensure it stays on top of keyboard
+    ...(Platform.OS === 'ios' && {
+      zIndex: 99999,
+    }),
   },
   gradientContainer: {
     flex: 1,

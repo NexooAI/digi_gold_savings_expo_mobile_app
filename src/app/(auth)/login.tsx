@@ -953,7 +953,7 @@ export default function Login() {
           <SimpleLanguageSwitcher />
           
           {/* Debug Button */}
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={handleDebugButton}
             style={{
               position: 'absolute',
@@ -973,7 +973,7 @@ export default function Login() {
             <Text style={{ color: '#ffffff', fontSize: 12, fontWeight: 'bold', marginLeft: 4 }}>
               DEBUG
             </Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           
           {showError && (
             <ErrorAlert message={errorMessage} onClose={hideErrorAlert} />
