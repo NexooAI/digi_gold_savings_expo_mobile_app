@@ -19,7 +19,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import AppHeader from "@/app/components/AppHeader";
+import AppLayoutWrapper from "@/components/AppLayoutWrapper";
 import { t } from "@/i18n";
 import useGlobalStore from "@/store/global.store";
 import api from "@/services/api";
@@ -133,22 +133,28 @@ export default function TermsAndConditions() {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={styles.container}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+    <AppLayoutWrapper
+      showHeader={true}
+      showBottomBar={false}
+      headerProps={{
+        showBackButton: true,
+        showDrawerToggle: false,
+        showLanguageSwitcher: false,
+        title: "Terms & Conditions",
+      }}
     >
-      <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
-      <ImageBackground
-        source={require("../../../../../../assets/images/bg_new.jpg")}
-        style={styles.backgroundImage}
-        resizeMode="contain"
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.container}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
-        <SafeAreaView style={styles.safeArea}>
-          {/* Fixed Header */}
-          <View style={styles.headerContainer}>
-            <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false}  showLanguageSwitcher={true}/>
-          </View>
+        <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
+        <ImageBackground
+          source={require("../../../../../../assets/images/bg_new.jpg")}
+          style={styles.backgroundImage}
+          resizeMode="contain"
+        >
+          <SafeAreaView style={styles.safeArea}>
 
           {/* Hero Section */}
           <LinearGradient
@@ -251,6 +257,7 @@ export default function TermsAndConditions() {
         </SafeAreaView>
       </ImageBackground>
     </KeyboardAvoidingView>
+    </AppLayoutWrapper>
   );
 }
 

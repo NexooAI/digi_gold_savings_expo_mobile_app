@@ -48,7 +48,7 @@ import StatusView from "@/app/components/StatusView";
 import NotificationService from "@/services/NotificationService";
 import { AppLocale } from "@/i18n";
 import AuthGuard from "@/components/AuthGuard";
-import { getFullImageUrl } from "@/utils/imageUtils";
+import { getFullImageUrl, formatGoldWeight } from "@/utils/imageUtils";
 // Import API logging utilities
 import {
   logApiSummary,
@@ -319,7 +319,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
                   <Text style={styles.statLabel}>{t('totalGold')}</Text>
                   <View style={styles.statValue}>
                     <Text style={styles.countText}>
-                      {totalGoldSavings.toFixed(2)}
+                      {formatGoldWeight(totalGoldSavings).replace(' g', '')}
                     </Text>
                     <Text style={styles.unitText}>g</Text>
                   </View>

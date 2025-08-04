@@ -29,6 +29,7 @@ import { theme } from "@/constants/theme";
 import RNPickerSelect from "react-native-picker-select";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CustomAlert from "../../../components/Alert";
+import { formatGoldWeight } from "@/utils/imageUtils";
 
 const { width } = Dimensions.get("window");
 
@@ -421,7 +422,9 @@ export default function JoinSavings() {
   };
 
   const calculateGoldWeight = (amt: number) => {
-    return Number((amt / goldRate).toFixed(3));
+    const weight = amt / goldRate;
+    // Return the raw number for calculations, formatting will be done when displaying
+    return weight;
   };
 
   const calculateAmount = (weight: number) => {
@@ -804,7 +807,7 @@ export default function JoinSavings() {
                 <View style={styles.goldInputContainer}>
                   <TextInput
                     style={styles.goldInput}
-                    value={String(goldWeight)}
+                    value={formatGoldWeight(goldWeight).replace(' g', '')}
                     onChangeText={handleGoldWeightInput}
                     keyboardType="decimal-pad"
                     maxLength={6}

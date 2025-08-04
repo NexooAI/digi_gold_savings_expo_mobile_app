@@ -18,7 +18,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import AppHeader from "@/app/components/AppHeader";
+import AppLayoutWrapper from "@/components/AppLayoutWrapper";
 import { Ionicons, MaterialIcons, FontAwesome5, AntDesign } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { moderateScale } from "react-native-size-matters";
@@ -488,16 +488,21 @@ export default function AboutUs() {
   );
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={styles.container}
+    <AppLayoutWrapper
+      showHeader={true}
+      showBottomBar={true}
+      headerProps={{
+        showBackButton: true,
+        showDrawerToggle: false,
+        showLanguageSwitcher: false,
+        title: "About Us",
+      }}
     >
-      <StatusBar barStyle="light-content" backgroundColor="#7B0006" />
-      <SafeAreaView style={styles.safeArea}>
-        {/* Fixed Header */}
-        <View style={styles.fixedHeader}>
-          <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false} />
-        </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.container}
+      >
+        <StatusBar barStyle="light-content" backgroundColor="#7B0006" />
         {/* Main FlatList for scrollable content */}
         <FlatList
           data={milestones}
@@ -508,8 +513,8 @@ export default function AboutUs() {
           ListFooterComponent={ListFooter}
           showsVerticalScrollIndicator={false}
         />
-      </SafeAreaView>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </AppLayoutWrapper>
   );
 }
 
@@ -517,17 +522,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f8f9fa",
-  },
-  safeArea: {
-    flex: 1,
-  },
-  fixedHeader: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 20,
-    backgroundColor: "transparent",
   },
   scrollContent: {
     paddingTop: 10,

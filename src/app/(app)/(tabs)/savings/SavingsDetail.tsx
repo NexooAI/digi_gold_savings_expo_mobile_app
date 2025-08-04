@@ -31,6 +31,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Clipboard from "expo-clipboard";
 import { Socket } from "socket.io-client";
 import { CommonActions, useNavigationState } from "@react-navigation/native";
+import { formatGoldWeight } from "@/utils/imageUtils";
 
 type Transaction = {
   paymentId: number;
@@ -433,7 +434,7 @@ const SavingsDetail = () => {
                 <Text style={styles.statLabel}>
                   {translations.goldAccumulated}
                 </Text>
-                <Text style={styles.statValue}>{params.goldWeight}g</Text>
+                <Text style={styles.statValue}>{formatGoldWeight(parseFloat(params.goldWeight) || 0)}</Text>
               </View>
             </View>
           </View>
@@ -503,7 +504,7 @@ const SavingsDetail = () => {
             <View style={styles.detailItem}>
               <Ionicons name="diamond-outline" size={16} color="#8B4513" />
               <Text style={styles.detailLabel}>Gold Weight</Text>
-              <Text style={styles.detailValue}>{params.goldWeight}g</Text>
+              <Text style={styles.detailValue}>{formatGoldWeight(parseFloat(params.goldWeight) || 0)}</Text>
             </View>
             <View style={styles.detailItem}>
               <Ionicons name="trending-up-outline" size={16} color="#8B4513" />

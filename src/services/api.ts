@@ -409,24 +409,57 @@ export const userAPI = {
   },
 
   uploadProfileImage: async (userId: number | string, fileUri: string) => {
-    const formData = new FormData();
-    formData.append('profile_image', {
-      uri: fileUri,
-      type: 'image/jpeg',
-      name: 'profile.jpg',
-    } as any);
-    formData.append('user_id', userId.toString());
+    try {
+      // Extract file extension from URI
+      const uriParts = fileUri.split('.');
+      const fileExtension = uriParts[uriParts.length - 1]?.toLowerCase() || 'jpg';
+      
+      // Determine MIME type based on extension
+      let mimeType = 'image/jpeg';
+      let fileName = 'profile.jpg';
+      
+      if (fileExtension === 'png') {
+        mimeType = 'image/png';
+        fileName = 'profile.png';
+      } else if (fileExtension === 'gif') {
+        mimeType = 'image/gif';
+        fileName = 'profile.gif';
+      } else if (fileExtension === 'webp') {
+        mimeType = 'image/webp';
+        fileName = 'profile.webp';
+      }
+      
+      const formData = new FormData();
+      formData.append('file', {
+        uri: fileUri,
+        type: mimeType,
+        name: fileName,
+      } as any);
+      formData.append('userId', userId.toString());
 
-    return apiClient.post('/user/upload-profile-image', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+      console.log('Uploading with formData:', {
+        userId: userId.toString(),
+        fileName,
+        mimeType,
+        uri: fileUri
+      });
+
+      return apiClient.post('/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        timeout: 30000, // 30 second timeout
+      });
+    } catch (error) {
+      console.error('Error in uploadProfileImage:', error);
+      throw error;
+    }
   },
 
   updateFcmTokenWithCompleteData: async (payload: any, userId: number | string, deviceType: string) => {
-    return apiClient.post('/user/update-fcm-token', {
-      ...payload,
+    return apiClient.post('/notifications/token',{
+      // ...payload,
+      token: payload?.deviceToken,
       user_id: userId,
       device_type: deviceType
     });

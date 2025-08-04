@@ -1,5 +1,4 @@
-// App.js
-import AppHeader from "@/app/components/AppHeader";
+import AppLayoutWrapper from "@/components/AppLayoutWrapper";
 import { theme } from "@/constants/theme";
 import { t } from "@/i18n";
 import useGlobalStore from "@/store/global.store";
@@ -285,13 +284,21 @@ export default function FAQScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={styles.container}
+    <AppLayoutWrapper
+      showHeader={true}
+      showBottomBar={true}
+      headerProps={{
+        showBackButton: true,
+        showDrawerToggle: false,
+        showLanguageSwitcher: false,
+        title: "FAQ & Help",
+      }}
     >
-      <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.container}
+      >
         <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
-        <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false}  showLanguageSwitcher={true}/>
         
         <LinearGradient
           colors={['#f8f9fa', '#ffffff']}
@@ -314,7 +321,7 @@ export default function FAQScreen() {
               </LinearGradient>
               
               <Text style={styles.subtitle}>
-                Find answers to commonly asked questions about our services and policies.
+                {t("findAnswersToCommonlyAsked")}
               </Text>
             </View>
 
@@ -333,13 +340,13 @@ export default function FAQScreen() {
 
             <View style={styles.footerContainer}>
               <Text style={styles.footerText}>
-                Still have questions? Contact our support team
+                {t("stillHaveQuestions")}
               </Text>
             </View>
           </ScrollView>
         </LinearGradient>
-      </SafeAreaView>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </AppLayoutWrapper>
   );
 }
 
@@ -360,7 +367,7 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,  },
   scrollContainer: {
-    paddingTop: 20,
+    paddingTop: 40,
     paddingHorizontal: 16,
     paddingBottom: 40,
   },

@@ -9,6 +9,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useNotificationBadge } from "@/hooks/useNotificationBadge";
 import { shouldHideTabs } from "@/config/navigation";
 import { useKeyboardVisibility } from "@/hooks/useKeyboardVisibility";
+import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 
 type Tab = {
   name: string;
@@ -25,6 +26,7 @@ export default function CustomBottomBar() {
   // const { badgeCount } = useNotificationBadge();
   const current = pathname.split('/').pop() || "home";
   const { keyboardVisible } = useKeyboardVisibility();
+  const layout = useResponsiveLayout();
   
   // Check if current route should hide tabs
   const shouldHide = shouldHideTabs(current);
@@ -37,7 +39,6 @@ export default function CustomBottomBar() {
   const tabAnimations = useRef([0, 1, 2, 3, 4].map(() => new Animated.Value(1))).current;
   const badgeAnimations = useRef([0, 1, 2, 3, 4].map(() => new Animated.Value(1))).current;
   
-
 
   const tabs: Tab[] = [
     {
@@ -134,19 +135,21 @@ export default function CustomBottomBar() {
     return <View style={{ display: 'none' }} />;
   }
 
+  // Ensure bottom bar stays at the very bottom on iOS even when keyboard is visible
+  const containerStyle = Platform.OS === 'ios' && keyboardVisible 
+    ? [styles.container, { position: 'absolute' as const, bottom: 0, left: 0, right: 0 }]
+    : styles.container;
+
+  // Responsive styles based on screen size
+  const responsiveStyles = {
+    iconSize: layout.getResponsiveFontSize(24, 26, 28),
+    labelFontSize: layout.getResponsiveFontSize(10, 11, 12),
+    tabPadding: layout.getResponsivePadding(6, 8, 10),
+    containerPadding: layout.getResponsivePadding(12, 16, 20),
+  };
+
   return (
-    <View style={[
-      styles.container, 
-      { 
-        position: 'absolute', 
-        bottom: 10,
-        // Keep bottom bar fixed when keyboard is visible on iOS
-        ...(keyboardVisible && Platform.OS === 'ios' && {
-          bottom: 10,
-          zIndex: 99999,
-        })
-      }
-    ]}>
+    <View style={[containerStyle, { paddingHorizontal: responsiveStyles.containerPadding }]}>
       <LinearGradient
         colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.98)']}
         style={styles.gradientContainer}
@@ -156,7 +159,7 @@ export default function CustomBottomBar() {
           return (
             <TouchableOpacity
               key={tab.name}
-              style={styles.tab}
+              style={[styles.tab, { paddingVertical: responsiveStyles.tabPadding }]}
               onPress={() => handleTabPress(tab, index)}
               activeOpacity={0.7}
             >
@@ -171,8 +174,8 @@ export default function CustomBottomBar() {
                 <View style={styles.iconContainer}>
                   <Ionicons
                     name={isActive ? tab.iconActive : tab.icon}
-                    size={26}
-                    color={isActive ? theme.colors.primary : "#888"}
+                    size={responsiveStyles.iconSize}
+                    color={isActive ? "#B31313" : "#888"}
                   />
                   {tab.badge && (
                     <Animated.View
@@ -192,12 +195,17 @@ export default function CustomBottomBar() {
                 <Text
                   style={[
                     styles.label,
-                    { color: isActive ? theme.colors.primary : "#888" },
+                    { 
+                      color: isActive ? "#B31313" : "#888",
+                      fontSize: responsiveStyles.labelFontSize,
+                    },
                   ]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
                 >
                   {t(tab.label)}
                 </Text>
-                {isActive && <View style={styles.activeIndicator} />}
+                {/* {isActive && <View style={styles.activeIndicator} />} */}
               </Animated.View>
             </TouchableOpacity>
           );
@@ -209,17 +217,9 @@ export default function CustomBottomBar() {
 
 const styles = StyleSheet.create({
   container: {
-    position: "absolute",
-    left: 10,
-    right: 10,
-    bottom: 10,
-    height: 80,
-    zIndex: 9999,
-    elevation: 9999,
-    // Ensure it stays on top of keyboard
-    ...(Platform.OS === 'ios' && {
-      zIndex: 99999,
-    }),
+    flex: 1,
+    paddingVertical: 8,
+    marginBottom: 0, // Ensure no bottom margin
   },
   gradientContainer: {
     flex: 1,
@@ -237,23 +237,30 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 8,
     position: "relative",
+    minWidth: 0, // Allow flex shrinking
+    paddingHorizontal: 4, // Add horizontal padding to prevent cutoff
   },
   tabContent: {
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 8,
+    paddingHorizontal: 4, // Reduced padding to prevent overflow
+    width: '100%', // Ensure content takes full width of tab
+    minWidth: 0, // Allow shrinking
   },
   iconContainer: {
     position: "relative",
     marginBottom: 4,
+    alignItems: "center",
+    justifyContent: "center",
   },
   label: {
-    fontSize: 11,
     fontWeight: "600",
     textAlign: "center",
     marginTop: 2,
+    paddingHorizontal: 2, // Add small padding to prevent text cutoff
+    minWidth: 0, // Allow text to shrink
+    flexShrink: 1, // Allow text to shrink if needed
   },
   badge: {
     position: "absolute",
@@ -281,7 +288,7 @@ const styles = StyleSheet.create({
     right: 0,
     width: 'auto',
     height: 3,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: "#B31313",
     borderRadius: 2,
     marginLeft: 'auto',
     marginRight: 'auto',

@@ -33,6 +33,7 @@ import api from "@/services/api";
 import { moderateScale } from "react-native-size-matters";
 import { theme } from "@/constants/theme";
 import AuthGuard from "@/components/AuthGuard";
+import { formatGoldWeight } from "@/utils/imageUtils";
 
 type Transaction = {
   id: string;
@@ -621,7 +622,7 @@ export default function SavingsScreen() {
                 <View style={styles.paymentInfoContent}>
                   <Text style={styles.paymentInfoLabel}>Total Weight</Text>
                   <Text style={styles.paymentInfoValue}>
-                    {item.goldWeight.toFixed(2)} g
+                    {formatGoldWeight(item.goldWeight)}
                   </Text>
                 </View>
               </View>
@@ -657,7 +658,7 @@ export default function SavingsScreen() {
                     </View>
                     <Text style={styles.enhancedInfoLabel}>Gold Weight</Text>
                     <Text style={styles.enhancedInfoValue}>
-                      {item.goldWeight.toFixed(2)} g
+                      {formatGoldWeight(item.goldWeight)}
                     </Text>
                   </View>
                   

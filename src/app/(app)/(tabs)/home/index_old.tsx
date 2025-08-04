@@ -44,6 +44,7 @@ import { Ionicons } from "@expo/vector-icons";
 import StatusView from "@/app/components/StatusView";
 import NotificationService from "@/services/NotificationService";
 import { AppLocale } from "@/i18n";
+import { formatGoldWeight } from "@/utils/imageUtils";
 
 // Constants
 const { width: screenWidth } = Dimensions.get("window");
@@ -218,7 +219,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
               <Text style={styles.statLabel}>Total Gold</Text>
               <View style={styles.statValue}>
                 <Text style={styles.countText}>
-                  {totalGoldSavings.toFixed(2)}
+                  {formatGoldWeight(totalGoldSavings).replace(' g', '')}
                 </Text>
                 <Text style={styles.unitText}>g</Text>
               </View>

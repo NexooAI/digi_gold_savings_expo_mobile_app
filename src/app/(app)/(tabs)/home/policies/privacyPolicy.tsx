@@ -10,16 +10,11 @@ import {
   Platform,
   ActivityIndicator,
   StyleSheet,
-  StatusBar,
 } from "react-native";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import AppHeader from "@/app/components/AppHeader";
+import AppLayoutWrapper from "@/components/AppLayoutWrapper";
 import { t } from "@/i18n";
 import useGlobalStore from "@/store/global.store";
 import api from "@/services/api";
@@ -36,7 +31,6 @@ interface Policy {
 
 export default function PrivacyPolicy() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { language } = useGlobalStore();
 
   const [policy, setPolicy] = useState<Policy | null>(null);
@@ -114,8 +108,16 @@ export default function PrivacyPolicy() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
+      <AppLayoutWrapper
+        showHeader={true}
+        showBottomBar={false}
+        headerProps={{
+          showBackButton: true,
+          showDrawerToggle: false,
+          showLanguageSwitcher: false,
+          title: translations.defaultTitle,
+        }}
+      >
         <LinearGradient
           colors={["#850111", "#5a000b"]}
           style={styles.loadingGradient}
@@ -123,14 +125,22 @@ export default function PrivacyPolicy() {
           <ActivityIndicator size="large" color="#FFD700" />
           <Text style={styles.loadingText}>{translations.loadingPrivacyPolicy}</Text>
         </LinearGradient>
-      </SafeAreaView>
+      </AppLayoutWrapper>
     );
   }
 
   if (error) {
     return (
-      <SafeAreaView style={styles.errorContainer}>
-        <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
+      <AppLayoutWrapper
+        showHeader={true}
+        showBottomBar={false}
+        headerProps={{
+          showBackButton: true,
+          showDrawerToggle: false,
+          showLanguageSwitcher: false,
+          title: translations.defaultTitle,
+        }}
+      >
         <LinearGradient
           colors={["#850111", "#5a000b"]}
           style={styles.errorGradient}
@@ -145,28 +155,31 @@ export default function PrivacyPolicy() {
             <Text style={styles.retryButtonText}>{translations.tryAgain}</Text>
           </TouchableOpacity>
         </LinearGradient>
-      </SafeAreaView>
+      </AppLayoutWrapper>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={styles.container}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+    <AppLayoutWrapper
+      showHeader={true}
+      showBottomBar={false}
+      headerProps={{
+        showBackButton: true,
+        showDrawerToggle: false,
+        showLanguageSwitcher: false,
+        title: translations.defaultTitle,
+      }}
     >
-      <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
-      <ImageBackground
-        source={require("../../../../../../assets/images/bg_new.jpg")}
-        style={styles.backgroundImage}
-        resizeMode="contain"
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.container}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
-        <SafeAreaView style={styles.safeArea}>
-          {/* Fixed Header */}
-          <View style={styles.headerContainer}>
-            <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false} showLanguageSwitcher={true}/>
-          </View>
-
+        <ImageBackground
+          source={require("../../../../../../assets/images/bg_new.jpg")}
+          style={styles.backgroundImage}
+          resizeMode="contain"
+        >
           {/* Hero Section */}
           <LinearGradient
             colors={["#850111", "#5a000b"]}
@@ -188,10 +201,7 @@ export default function PrivacyPolicy() {
           {/* Content Section */}
           <ScrollView
             style={styles.scrollView}
-            contentContainerStyle={[
-              styles.scrollContent,
-              { paddingBottom: Math.max(insets.bottom, 20) + 20 }, // Reduced padding since no tab bar
-            ]}
+            contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.contentCard}>
@@ -278,9 +288,9 @@ export default function PrivacyPolicy() {
               </LinearGradient>
             </View>
           </ScrollView>
-        </SafeAreaView>
-      </ImageBackground>
-    </KeyboardAvoidingView>
+        </ImageBackground>
+      </KeyboardAvoidingView>
+    </AppLayoutWrapper>
   );
 }
 
@@ -292,17 +302,6 @@ const styles = StyleSheet.create({
   backgroundImage: {
     flex: 1,
     width: "100%",
-  },
-  safeArea: {
-    flex: 1,
-    paddingTop: 50,
-  },
-  headerContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
   },
   heroSection: {
     paddingTop: 20,
@@ -334,6 +333,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 20,
+    paddingBottom: 20,
   },
   contentCard: {
     borderRadius: 20,
@@ -410,9 +410,6 @@ const styles = StyleSheet.create({
     color: "rgba(255, 255, 255, 0.8)",
     textAlign: "center",
   },
-  loadingContainer: {
-    flex: 1,
-  },
   loadingGradient: {
     flex: 1,
     justifyContent: "center",
@@ -423,9 +420,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     marginTop: 16,
-  },
-  errorContainer: {
-    flex: 1,
   },
   errorGradient: {
     flex: 1,

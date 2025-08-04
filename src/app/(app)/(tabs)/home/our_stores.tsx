@@ -15,7 +15,7 @@ import {
 import { Dropdown } from "react-native-element-dropdown";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useRouter } from "expo-router";
-import AppHeader from "@/app/components/AppHeader";
+import AppLayoutWrapper from "@/components/AppLayoutWrapper";
 import { theme } from "@/constants/theme";
 import { t } from "@/i18n";
 import useGlobalStore from "@/store/global.store";
@@ -97,12 +97,21 @@ const StoreLocator = () => {
   }, [language]);
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={{ flex: 1, backgroundColor: "#fff" }}
+    <AppLayoutWrapper
+      showHeader={true}
+      showBottomBar={true}
+              headerProps={{
+          showBackButton: true,
+          showDrawerToggle: false,
+          showLanguageSwitcher: false,
+          title: t("ourStoresTitle"),
+        }}
     >
-      <SafeAreaView style={{ flex: 1 }}>
-        <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1, backgroundColor: "#fff" }}
+      >
+        <SafeAreaView style={{ flex: 1 }}>
 
         <ScrollView
           contentContainerStyle={{ paddingTop: 100, paddingHorizontal: 16 }}
@@ -181,6 +190,7 @@ const StoreLocator = () => {
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>
+    </AppLayoutWrapper>
   );
 };
 

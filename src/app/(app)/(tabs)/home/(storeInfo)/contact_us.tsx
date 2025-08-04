@@ -17,10 +17,11 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import AppHeader from "@/app/components/AppHeader";
+import AppLayoutWrapper from "@/components/AppLayoutWrapper";
 import { Ionicons, MaterialIcons, FontAwesome5, Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { theme } from "@/constants/theme";
+import { t } from "@/i18n";
 
 const { width, height } = Dimensions.get('window');
 
@@ -37,7 +38,7 @@ export default function ContactUs() {
     if (supported) {
       await Linking.openURL(url);
     } else {
-      Alert.alert("Can't open the map link");
+      Alert.alert(t("cantOpenMapLink"));
     }
   };
   
@@ -59,12 +60,21 @@ export default function ContactUs() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={styles.container}
+    <AppLayoutWrapper
+      showHeader={true}
+      showBottomBar={true}
+      headerProps={{
+        showBackButton: true,
+        showDrawerToggle: false,
+        showLanguageSwitcher: false,
+        title: "Contact Us",
+      }}
     >
-      <SafeAreaView style={styles.safeArea}>
-        <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.container}
+      >
+        <SafeAreaView style={styles.safeArea}>
         
         {/* Hero Section */}
         <LinearGradient
@@ -72,12 +82,12 @@ export default function ContactUs() {
           style={styles.heroSection}
         >
           <View style={styles.heroContent}>
-            <View style={styles.iconContainer}>
+            {/* <View style={styles.iconContainer}>
               <Feather name="message-circle" size={40} color="white" />
-            </View>
-            <Text style={styles.heroTitle}>Get in Touch</Text>
+            </View> */}
+            <Text style={styles.heroTitle}>{t("getInTouch")}</Text>
             <Text style={styles.heroSubtitle}>
-              We're here to help and answer any questions you might have
+              {t("contactUsSubtitle")}
             </Text>
           </View>
         </LinearGradient>
@@ -157,34 +167,34 @@ export default function ContactUs() {
 
         {/* Quick Actions */}
         <View style={styles.actionsContainer}>
-          <Text style={styles.actionsTitle}>Quick Actions</Text>
+          <Text style={styles.actionsTitle}>{t("quickActions")}</Text>
           <View style={styles.actionButtons}>
             <TouchableOpacity style={styles.actionButton} onPress={handleCall}>
               <View style={styles.actionIcon}>
                 <Ionicons name="call" size={24} color={theme.colors.primary} />
               </View>
-              <Text style={styles.actionText}>Call Now</Text>
+              <Text style={styles.actionText}>{t("callNow")}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.actionButton} onPress={handleWhatsApp}>
               <View style={styles.actionIcon}>
                 <FontAwesome5 name="whatsapp" size={24} color={theme.colors.primary} />
               </View>
-              <Text style={styles.actionText}>WhatsApp</Text>
+              <Text style={styles.actionText}>{t("whatsApp")}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.actionButton} onPress={openGoogleMaps}>
               <View style={styles.actionIcon}>
                 <FontAwesome5 name="map-marker-alt" size={24} color={theme.colors.primary} />
               </View>
-              <Text style={styles.actionText}>Maps</Text>
+              <Text style={styles.actionText}>{t("maps")}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Website Section */}
         <View style={styles.websiteContainer}>
-          <Text style={styles.websiteTitle}>Visit Our Website</Text>
+          <Text style={styles.websiteTitle}>{t("visitOurWebsite")}</Text>
           <TouchableOpacity style={styles.websiteButton} onPress={handleWebsite}>
             <LinearGradient
               colors={[theme.colors.primary, '#8B0000']}
@@ -199,18 +209,18 @@ export default function ContactUs() {
 
         {/* Business Hours */}
         <View style={styles.hoursContainer}>
-          <Text style={styles.hoursTitle}>Business Hours</Text>
+          <Text style={styles.hoursTitle}>{t("businessHours")}</Text>
           <View style={styles.hoursContent}>
             <View style={styles.hourRow}>
-              <Text style={styles.dayText}>Monday - Friday</Text>
+              <Text style={styles.dayText}>{t("mondayFriday")}</Text>
               <Text style={styles.timeText}>9:00 AM - 8:00 PM</Text>
             </View>
             <View style={styles.hourRow}>
-              <Text style={styles.dayText}>Saturday</Text>
+              <Text style={styles.dayText}>{t("saturday")}</Text>
               <Text style={styles.timeText}>9:00 AM - 6:00 PM</Text>
             </View>
             <View style={styles.hourRow}>
-              <Text style={styles.dayText}>Sunday</Text>
+              <Text style={styles.dayText}>{t("sunday")}</Text>
               <Text style={styles.timeText}>10:00 AM - 4:00 PM</Text>
             </View>
           </View>
@@ -219,11 +229,12 @@ export default function ContactUs() {
         {/* Company Info */}
         <View style={styles.companyContainer}>
           <Text style={styles.companyTitle}>{theme.constants.customerName}</Text>
-          <Text style={styles.companySubtitle}>Gold & Diamonds</Text>
+          <Text style={styles.companySubtitle}>{t("goldAndDiamonds")}</Text>
           <Text style={styles.companyAddress}>{theme.constants.address}</Text>
         </View>
       </SafeAreaView>
     </KeyboardAvoidingView>
+    </AppLayoutWrapper>
   );
 }
 

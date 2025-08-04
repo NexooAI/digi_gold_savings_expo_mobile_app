@@ -120,8 +120,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+    <View style={styles.container}>
         {showBackButton && (
           <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
             <Ionicons
@@ -200,25 +199,18 @@ const AppHeader: React.FC<AppHeaderProps> = ({
           )}
         </View>
       </View>
-    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: theme.theme.colors.primary,
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-  },
   container: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 8,
+    backgroundColor: theme.theme.colors.primary,
+    flex: 1,
   },
   logoContainer: {
     width: width * 0.25,

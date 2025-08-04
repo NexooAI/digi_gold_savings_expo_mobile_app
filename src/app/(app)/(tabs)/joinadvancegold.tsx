@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import useGlobalStore from '@/store/global.store';
 import { Slider } from '@miblanchard/react-native-slider';
 import AppHeader from '@/app/components/AppHeader';
+import { formatGoldWeight } from '@/utils/imageUtils';
 
 const ADVANCE_PERCENTS = [5, 10, 20, 30];
 
@@ -135,7 +136,7 @@ export default function JoinAdvanceGold() {
               <TextInput
                 style={styles.royalInput}
                 keyboardType="numeric"
-                value={goldGrams ? goldGrams.toFixed(3) : ''}
+                                    value={goldGrams ? formatGoldWeight(goldGrams).replace(' g', '') : ''}
                 onChangeText={val => {
                   const grams = parseFloat(val);
                   if (!isNaN(grams)) setGoldGrams(grams);

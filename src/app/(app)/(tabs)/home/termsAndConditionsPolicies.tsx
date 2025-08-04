@@ -17,7 +17,7 @@ import {
 } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import AppHeader from "@/app/components/AppHeader";
+import AppLayoutWrapper from "@/components/AppLayoutWrapper";
 import { t } from "@/i18n";
 import useGlobalStore from "@/store/global.store";
 import api from "@/services/api";
@@ -89,20 +89,22 @@ export default function TermsAndConditions() {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      className="flex-1"
-      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+    <AppLayoutWrapper
+      showHeader={true}
+      showBottomBar={true}
+      headerProps={{
+        showBackButton: true,
+        showDrawerToggle: false,
+        showLanguageSwitcher: false,
+        title: translations.defaultTitle,
+      }}
     >
-      <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
-      <SafeAreaView
-        className="flex-1 bg-white"
-        style={{ paddingTop: insets.top }}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        className="flex-1"
+        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
-        {/* Fixed Header */}
-        <View className="absolute top-0 left-0 right-0 z-20 bg-transparent px-4">
-          <AppHeader showBackButton={true} backRoute="index" />
-        </View>
+        <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
 
         {/* Scrollable Content */}
         <ScrollView
@@ -115,16 +117,7 @@ export default function TermsAndConditions() {
               className="h-64 justify-end p-6"
               style={{ marginTop: 20 }}
             >
-              <TouchableOpacity
-                onPress={() => router.back()}
-                className="absolute top-6 left-4 p-2 bg-white rounded-full z-10"
-              >
-                <Ionicons
-                  name="arrow-back"
-                  size={24}
-                  color={theme.colors.primary}
-                />
-              </TouchableOpacity>
+
 
               <View className="bg-white/80 p-4 rounded-xl">
                 <Text
@@ -147,9 +140,9 @@ export default function TermsAndConditions() {
                 {policy?.description || translations.defaultContent}
               </Text>
             </View>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </KeyboardAvoidingView>
-  );
+                      </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </AppLayoutWrapper>
+    );
 }

@@ -7,14 +7,20 @@ import {
   Share,
   Alert,
   ImageBackground,
+  ScrollView,
+  Dimensions,
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import useGlobalStore from "@/store/global.store";
-import AppHeader from "@/app/components/AppHeader";
+import AppLayoutWrapper from "@/components/AppLayoutWrapper";
 import { useRouter } from "expo-router";
 import { theme } from "@/constants/theme";
 import { t } from "@/i18n";
+import { LinearGradient } from "expo-linear-gradient";
+
+
+const { width, height } = Dimensions.get('window');
 
 export default function ReferCodeScreen() {
   // Retrieve referral code from your global store; fallback to a default value
@@ -48,124 +54,251 @@ export default function ReferCodeScreen() {
   };
 
   return (
-    <ImageBackground
-      source={theme.image.gold_pattern}
-      style={styles.background}
-      resizeMode="cover"
+    <AppLayoutWrapper
+      showHeader={true}
+      showBottomBar={true}
+      headerProps={{
+        showBackButton: true,
+        showDrawerToggle: false,
+        showLanguageSwitcher: false,
+        title: t("refer_earn_title"),
+      }}
     >
-      <View style={styles.headerContainer}>
-        <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false} />
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="absolute top-6 left-4 p-2 bg-white rounded-full z-10"
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Hero Section */}
+        <LinearGradient
+          colors={[theme.colors.primary, '#8B0000']}
+          style={styles.heroSection}
         >
-          <Ionicons name="arrow-back" size={24} color={theme.colors.primary} />
-        </TouchableOpacity>
-      </View>
-      <View style={styles.overlay}>
-        <Text style={styles.title}>{t("refer_earn_title")}</Text>
-        <Text style={styles.description}>
-          {t("refer_earn_description")}
-        </Text>
+          <View style={styles.heroContent}>
+            <View style={styles.heroIconContainer}>
+              <MaterialIcons name="card-giftcard" size={40} color="white" />
+            </View>
+            <Text style={styles.heroTitle}>{t("refer_earn_title")}</Text>
+            <Text style={styles.heroSubtitle}>
+              {t("refer_earn_description")}
+            </Text>
+          </View>
+        </LinearGradient>
 
-        {/* Referral Code & Copy Button */}
-        <View style={styles.codeContainer}>
-          <Text style={styles.codeText}>{code}</Text>
-          <TouchableOpacity style={styles.copyButton} onPress={copyToClipboard}>
-            <Ionicons name="copy-outline" size={20} color="#fff" />
-            <Text style={styles.copyButtonText}>{t("copy")}</Text>
+        {/* Main Content */}
+        <View style={styles.contentContainer}>
+          {/* Referral Code Card */}
+          <View style={styles.codeCard}>
+            <View style={styles.codeHeader}>
+              <Ionicons name="qr-code-outline" size={24} color={theme.colors.primary} />
+              <Text style={styles.codeHeaderText}>{t("yourReferralCode")}</Text>
+            </View>
+            
+            <View style={styles.codeContainer}>
+              <Text style={styles.codeText}>{code}</Text>
+              <TouchableOpacity style={styles.copyButton} onPress={copyToClipboard}>
+                <Ionicons name="copy-outline" size={20} color="#fff" />
+                <Text style={styles.copyButtonText}>{t("copy")}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Benefits Section */}
+          <View style={styles.benefitsCard}>
+            <Text style={styles.benefitsTitle}>{t("howItWorks")}</Text>
+            <View style={styles.benefitsList}>
+              <View style={styles.benefitItem}>
+                <View style={styles.benefitIcon}>
+                  <Ionicons name="share-social" size={20} color={theme.colors.primary} />
+                </View>
+                <Text style={styles.benefitText}>{t("shareReferralCode")}</Text>
+              </View>
+              <View style={styles.benefitItem}>
+                <View style={styles.benefitIcon}>
+                  <Ionicons name="person-add" size={20} color={theme.colors.primary} />
+                </View>
+                <Text style={styles.benefitText}>{t("theySignUp")}</Text>
+              </View>
+              <View style={styles.benefitItem}>
+                <View style={styles.benefitIcon}>
+                  <Ionicons name="gift" size={20} color={theme.colors.primary} />
+                </View>
+                <Text style={styles.benefitText}>{t("bothGetRewards")}</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Share Button */}
+          <TouchableOpacity style={styles.shareButton} onPress={onShare}>
+            <LinearGradient
+              colors={[theme.colors.primary, '#8B0000']}
+              style={styles.shareGradient}
+            >
+              <Ionicons name="share-social" size={24} color="white" />
+              <Text style={styles.shareButtonText}>{t("share_code")}</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
-
-        {/* Share Button */}
-        <TouchableOpacity style={styles.shareButton} onPress={onShare}>
-          <Text style={styles.shareButtonText}>{t("share_code")}</Text>
-        </TouchableOpacity>
-      </View>
-    </ImageBackground>
+      </ScrollView>
+    </AppLayoutWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  background: {
+  container: {
     flex: 1,
-    width: "100%",
+    backgroundColor: '#f8f9fa',
   },
-  headerContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: 20,
-    paddingHorizontal: 16,
-  },
-  backButton: {
-    backgroundColor: "#fff",
-    padding: 8,
-    borderRadius: 25,
-  },
-  overlay: {
+  scrollView: {
     flex: 1,
-    backgroundColor: "rgba(255,255,255,0.8)",
-    padding: 20,
-    justifyContent: "center",
-    alignItems: "center",
   },
-  title: {
+  scrollContent: {
+    paddingBottom: 20, // Reduced padding since AppLayoutWrapper handles bottom bar
+  },
+  heroSection: {
+    paddingTop: 120,
+    paddingBottom: 40,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  heroContent: {
+    alignItems: 'center',
+  },
+  heroIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  heroTitle: {
     fontSize: 28,
-    fontWeight: "bold",
-    color: theme.colors.primary,
+    fontWeight: '800',
+    color: 'white',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  heroSubtitle: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.9)',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  contentContainer: {
+    paddingHorizontal: 20,
+    marginTop: -20,
+  },
+  codeCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  codeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 16,
   },
-  description: {
-    fontSize: 16,
-    color: "#555",
-    textAlign: "center",
-    marginBottom: 32,
-    paddingHorizontal: 16,
+  codeHeaderText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: theme.colors.primary,
+    marginLeft: 8,
   },
   codeContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f6f6f6",
-    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
-    marginBottom: 20,
   },
   codeText: {
     fontSize: 20,
-    fontWeight: "bold",
-    color: "#2e0406",
-    marginRight: 12,
+    fontWeight: 'bold',
+    color: '#2e0406',
+    flex: 1,
   },
   copyButton: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: theme.colors.primary,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    borderRadius: 4,
+    borderRadius: 6,
   },
   copyButtonText: {
-    color: "#fff",
+    color: '#fff',
     marginLeft: 4,
     fontSize: 14,
-    fontWeight: "bold",
+    fontWeight: 'bold',
+  },
+  benefitsCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  benefitsTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: theme.colors.primary,
+    marginBottom: 16,
+  },
+  benefitsList: {
+    gap: 16,
+  },
+  benefitItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  benefitIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(139, 0, 0, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  benefitText: {
+    fontSize: 16,
+    color: '#333',
+    flex: 1,
   },
   shareButton: {
-    backgroundColor: "#ffc90c",
-    paddingVertical: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  shareGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 25,
   },
   shareButtonText: {
     fontSize: 18,
-    color: "#2e0406",
-    fontWeight: "bold",
+    color: 'white',
+    fontWeight: 'bold',
+    marginLeft: 8,
   },
 });

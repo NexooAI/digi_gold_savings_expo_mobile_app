@@ -1,27 +1,29 @@
 import { Tabs } from "expo-router";
-import CustomBottomBar from "@/common/components/navigation/CustomBottomBar";
-import { Slot } from "expo-router";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import { View, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
-import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-
-function MyTabBar(props: BottomTabBarProps) {
-  return <CustomBottomBar {...props} />;
-}
+import { StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
+import AppLayoutWrapper from "@/components/AppLayoutWrapper";
 
 export default function TabsLayout() {
   return (
-    <SafeAreaProvider>
+    <AppLayoutWrapper
+      showHeader={true}
+      showBottomBar={true}
+      headerProps={{
+        showDrawerToggle: true,
+        showLanguageSwitcher: true,
+      }}
+    >
       <KeyboardAvoidingView 
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+        enabled={Platform.OS === "ios"} // Only enable on iOS to prevent interference with bottom bar
       >
         <Tabs
           screenOptions={{
             headerShown: false,
+            tabBarStyle: { display: 'none' }, // Hide the default tab bar
+            tabBarButton: () => null, // Disable tab bar buttons
           }}
-          tabBar={MyTabBar}
         >
           <Tabs.Screen name="home" />
           <Tabs.Screen name="savings" />
@@ -30,9 +32,8 @@ export default function TabsLayout() {
           <Tabs.Screen name="profile" />
         </Tabs>
       </KeyboardAvoidingView>
-    </SafeAreaProvider>
+    </AppLayoutWrapper>
   );
 }
 
-// You can add styles for the custom bar if needed
 const styles = StyleSheet.create({});
