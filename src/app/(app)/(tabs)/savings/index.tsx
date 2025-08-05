@@ -170,7 +170,7 @@ export default function SavingsScreen() {
             schemeId: "",
             schemeName: "",
             type: "gold",
-            schemeType: "weight", 
+            schemeType: "weight",
           };
           const chit = item.chits || {
             amount: "0",
@@ -192,18 +192,18 @@ export default function SavingsScreen() {
           // Parse dates with error handling
           const doj = item.start_date
             ? new Date(item.start_date).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })
             : "N/A";
 
           const dom = item.end_date
             ? new Date(item.end_date).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })
             : "N/A";
 
           // Calculate installment amount based on scheme type with validation
@@ -337,6 +337,34 @@ export default function SavingsScreen() {
       maturesOn: t("maturesOn"),
       noActiveSchemes: t("noActiveSavingsSchemesFound"),
       gold: t("gold"),
+      viewDetails: t("viewDetails"),
+      payNow: t("payNow"),
+      accountHolderLabel: t("accountHolderLabel"),
+      accountNumberLabel: t("accountNumberLabel"),
+      frequency: t("frequency"),
+      totalWeight: t("totalWeight"),
+      installmentProgress: t("installmentProgress"),
+      investmentTimeline: t("investmentTimeline"),
+      started: t("started"),
+      currentProgress: t("currentProgress"),
+      maturity: t("maturity"),
+      paid: t("paid"),
+      pending: t("pending"),
+      total: t("total"),
+      startNewSavings: t("startNewSavings"),
+      fixed: t("fixed"),
+      flexi: t("flexi"),
+      totalInvestedLabel: t("totalInvestedLabel"),
+      goldWeightLabel: t("goldWeightLabel"),
+      monthlyEMILabel: t("monthlyEMILabel"),
+      progressLabel: t("progressLabel"),
+      remainingLabel: t("remainingLabel"),
+      statusLabel: t("statusLabel"),
+      monthsLabel: t("monthsLabel"),
+      completeLabel: t("completeLabel"),
+      somethingWentWrong: t("somethingWentWrong"),
+      errorLoadingSavings: t("errorLoadingSavings"),
+      retry: t("retry"),
     }),
     [language]
   );
@@ -347,7 +375,7 @@ export default function SavingsScreen() {
 
   // Filtered savings based on selectedType
   const filteredSavings = useMemo(() => {
-    return savings.filter((item:any) => {
+    return savings.filter((item: any) => {
       const schemeType = item.schemesData.paymentFrequencyName;
       // console.log(item, item.schemesData.paymentFrequencyName);
       if (selectedType === 'Flexi') {
@@ -364,15 +392,15 @@ export default function SavingsScreen() {
     const bgColors: readonly [string, string, string] =
       item.metalType === "gold"
         ? ([
-            "rgba(1, 133, 69, 0.95)",
-            "rgba(90, 0, 11, 0.95)",
-            "rgba(46, 4, 6, 0.95)",
-          ] as const)
+          "rgba(1, 133, 69, 0.95)",
+          "rgba(90, 0, 11, 0.95)",
+          "rgba(46, 4, 6, 0.95)",
+        ] as const)
         : ([
-            "rgba(192, 192, 192, 0.95)",
-            "rgba(168, 168, 168, 0.95)",
-            "rgba(128, 128, 128, 0.95)",
-          ] as const);
+          "rgba(192, 192, 192, 0.95)",
+          "rgba(168, 168, 168, 0.95)",
+          "rgba(128, 128, 128, 0.95)",
+        ] as const);
 
     const [isExpanded, setIsExpanded] = useState(false);
     const animatedHeight = useRef(new Animated.Value(0)).current;
@@ -458,23 +486,23 @@ export default function SavingsScreen() {
         <ImageBackground
           source={
             item.metalType === "gold"
-              ? require("../../../../../assets/images/gold_pattern.jpg")
-              : require("../../../../../assets/images/silver.png")
+              ? require("../../../../../assets/images/saving_bg.png")
+              : require("../../../../../assets/images/saving_bg.png")
           }
           style={styles.cardBackgroundImage}
           imageStyle={styles.cardBackgroundImageStyle}
           resizeMode="cover"
         >
           {/* <LinearGradient colors={bgColors} style={styles.cardContainer}> */}
-            <View style={styles.cardHeader}>
-              <View style={styles.schemeInfo}>
-                <View
-                  style={[
-                    styles.schemeIconContainer,
-                    { backgroundColor: "rgba(255, 255, 255, 0.2)" },
-                  ]}
-                >
-                  {/* <Ionicons
+          <View style={styles.cardHeader}>
+            <View style={styles.schemeInfo}>
+              {/* <View
+                style={[
+                  styles.schemeIconContainer,
+                  { backgroundColor: "rgba(255, 255, 255, 0.2)" },
+                ]}
+              >
+                <Ionicons
                     name={
                       item.metalType === "gold"
                         ? "diamond-outline"
@@ -482,325 +510,325 @@ export default function SavingsScreen() {
                     }
                     size={24}
                     color="#000"
-                  /> */}
-              <Image source={require('../../../../../assets/images/gold.png')} style={{ width: 40, height: 40 }} />
+                  />
+                <Image source={require('../../../../../assets/images/gold.png')} style={{ width: 40, height: 40 }} />
 
-                </View>
-                <View style={styles.schemeTitleContainer}>
-                  <Text style={styles.schemeTitle}>{item.schemeName}</Text>
-                  <View style={styles.schemeSubtitleContainer}>
-                    <View
-                      style={[
-                        styles.metalTypeBadge,
-                        { backgroundColor: "rgba(255, 255, 255, 0.2)" },
-                      ]}
-                    >
-                      <Text style={styles.metalTypeText}>
-                        {item.metalType.charAt(0).toUpperCase() +
-                          item.metalType.slice(1)}
-                      </Text>
-                    </View>
-                    <View
-                      style={[
-                        styles.savingTypeBadge,
-                        { backgroundColor: "rgba(255, 255, 255, 0.2)" },
-                      ]}
-                    >
-                      <Text style={styles.savingTypeText}>
-                        {item.schemesData?.paymentFrequencyName === 'Flexi'? 'Flexi':'Fixed' }
-                      </Text>
-                    </View>
+              </View> */}
+              <View style={styles.schemeTitleContainer}>
+                <Text style={styles.schemeTitle}>{item.schemeName}</Text>
+                <View style={styles.schemeSubtitleContainer}>
+                  <View
+                    style={[
+                      styles.metalTypeBadge,
+                      { backgroundColor: "rgb(245, 225, 6)" },
+                    ]}
+                  >
+                    <Text style={styles.metalTypeText}>
+                      {item.metalType.charAt(0).toUpperCase() +
+                        item.metalType.slice(1)}
+                    </Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.savingTypeBadge,
+                      { backgroundColor: "rgba(239, 24, 24, 0.71)" },
+                    ]}
+                  >
+                    <Text style={styles.savingTypeText}>
+                      {item.schemesData?.paymentFrequencyName === 'Flexi' ? translations.flexi : translations.fixed}
+                    </Text>
                   </View>
                 </View>
               </View>
-              <View style={styles.headerRight}>
-                <View
+            </View>
+            <View style={styles.headerRight}>
+              <View
+                style={[
+                  styles.statusBadge,
+                  {
+                    backgroundColor:
+                      item.status === "ACTIVE"
+                        ? "rgba(8, 237, 8, 0.56)"
+                        : "rgba(255, 0, 0, 0.2)",
+                  },
+                ]}
+              >
+                <Text
                   style={[
-                    styles.statusBadge,
+                    styles.statusText,
                     {
-                      backgroundColor:
-                        item.status === "ACTIVE"
-                          ? "rgba(8, 237, 8, 0.56)"
-                          : "rgba(255, 0, 0, 0.2)",
+                      color: item.status === "ACTIVE" ? "#000" : "#FF0000",
                     },
                   ]}
                 >
-                  <Text
-                    style={[
-                      styles.statusText,
-                      {
-                        color: item.status === "ACTIVE" ? "#000" : "#FF0000",
-                      },
-                    ]}
-                  >
-                    {item.status || "INACTIVE"}
+                  {item.status || "INACTIVE"}
+                </Text>
+              </View>
+              <View style={styles.expandIcon}>
+                <Ionicons
+                  name={isExpanded ? "chevron-up" : "chevron-down"}
+                  size={20}
+                  color="#FFFFFF"
+                />
+              </View>
+            </View>
+          </View>
+
+          {/* Account Info - Before Action Buttons */}
+          <View style={styles.accountInfo}>
+            <View style={styles.accountLabelsRow}>
+              <View style={styles.accountLabelItem}>
+                <View style={styles.accountIconContainer}>
+                  <Ionicons name="person-outline" size={16} color="#FFFFFF" />
+                </View>
+                <Text style={styles.accountLabel}>{translations.accountHolderLabel}</Text>
+              </View>
+              <View style={styles.accountLabelItem}>
+                <View style={styles.accountIconContainer}>
+                  <Ionicons name="card-outline" size={16} color="#FFFFFF" />
+                </View>
+                <Text style={styles.accountLabel}>{translations.accountNumberLabel}</Text>
+              </View>
+            </View>
+            <View style={styles.accountValuesRow}>
+              <Text style={styles.accountValue}>{item.accountHolder?.toUpperCase()}</Text>
+              <Text style={styles.accountValue}>DCJ-{item.accNo}</Text>
+            </View>
+          </View>
+
+
+
+          {/* Payment Info Row - Always Visible */}
+          <View style={styles.paymentInfoRow}>
+            <View style={styles.paymentInfoItem}>
+              <View style={styles.paymentInfoIconContainer}>
+                <Ionicons name="time-outline" size={16} color="#FFFFFF" />
+              </View>
+              <View style={styles.paymentInfoContent}>
+                <Text style={styles.paymentInfoLabel}>{translations.frequency}</Text>
+                <Text style={styles.paymentInfoValue}>
+                  {/* {item.paymentFrequency} */}
+                  {item.schemesData?.paymentFrequencyName === 'Flexi' ? translations.flexi : item.paymentFrequency}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.paymentInfoDivider} />
+            <View style={styles.paymentInfoItem}>
+              <View style={styles.paymentInfoIconContainer}>
+                <Ionicons name="scale-outline" size={16} color="#FFFFFF" />
+              </View>
+              <View style={styles.paymentInfoContent}>
+                <Text style={styles.paymentInfoLabel}>{translations.totalWeight}</Text>
+                <Text style={styles.paymentInfoValue}>
+                  {formatGoldWeight(item.goldWeight)}
+                </Text>
+              </View>
+            </View>
+          </View>
+          {/* Action Buttons Container - Always Visible */}
+          <View style={styles.actionButtonsContainer}>
+            <TouchableOpacity
+              style={styles.detailsButton}
+              onPress={() => handleNavigation(item)}
+            >
+              <LinearGradient
+                colors={["#850111", "#B8860B", "#DAA520"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.detailsButtonGradient}
+              >
+                <Text style={styles.detailsButtonText}>{translations.viewDetails}</Text>
+                <Ionicons name="chevron-forward" size={20} color="#fff" />
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.payNowButtonLarge}
+              onPress={handlePayNow}
+            >
+              <LinearGradient
+                colors={["#4CAF50", "#45a049", "#3d8b40"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.payNowButtonGradient}
+              >
+                <Text style={styles.payNowButtonTextLarge}>{translations.payNow}</Text>
+                <Ionicons name="card-outline" size={20} color="#fff" />
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+          <Animated.View
+            style={[
+              styles.cardContent,
+              {
+                maxHeight: animatedHeight.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 500],
+                }),
+              },
+            ]}
+          >
+            {/* Enhanced Info Grid with More Relevant Data */}
+            <View style={styles.enhancedInfoGrid}>
+              <View style={styles.enhancedInfoRow}>
+                <View style={styles.enhancedInfoItem}>
+                  <View style={styles.enhancedInfoIconContainer}>
+                    <Ionicons name="wallet-outline" size={20} color="#FFFFFF" />
+                  </View>
+                  <Text style={styles.enhancedInfoLabel}>{translations.totalInvestedLabel}</Text>
+                  <Text style={styles.enhancedInfoValue}>
+                    ₹{item.totalPaid.toLocaleString()}
                   </Text>
                 </View>
-                <View style={styles.expandIcon}>
-                  <Ionicons
-                    name={isExpanded ? "chevron-up" : "chevron-down"}
-                    size={20}
-                    color="#FFFFFF"
-                  />
-                </View>
-              </View>
-            </View>
 
-            {/* Account Info - Before Action Buttons */}
-            <View style={styles.accountInfo}>
-              <View style={styles.accountLabelsRow}>
-                <View style={styles.accountLabelItem}>
-                  <View style={styles.accountIconContainer}>
-                    <Ionicons name="person-outline" size={16} color="#FFFFFF" />
+                <View style={styles.enhancedInfoItem}>
+                  <View style={styles.enhancedInfoIconContainer}>
+                    <Ionicons name="trending-up" size={20} color="#FFFFFF" />
                   </View>
-                  <Text style={styles.accountLabel}>Account Holder:</Text>
-                </View>
-                <View style={styles.accountLabelItem}>
-                  <View style={styles.accountIconContainer}>
-                    <Ionicons name="card-outline" size={16} color="#FFFFFF" />
-                  </View>
-                  <Text style={styles.accountLabel}>A/C No:</Text>
-                </View>
-              </View>
-              <View style={styles.accountValuesRow}>
-                <Text style={styles.accountValue}>{item.accountHolder?.toUpperCase()}</Text>
-                <Text style={styles.accountValue}>DCJ-{item.accNo}</Text>
-              </View>
-            </View>
-
-            {/* Action Buttons Container - Always Visible */}
-            <View style={styles.actionButtonsContainer}>
-              <TouchableOpacity
-                style={styles.detailsButton}
-                onPress={() => handleNavigation(item)}
-              >
-                <LinearGradient
-                  colors={["#850111", "#B8860B", "#DAA520"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.detailsButtonGradient}
-                >
-                  <Text style={styles.detailsButtonText}>View Details</Text>
-                  <Ionicons name="chevron-forward" size={20} color="#fff" />
-                </LinearGradient>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.payNowButtonLarge}
-                onPress={handlePayNow}
-              >
-                <LinearGradient
-                  colors={["#4CAF50", "#45a049", "#3d8b40"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.payNowButtonGradient}
-                >
-                  <Text style={styles.payNowButtonTextLarge}>Pay Now</Text>
-                  <Ionicons name="card-outline" size={20} color="#fff" />
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
-
-            {/* Payment Info Row - Always Visible */}
-            <View style={styles.paymentInfoRow}>
-              <View style={styles.paymentInfoItem}>
-                <View style={styles.paymentInfoIconContainer}>
-                  <Ionicons name="time-outline" size={16} color="#FFFFFF" />
-                </View>
-                <View style={styles.paymentInfoContent}>
-                  <Text style={styles.paymentInfoLabel}>Frequency</Text>
-                  <Text style={styles.paymentInfoValue}>
-                    {/* {item.paymentFrequency} */}
-                    {item.schemesData?.paymentFrequencyName === 'Flexi' ? 'Flexi':item.paymentFrequency}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.paymentInfoDivider} />
-              <View style={styles.paymentInfoItem}>
-                <View style={styles.paymentInfoIconContainer}>
-                  <Ionicons name="scale-outline" size={16} color="#FFFFFF" />
-                </View>
-                <View style={styles.paymentInfoContent}>
-                  <Text style={styles.paymentInfoLabel}>Total Weight</Text>
-                  <Text style={styles.paymentInfoValue}>
+                  <Text style={styles.enhancedInfoLabel}>{translations.goldWeightLabel}</Text>
+                  <Text style={styles.enhancedInfoValue}>
                     {formatGoldWeight(item.goldWeight)}
                   </Text>
                 </View>
+
+                <View style={styles.enhancedInfoItem}>
+                  <View style={styles.enhancedInfoIconContainer}>
+                    <Ionicons name="cash-outline" size={20} color="#FFFFFF" />
+                  </View>
+                  <Text style={styles.enhancedInfoLabel}>{translations.monthlyEMILabel}</Text>
+                  <Text style={styles.enhancedInfoValue}>₹{item.emiAmount}</Text>
+                </View>
+              </View>
+
+              {/* Additional Row for More Details */}
+              <View style={styles.enhancedInfoRow}>
+                <View style={styles.enhancedInfoItem}>
+                  <View style={styles.enhancedInfoIconContainer}>
+                    <Ionicons name="calendar-outline" size={20} color="#FFFFFF" />
+                  </View>
+                  <Text style={styles.enhancedInfoLabel}>{translations.progressLabel}</Text>
+                  <Text style={styles.enhancedInfoValue}>
+                    {item.monthsPaid}/{item.noOfIns}
+                  </Text>
+                </View>
+
+                <View style={styles.enhancedInfoItem}>
+                  <View style={styles.enhancedInfoIconContainer}>
+                    <Ionicons name="time-outline" size={20} color="#FFFFFF" />
+                  </View>
+                  <Text style={styles.enhancedInfoLabel}>{translations.remainingLabel}</Text>
+                  <Text style={styles.enhancedInfoValue}>
+                    {Number(item.noOfIns) - Number(item.monthsPaid)} {translations.monthsLabel}
+                  </Text>
+                </View>
+
+                <View style={styles.enhancedInfoItem}>
+                  <View style={styles.enhancedInfoIconContainer}>
+                    <Ionicons name="trophy-outline" size={20} color="#FFFFFF" />
+                  </View>
+                  <Text style={styles.enhancedInfoLabel}>{translations.statusLabel}</Text>
+                  <Text style={[
+                    styles.enhancedInfoValue,
+                    { color: item.status === "ACTIVE" ? "#2E7D32" : "#D32F2F" }
+                  ]}>
+                    {item.status || "INACTIVE"}
+                  </Text>
+                </View>
               </View>
             </View>
 
-            <Animated.View
-              style={[
-                styles.cardContent,
-                {
-                  maxHeight: animatedHeight.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0, 500],
-                  }),
-                },
-              ]}
-            >
-              {/* Enhanced Info Grid with More Relevant Data */}
-              <View style={styles.enhancedInfoGrid}>
-                <View style={styles.enhancedInfoRow}>
-                  <View style={styles.enhancedInfoItem}>
-                    <View style={styles.enhancedInfoIconContainer}>
-                      <Ionicons name="wallet-outline" size={20} color="#FFFFFF" />
-                    </View>
-                    <Text style={styles.enhancedInfoLabel}>Total Invested</Text>
-                    <Text style={styles.enhancedInfoValue}>
-                      ₹{item.totalPaid.toLocaleString()}
-                    </Text>
-                  </View>
-                  
-                  <View style={styles.enhancedInfoItem}>
-                    <View style={styles.enhancedInfoIconContainer}>
-                      <Ionicons name="trending-up" size={20} color="#FFFFFF" />
-                    </View>
-                    <Text style={styles.enhancedInfoLabel}>Gold Weight</Text>
-                    <Text style={styles.enhancedInfoValue}>
-                      {formatGoldWeight(item.goldWeight)}
-                    </Text>
-                  </View>
-                  
-                  <View style={styles.enhancedInfoItem}>
-                    <View style={styles.enhancedInfoIconContainer}>
-                      <Ionicons name="cash-outline" size={20} color="#FFFFFF" />
-                    </View>
-                    <Text style={styles.enhancedInfoLabel}>Monthly EMI</Text>
-                    <Text style={styles.enhancedInfoValue}>₹{item.emiAmount}</Text>
+            {/* Smart Timeline Section */}
+            <View style={styles.smartTimelineContainer}>
+              <View style={styles.timelineHeader}>
+                <Ionicons name="time-outline" size={18} color="#000" />
+                <Text style={styles.timelineTitle}>{translations.investmentTimeline}</Text>
+              </View>
+
+              <View style={styles.timelineContent}>
+                <View style={styles.timelineItem}>
+                  <View style={styles.timelineDot} />
+                  <View style={styles.timelineInfo}>
+                    <Text style={styles.timelineLabel}>{translations.started}</Text>
+                    <Text style={styles.timelineValue}>{item.joiningDate}</Text>
                   </View>
                 </View>
-                
-                {/* Additional Row for More Details */}
-                <View style={styles.enhancedInfoRow}>
-                  <View style={styles.enhancedInfoItem}>
-                    <View style={styles.enhancedInfoIconContainer}>
-                      <Ionicons name="calendar-outline" size={20} color="#FFFFFF" />
-                    </View>
-                    <Text style={styles.enhancedInfoLabel}>Progress</Text>
-                    <Text style={styles.enhancedInfoValue}>
-                      {item.monthsPaid}/{item.noOfIns}
-                    </Text>
+
+                <View style={styles.timelineConnector} />
+
+                <View style={styles.timelineItem}>
+                  <View style={[styles.timelineDot, { backgroundColor: progressPercentage > 50 ? "#4CAF50" : "#FF9800" }]} />
+                  <View style={styles.timelineInfo}>
+                    <Text style={styles.timelineLabel}>{translations.currentProgress}</Text>
+                    <Text style={styles.timelineValue}>{progressPercentage}% {translations.completeLabel}</Text>
                   </View>
-                  
-                  <View style={styles.enhancedInfoItem}>
-                    <View style={styles.enhancedInfoIconContainer}>
-                      <Ionicons name="time-outline" size={20} color="#FFFFFF" />
-                    </View>
-                    <Text style={styles.enhancedInfoLabel}>Remaining</Text>
-                    <Text style={styles.enhancedInfoValue}>
-                      {Number(item.noOfIns) - Number(item.monthsPaid)} months
-                    </Text>
-                  </View>
-                  
-                  <View style={styles.enhancedInfoItem}>
-                    <View style={styles.enhancedInfoIconContainer}>
-                      <Ionicons name="trophy-outline" size={20} color="#FFFFFF" />
-                    </View>
-                    <Text style={styles.enhancedInfoLabel}>Status</Text>
-                                         <Text style={[
-                       styles.enhancedInfoValue,
-                       { color: item.status === "ACTIVE" ? "#2E7D32" : "#D32F2F" }
-                     ]}>
-                       {item.status || "INACTIVE"}
-                     </Text>
+                </View>
+
+                <View style={styles.timelineConnector} />
+
+                <View style={styles.timelineItem}>
+                  <View style={[styles.timelineDot, { backgroundColor: "#FFD700" }]} />
+                  <View style={styles.timelineInfo}>
+                    <Text style={styles.timelineLabel}>{translations.maturity}</Text>
+                    <Text style={styles.timelineValue}>{item.maturityDate}</Text>
                   </View>
                 </View>
               </View>
+            </View>
 
-              {/* Smart Timeline Section */}
-              <View style={styles.smartTimelineContainer}>
-                <View style={styles.timelineHeader}>
-                  <Ionicons name="time-outline" size={18} color="#FFFFFF" />
-                  <Text style={styles.timelineTitle}>Investment Timeline</Text>
-                </View>
-                
-                <View style={styles.timelineContent}>
-                  <View style={styles.timelineItem}>
-                    <View style={styles.timelineDot} />
-                    <View style={styles.timelineInfo}>
-                      <Text style={styles.timelineLabel}>Started</Text>
-                      <Text style={styles.timelineValue}>{item.joiningDate}</Text>
-                    </View>
-                  </View>
-                  
-                  <View style={styles.timelineConnector} />
-                  
-                  <View style={styles.timelineItem}>
-                    <View style={[styles.timelineDot, { backgroundColor: progressPercentage > 50 ? "#4CAF50" : "#FF9800" }]} />
-                    <View style={styles.timelineInfo}>
-                      <Text style={styles.timelineLabel}>Current Progress</Text>
-                      <Text style={styles.timelineValue}>{progressPercentage}% Complete</Text>
-                    </View>
-                  </View>
-                  
-                  <View style={styles.timelineConnector} />
-                  
-                  <View style={styles.timelineItem}>
-                    <View style={[styles.timelineDot, { backgroundColor: "#FFD700" }]} />
-                    <View style={styles.timelineInfo}>
-                      <Text style={styles.timelineLabel}>Maturity</Text>
-                      <Text style={styles.timelineValue}>{item.maturityDate}</Text>
-                    </View>
+            {/* Installment Progress Section - Only show if not Flexi with payment_duration 0.00 */}
+            {!(item.schemesData?.paymentFrequencyName === 'Flexi' && item.schemesData?.payment_duration === '0.00') && (
+              <View style={styles.progressContainer}>
+                <View style={styles.progressHeader}>
+                  <Text style={styles.progressLabel}>{translations.installmentProgress}</Text>
+                  <View style={styles.progressStats}>
+                    {/* <Text style={styles.progressValue}>
+                      {progressPercentage}%
+                    </Text> */}
+                    <Text style={styles.progressMonths}>
+                      {item.monthsPaid}/{item.noOfIns} {translations.monthsLabel}
+                    </Text>
                   </View>
                 </View>
-              </View>
-
-              {/* Installment Progress Section - Only show if not Flexi with payment_duration 0.00 */}
-              {!(item.schemesData?.paymentFrequencyName === 'Flexi' && item.schemesData?.payment_duration === '0.00') && (
-                <View style={styles.progressContainer}>
-                  <View style={styles.progressHeader}>
-                    <Text style={styles.progressLabel}>Installment Progress</Text>
-                    <View style={styles.progressStats}>
-                      <Text style={styles.progressValue}>
-                        {progressPercentage}%
-                      </Text>
-                      <Text style={styles.progressMonths}>
-                        {item.monthsPaid}/{item.noOfIns} months
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.progressBar}>
-                    <Animated.View
-                      style={[
-                        styles.progressFill,
-                        {
-                          width: animatedHeight.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: ["0%", `${progressPercentage}%`],
-                          }),
-                        },
-                      ]}
+                <View style={styles.progressBar}>
+                  <Animated.View
+                    style={[
+                      styles.progressFill,
+                      {
+                        width: animatedHeight.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ["0%", `${progressPercentage}%`],
+                        }),
+                      },
+                    ]}
+                  />
+                </View>
+                <View style={styles.monthsInfo}>
+                  <View style={styles.monthItem}>
+                    <View
+                      style={[styles.monthDot, { backgroundColor: "#850111" }]}
                     />
+                    <Text style={styles.monthLabel}>{translations.paid}</Text>
+                    <Text style={styles.monthValue}>{item.monthsPaid}</Text>
                   </View>
-                  <View style={styles.monthsInfo}>
-                    <View style={styles.monthItem}>
-                      <View
-                        style={[styles.monthDot, { backgroundColor: "#850111" }]}
-                      />
-                      <Text style={styles.monthLabel}>Paid</Text>
-                      <Text style={styles.monthValue}>{item.monthsPaid}</Text>
-                    </View>
-                    <View style={styles.monthItem}>
-                      <View
-                        style={[styles.monthDot, { backgroundColor: "#DAA520" }]}
-                      />
-                      <Text style={styles.monthLabel}>Pending</Text>
-                      <Text style={styles.monthValue}>
-                        {Number(item.noOfIns) - Number(item.monthsPaid)}
-                      </Text>
-                    </View>
-                    <View style={styles.monthItem}>
-                      <View
-                        style={[styles.monthDot, { backgroundColor: "#850111" }]}
-                      />
-                      <Text style={styles.monthLabel}>Total</Text>
-                      <Text style={styles.monthValue}>{item.noOfIns}</Text>
-                    </View>
+                  <View style={styles.monthItem}>
+                    <View
+                      style={[styles.monthDot, { backgroundColor: "#DAA520" }]}
+                    />
+                    <Text style={styles.monthLabel}>{translations.pending}</Text>
+                    <Text style={styles.monthValue}>
+                      {Number(item.noOfIns) - Number(item.monthsPaid)}
+                    </Text>
+                  </View>
+                  <View style={styles.monthItem}>
+                    <View
+                      style={[styles.monthDot, { backgroundColor: "#850111" }]}
+                    />
+                    <Text style={styles.monthLabel}>{translations.total}</Text>
+                    <Text style={styles.monthValue}>{item.noOfIns}</Text>
                   </View>
                 </View>
-              )}
-            </Animated.View>
+              </View>
+            )}
+          </Animated.View>
           {/* </LinearGradient> */}
         </ImageBackground>
       </TouchableOpacity>
@@ -904,7 +932,7 @@ export default function SavingsScreen() {
           onPress={() => router.push("/(tabs)/home/schemes")}
         >
           <Ionicons name="add-circle-outline" size={20} color="#000" />
-          <Text style={styles.emptyStateButtonText}>Start New Savings</Text>
+          <Text style={styles.emptyStateButtonText}>{translations.startNewSavings}</Text>
         </TouchableOpacity>
       </LinearGradient>
     </View>
@@ -919,17 +947,17 @@ export default function SavingsScreen() {
         resizeMode="contain"
       />
       <Text className="text-lg font-semibold text-gray-800 mb-2">
-        {t("somethingWentWrong")}
+        {translations.somethingWentWrong}
       </Text>
       <Text className="text-sm text-gray-600 text-center mb-6">
-        {t("errorLoadingSavings")}
+        {translations.errorLoadingSavings}
       </Text>
       <TouchableOpacity
         onPress={fetchUserData}
         className="bg-[#7b0006] px-6 py-3 rounded-full flex-row items-center"
       >
         <Ionicons name="refresh" size={20} color="white" className="mr-2" />
-        <Text className="text-white font-semibold">{t("retry")}</Text>
+        <Text className="text-white font-semibold">{translations.retry}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -967,7 +995,7 @@ export default function SavingsScreen() {
             fontSize: 16,
           }}
         >
-          Fixed
+          {translations.fixed}
         </Text>
       </TouchableOpacity>
       <TouchableOpacity
@@ -989,7 +1017,7 @@ export default function SavingsScreen() {
             fontSize: 16,
           }}
         >
-          Flexi
+          {translations.flexi}
         </Text>
       </TouchableOpacity>
     </View>
@@ -1026,37 +1054,37 @@ export default function SavingsScreen() {
           style={{ flex: 1 }}
           resizeMode="cover"
         >
-        <LinearGradient
-          colors={["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.02)", "rgba(0, 0, 0, 0.01)"]}
-          style={StyleSheet.absoluteFillObject}
-        />
-
-        <SafeAreaView style={{ flex: 1 }}>
-          <View className="absolute top-0 left-0 right-0 z-10 px-4">
-            <AppHeader showBackButton={false} backRoute="index" />
-          </View>
-
-          <FlatList
-            data={filteredSavings}
-            keyExtractor={(item, index) =>
-              item.id && item.id !== "" ? item.id : index.toString()
-            }
-            renderItem={renderSchemeItem}
-            ListHeaderComponent={savings.length > 0 ? <ListHeader /> : null}
-            ListEmptyComponent={<EmptyState />}
-            contentContainerStyle={{
-              paddingTop: 100,
-              paddingBottom: bottomPadding,
-            }}
-            showsVerticalScrollIndicator={false}
-            removeClippedSubviews={true}
-            maxToRenderPerBatch={10}
-            windowSize={5}
-            initialNumToRender={10}
+          <LinearGradient
+            colors={["rgba(0, 0, 0, 0.1)", "rgba(0, 0, 0, 0.05)", "rgba(0, 0, 0, 0.02)"]}
+            style={StyleSheet.absoluteFillObject}
           />
-        </SafeAreaView>
-      </ImageBackground>
-    </View>
+
+          <SafeAreaView style={{ flex: 1 }}>
+            <View className="absolute top-0 left-0 right-0 z-10 px-4">
+              <AppHeader showBackButton={false} backRoute="index" />
+            </View>
+
+            <FlatList
+              data={filteredSavings}
+              keyExtractor={(item, index) =>
+                item.id && item.id !== "" ? item.id : index.toString()
+              }
+              renderItem={renderSchemeItem}
+              ListHeaderComponent={savings.length > 0 ? <ListHeader /> : null}
+              ListEmptyComponent={<EmptyState />}
+              contentContainerStyle={{
+                paddingTop: 100,
+                paddingBottom: bottomPadding,
+              }}
+              showsVerticalScrollIndicator={false}
+              removeClippedSubviews={true}
+              maxToRenderPerBatch={10}
+              windowSize={5}
+              initialNumToRender={10}
+            />
+          </SafeAreaView>
+        </ImageBackground>
+      </View>
     </AuthGuard>
   );
 }
@@ -1133,12 +1161,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: theme.colors.primary,
+    backgroundColor: "rgba(123, 0, 6, 0.9)",
     borderRadius: 16,
     padding: 16,
     marginBottom: 0,
     borderWidth: 1,
-    borderColor: theme.colors.primary,
+    borderColor: "rgba(123, 0, 6, 0.95)",
   },
   statItem: {
     flex: 1,
@@ -1149,12 +1177,12 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(255,215,0,0.15)",
+    backgroundColor: "rgba(255,215,0,0.25)",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
     borderWidth: 1,
-    borderColor: "rgba(255,215,0,0.2)",
+    borderColor: "rgba(255,215,0,0.3)",
   },
   statInfo: {
     flex: 1,
@@ -1175,7 +1203,7 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
     height: 36,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    backgroundColor: "rgba(255,255,255,0.25)",
     marginHorizontal: 16,
   },
   portfolioFooter: {
@@ -1240,10 +1268,10 @@ const styles = StyleSheet.create({
     margin: 12,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    backgroundColor: "rgba(255, 255, 255, 0.81)",
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   schemeInfo: {
     flexDirection: "row",
@@ -1281,9 +1309,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    backgroundColor: "rgba(187, 240, 51, 0.5)",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.4)",
+    borderColor: "rgba(255, 255, 255, 0.6)",
   },
   metalTypeText: {
     fontSize: 12,
@@ -1294,9 +1322,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    backgroundColor: "rgba(255, 255, 255, 0.5)",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.4)",
+    borderColor: "rgba(255, 255, 255, 0.6)",
   },
   savingTypeText: {
     fontSize: 12,
@@ -1312,12 +1340,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    backgroundColor: "rgba(255, 255, 255, 0.5)",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.4)",
+    borderColor: "rgba(255, 255, 255, 0.6)",
   },
   statusText: {
-    fontSize: 12,
+    fontSize: 8,
     fontWeight: "600",
     color: "#000",
   },
@@ -1325,22 +1353,22 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(133, 1, 17, 0.4)",
+    backgroundColor: "rgba(133, 1, 17, 0.6)",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "rgba(133, 1, 17, 0.6)",
+    borderColor: "rgba(133, 1, 17, 0.8)",
   },
   accountInfo: {
     flexDirection: "column",
     marginBottom: 16,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.4)",
+    backgroundColor: "rgba(255, 255, 255, 0.6)",
     borderRadius: 16,
     marginHorizontal: 12,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
+    borderColor: "rgba(255, 255, 255, 0.4)",
   },
   accountLabelsRow: {
     flexDirection: "row",
@@ -1358,7 +1386,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "rgba(228, 16, 41, 0.62)",
+    backgroundColor: "rgba(228, 16, 41, 0.8)",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -1459,7 +1487,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
   },
   progressContainer: {
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
     borderRadius: 12,
     padding: 12,
     marginBottom: 16,
@@ -1587,14 +1615,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.6)",
+    backgroundColor: "rgba(255, 255, 255, 0.75)",
     borderRadius: 16,
     marginHorizontal: 12,
     marginBottom: 16,
-    padding: 16,
+    padding: 10,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
+    borderColor: "rgba(255, 255, 255, 0.5)",
     elevation: 4,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -1610,12 +1638,12 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(133, 1, 17, 0.7)",
+    backgroundColor: "rgba(133, 1, 17, 0.85)",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 10,
     borderWidth: 2,
-    borderColor: "rgba(133, 1, 17, 0.9)",
+    borderColor: "rgba(133, 1, 17, 0.95)",
   },
   paymentInfoContent: {
     flex: 1,
@@ -1652,8 +1680,8 @@ const styles = StyleSheet.create({
     padding: 12,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(255,215,0,0.2)",
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderColor: "rgba(255,215,0,0.3)",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -1670,12 +1698,12 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 40,
-    backgroundColor: "rgba(255,215,0,0.15)",
+    backgroundColor: "rgba(255,215,0,0.25)",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "rgba(255,215,0,0.2)",
+    borderColor: "rgba(255,215,0,0.3)",
   },
   emptyStateImage: {
     width: 150,
@@ -1737,16 +1765,16 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     padding: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   enhancedInfoIconContainer: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "rgba(133, 1, 17, 0.7)",
+    backgroundColor: "rgba(133, 1, 17, 0.85)",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
@@ -1765,12 +1793,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   smartTimelineContainer: {
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   timelineHeader: {
     flexDirection: "row",
@@ -1817,7 +1845,7 @@ const styles = StyleSheet.create({
   timelineConnector: {
     flex: 1,
     height: 2,
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    backgroundColor: "rgba(208, 32, 32, 0.3)",
     marginHorizontal: 8,
   },
 });

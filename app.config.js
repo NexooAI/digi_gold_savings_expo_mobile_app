@@ -62,6 +62,9 @@ export default {
         tabletImage: theme.adaptiveIcon,
       },
       bundleIdentifier: "com.nexooai.dcjewellery",
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false
+      }
     },
 
     plugins: [
