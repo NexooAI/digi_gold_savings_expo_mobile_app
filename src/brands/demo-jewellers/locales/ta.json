@@ -1,0 +1,24 @@
+{
+  "brand": {
+    "name": "Demo Jewellers",
+    "tagline": "Premium Jewellery & Diamonds"
+  },
+  "company": {
+    "name": "Demo Jewellers",
+    "address": "Main Street, Building, City, State 000000",
+    "phone": "+91 9876543210",
+    "email": "info@demo-jewellers.com",
+    "website": "https://www.demo-jewellers.com"
+  },
+  "common": {
+    "welcome": "Welcome to Demo Jewellers",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "success": "Success!",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View"
+  }
+}

@@ -1,10 +1,14 @@
+// Import brand configuration dynamically
+const { brandConfig } = require("../core/config/BrandConfig");
+
 module.exports = {
-  customerName: "DC Jewellers",
-  primaryColor: "#850111",
+  customerName: "Akila Jewellers",
+  primaryColor: "#1a2a39",
   splashLogo: "./assets/images/splashscreen_logo.png",
   icon: "./assets/images/logo_trans.png",
   adaptiveIcon: "./assets/images/adaptive-icon.png",
-  projectId: "9af1745a-105c-44f9-9e53-a111bc6ed9ce",
+  bundleIdentifier: "com.nexooai.akilajewellers",
+  projectId: "4a014870-9859-4e8d-a8a3-09ca4b79c635",
   owner: "sudhakarg",
-  slug: "dc-jewellers-gold-and-diamonds",
+  slug: "akilajewellery",
 };

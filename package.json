@@ -6,7 +6,16 @@
     "start": "expo start --dev-client",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build:dc-jewellers": "node scripts/build-brand.js dc-jewellers android",
+    "build:dc-jewellers:ios": "node scripts/build-brand.js dc-jewellers ios",
+    "build:akilajewellers": "node scripts/build-brand.js akilajewellers android",
+    "build:akilajewellers:ios": "node scripts/build-brand.js akilajewellers ios",
+    "build:srimurugangoldhouse": "node scripts/build-brand.js srimurugangoldhouse android",
+    "build:srimurugangoldhouse:ios": "node scripts/build-brand.js srimurugangoldhouse ios",
+    "start:dc-jewellers": "set BRAND_NAME=dc-jewellers && expo start --dev-client",
+    "start:akilajewellers": "node start-akilajewellers.js",
+    "start:srimurugangoldhouse": "set BRAND_NAME=srimurugangoldhouse && expo start --dev-client"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",

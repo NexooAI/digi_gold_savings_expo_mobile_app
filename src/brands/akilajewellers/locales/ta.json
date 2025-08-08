@@ -1,0 +1,24 @@
+{
+  "brand": {
+    "name": "Akilajewellers",
+    "tagline": "Premium Jewellery & Diamonds"
+  },
+  "company": {
+    "name": "Akilajewellers",
+    "address": "Main Street, Building, City, State 000000",
+    "phone": "+91 9876543210",
+    "email": "info@akilajewellers.com",
+    "website": "https://www.akilajewellers.com"
+  },
+  "common": {
+    "welcome": "Welcome to Akilajewellers",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "success": "Success!",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View"
+  }
+}

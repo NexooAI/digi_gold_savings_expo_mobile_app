@@ -1,42 +1,43 @@
-const theme = require("./src/constants/theme.config");
+// Import the brand configuration dynamically
+const { brandConfig } = require("./src/core/config/BrandConfig");
 
-export default {
+module.exports = {
   expo: {
-    name: theme.customerName,
-    slug: theme.slug,
+    name: brandConfig.appName,
+    slug: brandConfig.appSlug,
     version: "2.0.0",
     orientation: "portrait",
     userInterfaceStyle: "automatic",
     scheme: "acme",
 
-    icon: theme.splashLogo,
+    icon: brandConfig.splashLogo || "./assets/images/icon.png",
     splash: {
-      image: theme.splashLogo,
+      image: brandConfig.splashLogo || "./assets/images/splashscreen_logo.png",
       resizeMode: "contain",
-      backgroundColor: "#850111",
+      backgroundColor: brandConfig.primaryColor || "#1a2a39",
     },
 
     androidStatusBar: {
-      backgroundColor: "#850111",
+      backgroundColor: brandConfig.primaryColor || "#1a2a39",
       translucent: false,
     },
 
     android: {
       adaptiveIcon: {
-        foregroundImage: theme.adaptiveIcon,
-        backgroundColor: "#850111",
+        foregroundImage: brandConfig.adaptiveIcon || "./assets/images/adaptive-icon.png",
+        backgroundColor: brandConfig.primaryColor || "#1a2a39",
       },
       splash: {
-        image: theme.adaptiveIcon,
+        image: brandConfig.adaptiveIcon || "./assets/images/adaptive-icon.png",
         resizeMode: "contain",
-        backgroundColor: "#850111",
-        mdpi: theme.adaptiveIcon,
-        hdpi: theme.adaptiveIcon,
-        xhdpi: theme.adaptiveIcon,
-        xxhdpi: theme.adaptiveIcon,
-        xxxhdpi: theme.adaptiveIcon,
+        backgroundColor: brandConfig.primaryColor || "#1a2a39",
+        mdpi: brandConfig.adaptiveIcon || "./assets/images/adaptive-icon.png",
+        hdpi: brandConfig.adaptiveIcon || "./assets/images/adaptive-icon.png",
+        xhdpi: brandConfig.adaptiveIcon || "./assets/images/adaptive-icon.png",
+        xxhdpi: brandConfig.adaptiveIcon || "./assets/images/adaptive-icon.png",
+        xxxhdpi: brandConfig.adaptiveIcon || "./assets/images/adaptive-icon.png",
       },
-      package: "com.nexooai.dcjewellery",
+      package: brandConfig.androidPackage,
       googleServicesFile: "./google-services.json",
       versionCode:2,
       config: {
@@ -47,7 +48,7 @@ export default {
       edgeToEdgeEnabled: true,
       notification: {
         icon: "./assets/images/icon.png",
-        color: "#850111"
+        color: brandConfig.primaryColor || "#1a2a39"
       },
       targetSdkVersion: 36,
       jsEngine: "hermes",
@@ -56,12 +57,12 @@ export default {
     ios: {
       supportsTablet: true,
       splash: {
-        image: theme.adaptiveIcon,
+        image: brandConfig.adaptiveIcon || "./assets/images/adaptive-icon.png",
         resizeMode: "contain",
-        backgroundColor: theme.primaryColor,
-        tabletImage: theme.adaptiveIcon,
+        backgroundColor: brandConfig.primaryColor || "#1a2a39",
+        tabletImage: brandConfig.adaptiveIcon || "./assets/images/adaptive-icon.png",
       },
-      bundleIdentifier: "com.nexooai.dcjewellery",
+      bundleIdentifier: brandConfig.iosBundleId,
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false
       }
@@ -82,7 +83,7 @@ export default {
         origin: "https://n",
       },
       eas: {
-        projectId: theme.projectId,
+        projectId: brandConfig.projectId,
       },
     },
 
@@ -95,6 +96,6 @@ export default {
       output: "static",
       bundler: "metro",
     },
-    owner: theme.owner,
+    owner: brandConfig.owner,
   },
 };

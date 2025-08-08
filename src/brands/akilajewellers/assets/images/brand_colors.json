@@ -1,0 +1,29 @@
+{
+  "brand": "akilajewellers",
+  "colors": {
+    "primary": "#1a2a39",
+    "secondary": "#f6ad55",
+    "background": "#ffffff",
+    "textPrimary": "#ffffff",
+    "textSecondary": "#000000"
+  },
+  "gradients": {
+    "primary": [
+      "#1a2a39",
+      "#2d3748"
+    ],
+    "secondary": [
+      "#f6ad55",
+      "#ed8936"
+    ],
+    "background": [
+      "#ffffff",
+      "#f8f8f8"
+    ]
+  },
+  "support_container": [
+    "#1a2a39",
+    "#2d3748",
+    "#4a5568"
+  ]
+}
