@@ -132,7 +132,7 @@ export default function PaymentWebView() {
   return (
     <Modal visible={true} animationType="slide" presentationStyle="fullScreen">
       <View style={styles.container}>
-        <WebView
+        {/* <WebView
           source={{ uri: params.url as string }}
           style={{ flex: 1 }}
           onNavigationStateChange={(navState) => {
@@ -159,7 +159,44 @@ export default function PaymentWebView() {
               handleCancel();
             }
           }}
-        />
+        /> */}
+         <WebView
+      source={{ uri: params.url as string }}
+      style={{ flex: 1 }}
+      javaScriptEnabled={true}
+      domStorageEnabled={true}
+      originWhitelist={["*"]}
+      startInLoadingState={true}
+      allowsInlineMediaPlayback={true}
+      sharedCookiesEnabled={true}
+      thirdPartyCookiesEnabled={true}
+      cacheEnabled={true}
+      incognito={false}
+      onNavigationStateChange={(navState) => {
+        console.log("Payment Navigation State:", {
+          url: navState.url,
+          title: navState.title,
+          loading: navState.loading,
+          canGoBack: navState.canGoBack,
+        });
+
+        const currentUrl = navState.url.toLowerCase();
+        if (
+          currentUrl.includes("/cancel") ||
+          currentUrl.includes("/error") ||
+          currentUrl.includes("/failed") ||
+          (currentUrl.includes("payment") &&
+            currentUrl.includes("status=failed"))
+        ) {
+          if (socket && socket.connected) {
+            socket.disconnect();
+          }
+          handleCancel();
+        }
+      }}
+      onError={(err) => console.log("WebView Error:", err)}
+      onHttpError={(e) => console.log("HTTP error:", e.nativeEvent)}
+    />
       </View>
     </Modal>
   );

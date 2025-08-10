@@ -155,6 +155,20 @@ const SavingsDetail = () => {
       back: t("back"),
       goldRate: t("goldRate"),
       paymentMethod: t("paymentMethod"),
+      advancePayment: t("advancePayment"),
+      selectAll: t("selectAll"),
+      unselectAll: t("unselectAll"),
+      paySelected: t("paySelected"),
+      payNow: t("payNow"),
+      hide: t("hide"),
+      show: t("show"),
+      month: t("month"),
+      due: t("due"),
+      accountDetails: t("accountDetails"),
+      accountNo: t("accountNo"),
+      goldWeight: t("goldWeight"),
+      totalPaid: t("totalPaid"),
+      monthsPaid: t("monthsPaid"),
     }),
     [language]
   );
@@ -457,7 +471,7 @@ const SavingsDetail = () => {
                   {translations.paymentProgress}
                 </Text>
                 <Text style={styles.progressValue}>
-                  {params.monthsPaid}/{params.noOfIns} months
+                  {params.monthsPaid}/{params.noOfIns} {t('months')}
                 </Text>
               </View>
               <View style={styles.progressBar}>
@@ -476,7 +490,7 @@ const SavingsDetail = () => {
 
         {/* Details Section */}
         <View style={[styles.detailsCard, { backgroundColor: "#FFF8DC" }]}>
-          <Text style={styles.sectionTitle}>Account Details</Text>
+          <Text style={styles.sectionTitle}>{translations.accountDetails}</Text>
           <View style={styles.detailsGrid}>
             <View style={styles.detailItem}>
               <Ionicons name="person-outline" size={16} color="#8B4513" />
@@ -508,24 +522,24 @@ const SavingsDetail = () => {
             </View>
             <View style={styles.detailItem}>
               <Ionicons name="calendar-outline" size={16} color="#8B4513" />
-              <Text style={styles.detailLabel}>Account No</Text>
+              <Text style={styles.detailLabel}>{translations.accountNo}</Text>
               <Text style={styles.detailValue}>{params.accNo}</Text>
             </View>
             <View style={styles.detailItem}>
               <Ionicons name="diamond-outline" size={16} color="#8B4513" />
-              <Text style={styles.detailLabel}>Gold Weight</Text>
+              <Text style={styles.detailLabel}>{translations.goldWeight}</Text>
               <Text style={styles.detailValue}>{formatGoldWeight(parseFloat(params.goldWeight) || 0)}</Text>
             </View>
             <View style={styles.detailItem}>
               <Ionicons name="trending-up-outline" size={16} color="#8B4513" />
-              <Text style={styles.detailLabel}>Total Paid</Text>
+              <Text style={styles.detailLabel}>{translations.totalPaid}</Text>
               <Text style={styles.detailValue}>
                 ₹{Number(params.totalPaid).toLocaleString()}
               </Text>
             </View>
             <View style={styles.detailItem}>
               <Ionicons name="checkmark-circle-outline" size={16} color="#8B4513" />
-              <Text style={styles.detailLabel}>Months Paid</Text>
+              <Text style={styles.detailLabel}>{translations.monthsPaid}</Text>
               <Text style={styles.detailValue}>{params.monthsPaid}/{params.noOfIns}</Text>
             </View>
           </View>
@@ -600,13 +614,13 @@ const SavingsDetail = () => {
         {advancePayments.filter(p => p.status === 'PENDING').length > 0 && (
           <View style={[styles.transactionsCard, { backgroundColor: '#FFF8DC', marginTop: 16 }]}> 
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <Text style={styles.sectionTitle}>Advance Payment</Text>
+              <Text style={styles.sectionTitle}>{t('advancePayment')}</Text>
               <TouchableOpacity
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
                 onPress={() => setShowAdvancePayment(!showAdvancePayment)}
               >
                 <Text style={{ color: '#850111', fontSize: 12, fontWeight: '600' }}>
-                  {showAdvancePayment ? 'Hide' : 'Show'}
+                  {showAdvancePayment ? t('hide') : t('show')}
                 </Text>
                 <Ionicons 
                   name={showAdvancePayment ? "chevron-up" : "chevron-down"} 
@@ -624,13 +638,13 @@ const SavingsDetail = () => {
                       style={{ backgroundColor: '#850111', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}
                       onPress={handleSelectAll}
                     >
-                      <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>Select All</Text>
+                      <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>{t('selectAll')}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={{ backgroundColor: '#8B4513', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}
                       onPress={handleUnselectAll}
                     >
-                      <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>Unselect All</Text>
+                      <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>{t('unselectAll')}</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -639,7 +653,7 @@ const SavingsDetail = () => {
               return (
                 <TouchableOpacity key={pending.monthNumber} onPress={() => handleSelectPayment(pending)} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' }}>
                   <Ionicons name={isSelected ? "checkbox" : "square-outline"} size={24} color={isSelected ? "#850111" : "#8B4513"} style={{ marginRight: 16 }} />
-                  <Text style={{ flex: 1, fontSize: 14, color: '#2C1810' }}>{`Month ${pending.monthNumber} - Due ${new Date(pending.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}`}</Text>
+                  <Text style={{ flex: 1, fontSize: 14, color: '#2C1810' }}>{`${t('month')} ${pending.monthNumber} - ${t('due')} ${new Date(pending.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}`}</Text>
                   <Text style={{ fontSize: 15, fontWeight: '700', color: '#850111', marginLeft: 12 }}>₹{Number(params.emiAmount).toLocaleString()}</Text>
                 </TouchableOpacity>
               )
@@ -662,7 +676,7 @@ const SavingsDetail = () => {
                       <ActivityIndicator color="#fff" />
                     ) : (
                       <>
-                        <Text style={styles.payButtonText}>Pay Selected (₹{totalSelectedAmount.toLocaleString()})</Text>
+                        <Text style={styles.payButtonText}>{t('paySelected')} (₹{totalSelectedAmount.toLocaleString()})</Text>
                         <Ionicons name="arrow-forward" size={24} color="#fff" />
                       </>
                     )}
@@ -692,7 +706,7 @@ const SavingsDetail = () => {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <>
-                  <Text style={styles.payButtonText}>Pay Now</Text>
+                  <Text style={styles.payButtonText}>{t('payNow')}</Text>
                   <Ionicons name="arrow-forward" size={24} color="#fff" />
                 </>
               )}

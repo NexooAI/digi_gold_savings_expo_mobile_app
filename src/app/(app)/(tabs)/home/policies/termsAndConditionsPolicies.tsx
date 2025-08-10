@@ -99,7 +99,7 @@ export default function TermsAndConditions() {
       useGlobalStore.getState().setHeaderConfig({
         showBackButton: true,
         showMenu: false,
-        showLanguageSwitcher: false,
+        showLanguageSwitcher: true,
         title: translations.defaultTitle,
         backRoute: "/(app)/(tabs)/home",
       });
@@ -107,166 +107,166 @@ export default function TermsAndConditions() {
     }, [translations.defaultTitle])
   );
 
-  if (loading) {
-    return (
-      <AppLayoutWrapper
-        showHeader={false}
-        showBottomBar={false}
+  // Render loading state
+  const renderLoadingState = () => (
+    <View style={styles.loadingContainer}>
+      <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
+      <LinearGradient
+        colors={[theme.colors.primary, theme.colors.support_container[1]]}
+        style={styles.loadingContainer}
       >
-        <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
-        <LinearGradient
-          colors={[theme.colors.primary, theme.colors.support_container[1]]}
-          style={styles.loadingContainer}
-        >
-          <ActivityIndicator size="large" color="#FFD700" />
-        </LinearGradient>
-      </AppLayoutWrapper>
-    );
-  }
+        <ActivityIndicator size="large" color="#FFD700" />
+      </LinearGradient>
+    </View>
+  );
 
-  if (error) {
-    return (
-      <SafeAreaView style={styles.errorContainer}>
-        <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
+  // Render error state
+  const renderErrorState = () => (
+    <View style={styles.errorContainer}>
+      <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
+      <LinearGradient
+        colors={["#850111", "#5a000b"]}
+        style={styles.errorGradient}
+      >
+        <Ionicons name="alert-circle-outline" size={60} color="#FFD700" />
+        <Text style={styles.errorTitle}>{t("oopsSomethingWentWrong")}</Text>
+        <Text style={styles.errorText}>
+          {t("errorLoadingPolicy")} {error.message}
+        </Text>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={retryFetchPolicy}
+        >
+          <Text style={styles.retryButtonText}>{t("tryAgain")}</Text>
+        </TouchableOpacity>
+      </LinearGradient>
+    </View>
+  );
+
+  // Render main content
+  const renderMainContent = () => (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      style={styles.container}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+    >
+      <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
+      <ImageBackground
+        source={require("../../../../../../assets/images/bg_new.jpg")}
+        style={styles.backgroundImage}
+        resizeMode="contain"
+      >
+        <SafeAreaView style={styles.safeArea}>
+
+        {/* Hero Section */}
         <LinearGradient
           colors={["#850111", "#5a000b"]}
-          style={styles.errorGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.heroSection}
         >
-          <Ionicons name="alert-circle-outline" size={60} color="#FFD700" />
-          <Text style={styles.errorTitle}>{t("oopsSomethingWentWrong")}</Text>
-          <Text style={styles.errorText}>
-            {t("errorLoadingPolicy")} {error.message}
-          </Text>
-          <TouchableOpacity
-            style={styles.retryButton}
-            onPress={retryFetchPolicy}
-          >
-            <Text style={styles.retryButtonText}>{t("tryAgain")}</Text>
-          </TouchableOpacity>
+          <View style={styles.heroContent}>
+            <View style={{ marginTop: 20 }}>
+              <Ionicons
+                name="document-text-outline"
+                size={40}
+                color="#FFD700"
+              />
+            </View>
+            <Text style={styles.heroTitle}>
+              {policy?.title || translations.defaultTitle}
+            </Text>
+            <View style={styles.decorativeLine} />
+          </View>
         </LinearGradient>
+
+        {/* Content Section */}
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: Math.max(insets.bottom, 20) + 20 }, // Reduced padding since no tab bar
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.contentCard}>
+            <LinearGradient
+              colors={[
+                "rgba(255, 255, 255, 0.95)",
+                "rgba(255, 255, 255, 0.85)",
+              ]}
+              style={styles.cardGradient}
+            >
+              <View style={styles.contentHeader}>
+                <Ionicons name="shield-checkmark" size={24} color="#850111" />
+                <Text style={styles.contentHeaderText}>
+                  {t("ourCommitmentToYou")}
+                </Text>
+              </View>
+
+              <Text style={styles.contentText}>
+                {translations.defaultDiscription}
+              </Text>
+
+              {/* Service Terms Section */}
+              <View style={styles.sectionContainer}>
+                <View style={styles.sectionHeader}>
+                  <Ionicons
+                    name="business-outline"
+                    size={20}
+                    color="#850111"
+                  />
+                  <Text style={styles.sectionTitle}>{t("serviceTerms")}</Text>
+                </View>
+                <Text style={styles.sectionText}>
+                  {t("serviceTermsDescription")}
+                </Text>
+              </View>
+
+              {/* User Responsibilities Section */}
+              <View style={styles.sectionContainer}>
+                <View style={styles.sectionHeader}>
+                  <Ionicons name="person-outline" size={20} color="#850111" />
+                  <Text style={styles.sectionTitle}>{t("userResponsibilities")}</Text>
+                </View>
+                <Text style={styles.sectionText}>
+                  {t("userResponsibilitiesDescription")}
+                </Text>
+              </View>
+
+              {/* Contact Section */}
+              <View style={styles.contactSection}>
+                <LinearGradient
+                  colors={["#850111", "#5a000b"]}
+                  style={styles.contactGradient}
+                >
+                  <Ionicons
+                    name="information-circle-outline"
+                    size={24}
+                    color="#FFD700"
+                  />
+                  <Text style={styles.contactTitle}>
+                    {t("questionsAboutTerms")}
+                  </Text>
+                  <Text style={styles.contactText}>
+                    {t("contactForClarification")}
+                  </Text>
+                </LinearGradient>
+              </View>
+            </LinearGradient>
+          </View>
+        </ScrollView>
       </SafeAreaView>
-    );
-  }
+    </ImageBackground>
+  </KeyboardAvoidingView>
+  );
 
   return (
     <AppLayoutWrapper
       showHeader={false}
       showBottomBar={false}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={styles.container}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
-      >
-        <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
-        <ImageBackground
-          source={require("../../../../../../assets/images/bg_new.jpg")}
-          style={styles.backgroundImage}
-          resizeMode="contain"
-        >
-          <SafeAreaView style={styles.safeArea}>
-
-          {/* Hero Section */}
-          <LinearGradient
-            colors={["#850111", "#5a000b"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.heroSection}
-          >
-            <View style={styles.heroContent}>
-              <View style={{ marginTop: 20 }}>
-                <Ionicons
-                  name="document-text-outline"
-                  size={40}
-                  color="#FFD700"
-                />
-              </View>
-              <Text style={styles.heroTitle}>
-                {policy?.title || translations.defaultTitle}
-              </Text>
-              <View style={styles.decorativeLine} />
-            </View>
-          </LinearGradient>
-
-          {/* Content Section */}
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={[
-              styles.scrollContent,
-              { paddingBottom: Math.max(insets.bottom, 20) + 20 }, // Reduced padding since no tab bar
-            ]}
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={styles.contentCard}>
-              <LinearGradient
-                colors={[
-                  "rgba(255, 255, 255, 0.95)",
-                  "rgba(255, 255, 255, 0.85)",
-                ]}
-                style={styles.cardGradient}
-              >
-                <View style={styles.contentHeader}>
-                  <Ionicons name="shield-checkmark" size={24} color="#850111" />
-                  <Text style={styles.contentHeaderText}>
-                    {t("ourCommitmentToYou")}
-                  </Text>
-                </View>
-
-                <Text style={styles.contentText}>
-                  {translations.defaultDiscription}
-                </Text>
-
-                {/* Service Terms Section */}
-                <View style={styles.sectionContainer}>
-                  <View style={styles.sectionHeader}>
-                    <Ionicons
-                      name="business-outline"
-                      size={20}
-                      color="#850111"
-                    />
-                    <Text style={styles.sectionTitle}>{t("serviceTerms")}</Text>
-                  </View>
-                  <Text style={styles.sectionText}>
-                    {t("serviceTermsDescription")}
-                  </Text>
-                </View>
-
-                {/* User Responsibilities Section */}
-                <View style={styles.sectionContainer}>
-                  <View style={styles.sectionHeader}>
-                    <Ionicons name="person-outline" size={20} color="#850111" />
-                    <Text style={styles.sectionTitle}>{t("userResponsibilities")}</Text>
-                  </View>
-                  <Text style={styles.sectionText}>
-                    {t("userResponsibilitiesDescription")}
-                  </Text>
-                </View>
-
-                {/* Contact Section */}
-                <View style={styles.contactSection}>
-                  <LinearGradient
-                    colors={["#850111", "#5a000b"]}
-                    style={styles.contactGradient}
-                  >
-                    <Ionicons
-                      name="information-circle-outline"
-                      size={24}
-                      color="#FFD700"
-                    />
-                    <Text style={styles.contactTitle}>
-                      {t("questionsAboutTerms")}
-                    </Text>
-                    <Text style={styles.contactText}>
-                      {t("contactForClarification")}
-                    </Text>
-                  </LinearGradient>
-                </View>
-              </LinearGradient>
-            </View>
-          </ScrollView>
-        </SafeAreaView>
-      </ImageBackground>
-    </KeyboardAvoidingView>
+      {loading ? renderLoadingState() : error ? renderErrorState() : renderMainContent()}
     </AppLayoutWrapper>
   );
 }

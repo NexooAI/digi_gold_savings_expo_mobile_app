@@ -71,9 +71,7 @@ interface Scheme {
 const DEFAULT_SCHEME_TYPE = "Monthly";
 
 export default function SchemeList() {
-  const [activeTab, setActiveTab] = useState<
-    "Daily" | "Weekly" | "Monthly" | "Flexi"
-  >("Monthly");
+  const [activeTab, setActiveTab] = useState<string>("");
   const [schemes, setSchemes] = useState<Scheme[]>([]);
   const [loading, setLoading] = useState(true);
   const [allSchemes, setAllSchemes] = useState<Scheme[]>([]);
@@ -85,29 +83,47 @@ export default function SchemeList() {
   const [tabLayouts, setTabLayouts] = useState<{
     [key: string]: { x: number; width: number };
   }>({});
-  const tabs: ("Daily" | "Weekly" | "Monthly" | "Flexi")[] = [
-    "Monthly",
-    "Weekly",
-    "Daily",
-    "Flexi",
-  ];
+  
+  // Dynamic tabs based on available schemes
+  const [availableTabs, setAvailableTabs] = useState<string[]>([]);
+  
+  // Pan responder state
+  const [currentPanResponder, setCurrentPanResponder] = useState<ReturnType<typeof PanResponder.create> | null>(null);
+  
   const flatListRef = useRef<FlatList>(null);
   const scrollViewRef = useRef<ScrollView>(null);
-  const currentTabIndex = tabs.indexOf(activeTab);
   const [descModalVisible, setDescModalVisible] = useState(false);
   const [descModalText, setDescModalText] = useState("");
 
+  // Function to determine available tab types from schemes data
+  const getAvailableTabTypes = useCallback((schemesData: Scheme[]): string[] => {
+    if (!schemesData || schemesData.length === 0) return [];
+    
+    const tabTypes = new Set<string>();
+    
+    schemesData.forEach((scheme) => {
+      if (scheme.ACTIVE === "Y" && scheme.chits && scheme.chits.length > 0) {
+        scheme.chits.forEach((chit) => {
+          if (chit.PAYMENT_FREQUENCY && chit.ACTIVE === "Y") {
+            tabTypes.add(chit.PAYMENT_FREQUENCY);
+          }
+        });
+      }
+    });
+    
+    // Convert to array and sort for consistent order
+    return Array.from(tabTypes).sort((a, b) => {
+      const order = { "Daily": 1, "Weekly": 2, "Monthly": 3, "Flexi": 4 };
+      return (order[a as keyof typeof order] || 999) - (order[b as keyof typeof order] || 999);
+    });
+  }, []);
+
   // Memoize the filtered schemes to prevent unnecessary recalculations
   const filteredSchemes = useMemo(() => {
-    if (!allSchemes.length) return [];
+    if (!allSchemes.length || !activeTab) return [];
 
     // Create buckets for each frequency
-    const buckets: { [key: string]: any[] } = {
-      daily: [],
-      weekly: [],
-      monthly: [],
-      flexi: [],
-    };
+    const buckets: { [key: string]: any[] } = {};
 
     // Process all schemes and their chits
     allSchemes.forEach((scheme: Scheme) => {
@@ -122,6 +138,10 @@ export default function SchemeList() {
         ) || [];
 
       if (relevantChits.length > 0) {
+        if (!buckets[activeTab.toLowerCase()]) {
+          buckets[activeTab.toLowerCase()] = [];
+        }
+        
         buckets[activeTab.toLowerCase()].push({
           SCHEMEID: scheme.SCHEMEID,
           SCHEMENAME: scheme.SCHEMENAME,
@@ -144,7 +164,7 @@ export default function SchemeList() {
       }
     });
 
-    return buckets[activeTab.toLowerCase()];
+    return buckets[activeTab.toLowerCase()] || [];
   }, [activeTab, allSchemes]);
 
   // Update schemes when filteredSchemes changes
@@ -195,14 +215,61 @@ export default function SchemeList() {
     };
   }, []); // Empty dependency array means it runs once on mount
 
+  // Update available tabs and set default active tab when schemes data changes
   useEffect(() => {
+    const tabs = getAvailableTabTypes(allSchemes);
+    setAvailableTabs(tabs);
+    
+    // Set the first available tab as active, or empty string if no tabs
+    if (tabs.length > 0 && !activeTab) {
+      setActiveTab(tabs[0]);
+    } else if (tabs.length === 0) {
+      setActiveTab("");
+    }
+  }, [allSchemes, getAvailableTabTypes, activeTab]);
+
+  // Recreate pan responder when available tabs change
+  useEffect(() => {
+    if (availableTabs.length > 1) {
+      // Recreate pan responder for multiple tabs
+      const newPanResponder = PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+          return Math.abs(gestureState.dx) > 20;
+        },
+        onPanResponderRelease: (_, gestureState) => {
+          const currentIndex = availableTabs.indexOf(activeTab);
+
+          // Swipe right to left (next tab)
+          if (gestureState.dx < -50 && currentIndex < availableTabs.length - 1) {
+            handleTabPress(availableTabs[currentIndex + 1]);
+          }
+          // Swipe left to right (previous tab)
+          else if (gestureState.dx > 50 && currentIndex > 0) {
+            handleTabPress(availableTabs[currentIndex - 1]);
+          }
+        },
+      });
+      
+      // Update the pan responder state
+      setCurrentPanResponder(newPanResponder);
+    } else {
+      setCurrentPanResponder(null);
+    }
+  }, [availableTabs, activeTab]);
+
+  useEffect(() => {
+    if (!activeTab || availableTabs.length === 0) return;
+    
     // Animate the slide transition when active tab changes
-    Animated.timing(slideAnim, {
-      toValue: currentTabIndex * -width,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  }, [currentTabIndex]);
+    const currentTabIndex = availableTabs.indexOf(activeTab);
+    if (currentTabIndex >= 0) {
+      Animated.timing(slideAnim, {
+        toValue: currentTabIndex * -width,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [activeTab, availableTabs, slideAnim, width]);
   useFocusEffect(
     useCallback(() => {
       useGlobalStore.getState().setHeaderConfig({
@@ -215,25 +282,6 @@ export default function SchemeList() {
       return () => useGlobalStore.getState().resetHeaderConfig();
     }, ['Schemes'])
   );
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        return Math.abs(gestureState.dx) > 20;
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        const currentIndex = tabs.indexOf(activeTab);
-
-        // Swipe right to left (next tab)
-        if (gestureState.dx < -50 && currentIndex < tabs.length - 1) {
-          handleTabPress(tabs[currentIndex + 1]);
-        }
-        // Swipe left to right (previous tab)
-        else if (gestureState.dx > 50 && currentIndex > 0) {
-          handleTabPress(tabs[currentIndex - 1]);
-        }
-      },
-    })
-  ).current;
 
   const handleJoinScheme = async (item: Scheme) => {
     try {
@@ -244,12 +292,12 @@ export default function SchemeList() {
         schemeId: item.SCHEMEID,
         name: item.SCHEMENAME,
         description: item.DESCRIPTION,
-        type: item.SCHEMETYPE,
+        type: activeTab, // Use the active tab as the type
         chits:
           item.chits.filter((chit) => chit.PAYMENT_FREQUENCY === activeTab) ||
           [],
         schemeType:
-          item.SCHEMETYPE.toLowerCase() === "flexi" ? "flexi" : "fixed",
+          activeTab.toLowerCase() === "flexi" ? "flexi" : "fixed",
         activeTab: activeTab,
         benefits: item.BENEFITS,
         timestamp: new Date().toISOString(),
@@ -275,7 +323,7 @@ export default function SchemeList() {
     }
   };
 
-  const handleTabPress = (title: "Daily" | "Weekly" | "Monthly" | "Flexi") => {
+  const handleTabPress = (title: string) => {
     setActiveTab(title);
     if (tabLayouts[title]) {
       Animated.spring(underlineAnim, {
@@ -285,13 +333,14 @@ export default function SchemeList() {
     }
 
     // Scroll to the corresponding section
-    const newIndex = tabs.indexOf(title);
+    const newIndex = availableTabs.indexOf(title);
     if (flatListRef.current) {
       flatListRef.current.scrollToOffset({ offset: 0, animated: true });
     }
   };
 
   const getTabColor = (title: string) => {
+    // Default color for any tab type
     return "#FFC857";
   };
 
@@ -356,7 +405,7 @@ export default function SchemeList() {
     }
   };
 
-  const renderTab = (title: "Daily" | "Weekly" | "Monthly" | "Flexi") => {
+  const renderTab = (title: string) => {
     const isActive = activeTab === title;
     const tabColor = getTabColor(title);
     const tabBackground = isActive ? getTabBackground(title) : "transparent";
@@ -414,8 +463,8 @@ export default function SchemeList() {
 
   const renderSchemeItem = ({ item }: { item: Scheme }) => {
     const scaleValue = new Animated.Value(1);
-    const tabColor = getTabColor(item.SCHEMETYPE);
-    const gradientColors = getCardGradient(item.SCHEMETYPE);
+    const tabColor = getTabColor(activeTab);
+    const gradientColors = getCardGradient(activeTab);
     //console.log(item);
     return (
       <Animated.View
@@ -444,7 +493,7 @@ export default function SchemeList() {
                     <Text
                       style={[
                         styles.schemeName,
-                        item.SCHEMETYPE === "Flexi" && styles.flexiSchemeName,
+                        activeTab === "Flexi" && styles.flexiSchemeName,
                       ]}
                     >
                       {item.SCHEMENAME}
@@ -457,10 +506,10 @@ export default function SchemeList() {
                     <Text
                       style={[
                         styles.typeText,
-                        item.SCHEMETYPE === "Flexi" && styles.flexiTypeText,
+                        activeTab === "Flexi" && styles.flexiTypeText,
                       ]}
                     >
-                      {item.SCHEMETYPE === "Flexi" ? "Flexi" : "Fixed"}
+                      {activeTab === "Flexi" ? "Flexi" : "Fixed"}
                     </Text>
                   </View>
                 </View>
@@ -553,36 +602,57 @@ export default function SchemeList() {
   };
 
   const TabSlider = () => (
-    <View style={styles.tabSliderContainer}>
-      <View style={styles.tabSliderTrack}>
-        {tabs.map((tab) => (
-          <View
-            key={`slider-${tab}`}
-            style={[
-              styles.tabSliderDot,
-              activeTab === tab && { backgroundColor: getTabColor(tab) },
-            ]}
-          />
-        ))}
+    availableTabs.length > 1 ? (
+      <View style={styles.tabSliderContainer}>
+        <View style={styles.tabSliderTrack}>
+          {availableTabs.map((tab) => (
+            <View
+              key={`slider-${tab}`}
+              style={[
+                styles.tabSliderDot,
+                activeTab === tab && { backgroundColor: getTabColor(tab) },
+              ]}
+            />
+          ))}
+        </View>
       </View>
-    </View>
+    ) : null
   );
 
   return (
-    <View style={styles.container} {...panResponder.panHandlers}>
+    <View style={styles.container} {...(currentPanResponder?.panHandlers || {})}>
       <View style={styles.mainBackground}>
-        <View style={styles.tabsContainer}>
-          {tabs.map((tab) => renderTab(tab))}
-        </View>
+        {/* Only show tabs if there are available schemes */}
+        {availableTabs.length > 0 && (
+          <View style={styles.tabsContainer}>
+            {availableTabs.map((tab) => renderTab(tab))}
+          </View>
+        )}
 
         <View style={styles.contentContainer}>
           {loading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={getTabColor(activeTab)} />
+              <ActivityIndicator size="large" color={getTabColor(activeTab || "Monthly")} />
               <Text
-                style={[styles.loadingText, { color: getTabColor(activeTab) }]}
+                style={[styles.loadingText, { color: getTabColor(activeTab || "Monthly") }]}
               >
-                {t('schemes.loading').replace('{category}', activeTab)}
+                {activeTab ? t('schemes.loading').replace('{category}', activeTab) : t('schemes.loading').replace('{category}', 'schemes')}
+              </Text>
+            </View>
+          ) : availableTabs.length === 0 ? (
+            // Show message when no schemes exist
+            <View style={styles.emptyContainer}>
+              <Ionicons name="sad-outline" size={40} color="#777" />
+              <Text style={styles.emptyMessage}>
+                {t('schemes.noSchemesAvailable').replace('{category}', 'any')}
+              </Text>
+            </View>
+          ) : !activeTab ? (
+            // Show message when no active tab is set
+            <View style={styles.emptyContainer}>
+              <Ionicons name="alert-circle-outline" size={40} color="#777" />
+              <Text style={styles.emptyMessage}>
+                {t('schemes.noSchemesAvailable').replace('{category}', 'selected category')}
               </Text>
             </View>
           ) : (
@@ -612,10 +682,13 @@ export default function SchemeList() {
           )}
         </View>
 
-        <View style={styles.floatingHint}>
-          <Ionicons name="swap-horizontal" size={16} color="#fff" />
-          <Text style={styles.floatingHintText}>{t('schemes.swipeHint')}</Text>
-        </View>
+        {/* Only show floating hint if there are tabs */}
+        {availableTabs.length > 1 && (
+          <View style={styles.floatingHint}>
+            <Ionicons name="swap-horizontal" size={16} color="#fff" />
+            <Text style={styles.floatingHintText}>{t('schemes.swipeHint')}</Text>
+          </View>
+        )}
       </View>
       <Modal
         visible={descModalVisible}
@@ -640,98 +713,6 @@ export default function SchemeList() {
     </View>
   );
 }
-
-// Mock data for testing
-const mockSchemes: Scheme[] = [
-  {
-    SCHEMEID: 1,
-    SCHEMENAME: "Daily Gold Saver",
-    DESCRIPTION:
-      "Save a small amount daily to accumulate gold over time with guaranteed returns.",
-    BENEFITS: [
-      "Low daily commitment",
-      "Regular savings habit",
-      "No lock-in period",
-      "Zero making charges",
-    ],
-    SCHEMETYPE: "Fixed",
-    ACTIVE: "Y",
-    chits: [
-      { CHITID: 101, AMOUNT: "500.00", PAYMENT_FREQUENCY: "Daily" },
-      { CHITID: 102, AMOUNT: "1000.00", PAYMENT_FREQUENCY: "Daily" },
-    ],
-    relevantChits: [
-      { CHITID: 101, AMOUNT: 500.0 },
-      { CHITID: 102, AMOUNT: 1000.0 },
-    ],
-  },
-  {
-    SCHEMEID: 2,
-    SCHEMENAME: "Weekly Gold Builder",
-    DESCRIPTION:
-      "Weekly contribution plan for systematic gold investment with bonus at maturity.",
-    BENEFITS: [
-      "Higher weekly returns",
-      "Flexible withdrawal options",
-      "24K purity guaranteed",
-      "Free gold certification",
-    ],
-    SCHEMETYPE: "Fixed",
-    ACTIVE: "Y",
-    chits: [
-      { CHITID: 201, AMOUNT: "2000.00", PAYMENT_FREQUENCY: "Weekly" },
-      { CHITID: 202, AMOUNT: "3000.00", PAYMENT_FREQUENCY: "Weekly" },
-    ],
-    relevantChits: [
-      { CHITID: 201, AMOUNT: 2000.0 },
-      { CHITID: 202, AMOUNT: 3000.0 },
-    ],
-  },
-  {
-    SCHEMEID: 3,
-    SCHEMENAME: "Gold Plus Monthly",
-    DESCRIPTION:
-      "Premium monthly gold savings with additional benefits and higher returns.",
-    BENEFITS: [
-      "Premium returns",
-      "Lower making charges",
-      "Free gold certificate",
-      "Priority customer service",
-    ],
-    SCHEMETYPE: "Fixed",
-    ACTIVE: "Y",
-    chits: [
-      { CHITID: 301, AMOUNT: "5000.00", PAYMENT_FREQUENCY: "Monthly" },
-      { CHITID: 302, AMOUNT: "10000.00", PAYMENT_FREQUENCY: "Monthly" },
-    ],
-    relevantChits: [
-      { CHITID: 301, AMOUNT: 5000.0 },
-      { CHITID: 302, AMOUNT: 10000.0 },
-    ],
-  },
-  {
-    SCHEMEID: 4,
-    SCHEMENAME: "Flexi Gold Saver",
-    DESCRIPTION:
-      t('schemes.defaultDescription'),
-    BENEFITS: [
-      "Competitive rates",
-      "Flexible payments",
-      "Zero making charges",
-      "Free locker facility",
-    ],
-    SCHEMETYPE: "Flexi",
-    ACTIVE: "Y",
-    chits: [
-      { CHITID: 401, AMOUNT: "1500.00", PAYMENT_FREQUENCY: "Flexi" },
-      { CHITID: 402, AMOUNT: "3500.00", PAYMENT_FREQUENCY: "Flexi" },
-    ],
-    relevantChits: [
-      { CHITID: 401, AMOUNT: 1500.0 },
-      { CHITID: 402, AMOUNT: 3500.0 },
-    ],
-  },
-];
 
 const styles = StyleSheet.create({
   container: {

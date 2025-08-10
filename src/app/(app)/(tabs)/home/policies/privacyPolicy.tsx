@@ -96,7 +96,7 @@ export default function PrivacyPolicy() {
       useGlobalStore.getState().setHeaderConfig({
         showBackButton: true,
         showMenu: false,
-        showLanguageSwitcher: false,
+        showLanguageSwitcher: true,
         title: translations.defaultTitle,
         backRoute: "/(app)/(tabs)/home",
       });
@@ -120,172 +120,163 @@ export default function PrivacyPolicy() {
     }
   };
 
-  if (loading) {
-    return (
-      <AppLayoutWrapper
-        showHeader={false}
-        showBottomBar={false}
+  // Render loading state
+  const renderLoadingState = () => (
+    <View style={styles.loadingContainer}>
+      <LinearGradient
+        colors={["#850111", "#5a000b"]}
+        style={styles.loadingGradient}
       >
-        <LinearGradient
-          colors={["#850111", "#5a000b"]}
-          style={styles.loadingGradient}
-        >
-          <ActivityIndicator size="large" color="#FFD700" />
-          <Text style={styles.loadingText}>{translations.loadingPrivacyPolicy}</Text>
-        </LinearGradient>
-      </AppLayoutWrapper>
-    );
-  }
+        <ActivityIndicator size="large" color="#FFD700" />
+        <Text style={styles.loadingText}>{translations.loadingPrivacyPolicy}</Text>
+      </LinearGradient>
+    </View>
+  );
 
-  if (error) {
-    return (
-      <AppLayoutWrapper
-        showHeader={false}
-        showBottomBar={false}
+  // Render error state
+  const renderErrorState = () => (
+    <View style={styles.errorContainer}>
+      <LinearGradient
+        colors={["#850111", "#5a000b"]}
+        style={styles.errorGradient}
       >
+        <Ionicons name="alert-circle-outline" size={60} color="#FFD700" />
+        <Text style={styles.errorTitle}>{translations.oopsSomethingWentWrong}</Text>
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={retryFetchPolicy}
+        >
+          <Text style={styles.retryButtonText}>{translations.tryAgain}</Text>
+        </TouchableOpacity>
+      </LinearGradient>
+    </View>
+  );
+
+  // Render main content
+  const renderMainContent = () => (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      style={styles.container}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+    >
+      <ImageBackground
+        source={require("../../../../../../assets/images/bg_new.jpg")}
+        style={styles.backgroundImage}
+        resizeMode="contain"
+      >
+        {/* Hero Section */}
         <LinearGradient
           colors={["#850111", "#5a000b"]}
-          style={styles.errorGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.heroSection}
         >
-          <Ionicons name="alert-circle-outline" size={60} color="#FFD700" />
-          <Text style={styles.errorTitle}>{translations.oopsSomethingWentWrong}</Text>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity
-            style={styles.retryButton}
-            onPress={retryFetchPolicy}
-          >
-            <Text style={styles.retryButtonText}>{translations.tryAgain}</Text>
-          </TouchableOpacity>
+          <View style={styles.heroContent}>
+            <View style={{ marginTop: 20 }}>
+              <Ionicons name="shield-outline" size={40} color="#FFD700" />
+            </View>
+            <Text style={styles.heroTitle}>
+              {policy?.title || translations.defaultTitle}
+            </Text>
+            <View style={styles.decorativeLine} />
+          </View>
         </LinearGradient>
-      </AppLayoutWrapper>
-    );
-  }
+
+        {/* Content Section */}
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.contentCard}>
+            <LinearGradient
+              colors={[
+                "rgba(255, 255, 255, 0.95)",
+                "rgba(255, 255, 255, 0.85)",
+              ]}
+              style={styles.cardGradient}
+            >
+              <View style={styles.contentHeader}>
+                <Ionicons name="lock-closed" size={24} color="#850111" />
+                <Text style={styles.contentHeaderText}>
+                  {translations.yourPrivacyMatters}
+                </Text>
+              </View>
+
+              <Text style={styles.contentText}>
+                {translations.defaultPrivacyPolicyDiscription}
+              </Text>
+
+              {/* Data Collection Section */}
+              <View style={styles.sectionContainer}>
+                <View style={styles.sectionHeader}>
+                  <Ionicons
+                    name="cloud-download-outline"
+                    size={20}
+                    color="#850111"
+                  />
+                  <Text style={styles.sectionTitle}>{translations.dataCollection}</Text>
+                </View>
+                <Text style={styles.sectionText}>
+                  {translations.dataCollectionDescription}
+                </Text>
+              </View>
+
+              {/* Data Usage Section */}
+              <View style={styles.sectionContainer}>
+                <View style={styles.sectionHeader}>
+                  <Ionicons name="analytics-outline" size={20} color="#850111" />
+                  <Text style={styles.sectionTitle}>{translations.dataUsage}</Text>
+                </View>
+                <Text style={styles.sectionText}>
+                  {translations.dataUsageDescription}
+                </Text>
+              </View>
+
+              {/* Data Protection Section */}
+              <View style={styles.sectionContainer}>
+                <View style={styles.sectionHeader}>
+                  <Ionicons name="shield-checkmark" size={20} color="#850111" />
+                  <Text style={styles.sectionTitle}>{translations.dataProtection}</Text>
+                </View>
+                <Text style={styles.sectionText}>
+                  {translations.dataProtectionDescription}
+                </Text>
+              </View>
+
+              {/* Contact Section */}
+              <View style={styles.contactSection}>
+                <LinearGradient
+                  colors={["#850111", "#5a000b"]}
+                  style={styles.contactGradient}
+                >
+                  <Ionicons
+                    name="information-circle-outline"
+                    size={24}
+                    color="#FFD700"
+                  />
+                  <Text style={styles.contactTitle}>
+                    {translations.privacyQuestions}
+                  </Text>
+                  <Text style={styles.contactText}>
+                    {translations.contactForPrivacy}
+                  </Text>
+                </LinearGradient>
+              </View>
+            </LinearGradient>
+          </View>
+        </ScrollView>
+      </ImageBackground>
+    </KeyboardAvoidingView>
+  );
 
   return (
     <AppLayoutWrapper
       showHeader={false}
       showBottomBar={false}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={styles.container}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
-      >
-        <ImageBackground
-          source={require("../../../../../../assets/images/bg_new.jpg")}
-          style={styles.backgroundImage}
-          resizeMode="contain"
-        >
-          {/* Hero Section */}
-          <LinearGradient
-            colors={["#850111", "#5a000b"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.heroSection}
-          >
-            <View style={styles.heroContent}>
-              <View style={{ marginTop: 20 }}>
-                <Ionicons name="shield-outline" size={40} color="#FFD700" />
-              </View>
-              <Text style={styles.heroTitle}>
-                {policy?.title || translations.defaultTitle}
-              </Text>
-              <View style={styles.decorativeLine} />
-            </View>
-          </LinearGradient>
-
-          {/* Content Section */}
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={styles.contentCard}>
-              <LinearGradient
-                colors={[
-                  "rgba(255, 255, 255, 0.95)",
-                  "rgba(255, 255, 255, 0.85)",
-                ]}
-                style={styles.cardGradient}
-              >
-                <View style={styles.contentHeader}>
-                  <Ionicons name="lock-closed" size={24} color="#850111" />
-                  <Text style={styles.contentHeaderText}>
-                    {translations.yourPrivacyMatters}
-                  </Text>
-                </View>
-
-                <Text style={styles.contentText}>
-                  {translations.defaultPrivacyPolicyDiscription}
-                </Text>
-
-                {/* Data Collection Section */}
-                <View style={styles.sectionContainer}>
-                  <View style={styles.sectionHeader}>
-                    <Ionicons
-                      name="document-text-outline"
-                      size={20}
-                      color="#850111"
-                    />
-                    <Text style={styles.sectionTitle}>
-                      {translations.dataCollection}
-                    </Text>
-                  </View>
-                  <Text style={styles.sectionText}>
-                    {translations.dataCollectionDescription}
-                  </Text>
-                </View>
-
-                {/* Data Usage Section */}
-                <View style={styles.sectionContainer}>
-                  <View style={styles.sectionHeader}>
-                    <Ionicons name="analytics" size={20} color="#850111" />
-                    <Text style={styles.sectionTitle}>
-                      {translations.howWeUseYourData}
-                    </Text>
-                  </View>
-                  <Text style={styles.sectionText}>
-                    {translations.dataUsageDescription}
-                  </Text>
-                </View>
-
-                {/* Data Protection Section */}
-                <View style={styles.sectionContainer}>
-                  <View style={styles.sectionHeader}>
-                    <Ionicons name="shield-checkmark" size={20} color="#850111" />
-                    <Text style={styles.sectionTitle}>
-                      {translations.dataProtection}
-                    </Text>
-                  </View>
-                  <Text style={styles.sectionText}>
-                    {translations.dataProtectionDescription}
-                  </Text>
-                </View>
-
-                {/* Contact Section */}
-                <View style={styles.contactSection}>
-                  <LinearGradient
-                    colors={["#850111", "#5a000b"]}
-                    style={styles.contactGradient}
-                  >
-                    <Ionicons
-                      name="information-circle-outline"
-                      size={24}
-                      color="#FFD700"
-                    />
-                    <Text style={styles.contactTitle}>
-                      {translations.questionsAboutPrivacy}
-                    </Text>
-                    <Text style={styles.contactText}>
-                      {translations.privacyContactDescription}
-                    </Text>
-                  </LinearGradient>
-                </View>
-              </LinearGradient>
-            </View>
-          </ScrollView>
-        </ImageBackground>
-      </KeyboardAvoidingView>
+      {loading ? renderLoadingState() : error ? renderErrorState() : renderMainContent()}
     </AppLayoutWrapper>
   );
 }
@@ -448,5 +439,17 @@ const styles = StyleSheet.create({
     color: "#850111",
     fontSize: 16,
     fontWeight: "600",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f7f7f7",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f7f7f7",
   },
 });

@@ -148,7 +148,7 @@ const AppLayoutContent: React.FC<AppLayoutWrapperProps> = ({
       ) : null}
       
       {/* Floating Home Button - Shows only when bottom bar is hidden */}
-      <FloatingHomeButton />
+      {/* <FloatingHomeButton /> */}
     </View>
   );
 };
