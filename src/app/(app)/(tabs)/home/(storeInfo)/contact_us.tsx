@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import {
   View,
   Text,
@@ -22,12 +22,27 @@ import { Ionicons, MaterialIcons, FontAwesome5, Feather } from "@expo/vector-ico
 import { useRouter } from "expo-router";
 import { theme } from "@/constants/theme";
 import { t } from "@/i18n";
+import { useFocusEffect } from "@react-navigation/native";
+import useGlobalStore from "@/store/global.store";
 
 const { width, height } = Dimensions.get('window');
 
 export default function ContactUs() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+
+  useFocusEffect(
+    useCallback(() => {
+      useGlobalStore.getState().setHeaderConfig({
+        showBackButton: true,
+        showMenu: false,
+        showLanguageSwitcher: false,
+        title: "Contact Us",
+        backRoute: "/(app)/(tabs)/home",
+      });
+      return () => useGlobalStore.getState().resetHeaderConfig();
+    }, [])
+  );
 
   const openGoogleMaps = async () => {
     const url =
@@ -61,14 +76,8 @@ export default function ContactUs() {
 
   return (
     <AppLayoutWrapper
-      showHeader={true}
-      showBottomBar={true}
-      headerProps={{
-        showBackButton: true,
-        showDrawerToggle: false,
-        showLanguageSwitcher: false,
-        title: "Contact Us",
-      }}
+      showHeader={false}
+      showBottomBar={false}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -79,7 +88,7 @@ export default function ContactUs() {
         {/* Hero Section */}
         <LinearGradient
           colors={[theme.colors.primary, '#8B0000']}
-          style={styles.heroSection}
+          style={styles.hero}
         >
           <View style={styles.heroContent}>
             {/* <View style={styles.iconContainer}>

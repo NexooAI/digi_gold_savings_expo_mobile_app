@@ -19,12 +19,11 @@ import {
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import {
-  SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import Icon from "@expo/vector-icons/MaterialIcons";
 import * as ImagePicker from "expo-image-picker";
-import AppHeader from "@/app/components/AppHeader";
+// AppHeader is now handled by the layout wrapper
 import useGlobalStore from "@/store/global.store";
 import { t } from "@/i18n";
 import { router } from "expo-router";
@@ -435,12 +434,11 @@ const ProfileScreen = () => {
 
   return (
     <AuthGuard>
-      <SafeAreaView style={{ flex: 1, paddingTop: 0 }}>
-        <KeyboardAvoidingView 
-          style={{ flex: 1 }}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-        >
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+      >
           <View style={styles.backgroundImage}>
             <LinearGradient
               colors={[
@@ -451,14 +449,7 @@ const ProfileScreen = () => {
               style={StyleSheet.absoluteFill}
             />
 
-            <View className="absolute top-0 left-0 right-0 z-10 px-4">
-              <AppHeader 
-                showBackButton={true} 
-                showDrawerToggle={false}
-                showLanguageSwitcher={false}
-                title={t("profile")}
-              />
-            </View>
+            {/* Header is now handled by the layout wrapper */}
 
             <Animated.View
               style={[
@@ -470,7 +461,6 @@ const ProfileScreen = () => {
             <ScrollView
               contentContainerStyle={{
                 flexGrow: 1,
-                paddingTop: 80,
                 paddingBottom: bottomPadding,
                 paddingHorizontal: 16,
               }}
@@ -926,7 +916,6 @@ const ProfileScreen = () => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
     </AuthGuard>
   );
 };

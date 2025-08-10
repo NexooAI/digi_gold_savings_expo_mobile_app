@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback} from "react";
 import {
   View,
   Text,
@@ -15,7 +15,9 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import AppHeader from "@/app/components/AppHeader";
+import { useFocusEffect } from "@react-navigation/native";
+
+// AppHeader is now handled by the layout wrapper
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { t } from "@/i18n";
@@ -70,7 +72,7 @@ interface DetailRowProps {
   icon?: string;
 }
 
-const HEADER_HEIGHT = Platform.OS === "ios" ? 44 : 56;
+
 
 // Payment data storage keys
 const PAYMENT_DATA_KEY = "@payment_data_retry";
@@ -173,7 +175,18 @@ const SavingsDetail = () => {
       socketInstance.disconnect();
     };
   }, []);
-
+  useFocusEffect(
+    useCallback(() => {
+      useGlobalStore.getState().setHeaderConfig({
+        showBackButton: true,
+        showMenu: false,
+        showLanguageSwitcher: false,
+        title: 'Savings Detail',
+        backRoute: '/(tabs)/savings',
+      });
+      return () => useGlobalStore.getState().resetHeaderConfig();
+    }, ['Savings Detail'])
+  );
   useEffect(() => {
     const unsubscribe = navigation.addListener("state", () => {
       setIsNavigationReady(true);
@@ -372,10 +385,7 @@ const SavingsDetail = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f3f4f6" }}>
-      {/* Fixed Header */}
-      <View style={{ backgroundColor: "white", height: HEADER_HEIGHT }}>
-        <AppHeader showBackButton={true} backRoute="index" />
-      </View>
+      {/* Header is now handled by the layout wrapper */}
 
       <ScrollView
         contentContainerStyle={{

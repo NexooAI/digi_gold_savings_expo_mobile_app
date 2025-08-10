@@ -1,4 +1,4 @@
-import React, { useRef, useState, RefObject } from "react";
+import React, { useRef, useState, RefObject, useCallback, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -18,6 +18,7 @@ import { useRouter } from "expo-router";
 import AppLayoutWrapper from "@/components/AppLayoutWrapper";
 import { theme } from "@/constants/theme";
 import { t } from "@/i18n";
+import { useFocusEffect } from "@react-navigation/native";
 import useGlobalStore from "@/store/global.store";
 
 interface Store {
@@ -96,25 +97,32 @@ const StoreLocator = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language]);
 
+  useFocusEffect(
+    useCallback(() => {
+      useGlobalStore.getState().setHeaderConfig({
+        showBackButton: true,
+        showMenu: false,
+        showLanguageSwitcher: false,
+        title: t("ourStoresTitle"),
+        backRoute: "/(app)/(tabs)/home",
+      });
+      return () => useGlobalStore.getState().resetHeaderConfig();
+    }, [])
+  );
+
   return (
     <AppLayoutWrapper
-      showHeader={true}
-      showBottomBar={true}
-              headerProps={{
-          showBackButton: true,
-          showDrawerToggle: false,
-          showLanguageSwitcher: false,
-          title: t("ourStoresTitle"),
-        }}
+      showHeader={false}
+      showBottomBar={false}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1, backgroundColor: "#fff" }}
+        style={{ flex: 1 }}
       >
         <SafeAreaView style={{ flex: 1 }}>
 
         <ScrollView
-          contentContainerStyle={{ paddingTop: 100, paddingHorizontal: 16 }}
+          contentContainerStyle={{ paddingHorizontal: 16 }}
         >
           <ImageBackground
             source={require("../../../../../assets/images/shop.jpg")}

@@ -2,7 +2,7 @@ import AppLayoutWrapper from "@/components/AppLayoutWrapper";
 import { theme } from "@/constants/theme";
 import { t } from "@/i18n";
 import useGlobalStore from "@/store/global.store";
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useCallback } from "react";
 import {
   StyleSheet,
   Text,
@@ -19,6 +19,7 @@ import {
 } from "react-native";
 import { moderateScale } from "react-native-size-matters";
 import { LinearGradient } from 'expo-linear-gradient';
+import { useFocusEffect } from "@react-navigation/native";
 
 // Types
 interface FAQItem {
@@ -283,16 +284,23 @@ export default function FAQScreen() {
     setOpenItemId(openItemId === id ? null : id);
   };
 
-  return (
-    <AppLayoutWrapper
-      showHeader={true}
-      showBottomBar={true}
-      headerProps={{
+  useFocusEffect(
+    useCallback(() => {
+      useGlobalStore.getState().setHeaderConfig({
         showBackButton: true,
-        showDrawerToggle: false,
+        showMenu: false,
         showLanguageSwitcher: false,
         title: "FAQ & Help",
-      }}
+        backRoute: "/(app)/(tabs)/home",
+      });
+      return () => useGlobalStore.getState().resetHeaderConfig();
+    }, [])
+  );
+
+  return (
+    <AppLayoutWrapper
+      showHeader={false}
+      showBottomBar={false}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -362,7 +370,6 @@ const styles = StyleSheet.create({
   },
   backgroundGradient: {
     flex: 1,
-    paddingTop: 50, // Account for the absolute positioned header
   },
   scrollView: {
     flex: 1,  },

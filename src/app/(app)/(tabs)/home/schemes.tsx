@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback} from "react";
 import {
   View,
   Text,
@@ -16,7 +16,7 @@ import {
   Alert,
   Modal,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { t } from "@/i18n";
@@ -126,7 +126,7 @@ export default function SchemeList() {
           SCHEMEID: scheme.SCHEMEID,
           SCHEMENAME: scheme.SCHEMENAME,
           DESCRIPTION:
-            scheme.DESCRIPTION || "Save gold with our flexible plan.",
+            scheme.DESCRIPTION || t('schemes.defaultDescription'),
           BENEFITS: scheme.BENEFITS || [
             "Competitive rates",
             "Flexible payments",
@@ -175,8 +175,8 @@ export default function SchemeList() {
         if (isMounted) {
           console.error("Error fetching schemes:", error);
           Alert.alert(
-            "Error",
-            "Failed to fetch schemes. Please try again later."
+            t('schemes.error'),
+            t('schemes.failedToFetchSchemes')
           );
           setAllSchemes([]);
         }
@@ -203,7 +203,18 @@ export default function SchemeList() {
       useNativeDriver: true,
     }).start();
   }, [currentTabIndex]);
-
+  useFocusEffect(
+    useCallback(() => {
+      useGlobalStore.getState().setHeaderConfig({
+        showBackButton: true,
+        showMenu: false,
+        showLanguageSwitcher: false,
+        title: t('schemes.title'),
+        backRoute: "/(app)/(tabs)/home",
+      });
+      return () => useGlobalStore.getState().resetHeaderConfig();
+    }, ['Schemes'])
+  );
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, gestureState) => {
@@ -260,7 +271,7 @@ export default function SchemeList() {
       });
     } catch (error) {
       console.error("Error storing scheme data:", error);
-      Alert.alert("Error", "Failed to load scheme data. Please try again.");
+      Alert.alert(t('schemes.error'), t('schemes.failedToLoadSchemeData'));
     }
   };
 
@@ -469,14 +480,14 @@ export default function SchemeList() {
                   setDescModalVisible(true);
                 }}
               >
-                <Text style={styles.readMoreText}>Read More</Text>
+                <Text style={styles.readMoreText}>{t('schemes.readMore')}</Text>
               </TouchableOpacity>
             )}
 
             <View style={styles.divider} />
 
             <View style={styles.benefitsHeaderRow}>
-              <Text style={styles.benefitsTitle}>Key Benefits</Text>
+              <Text style={styles.benefitsTitle}>{t('schemes.keyBenefits')}</Text>
               <TouchableOpacity
                 onPress={() => handleToggleExpand(item.SCHEMEID)}
               >
@@ -513,10 +524,10 @@ export default function SchemeList() {
             )}
 
             <View style={styles.amountContainer}>
-              <Text style={styles.amountLabel}>Available Plans:</Text>
+              <Text style={styles.amountLabel}>{t('schemes.availablePlans')}:</Text>
               <View style={styles.amountChipsContainer}>
                 <Text style={[styles.amountChipText, { color: "#850111" }]}>
-                  ₹100 to ₹10,000
+                  {t('schemes.amountRange')}
                 </Text>
               </View>
             </View>
@@ -531,7 +542,7 @@ export default function SchemeList() {
                 end={{ x: 1, y: 0 }}
                 style={styles.joinButton}
               >
-                <Text style={styles.joinButtonText}>Join Now</Text>
+                <Text style={styles.joinButtonText}>{t('schemes.joinNow')}</Text>
                 <Ionicons name="arrow-forward" size={18} color="#fff" />
               </LinearGradient>
             </TouchableOpacity>
@@ -558,25 +569,8 @@ export default function SchemeList() {
   );
 
   return (
-    <SafeAreaView style={styles.container} {...panResponder.panHandlers}>
+    <View style={styles.container} {...panResponder.panHandlers}>
       <View style={styles.mainBackground}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-          >
-            <Ionicons
-              name="arrow-back"
-              size={24}
-              color={getTabColor(activeTab)}
-            />
-          </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: getTabColor(activeTab) }]}>
-            {t("goldSchemes")}
-          </Text>
-          <TabSlider />
-        </View>
-
         <View style={styles.tabsContainer}>
           {tabs.map((tab) => renderTab(tab))}
         </View>
@@ -588,7 +582,7 @@ export default function SchemeList() {
               <Text
                 style={[styles.loadingText, { color: getTabColor(activeTab) }]}
               >
-                Loading {activeTab} Schemes...
+                {t('schemes.loading').replace('{category}', activeTab)}
               </Text>
             </View>
           ) : (
@@ -606,7 +600,7 @@ export default function SchemeList() {
                 <View style={styles.emptyContainer}>
                   <Ionicons name="sad-outline" size={40} color="#777" />
                   <Text style={styles.emptyMessage}>
-                    No schemes available for {activeTab} category
+                    {t('schemes.noSchemesAvailable').replace('{category}', activeTab)}
                   </Text>
                 </View>
               }
@@ -620,7 +614,7 @@ export default function SchemeList() {
 
         <View style={styles.floatingHint}>
           <Ionicons name="swap-horizontal" size={16} color="#fff" />
-          <Text style={styles.floatingHintText}>Swipe to switch plans</Text>
+          <Text style={styles.floatingHintText}>{t('schemes.swipeHint')}</Text>
         </View>
       </View>
       <Modal
@@ -632,7 +626,7 @@ export default function SchemeList() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Description</Text>
+              <Text style={styles.modalTitle}>{t('schemes.description')}</Text>
               <TouchableOpacity onPress={() => setDescModalVisible(false)} style={styles.closeButton}>
                 <Ionicons name="close" size={24} color={theme.colors.primary} />
               </TouchableOpacity>
@@ -643,7 +637,7 @@ export default function SchemeList() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -719,11 +713,11 @@ const mockSchemes: Scheme[] = [
     SCHEMEID: 4,
     SCHEMENAME: "Flexi Gold Saver",
     DESCRIPTION:
-      "Save gold whenever you want with our flexible plan with zero penalties.",
+      t('schemes.defaultDescription'),
     BENEFITS: [
-      "No fixed schedule",
-      "Save as per convenience",
       "Competitive rates",
+      "Flexible payments",
+      "Zero making charges",
       "Free locker facility",
     ],
     SCHEMETYPE: "Flexi",
@@ -772,7 +766,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     backgroundColor: theme.colors.primary,
     position: "relative",
-    paddingTop: 8,
     paddingBottom: 8,
     borderBottomWidth: 1,
     borderBottomColor: `${theme.colors.border}15`,

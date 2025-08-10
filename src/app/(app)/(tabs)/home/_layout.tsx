@@ -1,6 +1,13 @@
 import { Stack } from "expo-router";
+import useGlobalStore from "@/store/global.store";
+import { useEffect } from "react";
 
 export default function HomeLayout() {
+  const { setTabVisibility } = useGlobalStore();
+  useEffect(() => {
+    // Default to showing tabs when entering the home stack
+    setTabVisibility(true);
+  }, [setTabVisibility]);
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -87,7 +94,7 @@ export default function HomeLayout() {
           headerShown: false,
         }}
       />
-       <Stack.Screen
+      <Stack.Screen
         name="paymentNewOverView"
         options={{ title: "Payment Process", headerShown: false }}
       />

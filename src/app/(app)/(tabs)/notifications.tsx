@@ -3,7 +3,7 @@ import { View, Text, ImageBackground, TouchableOpacity, Pressable, Animated, Mod
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import AppHeader from "@/app/components/AppHeader";
+// AppHeader is now handled by the layout wrapper
 import { theme } from "@/constants/theme";
 
 // Types
@@ -477,24 +477,13 @@ export default function NotificationsScreen() {
         }}
       >
         {/* Fixed Header */}
-        <View style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 10,
-          backgroundColor: 'transparent',
-          paddingHorizontal: 16,
-        }}>
-          <AppHeader showBackButton={false} backRoute="index" />
-        </View>
+        {/* Header is now handled by the layout wrapper */}
 
         {/* Scrollable Content */}
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{
             flexGrow: 1,
-            paddingTop: 100,
             paddingBottom: 80,
             paddingHorizontal: 20,
           }}

@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import AppLayoutWrapper from "@/components/AppLayoutWrapper";
 import { t } from "@/i18n";
+import { useFocusEffect } from "@react-navigation/native";
 import useGlobalStore from "@/store/global.store";
 import api from "@/services/api";
 import { theme } from "@/constants/theme";
@@ -90,6 +91,19 @@ export default function PrivacyPolicy() {
     fetchPolicy();
   }, [translations.failedToLoadPrivacyPolicy]);
 
+  useFocusEffect(
+    useCallback(() => {
+      useGlobalStore.getState().setHeaderConfig({
+        showBackButton: true,
+        showMenu: false,
+        showLanguageSwitcher: false,
+        title: translations.defaultTitle,
+        backRoute: "/(app)/(tabs)/home",
+      });
+      return () => useGlobalStore.getState().resetHeaderConfig();
+    }, [translations.defaultTitle])
+  );
+
   // Function to retry fetching policy data
   const retryFetchPolicy = async () => {
     try {
@@ -109,14 +123,8 @@ export default function PrivacyPolicy() {
   if (loading) {
     return (
       <AppLayoutWrapper
-        showHeader={true}
+        showHeader={false}
         showBottomBar={false}
-        headerProps={{
-          showBackButton: true,
-          showDrawerToggle: false,
-          showLanguageSwitcher: false,
-          title: translations.defaultTitle,
-        }}
       >
         <LinearGradient
           colors={["#850111", "#5a000b"]}
@@ -132,14 +140,8 @@ export default function PrivacyPolicy() {
   if (error) {
     return (
       <AppLayoutWrapper
-        showHeader={true}
+        showHeader={false}
         showBottomBar={false}
-        headerProps={{
-          showBackButton: true,
-          showDrawerToggle: false,
-          showLanguageSwitcher: false,
-          title: translations.defaultTitle,
-        }}
       >
         <LinearGradient
           colors={["#850111", "#5a000b"]}
@@ -161,14 +163,8 @@ export default function PrivacyPolicy() {
 
   return (
     <AppLayoutWrapper
-      showHeader={true}
+      showHeader={false}
       showBottomBar={false}
-      headerProps={{
-        showBackButton: true,
-        showDrawerToggle: false,
-        showLanguageSwitcher: false,
-        title: translations.defaultTitle,
-      }}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}

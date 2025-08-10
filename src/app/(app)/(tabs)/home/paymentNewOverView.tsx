@@ -9,13 +9,13 @@ import {
   Pressable,
   Alert,
   TextInput,
+  ActivityIndicator,
 } from "react-native";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { t } from "@/i18n";
 import useGlobalStore from "@/store/global.store";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { theme } from "@/constants/theme";
 import api from "@/services/api";
 import paymentService from "../../../../services/payment.service";
@@ -34,10 +34,26 @@ export default function PaymentNewOverView() {
   const [weightPerGram, setWeightPerGram] = useState(0);
   const [isEditingAmount, setIsEditingAmount] = useState(false);
   const [amountError, setAmountError] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
   // Check for Flexi type using both paymentFrequency and schemeType parameters
   const isFlexi = params.paymentFrequency?.toString().toLowerCase() === "flexi" || 
                   params.schemeType?.toString().toLowerCase() === "flexi";
   const MAX_AMOUNT = 100000; // 1 lakh rupees
+
+  // Configure header to show back button and title
+  useFocusEffect(
+    useCallback(() => {
+      useGlobalStore.getState().setHeaderConfig({
+        showHeader: true,
+        showBackButton: true,
+        showMenu: false,
+        showLanguageSwitcher: false,
+        title: t('paymentOverview'),
+        backRoute: params.source?.toString() === "savings_index" ? '/(tabs)/savings' : undefined,
+      });
+      return () => useGlobalStore.getState().resetHeaderConfig();
+    }, [params.source])
+  );
 
   // Parse user details only once when component mounts
   useEffect(() => {
@@ -136,8 +152,17 @@ export default function PaymentNewOverView() {
   }, [weightPerGram]);
 
   const handlePayment = async () => {
+    // Immediate UX feedback and guards
+    if (isProcessing) return;
+    if (!currentAmount || currentAmount <= 0) {
+      Alert.alert("Invalid Amount", "Please enter a valid amount greater than 0");
+      return;
+    }
+    setIsProcessing(true);
+    console.log("userDetails ======>", userDetails);
     if (!userDetails) {
       Alert.alert("Error", "User details not available");
+      setIsProcessing(false);
       return;
     }
     
@@ -156,8 +181,11 @@ export default function PaymentNewOverView() {
         userEmail: userDetails?.email || user?.email,
         userMobile: userDetails?.mobile || user?.mobile,
         userName: userDetails?.accountname,
-        // chitId: Array.isArray(params.chitId) ? params.chitId[0] : params.chitId,
-        // paymentFrequency: params.paymentFrequency,
+        // Ensure backend-required identifiers are present
+        chitId:
+          userDetails?.chitId ||
+          (Array.isArray(params.chitId) ? params.chitId[0] : params.chitId),
+        paymentFrequency: params.paymentFrequency,
       };
       console.log("initialpayment ======>", payload);
       const response = await paymentService.initiatePayment(payload);
@@ -188,6 +216,8 @@ export default function PaymentNewOverView() {
     } catch (error) {
       Alert.alert("Error", "Failed to initiate payment");
       console.error(error);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -232,33 +262,10 @@ export default function PaymentNewOverView() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => {
-            // Navigate back based on source
-            const source = params.source?.toString();
-            if (source === "savings_index") {
-              router.replace("/(tabs)/savings");
-            } else {
-              // Default: go back to savings detail
-              router.back();
-            }
-          }}
-          style={styles.backButton}
-        >
-          <Ionicons
-            name="arrow-back"
-            size={24}
-            color={theme.colors.secondary}
-          />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t("paymentOverview")}</Text>
-      </View>
-
+    <View style={styles.container}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={[styles.contentContainer, { paddingBottom: 120 }]}
+        contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={true}
       >
         {/* Amount Card */}
@@ -381,80 +388,67 @@ export default function PaymentNewOverView() {
           </View>
         )}
 
-        {/* Scheme Details Card */}
-        <View style={styles.detailsCard}>
+        {/* User Details Card */}
+        <View style={styles.userDetailsCard}>
           <View style={styles.cardHeader}>
-            <MaterialCommunityIcons
-              name="file-document"
-              size={24}
-              color={theme.colors.primary}
-            />
+            <Ionicons name="person" size={24} color={theme.colors.secondary} />
+            <Text style={styles.cardTitle}>{t("userDetails")}</Text>
+          </View>
+          <View style={styles.userDetailsRow}>
+            <Text style={styles.userDetailLabel}>{t("name")}:</Text>
+            <Text style={styles.userDetailValue}>{userDetails?.name || user?.name || "N/A"}</Text>
+          </View>
+          <View style={styles.userDetailsRow}>
+            <Text style={styles.userDetailLabel}>{t("mobile")}:</Text>
+            <Text style={styles.userDetailValue}>{userDetails?.mobile || user?.mobile || "N/A"}</Text>
+          </View>
+          <View style={styles.userDetailsRow}>
+            <Text style={styles.userDetailLabel}>{t("email")}:</Text>
+            <Text style={styles.userDetailValue}>{userDetails?.email || user?.email || "N/A"}</Text>
+          </View>
+        </View>
+
+        {/* Scheme Details Card */}
+        <View style={styles.schemeDetailsCard}>
+          <View style={styles.cardHeader}>
+            <Ionicons name="business" size={24} color={theme.colors.secondary} />
             <Text style={styles.cardTitle}>{t("schemeDetails")}</Text>
           </View>
-          <View style={styles.detailsRow}>
-            <Text style={styles.detailLabel}>{t("schemeName")}</Text>
-            <Text style={styles.detailValue}>{params.schemeName?.toString().toUpperCase()}</Text>
+          <View style={styles.schemeDetailsRow}>
+            <Text style={styles.schemeDetailLabel}>{t("schemeType")}:</Text>
+            <Text style={styles.schemeDetailValue}>
+              {params.schemeType ? t(params.schemeType.toString()) : t("monthly")}
+            </Text>
           </View>
-          <View style={styles.detailsRow}>
-            <Text style={styles.detailLabel}>{t("schemeType")}</Text>
-            <Text style={styles.detailValue}>{params.schemeType?.toString().toUpperCase()}</Text>
+          <View style={styles.schemeDetailsRow}>
+            <Text style={styles.schemeDetailLabel}>{t("paymentFrequency")}:</Text>
+            <Text style={styles.schemeDetailValue}>
+              {params.paymentFrequency ? t(params.paymentFrequency.toString()) : t("monthly")}
+            </Text>
           </View>
-          <View style={styles.detailsRow}>
-            <Text style={styles.detailLabel}>{t("paymentFrequency")}</Text>
-            <Text style={styles.detailValue}>{params.paymentFrequency?.toString().toUpperCase()}</Text>
-          </View>
-        </View>
-
-        {/* User Account Details Card */}
-        <View style={styles.detailsCard}>
-          <View style={styles.cardHeader}>
-            <MaterialCommunityIcons
-              name="account"
-              size={24}
-              color={theme.colors.primary}
-            />
-            <Text style={styles.cardTitle}>{t("accountDetails")}</Text>
-          </View>
-          <View style={styles.detailsRow}>
-            <Text style={styles.detailLabel}>{t("accountName")}</Text>
-            <Text style={styles.detailValue}>{userDetails?.accountname || user?.name}</Text>
-          </View>
-          <View style={styles.detailsRow}>
-            <Text style={styles.detailLabel}>{t("mobile")}</Text>
-            <Text style={styles.detailValue}>{userDetails?.mobile || user?.mobile}</Text>
-          </View>
-          <View style={styles.detailsRow}>
-            <Text style={styles.detailLabel}>{t("email")}</Text>
-            <Text style={styles.detailValue}>{userDetails?.email || user?.email}</Text>
+          <View style={styles.schemeDetailsRow}>
+            <Text style={styles.schemeDetailLabel}>{t("schemeName")}:</Text>
+            <Text style={styles.schemeDetailValue}>
+              {params.schemeName || t("digiGold")}
+            </Text>
           </View>
         </View>
 
-        {/* Remove Pay Now Button and Terms from here */}
-      </ScrollView>
-
-      {/* Fixed bottom bar */}
-      <View style={styles.footer}>
-        <View style={styles.termsContainer}>
-          <TouchableOpacity
-            style={styles.checkboxContainer}
-            onPress={() => setIsTermsAccepted(!isTermsAccepted)}
-          >
-            <View
-              style={[
-                styles.checkbox,
-                isTermsAccepted && styles.checkboxChecked,
-              ]}
+        {/* Terms and Conditions */}
+        <View style={styles.termsCard}>
+          <View style={styles.termsHeader}>
+            <TouchableOpacity
+              style={styles.termsCheckbox}
+              onPress={() => setIsTermsAccepted(!isTermsAccepted)}
             >
-              {isTermsAccepted && (
-                <Ionicons
-                  name="checkmark"
-                  size={16}
-                  color={theme.colors.secondary}
-                />
-              )}
-            </View>
+              <Ionicons
+                name={isTermsAccepted ? "checkbox" : "square-outline"}
+                size={24}
+                color={isTermsAccepted ? theme.colors.secondary : theme.colors.textSecondary}
+              />
+            </TouchableOpacity>
             <Text style={styles.termsText}>
-              {t("iAccept")} {" "}
+              {t("iAgreeTo")}{" "}
               <Text
                 style={styles.termsLink}
                 onPress={() => setShowTermsModal(true)}
@@ -462,46 +456,38 @@ export default function PaymentNewOverView() {
                 {t("termsAndConditions")}
               </Text>
             </Text>
-          </TouchableOpacity>
+          </View>
         </View>
+
+        {/* Payment Button */}
         <TouchableOpacity
           style={[
-            styles.payButton,
-            !isTermsAccepted && styles.payButtonDisabled,
+            styles.paymentButton,
+            !isTermsAccepted && styles.paymentButtonDisabled,
           ]}
           onPress={handlePayment}
-          disabled={!isTermsAccepted}
+          disabled={!isTermsAccepted || isProcessing}
         >
-          <Text style={styles.payButtonText}>{t("payNow")}</Text>
+          {isProcessing ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.paymentButtonText}>
+              {t("proceedToPayment")}
+            </Text>
+          )}
         </TouchableOpacity>
-      </View>
+      </ScrollView>
 
+      {/* Terms Modal */}
       <TermsAndConditionsModal />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    backgroundColor: theme.colors.primary,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.1)",
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: theme.colors.secondary,
-    marginLeft: 16,
+    backgroundColor: "#f8f9ff",
   },
   content: {
     flex: 1,
@@ -633,7 +619,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 4,
+    elevation: 20,
+    zIndex: 20,
   },
   termsContainer: {
     marginBottom: 16,
@@ -756,5 +743,101 @@ const styles = StyleSheet.create({
   },
   disabledText: {
     opacity: 0.4,
+  },
+  userDetailsCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "#e5e5e5",
+  },
+  userDetailsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  userDetailLabel: {
+    fontSize: 14,
+    color: "#666",
+    fontWeight: "500",
+  },
+  userDetailValue: {
+    fontSize: 14,
+    color: "#333",
+    fontWeight: "600",
+  },
+  schemeDetailsCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "#e5e5e5",
+  },
+  schemeDetailsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  schemeDetailLabel: {
+    fontSize: 14,
+    color: "#666",
+    fontWeight: "500",
+  },
+  schemeDetailValue: {
+    fontSize: 14,
+    color: "#333",
+    fontWeight: "600",
+  },
+  termsCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "#e5e5e5",
+  },
+  termsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e5e5",
+    paddingBottom: 12,
+  },
+  termsCheckbox: {
+    padding: 8,
+  },
+  paymentButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: 8,
+    padding: 16,
+    alignItems: "center",
+  },
+  paymentButtonDisabled: {
+    opacity: 0.6,
+  },
+  paymentButtonText: {
+    color: theme.colors.secondary,
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

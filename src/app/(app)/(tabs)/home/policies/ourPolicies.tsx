@@ -19,7 +19,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import AppHeader from "@/app/components/AppHeader";
+// AppHeader is now handled by the layout wrapper
 import { t } from "@/i18n";
 import useGlobalStore from "@/store/global.store";
 import api from "@/services/api";
@@ -146,10 +146,7 @@ export default function OurPolicy() {
         resizeMode="contain"
       >
         <SafeAreaView style={styles.safeArea}>
-          {/* Fixed Header */}
-          <View style={styles.headerContainer}>
-            <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false} />
-          </View>
+          {/* Header is now handled by the layout wrapper */}
 
           {/* Hero Section */}
           <LinearGradient
@@ -220,7 +217,6 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    paddingTop: 50, // Added to prevent AppHeader from hiding content
   },
   headerContainer: {
     position: "absolute",

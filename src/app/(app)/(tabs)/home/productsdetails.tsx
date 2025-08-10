@@ -16,7 +16,7 @@ import {
 } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import AppHeader from "@/app/components/AppHeader";
+// AppHeader is now handled by the layout wrapper
 import { t } from "@/i18n";
 import useGlobalStore from "@/store/global.store";
 import { useLocalSearchParams as useSearchParams } from "expo-router";
@@ -24,7 +24,7 @@ import { theme } from "@/constants/theme";
 import api from "@/services/api";
 
 const { width } = Dimensions.get("window");
-const HEADER_HEIGHT = 0; // Adjust if needed
+
 
 // Dummy data to use if API does not return any valid scheme data.
 const dummyData = {
@@ -125,15 +125,12 @@ export default function KnowProduct() {
         className="flex-1 bg-white"
         style={{ paddingTop: insets.top }}
       >
-        {/* Fixed Header */}
-        <View className="absolute top-0 left-0 right-0 z-20 bg-transparent px-4">
-          <AppHeader showBackButton={true} backRoute="index" />
-        </View>
+        {/* Header is now handled by the layout wrapper */}
 
         {/* Scrollable Content */}
         <ScrollView
           className="flex-1"
-          contentContainerStyle={{ paddingTop: HEADER_HEIGHT }}
+          contentContainerStyle={{}}
         >
           <View className="relative">
             <ImageBackground

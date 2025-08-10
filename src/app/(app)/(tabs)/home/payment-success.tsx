@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing, Share, Alert } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing } from 'react-native';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/constants/theme';
 import { t } from '@/i18n';
+import useGlobalStore from '@/store/global.store';
 
 export default function PaymentSuccess() {
   const params = useLocalSearchParams();
@@ -15,6 +16,28 @@ export default function PaymentSuccess() {
   const [pulseAnim] = useState(new Animated.Value(1));
   const [checkmarkAnim] = useState(new Animated.Value(0));
   
+  // Configure header to show back button and title
+  useFocusEffect(
+    useCallback(() => {
+      useGlobalStore.getState().setHeaderConfig({
+        showHeader: true,
+        showBackButton: true,
+        showMenu: false,
+        showLanguageSwitcher: false,
+        title: 'Payment Success',
+        backRoute: '/(app)/(tabs)/home',
+        transactionDetails: {
+          txnId: params.txnId as string,
+          orderId: params.orderId as string,
+          amount: params.amount as string,
+          status: 'success' as const,
+          date: new Date().toISOString(),
+        },
+      });
+      return () => useGlobalStore.getState().resetHeaderConfig();
+    }, [params.txnId, params.orderId, params.amount])
+  );
+
   useEffect(() => {
     // Initial animation sequence
     Animated.sequence([
@@ -73,44 +96,7 @@ export default function PaymentSuccess() {
     }).start(() => router.replace('/(tabs)/savings'));
   };
 
-  const handleSharePress = async () => {
-    try {
-      const amount = new Intl.NumberFormat('en-IN', {
-        style: 'currency',
-        currency: 'INR',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      }).format(Number(params.amount) || 0);
 
-      const shareMessage = `🎉 Payment Successful!
-
-💰 Amount: ${amount}
-🆔 Transaction ID: ${params.txnId}
-📋 Order ID: ${params.orderId}
-
-Thank you for using our service!`;
-
-      const result = await Share.share({
-        message: shareMessage,
-        title: 'Payment Success Details'
-      });
-
-      if (result.action === Share.sharedAction) {
-        if (result.activityType) {
-          // shared with activity type of result.activityType
-          console.log('Shared with activity type:', result.activityType);
-        } else {
-          // shared
-          console.log('Shared successfully');
-        }
-      } else if (result.action === Share.dismissedAction) {
-        // dismissed
-        console.log('Share dismissed');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to share payment details');
-    }
-  };
 
   const checkmarkScale = checkmarkAnim.interpolate({
     inputRange: [0, 1],
@@ -119,19 +105,6 @@ Thank you for using our service!`;
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header with Share Icon */}
-      <View style={styles.header}>
-        <View style={styles.headerSpacer} />
-        <Text style={styles.headerTitle}>{t('paymentSuccessful')}</Text>
-        <TouchableOpacity 
-          style={styles.shareButton}
-          onPress={handleSharePress}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="share-outline" size={24} color={theme.colors.primary} />
-        </TouchableOpacity>
-      </View>
-
       <Animated.View style={[
         styles.content, 
         { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }
@@ -198,21 +171,23 @@ Thank you for using our service!`;
           </View>
         </View>
 
-        {/* Button Row: Back to Home (left) and Back to Savings (right) */}
+        {/* Button Row: Home (left) and Savings (right) */}
         <View style={styles.buttonRow}>
           <TouchableOpacity 
             style={[styles.button, styles.buttonLeft]}
             onPress={handleHomePress}
             activeOpacity={0.9}
           >
-            <Text style={styles.buttonText}>{t('backToHome')}</Text>
+            <Ionicons name="home" size={20} color="#fff" />
+            <Text style={styles.buttonText}>{t('home')}</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.button, styles.buttonRight]}
             onPress={handleSavingsPress}
             activeOpacity={0.9}
           >
-            <Text style={styles.buttonText}>{t('backToSavings')}</Text>
+            <Ionicons name="wallet" size={20} color="#fff" />
+            <Text style={styles.buttonText}>{t('savings')}</Text>
           </TouchableOpacity>
         </View>
       </Animated.View>
@@ -225,39 +200,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f9ff',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#edf2f7',
-  },
-  headerSpacer: {
-    width: 24,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#2d3748',
-    fontFamily: 'Inter_600SemiBold',
-  },
-  shareButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f7fafc',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
   content: {
     flex: 1,
     padding: 24,
-    paddingBottom: 100,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -265,10 +210,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 1, // Ensure icon is above background
   },
   checkmarkContainer: {
-    width: 160,
-    height: 160,
+    width: 120,
+    height: 120,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -277,7 +223,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: '800',
     color: '#2e7d32',
     marginBottom: 12,
@@ -357,31 +303,36 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+    gap: 16, // Consistent spacing between buttons
   },
   button: {
     backgroundColor: theme.colors.primary,
     paddingVertical: 18,
+    paddingHorizontal: 24, // Add horizontal padding for better text spacing
     borderRadius: 14,
     alignItems: 'center',
+    justifyContent: 'center', // Center content both horizontally and vertically
+    flexDirection: 'row', // Align icon and text horizontally
     shadowColor: theme.colors.primary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 8,
     marginBottom: 0,
+    minHeight: 56, // Ensure consistent button height
+    flex: 1, // Equal width for both buttons
   },
   buttonLeft: {
-    marginRight: 8,
-    flex: 1,
+    marginRight: 0, // Remove margin since we're using gap
   },
   buttonRight: {
-    marginLeft: 8,
-    flex: 1,
+    marginLeft: 0, // Remove margin since we're using gap
   },
   buttonText: {
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '700',
     fontFamily: 'Inter_700Bold',
+    marginLeft: 8, // Consistent spacing from icon
   },
 });

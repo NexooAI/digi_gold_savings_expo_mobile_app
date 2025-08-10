@@ -14,7 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialIcons, Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import AppHeader from "@/app/components/AppHeader";
+// AppHeader is now handled by the layout wrapper
 import { moderateScale } from "react-native-size-matters";
 import { theme } from "@/constants/theme";
 import { t } from "@/i18n";
@@ -105,7 +105,7 @@ export default function Offers() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false} />
+      {/* Header is now handled by the layout wrapper */}
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Hero Section */}
         <LinearGradient

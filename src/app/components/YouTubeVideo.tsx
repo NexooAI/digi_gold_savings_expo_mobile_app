@@ -87,7 +87,7 @@ const YouTubeVideo: React.FC<YouTubeVideoProps> = ({ videos }) => {
         // Create a local video object
         const localVideo: Video = {
           id: 1,
-          title: "DC Jewellers - Featured Video",
+          title: t("DC_Jewellers_Featured_Video"),
           video_url: localVideoUrl,
           created_at: new Date().toISOString(),
         };

@@ -26,7 +26,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient"; // For gradient background
-import AppHeader from "@/app/components/AppHeader";
+// AppHeader is now handled by the layout wrapper
 import { t } from "@/i18n";
 import useGlobalStore from "@/store/global.store";
 import api from "@/services/api";
@@ -844,21 +844,6 @@ export default function SavingsScreen() {
           end={{ x: 1, y: 1 }}
           style={styles.portfolioCard}
         >
-          {/* <View style={styles.portfolioHeader}>
-            <View style={styles.portfolioTitleContainer}>
-              <Text style={styles.portfolioTitle}>
-                {translations.yourGoldPortfolio}
-              </Text>
-              <View style={styles.portfolioBadge}>
-                <Ionicons name="star" size={12} color="#ffd700" />
-                <Text style={styles.portfolioBadgeText}>Premium</Text>
-              </View>
-            </View>
-            <View style={styles.portfolioIconContainer}>
-              <Ionicons name="albums" size={28} color="#ffd700" />
-            </View>
-          </View> */}
-
           <View style={styles.portfolioStats}>
             <View style={styles.statItem}>
               <View style={styles.statIconContainer}>
@@ -1040,7 +1025,6 @@ export default function SavingsScreen() {
   if (error) {
     return (
       <SafeAreaView className="flex-1 bg-white">
-        <AppHeader showBackButton={false} backRoute={undefined} />
         <ErrorState />
       </SafeAreaView>
     );
@@ -1060,9 +1044,7 @@ export default function SavingsScreen() {
           />
 
           <SafeAreaView style={{ flex: 1 }}>
-            <View className="absolute top-0 left-0 right-0 z-10 px-4">
-              <AppHeader showBackButton={false} backRoute="index" />
-            </View>
+            {/* Header is now handled by the layout wrapper */}
 
             <FlatList
               data={filteredSavings}
@@ -1073,7 +1055,6 @@ export default function SavingsScreen() {
               ListHeaderComponent={savings.length > 0 ? <ListHeader /> : null}
               ListEmptyComponent={<EmptyState />}
               contentContainerStyle={{
-                paddingTop: 100,
                 paddingBottom: bottomPadding,
               }}
               showsVerticalScrollIndicator={false}

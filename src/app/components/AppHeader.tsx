@@ -8,9 +8,11 @@ import {
   Dimensions,
   SafeAreaView,
   Animated,
+  Share,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "expo-router";
+import { useNavigation, useRouter, usePathname } from "expo-router";
 import theme from "src/constants/theme";
 import useGlobalStore from "@/store/global.store";
 import { AppLocale, t } from "@/i18n";
@@ -22,6 +24,14 @@ interface RateInfo {
   purity: string;
 }
 
+interface TransactionDetails {
+  txnId?: string;
+  orderId?: string;
+  amount?: string | number;
+  status: 'success' | 'failure';
+  date?: string;
+}
+
 interface AppHeaderProps {
   showBackButton?: boolean;
   backRoute?: string;
@@ -30,6 +40,7 @@ interface AppHeaderProps {
   goldRateInfo?: RateInfo;
   goldRateUpdatedAt?: string;
   title?: string;
+  transactionDetails?: TransactionDetails;
 }
 
 // Helper to format date as 'dd/MM/yyyy HH:mm'
@@ -48,9 +59,12 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   showDrawerToggle = true,
   goldRateInfo, 
   goldRateUpdatedAt, 
-  title 
+  title,
+  transactionDetails
 }) => {
   const navigation = useNavigation();
+  const router = useRouter();
+  const pathname = usePathname();
   const { setLanguage, language } = useGlobalStore();
 
   // Flipping card state
@@ -78,16 +92,44 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   });
 
   const handleBackPress = () => {
+    // Prefer explicit back route if provided
     if (backRoute) {
-      // Navigate to the specified back route (string format, bypass type error)
-      try {
-        navigation.navigate(backRoute as any);
-      } catch {
-        navigation.goBack();
+      // If it's an absolute app path, use the router
+      if (backRoute.startsWith('/')) {
+        try {
+          router.replace(backRoute as any);
+          return;
+        } catch {}
+      } else {
+        // Otherwise treat it as a route name for the current navigator
+        try {
+          (navigation as any).navigate(backRoute as any);
+          return;
+        } catch {}
       }
-    } else {
-      // Default behavior: go back to the previous screen
-      navigation.goBack();
+    }
+
+    // If we can go back via navigation, do so
+    try {
+      if ((navigation as any)?.canGoBack?.()) {
+        (navigation as any).goBack();
+        return;
+      }
+    } catch {}
+
+    // Try router back as a secondary option
+    try {
+      (router as any).back?.();
+      return;
+    } catch {}
+
+    // Final fallback: Go to home tab explicitly
+    try {
+      router.replace('/(app)/(tabs)/home');
+    } catch {
+      try {
+        (navigation as any).navigate('(tabs)', { screen: 'home' });
+      } catch {}
     }
   };
 
@@ -116,6 +158,80 @@ const AppHeader: React.FC<AppHeaderProps> = ({
       return require('../../../assets/images/translate/mal.png'); // Show Malayalam flag to switch to Malayalam
     } else {
       return require('../../../assets/images/translate/eng.png'); // Show English flag to switch to English
+    }
+  };
+
+  // Check if current page is payment success or failure
+  const isPaymentPage = pathname?.includes('payment-success') || pathname?.includes('payment-failure');
+
+  // Handle share functionality for payment pages
+  const handleSharePress = async () => {
+    if (!isPaymentPage || !transactionDetails) return;
+
+    try {
+      const { txnId, orderId, amount, status, date } = transactionDetails;
+      
+      // Format amount for display
+      const formattedAmount = amount ? 
+        new Intl.NumberFormat('en-IN', {
+          style: 'currency',
+          currency: 'INR',
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        }).format(Number(amount)) : 'N/A';
+
+      // Format date for display
+      const formattedDate = date ? 
+        new Date(date).toLocaleString('en-IN', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }) : new Date().toLocaleString('en-IN');
+
+      let shareMessage = '';
+      
+      if (status === 'success') {
+        shareMessage = `🎉 Payment Successful!
+
+💰 Amount: ${formattedAmount}
+🆔 Transaction ID: ${txnId || 'N/A'}
+📋 Order ID: ${orderId || 'N/A'}
+📅 Date & Time: ${formattedDate}
+✅ Status: Payment Successful
+
+Thank you for using our service! 🚀`;
+      } else {
+        shareMessage = `📱 Payment Service Update
+
+💡 Transaction Details:
+💰 Amount: ${formattedAmount}
+🆔 Transaction ID: ${txnId || 'N/A'}
+📋 Order ID: ${orderId || 'N/A'}
+📅 Date & Time: ${formattedDate}
+❌ Status: Payment Failed
+
+Need help? Contact our support team! 📞`;
+      }
+
+      const result = await Share.share({
+        message: shareMessage,
+        title: status === 'success' ? 'Payment Success Details' : 'Payment Details'
+      });
+
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          console.log('Shared with activity type:', result.activityType);
+        } else {
+          console.log('Shared successfully');
+        }
+      } else if (result.action === Share.dismissedAction) {
+        console.log('Share dismissed');
+      }
+    } catch (error) {
+      console.error('Share error:', error);
+      Alert.alert('Error', 'Failed to share details');
     }
   };
 
@@ -187,6 +303,16 @@ const AppHeader: React.FC<AppHeaderProps> = ({
                 resizeMode="contain"
               />
               <Text style={styles.languageText}>{getLanguageDisplayName()}</Text>
+            </TouchableOpacity>
+          )}
+          {/* Conditional Share Icon for Payment Pages */}
+          {isPaymentPage && (
+            <TouchableOpacity
+              onPress={handleSharePress}
+              style={styles.shareButton}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="share-outline" size={24} color={theme.theme.colors.white} />
             </TouchableOpacity>
           )}
           {showDrawerToggle && (
@@ -292,68 +418,43 @@ const styles = StyleSheet.create({
     backfaceVisibility: 'hidden',
   },
   flipCardBack: {
-    position: 'absolute',
-    width: 110,
-    height: 36,
-    borderRadius: 14,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backfaceVisibility: 'hidden',
-  },
-  rateImage: {
-    width: 28,
-    height: 28,
-    resizeMode: 'contain',
-  },
-  goldRateText: {
-    color: '#7a5600',
-    fontWeight: 'bold',
-    fontSize: 15,
-    textShadowColor: 'rgba(255,255,255,0.7)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  goldRatePurity: {
-    color: '#5a3d00',
-    fontSize: 12,
-    fontWeight: '600',
-    opacity: 0.9,
-    textShadowColor: 'rgba(255,255,255,0.6)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 1,
+    transform: [{ rotateX: '180deg' }],
   },
   plateBg: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFillObject as any,
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
-    zIndex: 0,
-    borderRadius: 16,
+    opacity: 0.15,
   },
   plateContent: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 1,
-    width: '100%',
-    paddingLeft: 8,
-    paddingRight: 8,
+  },
+  goldRateText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#7a5600',
+  },
+  goldRatePurity: {
+    fontSize: 11,
+    color: '#7a5600',
+    opacity: 0.9,
+    textAlign: 'center',
   },
   updateText: {
+    fontSize: 10,
     color: '#7a5600',
-    fontSize: 12,
-    fontWeight: '600',
-    textShadowColor: 'rgba(255,255,255,0.7)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 1,
   },
   liveText: {
-    color: '#d32f2f',
+    fontSize: 10,
+    color: '#b30000',
     fontWeight: 'bold',
-    fontSize: 13,
-    letterSpacing: 1,
-    marginTop: 2,
+  },
+  shareButton: {
+    padding: 8,
+    marginRight: 8,
   },
 });
 

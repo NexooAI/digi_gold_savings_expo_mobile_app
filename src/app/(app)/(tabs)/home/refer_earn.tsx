@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import { useRouter } from "expo-router";
 import { theme } from "@/constants/theme";
 import { t } from "@/i18n";
 import { LinearGradient } from "expo-linear-gradient";
+import { useFocusEffect } from "@react-navigation/native";
 
 
 const { width, height } = Dimensions.get('window');
@@ -28,6 +29,20 @@ export default function ReferCodeScreen() {
   const code = user?.referralCode || t("defaultReferralCode") || "DEFAULT123";
 
   const router = useRouter();
+
+  // Apply header override while focused
+  useFocusEffect(
+    useCallback(() => {
+      useGlobalStore.getState().setHeaderConfig({
+        showBackButton: true,
+        showMenu: false,
+        showLanguageSwitcher: false,
+        title: t("refer_earn_title"),
+        backRoute: "/(app)/(tabs)/home",
+      });
+      return () => useGlobalStore.getState().resetHeaderConfig();
+    }, [])
+  );
 
   // Copy code to clipboard and notify user
   const copyToClipboard = async () => {
@@ -55,14 +70,8 @@ export default function ReferCodeScreen() {
 
   return (
     <AppLayoutWrapper
-      showHeader={true}
-      showBottomBar={true}
-      headerProps={{
-        showBackButton: true,
-        showDrawerToggle: false,
-        showLanguageSwitcher: false,
-        title: t("refer_earn_title"),
-      }}
+      showHeader={false}
+      showBottomBar={false}
     >
       <ScrollView 
         style={styles.scrollView}
@@ -79,9 +88,7 @@ export default function ReferCodeScreen() {
               <MaterialIcons name="card-giftcard" size={40} color="white" />
             </View>
             <Text style={styles.heroTitle}>{t("refer_earn_title")}</Text>
-            <Text style={styles.heroSubtitle}>
-              {t("refer_earn_description")}
-            </Text>
+            <Text style={styles.heroSubtitle}>{t("refer_earn_subtitle")}</Text>
           </View>
         </LinearGradient>
 
@@ -156,7 +163,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20, // Reduced padding since AppLayoutWrapper handles bottom bar
   },
   heroSection: {
-    paddingTop: 120,
+    paddingTop: 30,
     paddingBottom: 40,
     paddingHorizontal: 20,
     alignItems: 'center',

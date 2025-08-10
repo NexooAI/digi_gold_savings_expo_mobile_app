@@ -16,6 +16,7 @@ import {
   ImageBackground,
   Image,
 } from "react-native";
+import { useKeyboardVisibility } from "@/hooks/useKeyboardVisibility";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -58,6 +59,7 @@ export default function JoinSavings() {
   const { schemeId } = useLocalSearchParams();
   const router = useRouter();
   const { language, user } = useGlobalStore();
+  const { keyboardVisible } = useKeyboardVisibility();
 
   // State for scheme data loaded from AsyncStorage
   const [schemeData, setSchemeData] = useState<any>(null);
@@ -554,6 +556,20 @@ export default function JoinSavings() {
       // Add more as needed
     }),
     [language]
+  );
+
+  // Configure layout header (AppHeader) similar to termsAndConditionsPolicies
+  useFocusEffect(
+    React.useCallback(() => {
+      useGlobalStore.getState().setHeaderConfig({
+        showHeader: true,
+        showBackButton: true,
+        showMenu: false,
+        title: "Join Savings",
+        showLanguageSwitcher: false,
+      });
+      return () => useGlobalStore.getState().resetHeaderConfig();
+    }, [parsedData?.name, translations.digiGoldTitle])
   );
 
   const calculateReturns = (amount: number): number => {
@@ -1395,61 +1411,62 @@ export default function JoinSavings() {
   };
 
   // Show loading screen while scheme data is being loaded
-  if (schemeDataLoading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-          >
-            <Ionicons name="arrow-back" size={24} color="#FFC857" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{translations.loadingScheme}</Text>
-        </View>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>{translations.loadingSchemeDetails}</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  // if (schemeDataLoading) {
+  //   return (
+  //     <SafeAreaView style={styles.container}>
+  //       <View style={styles.header}>
+  //         <TouchableOpacity
+  //           onPress={() => router.back()}
+  //           style={styles.backButton}
+  //         >
+  //           <Ionicons name="arrow-back" size={24} color="#FFC857" />
+  //         </TouchableOpacity>
+  //         <Text style={styles.headerTitle}>{translations.loadingScheme}</Text>
+  //       </View>
+  //       <View style={styles.loadingContainer}>
+  //         <ActivityIndicator size="large" color={theme.colors.primary} />
+  //         <Text style={styles.loadingText}>{translations.loadingSchemeDetails}</Text>
+  //       </View>
+  //     </SafeAreaView>
+  //   );
+  // }
 
   // Show error screen if no scheme data is available
-  if (!parsedData) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-          >
-            <Ionicons name="arrow-back" size={24} color="#FFC857" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{translations.error}</Text>
-        </View>
-        <View style={styles.loadingContainer}>
-          <Ionicons
-            name="alert-circle"
-            size={48}
-            color={theme.colors.primary}
-          />
-          <Text style={styles.loadingText}>{translations.failedToLoadSchemeDetails}</Text>
-          <TouchableOpacity style={styles.button} onPress={() => router.back()}>
-            <Text style={styles.buttonText}>{translations.goBack}</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  // if (!parsedData) {
+  //   return (
+  //     <SafeAreaView style={styles.container}>
+  //       <View style={styles.header}>
+  //         <TouchableOpacity
+  //           onPress={() => router.back()}
+  //           style={styles.backButton}
+  //         >
+  //           <Ionicons name="arrow-back" size={24} color="#FFC857" />
+  //         </TouchableOpacity>
+  //         <Text style={styles.headerTitle}>{translations.error}</Text>
+  //       </View>
+  //       <View style={styles.loadingContainer}>
+  //         <Ionicons
+  //           name="alert-circle"
+  //           size={48}
+  //           color={theme.colors.primary}
+  //         />
+  //         <Text style={styles.loadingText}>{translations.failedToLoadSchemeDetails}</Text>
+  //         <TouchableOpacity style={styles.button} onPress={() => router.back()}>
+  //           <Text style={styles.buttonText}>{translations.goBack}</Text>
+  //         </TouchableOpacity>
+  //       </View>
+  //     </SafeAreaView>
+  //   );
+  // }
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
     >
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
+      <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+        {/* <View style={styles.header}>
           <TouchableOpacity
             onPress={() => {
               if (step > 1) {
@@ -1501,8 +1518,8 @@ export default function JoinSavings() {
                 {schemeType === "fixed" ? "Fixed" : "Flexi"}
               </Text>
             </View>
-          </View>
-        </View>
+          </View> */}
+        {/* </View> */}
 
         {renderProgressBar()}
         {renderGoldRateArea()}
@@ -1514,7 +1531,10 @@ export default function JoinSavings() {
         ) : (
           <ScrollView
             style={styles.content}
-            contentContainerStyle={{ paddingBottom: 80 }}
+            contentContainerStyle={{ 
+              paddingBottom: keyboardVisible ? 20 : 80 
+            }}
+            keyboardShouldPersistTaps="handled"
           >
             {step === 1 && renderStep1()}
             {step === 2 && renderStep2()}
@@ -1522,7 +1542,10 @@ export default function JoinSavings() {
           </ScrollView>
         )}
 
-        <View style={styles.footer}>
+        <View style={[
+          styles.footer,
+          { marginBottom: keyboardVisible ? 0 : 80 }
+        ]}>
           <TouchableOpacity style={styles.button} onPress={handleNext}>
             <Text style={styles.buttonText}>
               {step === 3 ? translations.confirmAndJoin : translations.next}
@@ -1779,7 +1802,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderTopWidth: 1,
     borderTopColor: "#e5e5e5",
-    marginBottom: 80,
   },
   button: {
     backgroundColor: theme.colors.primary,

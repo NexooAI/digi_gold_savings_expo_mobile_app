@@ -1,4 +1,4 @@
-import { SafeAreaView } from "react-native-safe-area-context";
+
 import React, {
   useEffect,
   useMemo,
@@ -23,6 +23,7 @@ import {
   ActivityIndicator,
   Easing,
   ListRenderItem,
+  Linking,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -30,7 +31,7 @@ import LanguageSwitcher from "@/contexts/LanguageSwitcher";
 import LiveRateCard from "@/app/components/LiveRateCard";
 import ImageSlider from "@/app/components/ImageSlider";
 import { t } from "@/i18n";
-import AppHeader from "@/app/components/AppHeader";
+// AppHeader is now handled by the layout wrapper
 import ProductsList from "@/app/components/Products";
 import FlashOffer from "@/app/components/FlashOffer";
 import YouTubeVideo from "@/app/components/YouTubeVideo";
@@ -1000,7 +1001,7 @@ export default function Home2() {
     // Show loading screen while data is being fetched
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <>
         <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
         <ImageBackground
           source={require("../../../../../assets/images/bg_new.jpg")}
@@ -1012,14 +1013,14 @@ export default function Home2() {
             <Text style={styles.loadingText}>{t("loading")}</Text>
           </View>
         </ImageBackground>
-      </SafeAreaView>
+      </>
     );
   }
 
   // Show message if no user data is available
   if (!user || !user.id) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <>
         <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
         <ImageBackground
           source={require("../../../../../assets/images/bg_new.jpg")}
@@ -1037,13 +1038,12 @@ export default function Home2() {
             </TouchableOpacity>
           </View>
         </ImageBackground>
-      </SafeAreaView>
+      </>
     );
   }
 
   return (
     <AuthGuard>
-      <SafeAreaView style={styles.safeArea}>
       <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
       <ImageBackground
         source={require("../../../../../assets/images/bg_new.jpg")}
@@ -1057,22 +1057,6 @@ export default function Home2() {
           />
         )}
         <View style={styles.mainContainer}>
-          <View style={styles.headerWrapper}>
-            <AppHeader
-              showBackButton={false}
-              backRoute="index"
-              showLanguageSwitcher={true}
-            />
-            {/* Debug button for API logging - remove in production */}
-            <TouchableOpacity
-              style={styles.debugButton}
-              onPress={demonstrateApiLogging}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="analytics" size={20} color="#FFD700" />
-              <Text style={styles.debugButtonText}>{t('apiLogs')}</Text>
-            </TouchableOpacity>
-          </View>
 
           <ScrollView
             contentContainerStyle={styles.scrollContent}
@@ -1223,6 +1207,45 @@ export default function Home2() {
               <SocialMediaCard />
               
               <SupportContactCard />
+              
+              {/* Hallmark Images Section */}
+              <View style={styles.hallmarkContainer}>
+                <View style={styles.hallmarkHeader}>
+                  <View style={styles.hallmarkHeaderLine} />
+                  <Text style={styles.hallmarkHeaderText}>{t('certifiedHallmark')}</Text>
+                  <View style={styles.hallmarkHeaderLine} />
+                </View>
+                <View style={styles.hallmarkImagesContainer}>
+                  <View style={styles.hallmarkImageWrapper}>
+                    <Image
+                      source={require("../../../../../assets/images/halmark1.jpg")}
+                      style={styles.hallmarkImage}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.hallmarkImageLabel}>{t('certifiedDiamonds')}</Text>
+                  </View>
+                  <View style={styles.hallmarkImageWrapper}>
+                    <Image
+                      source={require("../../../../../assets/images/halmark2.jpg")}
+                      style={styles.hallmarkImage}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.hallmarkImageLabel}>{t('goldHallmarking')}</Text>
+                  </View>
+                </View>
+              </View>
+              
+              {/* Powered by Section */}
+              <View style={styles.poweredByContainer}>
+                <TouchableOpacity 
+                  style={styles.poweredByButton}
+                  onPress={() => Linking.openURL('http://agnisofterp.com/')}
+                >
+                  <Text style={styles.poweredByText}>{t('poweredBy')}</Text>
+                  <Text style={styles.poweredByLink}>agnisofterp.com</Text>
+                </TouchableOpacity>
+              </View>
+              
               <View style={styles.spacer} />
             </View>
           </ScrollView>
@@ -1243,15 +1266,11 @@ export default function Home2() {
           />
         </View>
       </ImageBackground>
-    </SafeAreaView>
     </AuthGuard>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
   backgroundImage: {
     flex: 1,
     width: "100%",
@@ -1275,7 +1294,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   ratesContainer: {
-    marginTop: moderateScale(20),
     paddingHorizontal: moderateScale(16),
     width: "100%",
     flexDirection: "row",
@@ -1842,5 +1860,81 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(16),
     fontWeight: '700',
     textAlign: 'center',
+  },
+  hallmarkContainer: {
+    width: "100%",
+    paddingHorizontal: 10,
+    marginTop: 15,
+    marginBottom: 10,
+  },
+  hallmarkHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+    paddingHorizontal: 5,
+  },
+  hallmarkHeaderLine: {
+    flex: 1,
+    height: 1.5,
+    backgroundColor: "#FFD700",
+    marginHorizontal: 5,
+  },
+  hallmarkHeaderText: {
+    fontSize: moderateScale(16),
+    fontWeight: "700",
+    color: "#850111",
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
+    textAlign: "center",
+  },
+  hallmarkImagesContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    paddingHorizontal: 10,
+  },
+  hallmarkImageWrapper: {
+    alignItems: "center",
+    width: "45%", // Adjust as needed for spacing
+  },
+  hallmarkImage: {
+    width: "100%",
+    height: 100, // Adjust height as needed
+    marginBottom: 8,
+  },
+  hallmarkImageLabel: {
+    fontSize: moderateScale(10),
+    color: "#666",
+    textAlign: "center",
+    fontStyle: "italic",
+  },
+  poweredByContainer: {
+    width: "100%",
+    paddingHorizontal: 20,
+    marginTop: 10,
+    marginBottom: 5,
+    alignItems: "center",
+  },
+  poweredByButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 215, 0, 0.3)",
+  },
+  poweredByText: {
+    fontSize: moderateScale(12),
+    color: "#666",
+    marginRight: 4,
+  },
+  poweredByLink: {
+    fontSize: moderateScale(12),
+    color: "#FFD700",
+    fontWeight: "600",
+    textDecorationLine: "underline",
   },
 }); 

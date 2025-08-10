@@ -1,3 +1,4 @@
+import React from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -121,6 +122,31 @@ interface GlobalStore {
   isTabVisible: boolean;
   setTabVisibility: (visible: boolean) => void;
 
+  // Header configuration (for layout-level AppHeader)
+  headerConfig: {
+    showBackButton?: boolean;
+    showMenu?: boolean;
+    showLanguageSwitcher?: boolean;
+    title?: string;
+    backRoute?: string;
+    showHeader?: boolean;
+    customHeader?: React.ReactNode; // Custom header component to replace main header
+    goldRateInfo?: {
+      rate: string;
+      purity: string;
+    };
+    goldRateUpdatedAt?: string;
+    transactionDetails?: {
+      txnId?: string;
+      orderId?: string;
+      amount?: string | number;
+      status: 'success' | 'failure';
+      date?: string;
+    };
+  } | null;
+  setHeaderConfig: (config: GlobalStore['headerConfig']) => void;
+  resetHeaderConfig: () => void;
+
   // Debug function
   debugState: () => GlobalStore;
 }
@@ -225,6 +251,11 @@ const useGlobalStore = create<GlobalStore>()(
       isTabVisible: true,
       setTabVisibility: (visible: boolean) => set({ isTabVisible: visible }),
 
+      // Header configuration
+      headerConfig: null,
+      setHeaderConfig: (config) => set({ headerConfig: config }),
+      resetHeaderConfig: () => set({ headerConfig: null }),
+
       // Debug function to check current state
       debugState: () => {
         const state = get();
@@ -242,6 +273,7 @@ const useGlobalStore = create<GlobalStore>()(
       partialize: (state) => ({
         language: state.language,
         user: state.user,
+        // Persisting header config can lead to stale UI after restart; avoid persisting it
         // Don't persist payment data for security
         // paymentRetryData and currentPaymentSession will be lost on app restart
       })

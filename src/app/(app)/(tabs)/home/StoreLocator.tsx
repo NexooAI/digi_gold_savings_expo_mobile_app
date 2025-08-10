@@ -18,7 +18,7 @@ import {
 import { Dropdown } from "react-native-element-dropdown";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useRouter } from "expo-router";
-import AppHeader from "@/app/components/AppHeader";
+// AppHeader is now handled by the layout wrapper
 import { Ionicons } from "@expo/vector-icons";
 
 // Make sure you have AppHeader defined or imported
@@ -99,25 +99,11 @@ const StoreLocator = () => {
     >
       <SafeAreaView style={{ flex: 1 }}>
         {/* Animated Header */}
-        <Animated.View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 20,
-            opacity: headerOpacity,
-            backgroundColor: "transparent",
-            paddingHorizontal: 16,
-          }}
-        >
-          <AppHeader showBackButton={true} backRoute="index" showDrawerToggle={false} />
-        </Animated.View>
+        {/* Header is now handled by the layout wrapper */}
 
         <Animated.ScrollView
           contentContainerStyle={{
             // Ensure content starts below the parallax header and ends above the tab bar
-            paddingTop: 100,
             paddingBottom: 100 + insets.bottom,
             paddingHorizontal: 16,
           }}

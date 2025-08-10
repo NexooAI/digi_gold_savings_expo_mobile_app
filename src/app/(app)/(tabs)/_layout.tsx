@@ -8,7 +8,7 @@ export default function TabsLayout() {
       showHeader={true}
       showBottomBar={true}
       headerProps={{
-        showDrawerToggle: true,
+        showMenu: true,
         showLanguageSwitcher: true,
       }}
     >

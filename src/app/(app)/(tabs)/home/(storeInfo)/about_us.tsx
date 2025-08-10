@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
 import AppLayoutWrapper from "@/components/AppLayoutWrapper";
 import { Ionicons, MaterialIcons, FontAwesome5, AntDesign } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -25,6 +26,7 @@ import { moderateScale } from "react-native-size-matters";
 import { theme } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { t } from "@/i18n";
+import useGlobalStore from "@/store/global.store";
 
 const { width, height } = Dimensions.get('window');
 
@@ -91,6 +93,23 @@ export default function AboutUs() {
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const { width: screenWidth } = useWindowDimensions();
   const [activeMilestone, setActiveMilestone] = useState(0);
+  const { setHeaderConfig, resetHeaderConfig } = useGlobalStore();
+
+  useFocusEffect(
+    useCallback(() => {
+      // Apply header only while this screen is focused
+      setHeaderConfig({
+        showBackButton: true,
+        showMenu: false,
+        showLanguageSwitcher: false,
+        title: "About Us",
+        backRoute: "/(app)/(tabs)/home",
+      });
+      return () => {
+        resetHeaderConfig();
+      };
+    }, [setHeaderConfig, resetHeaderConfig])
+  );
 
   useEffect(() => {
     Animated.parallel([
@@ -489,14 +508,8 @@ export default function AboutUs() {
 
   return (
     <AppLayoutWrapper
-      showHeader={true}
-      showBottomBar={true}
-      headerProps={{
-        showBackButton: true,
-        showDrawerToggle: false,
-        showLanguageSwitcher: false,
-        title: "About Us",
-      }}
+      showHeader={false}
+      showBottomBar={false}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}

@@ -6,7 +6,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import useGlobalStore from '@/store/global.store';
 import { Slider } from '@miblanchard/react-native-slider';
-import AppHeader from '@/app/components/AppHeader';
+// AppHeader is now handled by the layout wrapper
 import { formatGoldWeight } from '@/utils/imageUtils';
 
 const ADVANCE_PERCENTS = [5, 10, 20, 30];
@@ -73,15 +73,7 @@ export default function JoinAdvanceGold() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header with back button */}
-      <View style={styles.headerWrapper}>
-        <AppHeader 
-          showBackButton={true} 
-          backRoute="gold_advance"
-          showDrawerToggle={false}
-          title="Join Advance Gold"
-        />
-      </View>
+      {/* Header is now handled by the layout wrapper */}
       
       <LinearGradient
         colors={['#1a1a2e', '#16213e', '#0f3460']}
@@ -294,7 +286,6 @@ const styles = StyleSheet.create({
   },
   gradientBackground: { 
     flex: 1,
-    paddingTop: 80, // Space for header
   },
   content: { 
     padding: 20, 

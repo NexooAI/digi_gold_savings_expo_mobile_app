@@ -1,103 +1,67 @@
 // components/LanguageSwitcher.tsx
-import useGlobalStore from "@/store/global.store";
-import { useLanguage } from "../contexts/LanguageContext";
-import { Image, TouchableOpacity, StyleSheet, Text, View } from "react-native";
-import { AppLocale } from "@/i18n";
-import { theme } from "@/constants/theme";
-const LanguageSwitcher = () => {
-  const { setLanguage, language } = useGlobalStore();
-  const { locale, setLocale } = useLanguage();
-  
-  // Function to cycle through languages (en -> mal -> en)
-  const handleLanguageChange = async (currentLang: AppLocale) => {
-    let newLocale: AppLocale;
-    
-    if (currentLang === "en") {
-      newLocale = "mal";
-    } else {
-      newLocale = "en";
-    }
-    
-    await setLanguage(newLocale);
-    await setLocale(newLocale);
-  };
+import React, { useState } from 'react';
+import { TouchableOpacity, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from '@/hooks/useTranslation';
+import { getLanguageName, getLanguageFlag } from '@/utils/languageUtils';
+import { theme } from '@/constants/theme';
+import LanguageSelector from '@/components/LanguageSelector';
 
-  // Display language label based on current language
-  const getNextLanguageLabel = () => {
-    if (language === "en") {
-      return "മലയാളം"; // Malayalam in Malayalam script
-    } else {
-      return "English";
-    }
+const LanguageSwitcher = () => {
+  const { locale, setLocale } = useTranslation();
+  const [showLanguageSelector, setShowLanguageSelector] = useState(false);
+
+  const handleLanguageChange = async () => {
+    setShowLanguageSelector(true);
   };
 
   return (
-    <TouchableOpacity
-      onPress={() => handleLanguageChange(language as AppLocale)}
-      style={styles.languageButton}
-      activeOpacity={0.7}
-      hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-    >
-      <Image
-        source={theme.image.translate}
-        style={styles.languageImage}
-        resizeMode="contain"
+    <>
+      <TouchableOpacity style={styles.container} onPress={handleLanguageChange}>
+        <View style={styles.languageInfo}>
+          <Text style={styles.flag}>{getLanguageFlag(locale)}</Text>
+          <Text style={styles.languageName}>{getLanguageName(locale)}</Text>
+        </View>
+        <Text style={styles.changeText}>Change</Text>
+      </TouchableOpacity>
+
+      <LanguageSelector
+        visible={showLanguageSelector}
+        onClose={() => setShowLanguageSelector(false)}
       />
-      <Text style={styles.languageText}>{getNextLanguageLabel()}</Text>
-    </TouchableOpacity>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  languageButton: {
-    position: "absolute",
-    bottom: 80,
-    right: 10,
-    zIndex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-    borderRadius: 24,
-    flexDirection: "row",
-    alignItems: "center",
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: theme.colors.background,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#ffffff50",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 4,
+    borderColor: theme.colors.border,
   },
-  languageImage: {
-    width: 20,
-    height: 20,
-    marginRight: 8,
-    tintColor: "#ffffff",
+  languageInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  languageText: {
-    color: "#ffffff",
+  flag: {
+    fontSize: 20,
+    marginRight: 12,
+  },
+  languageName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: theme.colors.textPrimary,
+  },
+  changeText: {
     fontSize: 14,
-    fontWeight: "bold",
+    color: theme.colors.primary,
+    fontWeight: '500',
   },
 });
 
 export default LanguageSwitcher;
-
-// // components/LanguageSwitcher.tsx
-// import React from 'react';
-// import { Button } from 'react-native';
-// import { useLanguage } from '../contexts/LanguageContext';
-// import i18n from '../i18n';
-
-// const LanguageSwitcher: React.FC = () => {
-//   const { locale, setLocale } = useLanguage();
-
-//   return (
-//     <Button
-//       title={locale === 'en' ? 'தமிழ்' : 'English'}
-//       onPress={() => setLocale(locale === 'en' ? 'ta' : 'en')}
-//     />
-//   );
-// // };
-
-// export default LanguageSwitcher;

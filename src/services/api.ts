@@ -460,7 +460,7 @@ export const userAPI = {
     return apiClient.post('/notifications/token',{
       // ...payload,
       token: payload?.deviceToken,
-      user_id: userId,
+      userId: userId,
       device_type: deviceType
     });
   }

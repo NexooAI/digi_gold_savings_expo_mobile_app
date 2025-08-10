@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Modal, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import AppHeader from '@/app/components/AppHeader';
+// AppHeader is now handled by the layout wrapper
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -78,10 +78,7 @@ export default function GoldAdvanceScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Fixed Header */}
-      <View style={styles.headerWrapper}>
-        <AppHeader showBackButton={false} backRoute="index" />
-      </View>
+      {/* Header is now handled by the layout wrapper */}
       
       {/* Animated Background */}
       <LinearGradient
@@ -243,7 +240,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingTop: 120, // Ensure content appears below the header
     paddingBottom: 180,
   },
   titleContainer: {

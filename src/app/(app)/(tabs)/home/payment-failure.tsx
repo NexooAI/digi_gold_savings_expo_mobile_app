@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/constants/theme';
 import { t } from '@/i18n';
+import useGlobalStore from '@/store/global.store';
 
 export default function PaymentFailure() {
   const params = useLocalSearchParams();
@@ -15,6 +16,28 @@ export default function PaymentFailure() {
   const [pulseAnim] = useState(new Animated.Value(1));
   const [iconAnim] = useState(new Animated.Value(0));
   
+  // Configure header to show back button and title
+  useFocusEffect(
+    useCallback(() => {
+      useGlobalStore.getState().setHeaderConfig({
+        showHeader: true,
+        showBackButton: true,
+        showMenu: false,
+        showLanguageSwitcher: false,
+        title: 'Payment Failed',
+        backRoute: '/(app)/(tabs)/home',
+        transactionDetails: {
+          txnId: params.txnId as string,
+          orderId: params.orderId as string,
+          amount: params.amount as string,
+          status: 'failure' as const,
+          date: new Date().toISOString(),
+        },
+      });
+      return () => useGlobalStore.getState().resetHeaderConfig();
+    }, [params.txnId, params.orderId, params.amount])
+  );
+
   useEffect(() => {
     // Initial animation sequence
     Animated.sequence([
@@ -151,17 +174,16 @@ export default function PaymentFailure() {
             onPress={handleRetry}
             activeOpacity={0.9}
           >
-            <Ionicons name="refresh" size={20} color="#fff" style={{marginRight: 8}} />
+            <Ionicons name="refresh" size={20} color="#fff" />
             <Text style={styles.buttonText}>{t('retry')}</Text>
           </TouchableOpacity>
-          <View style={{width: 16}} />
           <TouchableOpacity 
             style={[styles.button, styles.buttonHalf, styles.buttonHome]}
             onPress={handleHomePress}
             activeOpacity={0.9}
           >
-            <Ionicons name="home" size={20} color="#fff" style={{marginRight: 8}} />
-            <Text style={styles.buttonText}>{t('backToHome')}</Text>
+            <Ionicons name="home" size={20} color="#fff" />
+            <Text style={styles.buttonText}>{t('home')}</Text>
           </TouchableOpacity>
         </View>
       </Animated.View>
@@ -177,7 +199,6 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 24,
-    paddingBottom: 100,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -185,6 +206,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 1, // Ensure icon is above background
   },
   iconWrapper: {
     width: 160,
@@ -282,34 +304,38 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
+    gap: 16, // Consistent spacing between buttons
   },
   button: {
     backgroundColor: theme.colors.error,
     paddingVertical: 18,
+    paddingHorizontal: 24, // Add horizontal padding for better text spacing
     borderRadius: 14,
     alignItems: 'center',
+    justifyContent: 'center', // Center content both horizontally and vertically
     shadowColor: theme.colors.error,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 8,
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: 'row', // Align icon and text horizontally
+    minHeight: 56, // Ensure consistent button height
   },
   buttonHalf: {
-    flex: 1,
+    flex: 1, // Equal width for both buttons
     minWidth: 0,
   },
   buttonRetry: {
     flex: 1,
   },
   buttonHome: {
-    flex: 1.3,
+    flex: 1,
   },
   buttonText: {
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '700',
     fontFamily: 'Inter_700Bold',
+    marginLeft: 8, // Consistent spacing from icon
   },
 });

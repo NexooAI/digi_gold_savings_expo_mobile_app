@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import AppLayoutWrapper from "@/components/AppLayoutWrapper";
 import { t } from "@/i18n";
+import { useFocusEffect } from "@react-navigation/native";
 import useGlobalStore from "@/store/global.store";
 import api from "@/services/api";
 import { theme } from "@/constants/theme";
@@ -93,18 +94,33 @@ export default function TermsAndConditions() {
     [language]
   );
 
+  useFocusEffect(
+    useCallback(() => {
+      useGlobalStore.getState().setHeaderConfig({
+        showBackButton: true,
+        showMenu: false,
+        showLanguageSwitcher: false,
+        title: translations.defaultTitle,
+        backRoute: "/(app)/(tabs)/home",
+      });
+      return () => useGlobalStore.getState().resetHeaderConfig();
+    }, [translations.defaultTitle])
+  );
+
   if (loading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
+      <AppLayoutWrapper
+        showHeader={false}
+        showBottomBar={false}
+      >
         <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
         <LinearGradient
-          colors={["#850111", "#5a000b"]}
-          style={styles.loadingGradient}
+          colors={[theme.colors.primary, theme.colors.support_container[1]]}
+          style={styles.loadingContainer}
         >
           <ActivityIndicator size="large" color="#FFD700" />
-          <Text style={styles.loadingText}>{t("loadingTermsAndConditions")}</Text>
         </LinearGradient>
-      </SafeAreaView>
+      </AppLayoutWrapper>
     );
   }
 
@@ -134,14 +150,8 @@ export default function TermsAndConditions() {
 
   return (
     <AppLayoutWrapper
-      showHeader={true}
+      showHeader={false}
       showBottomBar={false}
-      headerProps={{
-        showBackButton: true,
-        showDrawerToggle: false,
-        showLanguageSwitcher: false,
-        title: "Terms & Conditions",
-      }}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -272,7 +282,6 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    paddingTop: 50,
   },
   headerContainer: {
     position: "absolute",

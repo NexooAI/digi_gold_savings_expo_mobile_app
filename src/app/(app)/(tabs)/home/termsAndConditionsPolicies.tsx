@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -19,12 +19,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import AppLayoutWrapper from "@/components/AppLayoutWrapper";
 import { t } from "@/i18n";
+import { useFocusEffect } from "@react-navigation/native";
 import useGlobalStore from "@/store/global.store";
 import api from "@/services/api";
 import { theme } from "@/constants/theme";
 
 const { width } = Dimensions.get("window");
-const HEADER_HEIGHT = 80; // Account for the absolute positioned header
+
 
 export default function TermsAndConditions() {
   const router = useRouter();
@@ -70,6 +71,19 @@ export default function TermsAndConditions() {
     [language]
   );
 
+  useFocusEffect(
+    useCallback(() => {
+      useGlobalStore.getState().setHeaderConfig({
+        showBackButton: true,
+        showMenu: false,
+        showLanguageSwitcher: false,
+        title: translations.defaultTitle,
+        backRoute: "/(app)/(tabs)/home",
+      });
+      return () => useGlobalStore.getState().resetHeaderConfig();
+    }, [translations.defaultTitle])
+  );
+
   if (loading) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center bg-white">
@@ -90,14 +104,8 @@ export default function TermsAndConditions() {
 
   return (
     <AppLayoutWrapper
-      showHeader={true}
-      showBottomBar={true}
-      headerProps={{
-        showBackButton: true,
-        showDrawerToggle: false,
-        showLanguageSwitcher: false,
-        title: translations.defaultTitle,
-      }}
+      showHeader={false}
+      showBottomBar={false}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -109,7 +117,7 @@ export default function TermsAndConditions() {
         {/* Scrollable Content */}
         <ScrollView
           className="flex-1"
-          contentContainerStyle={{ paddingTop: HEADER_HEIGHT }}
+          contentContainerStyle={{}}
         >
           <View className="relative">
             <ImageBackground
