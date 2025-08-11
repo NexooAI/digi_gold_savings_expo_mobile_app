@@ -22,6 +22,7 @@ import { useLocalSearchParams } from "expo-router";
 import { theme } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { COLORS } from "@/constants/colors";
 
 const { width } = Dimensions.get("window");
 const logoWidth = width * 0.3;
@@ -74,11 +75,11 @@ const ErrorAlert = ({ message, onClose }: { message: string; onClose: () => void
       ]}
     >
       <View style={styles.errorContent}>
-        <Ionicons name="alert-circle" size={24} color="#fff" />
+        <Ionicons name="alert-circle" size={24} color={COLORS.white} />
         <Text style={styles.errorMessage}>{message}</Text>
       </View>
       <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-        <Ionicons name="close" size={20} color="#fff" />
+        <Ionicons name="close" size={20} color={COLORS.white} />
       </TouchableOpacity>
     </Animated.View>
   );
@@ -211,7 +212,7 @@ export default function BasicDetailsForm() {
 
   return (
     <ImageBackground
-      source={theme.image.bg_image}
+              source={theme.images.auth.loginBg}
       style={styles.backgroundImage}
     >
       <LinearGradient
@@ -228,7 +229,7 @@ export default function BasicDetailsForm() {
         >
           <View style={styles.logoContainer}>
             <Image
-              source={theme.image.transparentLogo}
+                              source={theme.images.auth.logo}
               style={[styles.logo, { width: logoWidth }]}
               resizeMode="contain"
             />
@@ -342,7 +343,7 @@ export default function BasicDetailsForm() {
                   ) : null}
                   {referralCode.length > 0 && !referralError && (
                     <View style={styles.successContainer}>
-                      <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+                      <Ionicons name="checkmark-circle" size={16} color={COLORS.green} />
                       <Text style={styles.successText}>Valid referral code!</Text>
                     </View>
                   )}
@@ -355,7 +356,7 @@ export default function BasicDetailsForm() {
                   disabled={loading}
                 >
                   <LinearGradient
-                    colors={['#ffc90c', '#ffd700']}
+                    colors={[COLORS.secondary, COLORS.gold]}
                     style={styles.gradientButton}
                   >
                     <View style={styles.buttonContent}>
@@ -441,7 +442,7 @@ const styles = StyleSheet.create({
     maxHeight: '80%',
     ...Platform.select({
       ios: {
-        shadowColor: "#000",
+        shadowColor: theme.colors.shadowBlack,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2,
         shadowRadius: 8,
@@ -511,7 +512,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   errorText: {
-    color: '#ff4444',
+    color: COLORS.red,
     fontSize: 12,
     marginTop: 5,
     marginLeft: 55,
@@ -523,7 +524,7 @@ const styles = StyleSheet.create({
     marginLeft: 55,
   },
   successText: {
-    color: '#4CAF50',
+    color: COLORS.green,
     fontSize: 12,
     marginLeft: 5,
   },
@@ -584,14 +585,14 @@ const styles = StyleSheet.create({
     top: Platform.OS === 'ios' ? 50 : 30,
     left: 20,
     right: 20,
-    backgroundColor: 'rgba(255, 68, 68, 0.95)',
+    backgroundColor: COLORS.red + 'F2',
     borderRadius: 12,
     padding: 15,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     zIndex: 1000,
-    shadowColor: '#000',
+    shadowColor: theme.colors.shadowBlack,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -606,7 +607,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   errorMessage: {
-    color: '#fff',
+    color: theme.colors.white,
     fontSize: 16,
     marginLeft: 10,
     flex: 1,

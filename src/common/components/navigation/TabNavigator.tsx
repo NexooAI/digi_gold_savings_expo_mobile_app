@@ -2,6 +2,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { StyleSheet } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { theme } from "@/constants/theme";
+import { COLORS } from "src/constants/colors";
 
 const Tab = createBottomTabNavigator();
 
@@ -17,7 +18,7 @@ const TabNavigator = () => {
         tabBarStyle: {
           height: 80,
           paddingTop: 8,
-          backgroundColor: "#ffffff",
+          backgroundColor: COLORS.white,
         },
       }}
     >

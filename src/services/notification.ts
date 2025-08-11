@@ -1,5 +1,6 @@
 // services/notification.ts
 import Toast from 'react-native-root-toast';
+import { theme } from '../constants/theme';
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -10,22 +11,22 @@ export const showToast = (
     type: ToastType = 'info',
     duration: number = Toast.durations.LONG
 ) => {
-    let backgroundColor = '#333';
-    let textColor = '#FFF';
+    let backgroundColor = theme.colors.textDarkGrey;
+    let textColor = theme.colors.textPrimary;
 
     switch (type) {
         case 'success':
-            backgroundColor = '#4CAF50';
+            backgroundColor = theme.colors.success;
             break;
         case 'error':
-            backgroundColor = '#F44336';
+            backgroundColor = theme.colors.error;
             break;
         case 'warning':
-            backgroundColor = '#FF9800';
+            backgroundColor = theme.colors.warning;
             break;
         case 'info':
         default:
-            backgroundColor = '#2196F3';
+            backgroundColor = theme.colors.info;
             break;
     }
 

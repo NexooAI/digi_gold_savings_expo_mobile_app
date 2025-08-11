@@ -1,16 +1,16 @@
-import React, { useRef, useEffect } from 'react';
-import { 
-  TouchableOpacity, 
-  StyleSheet, 
-  Animated, 
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  TouchableOpacity,
+  Animated,
+  StyleSheet,
   Platform,
-  View 
+  ViewStyle,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, usePathname } from 'expo-router';
-import { shouldHideTabs } from '@/config/navigation';
-import { theme } from '@/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter, usePathname } from 'expo-router';
+import { theme } from '../constants/theme';
+import { shouldHideTabs } from '@/config/navigation';
 
 interface FloatingHomeButtonProps {
   onPress?: () => void;
@@ -108,7 +108,7 @@ export default function FloatingHomeButton({ onPress }: FloatingHomeButtonProps)
         accessibilityHint="Double tap to navigate to the home screen"
       >
         <LinearGradient
-          colors={['#B31313', '#8B0000']}
+          colors={[theme.colors.redBurgundyLight, theme.colors.redBurgundyDark]}
           style={styles.gradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -116,7 +116,7 @@ export default function FloatingHomeButton({ onPress }: FloatingHomeButtonProps)
           <Ionicons 
             name="home" 
             size={24} 
-            color="#FFFFFF" 
+            color={theme.colors.white} 
           />
         </LinearGradient>
       </TouchableOpacity>
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    shadowColor: '#000',
+    shadowColor: theme.colors.black,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -152,6 +152,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: theme.colors.borderWhiteLight,
   },
 }); 

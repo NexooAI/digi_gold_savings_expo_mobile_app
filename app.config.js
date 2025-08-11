@@ -13,23 +13,23 @@ export default {
     splash: {
       image: theme.splashLogo,
       resizeMode: "contain",
-      backgroundColor: "#850111",
+      backgroundColor: theme.primaryColor,
     },
 
     androidStatusBar: {
-      backgroundColor: "#850111",
+      backgroundColor: theme.primaryColor,
       translucent: false,
     },
 
     android: {
       adaptiveIcon: {
         foregroundImage: theme.adaptiveIcon,
-        backgroundColor: "#850111",
+        backgroundColor: theme.primaryColor,
       },
       splash: {
         image: theme.adaptiveIcon,
         resizeMode: "contain",
-        backgroundColor: "#850111",
+        backgroundColor: theme.primaryColor,
         mdpi: theme.adaptiveIcon,
         hdpi: theme.adaptiveIcon,
         xhdpi: theme.adaptiveIcon,
@@ -47,7 +47,7 @@ export default {
       edgeToEdgeEnabled: true,
       notification: {
         icon: "./assets/images/icon.png",
-        color: "#850111"
+        color: theme.primaryColor
       },
       targetSdkVersion: 36,
       jsEngine: "hermes",

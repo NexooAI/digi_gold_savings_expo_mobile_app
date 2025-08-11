@@ -1,6 +1,8 @@
+const { theme } = require('./theme');
+
 module.exports = {
   customerName: "DC Jewellers",
-  primaryColor: "#850111",
+  primaryColor: theme.colors.primary,
   splashLogo: "./assets/images/splashscreen_logo.png",
   icon: "./assets/images/logo_trans.png",
   adaptiveIcon: "./assets/images/adaptive-icon.png",

@@ -1,331 +1,295 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
-  FlatList,
   TouchableOpacity,
-  Image,
+  StyleSheet,
+  ScrollView,
+  Animated,
   Dimensions,
-  ActivityIndicator,
-  Alert,
-} from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
-import { moderateScale } from "react-native-size-matters";
-import api, { news } from "@/services/api";
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { theme } from '../../constants/theme';
 
-const { width: screenWidth } = Dimensions.get("window");
-
-interface FlashNewsItem {
-  id: number;
+interface NewsItem {
+  id: string;
   title: string;
-  content: string;
-  image?: string;
-  created_at: string;
-  updated_at: string;
-  is_active: boolean;
+  description: string;
+  date: string;
+  isRead: boolean;
 }
 
 interface FlashNewsProps {
-  onNewsPress?: (newsItem: FlashNewsItem) => void;
+  news?: NewsItem[];
+  onNewsPress?: (news: NewsItem) => void;
 }
 
-const FlashNews: React.FC<FlashNewsProps> = ({ onNewsPress }) => {
-  const [newsData, setNewsData] = useState<FlashNewsItem[]>([]);
-  const [loading, setLoading] = useState(true);
+const FlashNews: React.FC<FlashNewsProps> = ({ 
+  news = [], 
+  onNewsPress 
+}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  // Sample news data if none provided
+  const sampleNews: NewsItem[] = [
+    {
+      id: '1',
+      title: 'Gold prices hit new high!',
+      description: 'Gold prices have reached a new all-time high in the market.',
+      date: '2024-01-15',
+      isRead: false,
+    },
+    {
+      id: '2',
+      title: 'New savings scheme launched',
+      description: 'Introducing our latest gold savings scheme with better returns.',
+      date: '2024-01-14',
+      isRead: false,
+    },
+    {
+      id: '3',
+      title: 'Market update: Silver trends',
+      description: 'Latest updates on silver market trends and predictions.',
+      date: '2024-01-13',
+      isRead: false,
+    },
+  ];
+
+  const displayNews = news.length > 0 ? news : sampleNews;
 
   useEffect(() => {
-    fetchFlashNews();
-  }, []);
+    if (displayNews.length <= 1 || isPaused) return;
 
-  const fetchFlashNews = async () => {
-    try {
-      setLoading(true);
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => 
+        prevIndex === displayNews.length - 1 ? 0 : prevIndex + 1
+      );
+    }, 3000);
 
-      // For testing - always show dummy data first
-      //console.log('FlashNews: Setting dummy data for testing');
-      setNewsData([
-        {
-          id: 1,
-          title: "Gold Prices Surge to New Heights",
-          content:
-            "Gold prices have reached unprecedented levels this week, making it an excellent time to invest in our digital gold schemes.",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          is_active: true,
-        },
-        {
-          id: 2,
-          title: "New Investment Schemes Available",
-          content:
-            "We're excited to announce new flexible investment schemes with better returns and lower entry amounts.",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          is_active: true,
-        },
-        {
-          id: 3,
-          title: "Special Festive Offers",
-          content:
-            "Celebrate this festive season with our special gold investment offers. Limited time only!",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          is_active: true,
-        },
-      ]);
+    return () => clearInterval(interval);
+  }, [displayNews.length, isPaused]);
 
-      // Comment out API call for now
-      /*
-      const response = await news.getActiveFlashNews();
-      //console.log('Flash news response:', response.data);
-      if (response.data && response.data.data) {
-        setNewsData(response.data.data);
-      } else if (response.data && Array.isArray(response.data)) {
-        setNewsData(response.data);
-      } else {
-        // If no data from API, use dummy data for testing
-        //console.log('No flash news data, using dummy data');
-        setNewsData([
-          {
-            id: 1,
-            title: "Gold Prices Surge to New Heights",
-            content: "Gold prices have reached unprecedented levels this week, making it an excellent time to invest in our digital gold schemes.",
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            is_active: true
-          },
-          {
-            id: 2,
-            title: "New Investment Schemes Available",
-            content: "We're excited to announce new flexible investment schemes with better returns and lower entry amounts.",
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            is_active: true
-          }
-        ]);
-      }
-      */
-    } catch (error) {
-      console.error("Error fetching flash news:", error);
-      // Use dummy data as fallback
-      //console.log('API error, using dummy data as fallback');
-      setNewsData([
-        {
-          id: 1,
-          title: "Welcome to DC Jewellers",
-          content:
-            "Discover our premium gold investment schemes and start your journey towards financial security.",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          is_active: true,
-        },
-      ]);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (displayNews.length <= 1) return;
+
+    Animated.sequence([
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Auto-scroll to current item
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({
+        x: currentIndex * Dimensions.get('window').width,
+        animated: true,
+      });
+    }
+  }, [currentIndex, fadeAnim, displayNews.length]);
+
+  const handleNewsPress = (item: NewsItem) => {
+    if (onNewsPress) {
+      onNewsPress(item);
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+  const handlePauseToggle = () => {
+    setIsPaused(!isPaused);
   };
 
-  const renderNewsItem = ({
-    item,
-    index,
-  }: {
-    item: FlashNewsItem;
-    index: number;
-  }) => (
-    <TouchableOpacity
-      style={styles.newsItem}
-      onPress={() => onNewsPress?.(item)}
-      activeOpacity={0.8}
-    >
-      <LinearGradient
-        colors={["#850111", "#5a000b"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.newsGradient}
-      >
-        <View style={styles.newsHeader}>
-          <View style={styles.newsIconContainer}>
-            <Ionicons name="flash" size={20} color="#FFD700" />
-          </View>
-          <Text style={styles.newsDate}>{formatDate(item.created_at)}</Text>
-        </View>
-
-        <Text style={styles.newsTitle} numberOfLines={2}>
-          {item.title}
-        </Text>
-
-        <Text style={styles.newsContent} numberOfLines={3}>
-          {item.content}
-        </Text>
-
-        <View style={styles.newsFooter}>
-          <Text style={styles.readMoreText}>Read More</Text>
-          <Ionicons name="chevron-forward" size={16} color="#FFD700" />
-        </View>
-      </LinearGradient>
-    </TouchableOpacity>
-  );
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#850111" />
-        <Text style={styles.loadingText}>Loading Flash News...</Text>
-      </View>
-    );
-  }
-
-  if (!newsData || newsData.length === 0) {
-    return null; // Don't render anything if no news
+  if (displayNews.length === 0) {
+    return null;
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerContainer}>
-        <Ionicons name="flash" size={24} color="#850111" />
-        <Text style={styles.sectionTitle}>Flash News</Text>
-        <View style={styles.newsIndicator}>
-          <Text style={styles.indicatorText}>
-            {currentIndex + 1} / {newsData.length}
-          </Text>
+      <LinearGradient
+        colors={[theme.colors.primary, theme.colors.redDarker]}
+        style={styles.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+      >
+        <View style={styles.header}>
+          <View style={styles.titleContainer}>
+            <Text style={styles.icon}>📰</Text>
+            <Text style={styles.title}>Flash News</Text>
+          </View>
+          <TouchableOpacity onPress={handlePauseToggle} style={styles.pauseButton}>
+            <Text style={styles.pauseIcon}>
+              {isPaused ? '▶️' : '⏸️'}
+            </Text>
+          </TouchableOpacity>
         </View>
-      </View>
 
-      <FlatList
-        data={newsData}
-        renderItem={renderNewsItem}
-        keyExtractor={(item) => item.id.toString()}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        pagingEnabled
-        snapToInterval={screenWidth - 40}
-        decelerationRate="fast"
-        contentContainerStyle={styles.newsList}
-        onMomentumScrollEnd={(event) => {
-          const index = Math.round(
-            event.nativeEvent.contentOffset.x / (screenWidth - 40)
-          );
-          setCurrentIndex(index);
-        }}
-      />
+        <ScrollView
+          ref={scrollViewRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          style={styles.newsContainer}
+          onMomentumScrollEnd={(event) => {
+            const newIndex = Math.round(
+              event.nativeEvent.contentOffset.x / Dimensions.get('window').width
+            );
+            setCurrentIndex(newIndex);
+          }}
+        >
+          {displayNews.map((item, index) => (
+            <TouchableOpacity
+              key={item.id}
+              style={styles.newsItem}
+              onPress={() => handleNewsPress(item)}
+              activeOpacity={0.8}
+            >
+              <Animated.View
+                style={[
+                  styles.newsContent,
+                  { opacity: index === currentIndex ? fadeAnim : 1 }
+                ]}
+              >
+                <View style={styles.newsHeader}>
+                  <Text style={styles.newsTitle} numberOfLines={2}>
+                    {item.title}
+                  </Text>
+                  <View style={styles.newsMeta}>
+                    <Text style={styles.newsDate}>{item.date}</Text>
+                    {!item.isRead && <View style={styles.unreadDot} />}
+                  </View>
+                </View>
+                <Text style={styles.newsDescription} numberOfLines={2}>
+                  {item.description}
+                </Text>
+              </Animated.View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {displayNews.length > 1 && (
+          <View style={styles.pagination}>
+            {displayNews.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.paginationDot,
+                  index === currentIndex && styles.paginationDotActive
+                ]}
+              />
+            ))}
+          </View>
+        )}
+      </LinearGradient>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: moderateScale(16),
-    paddingHorizontal: moderateScale(16),
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: theme.colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  headerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: moderateScale(12),
-    paddingHorizontal: moderateScale(4),
+  gradient: {
+    padding: 16,
   },
-  sectionTitle: {
-    fontSize: moderateScale(18),
-    fontWeight: "bold",
-    color: "#850111",
-    marginLeft: moderateScale(8),
-    flex: 1,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  newsIndicator: {
-    backgroundColor: "rgba(133, 1, 17, 0.1)",
-    paddingHorizontal: moderateScale(8),
-    paddingVertical: moderateScale(4),
-    borderRadius: moderateScale(12),
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  indicatorText: {
-    fontSize: moderateScale(12),
-    color: "#850111",
-    fontWeight: "600",
+  icon: {
+    fontSize: 20,
+    marginRight: 8,
   },
-  newsList: {
-    paddingHorizontal: moderateScale(4),
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: theme.colors.white,
+  },
+  pauseButton: {
+    padding: 4,
+  },
+  pauseIcon: {
+    fontSize: 16,
+  },
+  newsContainer: {
+    height: 80,
   },
   newsItem: {
-    width: screenWidth - 40,
-    marginHorizontal: moderateScale(4),
-    borderRadius: moderateScale(16),
-    overflow: "hidden",
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  newsGradient: {
-    padding: moderateScale(16),
-    minHeight: moderateScale(140),
-  },
-  newsHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: moderateScale(8),
-  },
-  newsIconContainer: {
-    width: moderateScale(32),
-    height: moderateScale(32),
-    borderRadius: moderateScale(16),
-    backgroundColor: "rgba(255, 215, 0, 0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  newsDate: {
-    fontSize: moderateScale(12),
-    color: "rgba(255, 255, 255, 0.7)",
-    fontWeight: "500",
-  },
-  newsTitle: {
-    fontSize: moderateScale(16),
-    fontWeight: "bold",
-    color: "#FFFFFF",
-    marginBottom: moderateScale(8),
-    lineHeight: moderateScale(22),
+    width: Dimensions.get('window').width - 64,
+    marginRight: 16,
   },
   newsContent: {
-    fontSize: moderateScale(14),
-    color: "rgba(255, 255, 255, 0.8)",
-    lineHeight: moderateScale(20),
-    marginBottom: moderateScale(12),
+    flex: 1,
+    justifyContent: 'center',
   },
-  newsFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
+  newsHeader: {
+    marginBottom: 4,
   },
-  readMoreText: {
-    fontSize: moderateScale(12),
-    color: "#FFD700",
-    fontWeight: "600",
-    marginRight: moderateScale(4),
+  newsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.white,
+    marginBottom: 4,
+    lineHeight: 18,
   },
-  loadingContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: moderateScale(32),
+  newsMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  loadingText: {
-    marginTop: moderateScale(8),
-    fontSize: moderateScale(14),
-    color: "#850111",
-    fontWeight: "500",
+  newsDate: {
+    fontSize: 12,
+    color: theme.colors.gold,
+  },
+  unreadDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: theme.colors.gold,
+  },
+  newsDescription: {
+    fontSize: 12,
+    color: theme.colors.white,
+    opacity: 0.9,
+    lineHeight: 16,
+  },
+  pagination: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 12,
+  },
+  paginationDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: theme.colors.white,
+    opacity: 0.5,
+    marginHorizontal: 3,
+  },
+  paginationDotActive: {
+    opacity: 1,
+    backgroundColor: theme.colors.gold,
   },
 });
 

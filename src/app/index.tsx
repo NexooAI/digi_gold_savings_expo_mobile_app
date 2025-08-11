@@ -13,6 +13,7 @@ import useGlobalStore from "@/store/global.store";
 import * as SecureStore from "expo-secure-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
+import { COLORS } from "src/constants/colors";
 
 const { width } = Dimensions.get("window");
 const logoWidth = width * 0.4;
@@ -122,22 +123,22 @@ export default function AuthGuard() {
   if (isChecking) {
     return (
       <ImageBackground
-        source={theme.image.bg_image}
+        source={theme.images.auth.loginBg}
         style={styles.backgroundImage}
       >
         <LinearGradient
-          colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.7)']}
+          colors={[theme.colors.bgBlackHeavy, theme.colors.bgBlackMedium, theme.colors.bgBlackHeavy]}
           style={styles.gradient}
         >
           <View style={styles.container}>
             <Image
-              source={theme.image.transparentLogo}
+              source={theme.images.auth.logo}
               style={[styles.logo, { width: logoWidth, aspectRatio: 1 }]}
               resizeMode="contain"
             />
             <ActivityIndicator 
               size="large" 
-              color="#ffc90c" 
+              color={COLORS.secondary} 
               style={styles.loader}
             />
           </View>

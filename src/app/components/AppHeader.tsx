@@ -13,7 +13,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRouter, usePathname } from "expo-router";
-import theme from "src/constants/theme";
+import { theme } from "src/constants/theme";
+import { COLORS } from "src/constants/colors";
 import useGlobalStore from "@/store/global.store";
 import { AppLocale, t } from "@/i18n";
 
@@ -242,7 +243,7 @@ Need help? Contact our support team! 📞`;
             <Ionicons
               name="arrow-back-outline"
               size={20}
-              color={theme.theme.colors.white}
+              color={theme.colors.white}
             />
           </TouchableOpacity>
         )}
@@ -253,7 +254,7 @@ Need help? Contact our support team! 📞`;
         ) : (
           <View style={styles.logoContainer}>
             <Image
-              source={theme.theme.image.transparentLogo}
+              source={require('../../../assets/images/logo_trans.png')}
               style={styles.logo}
               resizeMode="contain"
             />
@@ -265,7 +266,7 @@ Need help? Contact our support team! 📞`;
               style={[styles.flipCard, { transform: [{ perspective: 1000 }, { rotateX: frontInterpolate }] }]}
             >
               {/* Gold Side 1 */}
-              <Image source={require('../../../assets/images/gold_pattern.jpg')} style={styles.plateBg} />
+              <Image source={theme.images.navigation.goldPattern} style={styles.plateBg} />
               <View style={styles.plateContent}>
                 <View style={{ marginLeft: 6 }}>
                   <Text style={styles.goldRateText}>Gold: ₹{goldRateInfo.rate}</Text>
@@ -277,10 +278,10 @@ Need help? Contact our support team! 📞`;
               style={[styles.flipCard, styles.flipCardBack, { transform: [{ perspective: 1000 }, { rotateX: backInterpolate }] }]}
             >
               {/* Gold Side 2 (flipped): Show updated date/time and LIVE */}
-              <Image source={require('../../../assets/images/gold_pattern.jpg')} style={styles.plateBg} />
+              <Image source={theme.images.navigation.goldPattern} style={styles.plateBg} />
               <View style={[styles.plateContent, { flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }]}> 
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
-                  <Ionicons name="time-outline" size={14} color="#7a5600" style={{ marginRight: 4 }} />
+                  <Ionicons name="time-outline" size={14} color={COLORS.brown} style={{ marginRight: 4 }} />
                   <Text style={styles.updateText}>
                     {formatDateTime(goldRateUpdatedAt)}
                   </Text>
@@ -312,7 +313,7 @@ Need help? Contact our support team! 📞`;
               style={styles.shareButton}
               activeOpacity={0.7}
             >
-              <Ionicons name="share-outline" size={24} color={theme.theme.colors.white} />
+              <Ionicons name="share-outline" size={24} color={theme.colors.white} />
             </TouchableOpacity>
           )}
           {showDrawerToggle && (
@@ -320,7 +321,7 @@ Need help? Contact our support team! 📞`;
               onPress={() => (navigation as any).openDrawer()}
               style={styles.drawerToggle}
             >
-              <Ionicons name="reorder-three-outline" size={28} color="#ffffff" />
+              <Ionicons name="reorder-three-outline" size={28} color={COLORS.white} />
             </TouchableOpacity>
           )}
         </View>
@@ -335,7 +336,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: theme.theme.colors.primary,
+    backgroundColor: theme.colors.primary,
     flex: 1,
   },
   logoContainer: {
@@ -348,7 +349,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   titleText: {
-    color: theme.theme.colors.white,
+    color: theme.colors.white,
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -363,14 +364,14 @@ const styles = StyleSheet.create({
   languageButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    backgroundColor: COLORS.overlay,
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
+    borderColor: COLORS.borderWhiteLight,
     marginRight: 8,
-    shadowColor: "#000",
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
@@ -382,7 +383,7 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   languageText: {
-    color: "#ffffff",
+    color: COLORS.white,
     fontSize: 12,
     fontWeight: "bold",
   },
@@ -397,7 +398,7 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 13, // Smaller text for better UX
-    color: theme.theme.colors.white,
+    color: theme.colors.white,
     marginLeft: 4,
   },
   flipCardWrapper: {
@@ -435,21 +436,21 @@ const styles = StyleSheet.create({
   goldRateText: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: '#7a5600',
+    color: COLORS.brown,
   },
   goldRatePurity: {
     fontSize: 11,
-    color: '#7a5600',
+    color: COLORS.brown,
     opacity: 0.9,
     textAlign: 'center',
   },
   updateText: {
     fontSize: 10,
-    color: '#7a5600',
+    color: COLORS.brown,
   },
   liveText: {
     fontSize: 10,
-    color: '#b30000',
+    color: COLORS.red,
     fontWeight: 'bold',
   },
   shareButton: {

@@ -23,6 +23,7 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import { theme } from "@/constants/theme";
+import { COLORS } from "@/constants/colors";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import Icon from "@expo/vector-icons/MaterialIcons";
@@ -46,17 +47,17 @@ const BackToMpinButton = () => {
         top: Platform.OS === 'ios' ? 60 : 40,
         left: 20,
         zIndex: 1000,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backgroundColor: theme.colors.bgBlackHeavy,
         padding: 12,
         borderRadius: 25,
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.3)',
+        borderColor: theme.colors.borderWhiteMedium,
       }}
     >
-      <Icon name="arrow-back" size={20} color="#ffffff" />
-      <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: 'bold', marginLeft: 8 }}>
+      <Icon name="arrow-back" size={20} color={COLORS.white} />
+      <Text style={{ color: COLORS.white, fontSize: 14, fontWeight: 'bold', marginLeft: 8 }}>
         {t("backToMpin")}
       </Text>
     </TouchableOpacity>
@@ -101,20 +102,20 @@ const SimpleLanguageSwitcher = () => {
         top: Platform.OS === 'ios' ? 60 : 40,
         right: 20,
         zIndex: 1000,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backgroundColor: theme.colors.bgBlackHeavy,
         padding: 12,
         borderRadius: 25,
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.3)',
+        borderColor: theme.colors.borderWhiteMedium,
       }}
     >
       <Image
-        source={theme.image.translate}
-        style={{ width: 20, height: 20, marginRight: 8, tintColor: '#ffffff' }}
+                    source={theme.images.translate.malayalam}
+        style={{ width: 20, height: 20, marginRight: 8, tintColor: COLORS.white }}
       />
-      <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: 'bold' }}>
+      <Text style={{ color: COLORS.white, fontSize: 14, fontWeight: 'bold' }}>
         {getLanguageDisplayName()}
       </Text>
     </TouchableOpacity>
@@ -569,17 +570,17 @@ export default function ForgotMpin() {
   if (initializing) {
     return (
       <ImageBackground
-        source={theme.image.bg_image}
+        source={theme.images.auth.loginBg}
         style={styles.backgroundImage}
       >
         <LinearGradient
-          colors={["rgba(32, 1, 1, 0)", "rgba(167, 0, 0, 0)", "rgba(118, 1, 1, 0.02)"]}
+          colors={[theme.colors.transparent, theme.colors.transparent, theme.colors.bgPrimaryLight]}
           style={styles.gradient}
         >
           <View style={styles.container}>
             <View style={styles.logoContainer}>
               <Image
-                source={theme.image.transparentLogo}
+                source={theme.images.auth.logo}
                 style={[styles.logo, { width: logoWidth }]}
                 resizeMode="contain"
               />
@@ -614,14 +615,14 @@ export default function ForgotMpin() {
 
       {error ? (
         <View style={styles.errorContainer}>
-          <Icon name="error" size={16} color="#FF6B6B" />
+          <Icon name="error" size={16} color={COLORS.errorLight} />
           <Text style={styles.errorText}>{error}</Text>
         </View>
       ) : null}
 
       {success ? (
         <View style={styles.successContainer}>
-          <Icon name="check-circle" size={16} color="#4CAF50" />
+          <Icon name="check-circle" size={16} color={COLORS.success} />
           <Text style={styles.successText}>{success}</Text>
         </View>
       ) : null}
@@ -636,7 +637,7 @@ export default function ForgotMpin() {
           disabled={loading || otp.length !== 4}
         >
           <LinearGradient
-            colors={["#ffc90c", "#ffd700"]}
+            colors={[COLORS.secondary, COLORS.gold]}
             style={styles.buttonGradient}
           >
             <Text style={styles.actionButtonText}>
@@ -701,14 +702,14 @@ export default function ForgotMpin() {
 
       {error ? (
         <View style={styles.errorContainer}>
-          <Icon name="error" size={16} color="#96fc88" />
+          <Icon name="error" size={16} color={COLORS.greenLight} />
           <Text style={styles.errorText}>{error}</Text>
         </View>
       ) : null}
 
       {success ? (
         <View style={styles.successContainer}>
-          <Icon name="check-circle" size={16} color="#4CAF50" />
+          <Icon name="check-circle" size={16} color={COLORS.success} />
           <Text style={styles.successText}>{success}</Text>
         </View>
       ) : null}
@@ -723,7 +724,7 @@ export default function ForgotMpin() {
           disabled={loading || newMpin.length !== 4 || confirmMpin.length !== 4 || newMpin !== confirmMpin}
         >
           <LinearGradient
-            colors={["#ffc90c", "#ffd700"]}
+            colors={[COLORS.secondary, COLORS.gold]}
             style={styles.buttonGradient}
           >
             <Text style={styles.actionButtonText}>
@@ -739,11 +740,11 @@ export default function ForgotMpin() {
 
   return (
     <ImageBackground
-      source={theme.image.bg_image}
+      source={theme.images.auth.loginBg}
       style={styles.backgroundImage}
     >
       <LinearGradient
-        colors={["rgba(32, 1, 1, 0)", "rgba(167, 0, 0, 0)", "rgba(118, 1, 1, 0.02)"]}
+        colors={[theme.colors.transparent, theme.colors.transparent, theme.colors.bgPrimaryLight]}
         style={styles.gradient}
       >
         <KeyboardAvoidingView
@@ -755,7 +756,7 @@ export default function ForgotMpin() {
               <BackToMpinButton />
               <View style={styles.logoContainer}>
                 <Image
-                  source={theme.image.transparentLogo}
+                  source={theme.images.auth.logo}
                   style={[styles.logo, { width: logoWidth }]}
                   resizeMode="contain"
                 />
@@ -766,17 +767,17 @@ export default function ForgotMpin() {
                      {/* Base fog layer */}
                      <LinearGradient
                        colors={[
-                         "rgba(6, 2, 2, 0.78)",
-                         "rgba(34, 0, 0, 0.35)",
-                         "rgba(31, 3, 3, 0.54)",
+                         theme.colors.bgPrimaryHeavy,
+                         theme.colors.bgPrimaryLight,
+                         theme.colors.bgPrimaryMedium,
                        ]}
                        style={StyleSheet.absoluteFill}
                      />
                      {/* Top fog highlight */}
                      <LinearGradient
                        colors={[
-                         "rgba(10, 2, 2, 0.38)",
-                         "rgba(76, 63, 63, 0.74)",
+                         theme.colors.bgPrimaryLight,
+                         theme.colors.text.mediumGrey,
                        ]}
                        start={{ x: 0, y: 0 }}
                        end={{ x: 0, y: 0.5 }}
@@ -785,8 +786,8 @@ export default function ForgotMpin() {
                      {/* Bottom fog highlight */}
                      <LinearGradient
                        colors={[
-                         "rgba(0, 0, 0, 0.44)",
-                         "rgba(0, 0, 0, 0.28)",
+                         theme.colors.bgBlackMedium,
+                         theme.colors.bgBlackLight,
                        ]}
                        start={{ x: 0, y: 0.5 }}
                        end={{ x: 0, y: 1 }}
@@ -835,7 +836,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    color: "#ffffff",
+    color: COLORS.white,
     fontSize: 18,
     fontWeight: "600",
     textAlign: "center",
@@ -855,12 +856,12 @@ const styles = StyleSheet.create({
     padding: 20,
     width: "100%",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.4)",
+    borderColor: theme.colors.borderWhiteMedium,
     marginBottom: Platform.OS === "ios" ? 20 : 10,
     overflow: "hidden",
     ...Platform.select({
       ios: {
-        shadowColor: "#000",
+        shadowColor: COLORS.black,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.3,
         shadowRadius: 12,
@@ -868,7 +869,7 @@ const styles = StyleSheet.create({
       },
       android: {
         elevation: 12,
-        shadowColor: "#000",
+        shadowColor: COLORS.black,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.3,
         shadowRadius: 12,
@@ -884,14 +885,14 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   stepTitle: {
-    color: "#ffffff",
+    color: COLORS.white,
     fontSize: 28,
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
   },
   stepSubtitle: {
-    color: "#ffffff",
+    color: COLORS.white,
     fontSize: 16,
     marginBottom: 30,
     textAlign: "center",
@@ -901,20 +902,20 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   inputLabel: {
-    color: "#ffffff",
+    color: COLORS.white,
     fontSize: 16,
     fontWeight: "600",
     marginBottom: 10,
   },
   textInput: {
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    backgroundColor: theme.colors.bgWhiteLight,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
+    borderColor: theme.colors.borderWhiteMedium,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    color: "#ffffff",
+    color: COLORS.white,
   },
   mpinContainer: {
     flexDirection: "row",
@@ -933,18 +934,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     textAlign: "center",
     fontSize: 24,
-    color: "#000000",
-    backgroundColor: "#ffffff",
+    color: COLORS.black,
+    backgroundColor: COLORS.white,
   },
   mpinInputEmpty: {
-    borderColor: "rgba(174, 28, 28, 0.2)",
-    backgroundColor: "#ffffff",
-    color: "#000000",
+    borderColor: theme.colors.errorLight,
+    backgroundColor: COLORS.white,
+    color: COLORS.black,
   },
   mpinInputFilled: {
     borderColor: theme.colors.secondary,
-    backgroundColor: "#ffffff",
-    color: "#000000",
+    backgroundColor: COLORS.white,
+    color: COLORS.black,
   },
   inputDot: {
     position: "absolute",
@@ -964,7 +965,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     ...Platform.select({
       ios: {
-        shadowColor: "#000",
+        shadowColor: COLORS.black,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -1014,13 +1015,13 @@ const styles = StyleSheet.create({
   errorContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255, 107, 107, 0.1)",
+    backgroundColor: theme.colors.bgErrorLight,
     padding: 12,
     borderRadius: 8,
     marginBottom: 15,
   },
   errorText: {
-    color: "#a3f55b",
+    color: COLORS.green,
     fontSize: 14,
     marginLeft: 8,
     flex: 1,
@@ -1028,13 +1029,13 @@ const styles = StyleSheet.create({
   successContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(76, 175, 80, 0.1)",
+    backgroundColor: theme.colors.bgSuccessLight,
     padding: 12,
     borderRadius: 8,
     marginBottom: 15,
   },
   successText: {
-    color: "#4CAF50",
+    color: COLORS.success,
     fontSize: 14,
     marginLeft: 8,
     flex: 1,
@@ -1043,10 +1044,10 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.2)",
+    borderTopColor: theme.colors.borderWhiteLight,
   },
   sectionTitle: {
-    color: "#ffffff",
+    color: COLORS.white,
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 15,

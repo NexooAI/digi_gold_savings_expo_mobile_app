@@ -223,8 +223,8 @@ const StatusView: React.FC<StatusViewProps> = ({
   if (!currentCollection) {
     // Show a loading spinner while currentCollection is being set
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000000AA' }}>
-        <ActivityIndicator size="large" color="#FFD700" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.black + 'AA' }}>
+        <ActivityIndicator size="large" color={theme.colors.gold} />
       </View>
     );
   }
@@ -257,7 +257,7 @@ const StatusView: React.FC<StatusViewProps> = ({
                         : index < currentImageIndex
                         ? '100%'
                         : '0%',
-                      borderColor: !viewedStatus[index] ? '#00FF00' : 'rgba(255,255,255,0.3)', // green if not viewed
+                      borderColor: !viewedStatus[index] ? theme.colors.success : 'rgba(255,255,255,0.3)', // green if not viewed
                       borderWidth: 2,
                     },
                   ]}
@@ -276,14 +276,14 @@ const StatusView: React.FC<StatusViewProps> = ({
                   }}
                 />
               ) : (
-                <View style={[styles.avatar, { backgroundColor: '#666', justifyContent: 'center', alignItems: 'center' }]}> 
-                  <Ionicons name="image" size={20} color="#fff" />
+                <View style={[styles.avatar, { backgroundColor: theme.colors.textMediumGrey, justifyContent: 'center', alignItems: 'center' }]}> 
+                  <Ionicons name="image" size={20} color={theme.colors.white} />
                 </View>
               )}
               <Text style={styles.username}>{currentCollection?.name || 'Unknown Collection'}</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color="#fff" />
+              <Ionicons name="close" size={24} color={theme.colors.white} />
             </TouchableOpacity>
           </View>
         </View>
@@ -306,18 +306,18 @@ const StatusView: React.FC<StatusViewProps> = ({
                 }}
               />
             ) : (
-              <View style={[styles.statusImage, { backgroundColor: '#333', justifyContent: 'center', alignItems: 'center' }]}> 
-                <Text style={{ color: '#fff', fontSize: 16 }}>No image available</Text>
+              <View style={[styles.statusImage, { backgroundColor: theme.colors.textDarkGrey, justifyContent: 'center', alignItems: 'center' }]}> 
+                <Text style={{ color: theme.colors.white, fontSize: 16 }}>No image available</Text>
               </View>
             )}
             {imageLoading && (
               <View style={styles.loadingOverlay}>
-                <ActivityIndicator size="large" color="#FFD700" accessibilityLabel="Loading image" />
+                <ActivityIndicator size="large" color={theme.colors.gold} accessibilityLabel="Loading image" />
               </View>
             )}
             {isPaused && (
               <View style={styles.pauseOverlay}>
-                <Ionicons name="pause" size={40} color="#fff" />
+                <Ionicons name="pause" size={40} color={theme.colors.white} />
               </View>
             )}
           </View>
@@ -328,13 +328,13 @@ const StatusView: React.FC<StatusViewProps> = ({
             style={[styles.navButton, styles.leftButton]}
             onPress={handlePrev}
           >
-            <Ionicons name="chevron-back" size={30} color="#fff" />
+            <Ionicons name="chevron-back" size={30} color={theme.colors.white} />
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.navButton, styles.rightButton]}
             onPress={handleNext}
           >
-            <Ionicons name="chevron-forward" size={30} color="#fff" />
+            <Ionicons name="chevron-forward" size={30} color={theme.colors.white} />
           </TouchableOpacity>
         </View>
       </View>
@@ -345,7 +345,7 @@ const StatusView: React.FC<StatusViewProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: theme.colors.black,
   },
   header: {
     position: 'absolute',
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: '100%',
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.white,
   },
   headerContent: {
     flexDirection: 'row',
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   username: {
-    color: '#fff',
+    color: theme.colors.white,
     fontSize: 16,
     fontWeight: '600',
   },

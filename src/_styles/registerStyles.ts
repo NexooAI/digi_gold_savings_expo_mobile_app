@@ -8,7 +8,7 @@ export const registerStyles = StyleSheet.create({
   },
   darkOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0)', // Adjust opacity as needed
+    backgroundColor: theme.colors.transparent, // Adjust opacity as needed
     zIndex: 0,
   },
   gradient: {
@@ -36,12 +36,12 @@ export const registerStyles = StyleSheet.create({
     paddingBottom: 16,
     width: "100%",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.4)",
+    borderColor: theme.colors.borderWhiteLight,
     marginBottom: 8,
     overflow: "hidden",
     ...Platform.select({
       ios: {
-        shadowColor: "#000",
+        shadowColor: theme.colors.shadowBlack,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2,
         shadowRadius: 6,
@@ -49,7 +49,7 @@ export const registerStyles = StyleSheet.create({
       },
       android: {
         elevation: 6,
-        shadowColor: "#000",
+        shadowColor: theme.colors.shadowBlack,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2,
         shadowRadius: 6,
@@ -63,14 +63,14 @@ export const registerStyles = StyleSheet.create({
     paddingVertical: 0,
   },
   pageTitle: {
-    color: "#ffffff",
+    color: theme.colors.white,
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 6,
     textAlign: "center",
   },
   subtitle: {
-    color: "#ffffff",
+    color: theme.colors.white,
     fontSize: 14,
     marginBottom: 12,
     textAlign: "center",
@@ -88,7 +88,7 @@ export const registerStyles = StyleSheet.create({
     marginTop: 6,
     ...Platform.select({
       ios: {
-        shadowColor: "#000",
+        shadowColor: theme.colors.shadowBlack,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -107,7 +107,7 @@ export const registerStyles = StyleSheet.create({
     opacity: 0.6,
   },
   loginButtonText: {
-    color: theme.colors.textDark,
+    color: theme.colors.white,
     fontSize: 18,
     fontWeight: "bold",
   },
@@ -119,13 +119,13 @@ export const registerStyles = StyleSheet.create({
     minHeight: 220, // Ensures enough space for small screens
   },
   otpTitle: {
-    color: "#ffffff",
+    color: theme.colors.white,
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 10,
   },
   otpSentText: {
-    color: "#ffffff",
+    color: theme.colors.white,
     fontSize: 16,
     marginBottom: 20,
     opacity: 0.8,
@@ -151,11 +151,11 @@ export const registerStyles = StyleSheet.create({
     width: 48,
     height: 48,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.15)',
+    borderColor: theme.colors.bgBlackLight,
     borderRadius: 10,
-    color: '#000',
+    color: theme.colors.black,
     fontSize: 22,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.white,
     textAlign: 'center',
     marginHorizontal: 4, // For spacing if gap is not supported
   },
@@ -170,7 +170,7 @@ export const registerStyles = StyleSheet.create({
     marginTop: 15,
   },
   timerText: {
-    color: "#ffffff",
+    color: theme.colors.white,
     marginLeft: 8,
     fontSize: 16,
     opacity: 0.8,
@@ -192,7 +192,7 @@ export const registerStyles = StyleSheet.create({
     marginTop: 20,
   },
   registerText: {
-    color: "#ffffff",
+    color: theme.colors.white,
     fontSize: 16,
     opacity: 0.8,
   },
@@ -208,14 +208,14 @@ export const registerStyles = StyleSheet.create({
     top: Platform.OS === "ios" ? 50 : 30,
     left: 20,
     right: 20,
-    backgroundColor: "rgba(255, 68, 68, 0.95)",
+    backgroundColor: theme.colors.bgErrorMedium,
     borderRadius: 12,
     padding: 15,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     zIndex: 1000,
-    shadowColor: "#000",
+    shadowColor: theme.colors.shadowBlack,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -230,7 +230,7 @@ export const registerStyles = StyleSheet.create({
     alignItems: "center",
   },
   errorMessage: {
-    color: "#fff",
+    color: theme.colors.white,
     fontSize: 16,
     marginLeft: 10,
     flex: 1,
@@ -265,7 +265,7 @@ export const registerStyles = StyleSheet.create({
     marginTop: 20,
   },
   footerText: {
-    color: "#ffffff",
+    color: theme.colors.white,
     fontSize: 16,
     opacity: 0.8,
   },
@@ -277,7 +277,7 @@ export const registerStyles = StyleSheet.create({
     marginLeft: 4,
   },
   errorText: {
-    color: "#ff4444",
+    color: theme.colors.textError,
     fontSize: 12,
     marginTop: 4,
     marginLeft: 4,
@@ -295,15 +295,15 @@ export const registerStyles = StyleSheet.create({
     width: 60,
     height: 60,
     borderWidth: 2,
-    borderColor: "rgba(255, 255, 255, 0.3)",
+    borderColor: theme.colors.borderWhiteLight,
     borderRadius: 15,
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    color: "#000000",
+    backgroundColor: theme.colors.bgWhiteVeryHeavy,
+    color: theme.colors.black,
     fontSize: 28,
     fontWeight: "bold",
     textAlign: "center",
     marginVertical: 8,
-    shadowColor: "#000",
+    shadowColor: theme.colors.shadowBlack,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -313,13 +313,13 @@ export const registerStyles = StyleSheet.create({
     elevation: 3,
   },
   mpinInputEmpty: {
-    borderColor: "rgba(255, 255, 255, 0.3)",
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    borderColor: theme.colors.borderWhiteLight,
+    backgroundColor: theme.colors.bgWhiteVeryHeavy,
   },
   mpinInputFilled: {
-    borderColor: "#ffd700",
-    backgroundColor: "#ffffff",
-    shadowColor: "#ffd700",
+    borderColor: theme.colors.gold,
+    backgroundColor: theme.colors.white,
+    shadowColor: theme.colors.shadowGold,
     shadowOffset: {
       width: 0,
       height: 0,
@@ -336,18 +336,18 @@ export const registerStyles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#000000",
+    backgroundColor: theme.colors.black,
   },
   errorContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255, 68, 68, 0.1)",
+    backgroundColor: theme.colors.bgErrorLight,
     padding: 10,
     borderRadius: 8,
     marginBottom: 20,
   },
   label: {
-    color: "#ffffff",
+    color: theme.colors.white,
     fontSize: 14,
     marginBottom: 8,
     alignSelf: "center",
@@ -372,7 +372,7 @@ export const registerStyles = StyleSheet.create({
     marginTop: 20,
     ...Platform.select({
       ios: {
-        shadowColor: "#000",
+        shadowColor: theme.colors.shadowBlack,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -396,7 +396,7 @@ export const registerStyles = StyleSheet.create({
     alignItems: "center",
   },
   backButtonText: {
-    color: "#ffffff",
+    color: theme.colors.white,
     fontSize: 16,
     marginLeft: 5,
     opacity: 0.8,
@@ -417,14 +417,14 @@ export const newRegisterStyles = StyleSheet.create({
     top: 20, // Adjust top position
     right: 20, // Adjust right position
     zIndex: 5, // Bring it to front
-    backgroundColor: 'rgba(0,0,0,0.5)', // Optional: Add a background
+    backgroundColor: theme.colors.overlayDark, // Optional: Add a background
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
   textInput: {
     height: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: theme.colors.bgWhiteLight,
     borderRadius: 10,
     paddingHorizontal: 20,
     fontSize: 16,
@@ -459,7 +459,7 @@ export const newRegisterStyles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 24,
     color: theme.colors.white,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: theme.colors.bgWhiteLight,
   },
   eyeButton: {
     padding: 10,

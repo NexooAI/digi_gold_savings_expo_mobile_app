@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import { COLORS } from 'src/constants/colors';
 
 const { width, height } = Dimensions.get('window');
 
@@ -181,7 +182,7 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
           ]}
         >
           <LinearGradient
-            colors={['#000000', '#ffd700', '#000000', '#ffd700']}
+            colors={[COLORS.black, COLORS.gold, COLORS.black, COLORS.gold]}
             style={styles.ringGradient}
           />
         </Animated.View>
@@ -285,7 +286,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: COLORS.overlayMedium,
   },
   overlay: {
     position: 'absolute',
@@ -316,7 +317,7 @@ const styles = StyleSheet.create({
   },
   innerGlow: {
     position: 'absolute',
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: COLORS.bgBlackLight,
     borderRadius: 1000,
   },
   logoContainer: {
@@ -340,7 +341,7 @@ const styles = StyleSheet.create({
   },
   sparkleText: {
     fontSize: 16,
-    textShadowColor: 'rgba(255, 215, 0, 0.8)',
+    textShadowColor: COLORS.textShadowGold,
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
@@ -351,17 +352,17 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFD700',
+    color: COLORS.gold,
     marginBottom: 8,
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowColor: COLORS.textShadowBlack,
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
   brandText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#FFF',
+    color: COLORS.white,
     letterSpacing: 2,
     marginBottom: 15,
     textAlign: 'center',
@@ -374,7 +375,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#FFD700',
+    backgroundColor: COLORS.gold,
   },
 });
 

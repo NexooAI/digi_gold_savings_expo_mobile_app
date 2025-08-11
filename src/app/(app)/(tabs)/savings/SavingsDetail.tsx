@@ -34,6 +34,7 @@ import * as Clipboard from "expo-clipboard";
 import { Socket } from "socket.io-client";
 import { CommonActions, useNavigationState } from "@react-navigation/native";
 import { formatGoldWeight } from "@/utils/imageUtils";
+import { theme } from "@/constants/theme";
 
 type Transaction = {
   paymentId: number;
@@ -332,8 +333,8 @@ const SavingsDetail = () => {
   const DetailRow: React.FC<DetailRowProps> = ({
     label,
     value,
-    labelColor = "#595959",
-    valueColor = "#262626",
+    labelColor = theme.colors.textSecondary,
+    valueColor = theme.colors.textSecondary,
     icon,
   }) => (
     <View

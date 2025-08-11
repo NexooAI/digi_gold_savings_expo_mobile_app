@@ -32,6 +32,7 @@ import useGlobalStore from "@/store/global.store";
 import api from "@/services/api";
 import { moderateScale } from "react-native-size-matters";
 import { theme } from "@/constants/theme";
+import { COLORS, GRADIENT_COLORS } from "@/constants/colors";
 import AuthGuard from "@/components/AuthGuard";
 import { formatGoldWeight } from "@/utils/imageUtils";
 
@@ -392,14 +393,14 @@ export default function SavingsScreen() {
     const bgColors: readonly [string, string, string] =
       item.metalType === "gold"
         ? ([
-          "rgba(1, 133, 69, 0.95)",
-          "rgba(90, 0, 11, 0.95)",
-          "rgba(46, 4, 6, 0.95)",
+          theme.colors.bgSuccessLight,
+          theme.colors.redBurgundyDark,
+          theme.colors.redDarker,
         ] as const)
         : ([
-          "rgba(192, 192, 192, 0.95)",
-          "rgba(168, 168, 168, 0.95)",
-          "rgba(128, 128, 128, 0.95)",
+          theme.colors.silver,
+          theme.colors.silverLight,
+          theme.colors.silverDark,
         ] as const);
 
     const [isExpanded, setIsExpanded] = useState(false);
@@ -484,11 +485,7 @@ export default function SavingsScreen() {
         style={[styles.cardWrapper, isActive && styles.cardWrapperActive]}
       >
         <ImageBackground
-          source={
-            item.metalType === "gold"
-              ? require("../../../../../assets/images/saving_bg.png")
-              : require("../../../../../assets/images/saving_bg.png")
-          }
+          source={theme.images.savings.savingBg}
           style={styles.cardBackgroundImage}
           imageStyle={styles.cardBackgroundImageStyle}
           resizeMode="cover"
@@ -499,7 +496,7 @@ export default function SavingsScreen() {
               {/* <View
                 style={[
                   styles.schemeIconContainer,
-                  { backgroundColor: "rgba(255, 255, 255, 0.2)" },
+                  { backgroundColor: theme.colors.bgWhiteMedium },
                 ]}
               >
                 <Ionicons
@@ -509,9 +506,9 @@ export default function SavingsScreen() {
                         : "cube-outline"
                     }
                     size={24}
-                    color="#000"
+                    color={theme.colors.textSecondary}
                   />
-                <Image source={require('../../../../../assets/images/gold.png')} style={{ width: 40, height: 40 }} />
+                <Image source={theme.images.products.gold} style={{ width: 40, height: 40 }} />
 
               </View> */}
               <View style={styles.schemeTitleContainer}>
@@ -531,7 +528,7 @@ export default function SavingsScreen() {
                   <View
                     style={[
                       styles.savingTypeBadge,
-                      { backgroundColor: "rgba(239, 24, 24, 0.71)" },
+                      { backgroundColor: theme.colors.bgErrorMedium },
                     ]}
                   >
                     <Text style={styles.savingTypeText}>
@@ -548,8 +545,8 @@ export default function SavingsScreen() {
                   {
                     backgroundColor:
                       item.status === "ACTIVE"
-                        ? "rgba(8, 237, 8, 0.56)"
-                        : "rgba(255, 0, 0, 0.2)",
+                                ? theme.colors.bgSuccessLight
+        : theme.colors.bgErrorLight,
                   },
                 ]}
               >
@@ -557,7 +554,7 @@ export default function SavingsScreen() {
                   style={[
                     styles.statusText,
                     {
-                      color: item.status === "ACTIVE" ? "#000" : "#FF0000",
+                      color: item.status === "ACTIVE" ? theme.colors.textSecondary : theme.colors.error,
                     },
                   ]}
                 >
@@ -568,7 +565,7 @@ export default function SavingsScreen() {
                 <Ionicons
                   name={isExpanded ? "chevron-up" : "chevron-down"}
                   size={20}
-                  color="#FFFFFF"
+                  color={theme.colors.textPrimary}
                 />
               </View>
             </View>
@@ -579,13 +576,13 @@ export default function SavingsScreen() {
             <View style={styles.accountLabelsRow}>
               <View style={styles.accountLabelItem}>
                 <View style={styles.accountIconContainer}>
-                  <Ionicons name="person-outline" size={16} color="#FFFFFF" />
+                  <Ionicons name="person-outline" size={16} color={COLORS.white} />
                 </View>
                 <Text style={styles.accountLabel}>{translations.accountHolderLabel}</Text>
               </View>
               <View style={styles.accountLabelItem}>
                 <View style={styles.accountIconContainer}>
-                  <Ionicons name="card-outline" size={16} color="#FFFFFF" />
+                  <Ionicons name="card-outline" size={16} color={COLORS.white} />
                 </View>
                 <Text style={styles.accountLabel}>{translations.accountNumberLabel}</Text>
               </View>
@@ -602,7 +599,7 @@ export default function SavingsScreen() {
           <View style={styles.paymentInfoRow}>
             <View style={styles.paymentInfoItem}>
               <View style={styles.paymentInfoIconContainer}>
-                <Ionicons name="time-outline" size={16} color="#FFFFFF" />
+                <Ionicons name="time-outline" size={16} color={COLORS.white} />
               </View>
               <View style={styles.paymentInfoContent}>
                 <Text style={styles.paymentInfoLabel}>{translations.frequency}</Text>
@@ -615,7 +612,7 @@ export default function SavingsScreen() {
             <View style={styles.paymentInfoDivider} />
             <View style={styles.paymentInfoItem}>
               <View style={styles.paymentInfoIconContainer}>
-                <Ionicons name="scale-outline" size={16} color="#FFFFFF" />
+                <Ionicons name="scale-outline" size={16} color={COLORS.white} />
               </View>
               <View style={styles.paymentInfoContent}>
                 <Text style={styles.paymentInfoLabel}>{translations.totalWeight}</Text>
@@ -632,13 +629,13 @@ export default function SavingsScreen() {
               onPress={() => handleNavigation(item)}
             >
               <LinearGradient
-                colors={["#850111", "#B8860B", "#DAA520"]}
+                colors={GRADIENT_COLORS.primary as any}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.detailsButtonGradient}
               >
                 <Text style={styles.detailsButtonText}>{translations.viewDetails}</Text>
-                <Ionicons name="chevron-forward" size={20} color="#fff" />
+                <Ionicons name="chevron-forward" size={20} color={COLORS.white} />
               </LinearGradient>
             </TouchableOpacity>
             <TouchableOpacity
@@ -646,13 +643,13 @@ export default function SavingsScreen() {
               onPress={handlePayNow}
             >
               <LinearGradient
-                colors={["#4CAF50", "#45a049", "#3d8b40"]}
+                colors={GRADIENT_COLORS.success as any}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.payNowButtonGradient}
               >
                 <Text style={styles.payNowButtonTextLarge}>{translations.payNow}</Text>
-                <Ionicons name="card-outline" size={20} color="#fff" />
+                <Ionicons name="card-outline" size={20} color={COLORS.white} />
               </LinearGradient>
             </TouchableOpacity>
           </View>
@@ -672,7 +669,7 @@ export default function SavingsScreen() {
               <View style={styles.enhancedInfoRow}>
                 <View style={styles.enhancedInfoItem}>
                   <View style={styles.enhancedInfoIconContainer}>
-                    <Ionicons name="wallet-outline" size={20} color="#FFFFFF" />
+                    <Ionicons name="wallet-outline" size={20} color={COLORS.white} />
                   </View>
                   <Text style={styles.enhancedInfoLabel}>{translations.totalInvestedLabel}</Text>
                   <Text style={styles.enhancedInfoValue}>
@@ -682,7 +679,7 @@ export default function SavingsScreen() {
 
                 <View style={styles.enhancedInfoItem}>
                   <View style={styles.enhancedInfoIconContainer}>
-                    <Ionicons name="trending-up" size={20} color="#FFFFFF" />
+                    <Ionicons name="trending-up" size={20} color={COLORS.white} />
                   </View>
                   <Text style={styles.enhancedInfoLabel}>{translations.goldWeightLabel}</Text>
                   <Text style={styles.enhancedInfoValue}>
@@ -692,7 +689,7 @@ export default function SavingsScreen() {
 
                 <View style={styles.enhancedInfoItem}>
                   <View style={styles.enhancedInfoIconContainer}>
-                    <Ionicons name="cash-outline" size={20} color="#FFFFFF" />
+                    <Ionicons name="cash-outline" size={20} color={COLORS.white} />
                   </View>
                   <Text style={styles.enhancedInfoLabel}>{translations.monthlyEMILabel}</Text>
                   <Text style={styles.enhancedInfoValue}>₹{item.emiAmount}</Text>
@@ -703,7 +700,7 @@ export default function SavingsScreen() {
               <View style={styles.enhancedInfoRow}>
                 <View style={styles.enhancedInfoItem}>
                   <View style={styles.enhancedInfoIconContainer}>
-                    <Ionicons name="calendar-outline" size={20} color="#FFFFFF" />
+                    <Ionicons name="calendar-outline" size={20} color={COLORS.white} />
                   </View>
                   <Text style={styles.enhancedInfoLabel}>{translations.progressLabel}</Text>
                   <Text style={styles.enhancedInfoValue}>
@@ -713,7 +710,7 @@ export default function SavingsScreen() {
 
                 <View style={styles.enhancedInfoItem}>
                   <View style={styles.enhancedInfoIconContainer}>
-                    <Ionicons name="time-outline" size={20} color="#FFFFFF" />
+                    <Ionicons name="time-outline" size={20} color={COLORS.white} />
                   </View>
                   <Text style={styles.enhancedInfoLabel}>{translations.remainingLabel}</Text>
                   <Text style={styles.enhancedInfoValue}>
@@ -723,12 +720,12 @@ export default function SavingsScreen() {
 
                 <View style={styles.enhancedInfoItem}>
                   <View style={styles.enhancedInfoIconContainer}>
-                    <Ionicons name="trophy-outline" size={20} color="#FFFFFF" />
+                    <Ionicons name="trophy-outline" size={20} color={COLORS.white} />
                   </View>
                   <Text style={styles.enhancedInfoLabel}>{translations.statusLabel}</Text>
                   <Text style={[
                     styles.enhancedInfoValue,
-                    { color: item.status === "ACTIVE" ? "#2E7D32" : "#D32F2F" }
+                    { color: item.status === "ACTIVE" ? theme.colors.statusActive : theme.colors.statusInactive }
                   ]}>
                     {item.status || "INACTIVE"}
                   </Text>
@@ -739,7 +736,7 @@ export default function SavingsScreen() {
             {/* Smart Timeline Section */}
             <View style={styles.smartTimelineContainer}>
               <View style={styles.timelineHeader}>
-                <Ionicons name="time-outline" size={18} color="#000" />
+                <Ionicons name="time-outline" size={18} color={COLORS.black} />
                 <Text style={styles.timelineTitle}>{translations.investmentTimeline}</Text>
               </View>
 
@@ -755,7 +752,7 @@ export default function SavingsScreen() {
                 <View style={styles.timelineConnector} />
 
                 <View style={styles.timelineItem}>
-                  <View style={[styles.timelineDot, { backgroundColor: progressPercentage > 50 ? "#4CAF50" : "#FF9800" }]} />
+                  <View style={[styles.timelineDot, { backgroundColor: progressPercentage > 50 ? theme.colors.success : theme.colors.warning }]} />
                   <View style={styles.timelineInfo}>
                     <Text style={styles.timelineLabel}>{translations.currentProgress}</Text>
                     <Text style={styles.timelineValue}>{progressPercentage}% {translations.completeLabel}</Text>
@@ -765,7 +762,7 @@ export default function SavingsScreen() {
                 <View style={styles.timelineConnector} />
 
                 <View style={styles.timelineItem}>
-                  <View style={[styles.timelineDot, { backgroundColor: "#FFD700" }]} />
+                  <View style={[styles.timelineDot, { backgroundColor: theme.colors.gold }]} />
                   <View style={styles.timelineInfo}>
                     <Text style={styles.timelineLabel}>{translations.maturity}</Text>
                     <Text style={styles.timelineValue}>{item.maturityDate}</Text>
@@ -804,14 +801,14 @@ export default function SavingsScreen() {
                 <View style={styles.monthsInfo}>
                   <View style={styles.monthItem}>
                     <View
-                      style={[styles.monthDot, { backgroundColor: "#850111" }]}
+                      style={[styles.monthDot, { backgroundColor: theme.colors.primary }]}
                     />
                     <Text style={styles.monthLabel}>{translations.paid}</Text>
                     <Text style={styles.monthValue}>{item.monthsPaid}</Text>
                   </View>
                   <View style={styles.monthItem}>
                     <View
-                      style={[styles.monthDot, { backgroundColor: "#DAA520" }]}
+                      style={[styles.monthDot, { backgroundColor: theme.colors.goldLight }]}
                     />
                     <Text style={styles.monthLabel}>{translations.pending}</Text>
                     <Text style={styles.monthValue}>
@@ -820,7 +817,7 @@ export default function SavingsScreen() {
                   </View>
                   <View style={styles.monthItem}>
                     <View
-                      style={[styles.monthDot, { backgroundColor: "#850111" }]}
+                      style={[styles.monthDot, { backgroundColor: theme.colors.primary }]}
                     />
                     <Text style={styles.monthLabel}>{translations.total}</Text>
                     <Text style={styles.monthValue}>{item.noOfIns}</Text>
@@ -839,7 +836,7 @@ export default function SavingsScreen() {
     <View style={styles.headerContainer}>
       {!hasAmountType && (
         <LinearGradient
-          colors={["#1a1a2e", "#16213e", "#0f3460"]}
+          colors={GRADIENT_COLORS.blue as any}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.portfolioCard}
@@ -848,7 +845,7 @@ export default function SavingsScreen() {
             <View style={styles.statItem}>
               <View style={styles.statIconContainer}>
                 {/* <Ionicons name="wallet-outline" size={20} color="#ffd700" /> */}
-                <Image source={require('../../../../../assets/images/saveasmoneyproduct.png')} style={{ width: 20, height: 20 }} />
+                <Image source={theme.images.products.saveAsMoney} style={{ width: 20, height: 20 }} />
                 {/* saveasmoneyproduct */}
               </View>
               <View style={styles.statInfo}>
@@ -862,7 +859,7 @@ export default function SavingsScreen() {
             <View style={styles.statItem}>
               <View style={styles.statIconContainer}>
                 {/* <Ionicons name="cube-outline" size={20} color="#ffd700" /> */}
-                <Image source={require('../../../../../assets/images/savegold.png')} style={{ width: 20, height: 20 }} />
+                <Image source={theme.images.products.saveGold} style={{ width: 20, height: 20 }} />
               </View>
               <View style={styles.statInfo}>
                 <Text style={styles.statLabel}>{translations.gold}</Text>
@@ -873,11 +870,11 @@ export default function SavingsScreen() {
 
           {/* <View style={styles.portfolioFooter}>
             <View style={styles.footerItem}>
-              <Ionicons name="trending-up" size={14} color="#4ade80" />
+              <Ionicons name="trending-up" size={14} color={COLORS.green} />
               <Text style={styles.footerText}>Growing Portfolio</Text>
             </View>
             <View style={styles.footerItem}>
-              <Ionicons name="shield-checkmark" size={14} color="#60a5fa" />
+              <Ionicons name="shield-checkmark" size={14} color={COLORS.blue} />
               <Text style={styles.footerText}>Secure Investment</Text>
             </View>
           </View> */}
@@ -892,17 +889,17 @@ export default function SavingsScreen() {
     <View style={styles.emptyStateContainer}>
       <LinearGradient
         colors={[
-          "rgba(20, 20, 162, 0.9)",
-          "rgba(65, 6, 77, 0.7)",
-          "rgba(15, 96, 58, 0.9)",
+          theme.colors.blueDark,
+          theme.colors.blueDarker,
+          theme.colors.greenSuccess,
         ]}
         style={styles.emptyStateCard}
       >
         <View style={styles.emptyStateIconContainer}>
-          <Ionicons name="trending-up" size={40} color="#ffd700" />
+          <Ionicons name="trending-up" size={40} color={COLORS.gold} />
         </View>
         <Image
-          source={theme.image.no_data}
+          source={theme.images.navigation.noData}
           style={styles.emptyStateImage}
           resizeMode="contain"
         />
@@ -916,7 +913,7 @@ export default function SavingsScreen() {
           style={styles.emptyStateButton}
           onPress={() => router.push("/(tabs)/home/schemes")}
         >
-          <Ionicons name="add-circle-outline" size={20} color="#000" />
+          <Ionicons name="add-circle-outline" size={20} color={COLORS.black} />
           <Text style={styles.emptyStateButtonText}>{translations.startNewSavings}</Text>
         </TouchableOpacity>
       </LinearGradient>
@@ -927,7 +924,7 @@ export default function SavingsScreen() {
   const ErrorState = () => (
     <View className="flex-1 justify-center items-center px-4">
       <Image
-        source={require("../../../../../assets/images/bg_new.jpg")}
+        source={theme.images.auth.newBg}
         className="w-32 h-32 mb-4"
         resizeMode="contain"
       />
@@ -964,7 +961,7 @@ export default function SavingsScreen() {
       <TouchableOpacity
         style={{
           flex: 1,
-          backgroundColor: selectedType === 'Fixed' ? '#fff' : 'transparent',
+          backgroundColor: selectedType === 'Fixed' ? COLORS.white : COLORS.transparent,
           borderRadius: 30,
           justifyContent: 'center',
           alignItems: 'center',
@@ -975,7 +972,7 @@ export default function SavingsScreen() {
       >
         <Text
           style={{
-            color: selectedType === 'Fixed' ? theme.colors.primary : '#fff',
+            color: selectedType === 'Fixed' ? theme.colors.primary : COLORS.white,
             fontWeight: '700',
             fontSize: 16,
           }}
@@ -986,7 +983,7 @@ export default function SavingsScreen() {
       <TouchableOpacity
         style={{
           flex: 1,
-          backgroundColor: selectedType === 'Flexi' ? '#fff' : 'transparent',
+          backgroundColor: selectedType === 'Flexi' ? COLORS.white : COLORS.transparent,
           borderRadius: 30,
           justifyContent: 'center',
           alignItems: 'center',
@@ -997,7 +994,7 @@ export default function SavingsScreen() {
       >
         <Text
           style={{
-            color: selectedType === 'Flexi' ? theme.colors.primary : '#fff',
+            color: selectedType === 'Flexi' ? theme.colors.primary : COLORS.white,
             fontWeight: '700',
             fontSize: 16,
           }}
@@ -1017,7 +1014,7 @@ export default function SavingsScreen() {
   if (!user) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center bg-white">
-        <ActivityIndicator size="large" color="#7b0006" />
+        <ActivityIndicator size="large" color={COLORS.burgundy} />
       </SafeAreaView>
     );
   }
@@ -1034,12 +1031,12 @@ export default function SavingsScreen() {
     <AuthGuard>
       <View style={{ flex: 1 }}>
         <ImageBackground
-          source={require("../../../../../assets/images/bg_new.jpg")}
+          source={theme.images.auth.newBg}
           style={{ flex: 1 }}
           resizeMode="cover"
         >
           <LinearGradient
-            colors={["rgba(0, 0, 0, 0.1)", "rgba(0, 0, 0, 0.05)", "rgba(0, 0, 0, 0.02)"]}
+            colors={[theme.colors.bgBlackLight, theme.colors.bgBlackLight, theme.colors.transparent]}
             style={StyleSheet.absoluteFillObject}
           />
 
@@ -1081,7 +1078,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     ...Platform.select({
       ios: {
-        shadowColor: "#000",
+        shadowColor: COLORS.black,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.25,
         shadowRadius: 12,
@@ -1103,9 +1100,9 @@ const styles = StyleSheet.create({
   portfolioTitle: {
     fontSize: 20,
     fontWeight: "800",
-    color: "#fff",
+    color: COLORS.white,
     marginBottom: 6,
-    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowColor: theme.colors.textShadowBlack,
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
     letterSpacing: 0.5,
@@ -1113,16 +1110,16 @@ const styles = StyleSheet.create({
   portfolioBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255,215,0,0.2)",
+    backgroundColor: theme.colors.bgGoldMedium,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
     alignSelf: "flex-start",
     borderWidth: 1,
-    borderColor: "rgba(255,215,0,0.3)",
+    borderColor: theme.colors.borderGoldMedium,
   },
   portfolioBadgeText: {
-    color: "#ffd700",
+    color: COLORS.gold,
     fontSize: 11,
     fontWeight: "700",
     marginLeft: 4,
@@ -1132,22 +1129,22 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "rgba(255,215,0,0.15)",
+    backgroundColor: theme.colors.bgGoldLight,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(255,215,0,0.2)",
+    borderColor: theme.colors.borderGoldLight,
   },
   portfolioStats: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "rgba(123, 0, 6, 0.9)",
+    backgroundColor: theme.colors.bgPrimaryHeavy,
     borderRadius: 16,
     padding: 16,
     marginBottom: 0,
     borderWidth: 1,
-    borderColor: "rgba(123, 0, 6, 0.95)",
+    borderColor: theme.colors.primary,
   },
   statItem: {
     flex: 1,
@@ -1158,19 +1155,19 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(255,215,0,0.25)",
+    backgroundColor: theme.colors.bgGoldHeavy,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
     borderWidth: 1,
-    borderColor: "rgba(255,215,0,0.3)",
+    borderColor: theme.colors.borderGoldMedium,
   },
   statInfo: {
     flex: 1,
   },
   statLabel: {
     fontSize: 12,
-    color: "rgba(255,255,255,0.8)",
+    color: theme.colors.bgWhiteVeryHeavy,
     marginBottom: 4,
     fontWeight: "500",
     letterSpacing: 0.3,
@@ -1178,20 +1175,20 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 16,
     fontWeight: "800",
-    color: "#fff",
+    color: theme.colors.textPrimary,
     letterSpacing: 0.5,
   },
   statDivider: {
     width: 1,
     height: 36,
-    backgroundColor: "rgba(255,255,255,0.25)",
+    backgroundColor: theme.colors.bgWhiteMedium,
     marginHorizontal: 16,
   },
   portfolioFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
     borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.15)",
+    borderTopColor: theme.colors.borderWhiteLight,
     paddingTop: 12,
   },
   footerItem: {
@@ -1199,7 +1196,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   footerText: {
-    color: "rgba(255,255,255,0.9)",
+    color: theme.colors.bgWhiteVeryHeavy,
     fontSize: 12,
     fontWeight: "600",
     marginLeft: 6,
@@ -1208,10 +1205,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 22,
     fontWeight: "800",
-    color: "rgba(0, 0, 0, 0.89)",
+    color: theme.colors.black,
     textAlign: "center",
     marginBottom: 20,
-    textShadowColor: "rgba(34, 34, 209, 0.24)",
+    textShadowColor: theme.colors.blue,
     textShadowOffset: { width: 1, height: 2 },
     textShadowRadius: 4,
     letterSpacing: 0.5,
@@ -1222,7 +1219,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: "hidden",
     elevation: 8,
-    shadowColor: "#000",
+    shadowColor: theme.colors.black,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.2,
     shadowRadius: 12,
@@ -1249,10 +1246,10 @@ const styles = StyleSheet.create({
     margin: 12,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.81)",
+    backgroundColor: theme.colors.bgWhiteVeryHeavy,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
+    borderColor: theme.colors.borderWhiteMedium,
   },
   schemeInfo: {
     flexDirection: "row",
@@ -1266,9 +1263,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.25)",
+    backgroundColor: theme.colors.bgWhiteMedium,
     borderWidth: 2,
-    borderColor: "rgba(255, 255, 255, 0.3)",
+    borderColor: theme.colors.borderWhiteMedium,
   },
   schemeTitleContainer: {
     flex: 1,
@@ -1276,9 +1273,9 @@ const styles = StyleSheet.create({
   schemeTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#000",
+    color: theme.colors.textSecondary,
     marginBottom: 6,
-    textShadowColor: "rgba(255, 255, 255, 0.5)",
+    textShadowColor: theme.colors.textShadowWhite,
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
@@ -1290,27 +1287,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: "rgba(187, 240, 51, 0.5)",
+    backgroundColor: theme.colors.bgSuccessLight,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.6)",
+    borderColor: theme.colors.bgWhiteHeavy,
   },
   metalTypeText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#000",
+    color: theme.colors.textSecondary,
   },
   savingTypeBadge: {
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
+    backgroundColor: theme.colors.bgWhiteHeavy,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.6)",
+    borderColor: theme.colors.bgWhiteHeavy,
   },
   savingTypeText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#000",
+    color: theme.colors.textSecondary,
   },
   headerRight: {
     flexDirection: "row",
@@ -1321,35 +1318,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
+    backgroundColor: theme.colors.bgWhiteHeavy,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.6)",
+    borderColor: theme.colors.bgWhiteHeavy,
   },
   statusText: {
     fontSize: 8,
     fontWeight: "600",
-    color: "#000",
+    color: theme.colors.textSecondary,
   },
   expandIcon: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(133, 1, 17, 0.6)",
+    backgroundColor: theme.colors.bgPrimaryMedium,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "rgba(133, 1, 17, 0.8)",
+    borderColor: theme.colors.primary,
   },
   accountInfo: {
     flexDirection: "column",
     marginBottom: 16,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.6)",
+    backgroundColor: theme.colors.bgWhiteHeavy,
     borderRadius: 16,
     marginHorizontal: 12,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.4)",
+    borderColor: theme.colors.borderWhiteLight,
   },
   accountLabelsRow: {
     flexDirection: "row",
@@ -1367,13 +1364,13 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "rgba(228, 16, 41, 0.8)",
+    backgroundColor: theme.colors.bgErrorMedium,
     justifyContent: "center",
     alignItems: "center",
   },
   accountLabel: {
     fontSize: 12,
-    color: "rgba(0, 0, 0, 0.8)",
+    color: theme.colors.black,
     fontWeight: "600",
   },
   accountValuesRow: {
@@ -1384,7 +1381,7 @@ const styles = StyleSheet.create({
   accountValue: {
     fontSize: 18,
     fontWeight: "700",
-    color: "rgb(0, 0, 0)",
+    color: theme.colors.textSecondary,
     flex: 1,
     textAlign: "center",
   },
@@ -1403,33 +1400,33 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     padding: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.48)",
+    backgroundColor: theme.colors.bgWhiteMedium,
     borderRadius: 12,
   },
   infoIconContainer: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "rgba(228, 16, 41, 0.62)",
+    backgroundColor: theme.colors.bgErrorMedium,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
   },
   infoLabel: {
     fontSize: 12,
-    color: "rgba(7, 0, 0, 0.8)",
+    color: theme.colors.black,
     marginBottom: 4,
   },
   infoValue: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#000",
+    color: theme.colors.textSecondary,
   },
   dateContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "rgba(45, 22, 17, 0.78)",
+    backgroundColor: theme.colors.bgPrimaryHeavy,
     borderRadius: 12,
     padding: 12,
     marginBottom: 16,
@@ -1444,7 +1441,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "rgba(133, 1, 17, 0.1)",
+    backgroundColor: theme.colors.bgPrimaryLight,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -1453,22 +1450,22 @@ const styles = StyleSheet.create({
   },
   dateLabel: {
     fontSize: 12,
-    color: "rgba(255, 255, 255, 0.8)",
+    color: theme.colors.bgWhiteVeryHeavy,
     marginBottom: 2,
   },
   dateValue: {
     fontSize: 13,
     fontWeight: "500",
-    color: "#FFFFFF",
+    color: theme.colors.textPrimary,
   },
   dateDivider: {
     width: 1,
     height: "100%",
-    backgroundColor: "rgba(0, 0, 0, 0.1)",
+    backgroundColor: theme.colors.bgBlackLight,
     marginHorizontal: 12,
   },
   progressContainer: {
-    backgroundColor: "rgba(255, 255, 255, 0.7)",
+    backgroundColor: theme.colors.bgWhiteHeavy,
     borderRadius: 12,
     padding: 12,
     marginBottom: 16,
@@ -1482,7 +1479,7 @@ const styles = StyleSheet.create({
   progressLabel: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#000",
+    color: theme.colors.textSecondary,
   },
   progressStats: {
     flexDirection: "row",
@@ -1492,22 +1489,22 @@ const styles = StyleSheet.create({
   progressValue: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#000",
+    color: theme.colors.textSecondary,
   },
   progressMonths: {
     fontSize: 12,
-    color: "rgba(14, 13, 13, 0.8)",
+    color: theme.colors.black,
   },
   progressBar: {
     height: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.84)",
+    backgroundColor: theme.colors.bgWhiteVeryHeavy,
     borderRadius: 4,
     overflow: "hidden",
     marginBottom: 12,
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#850111",
+    backgroundColor: theme.colors.primary,
     borderRadius: 4,
   },
   monthsInfo: {
@@ -1525,12 +1522,12 @@ const styles = StyleSheet.create({
   },
   monthLabel: {
     fontSize: 12,
-    color: "rgba(18, 18, 18, 0.8)",
+    color: theme.colors.black,
   },
   monthValue: {
     fontSize: 12,
     fontWeight: "500",
-    color: "#FFFFFF",
+    color: theme.colors.textPrimary,
   },
   actionButtonsContainer: {
     flexDirection: "row",
@@ -1545,7 +1542,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
     elevation: 6,
-    shadowColor: "#850111",
+    shadowColor: theme.colors.primary,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
@@ -1560,9 +1557,9 @@ const styles = StyleSheet.create({
   detailsButtonText: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#fff",
+    color: theme.colors.textPrimary,
     marginRight: 8,
-    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowColor: theme.colors.textShadowBlack,
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
@@ -1571,7 +1568,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
     elevation: 6,
-    shadowColor: "#4CAF50",
+    shadowColor: theme.colors.success,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
@@ -1586,9 +1583,9 @@ const styles = StyleSheet.create({
   payNowButtonTextLarge: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#fff",
+    color: theme.colors.textPrimary,
     marginRight: 8,
-    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowColor: theme.colors.textShadowBlack,
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
@@ -1596,16 +1593,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.75)",
+    backgroundColor: theme.colors.bgWhiteHeavy,
     borderRadius: 16,
     marginHorizontal: 12,
     marginBottom: 16,
     padding: 10,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.5)",
+    borderColor: theme.colors.borderWhiteMedium,
     elevation: 4,
-    shadowColor: "#000",
+    shadowColor: theme.colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -1619,19 +1616,19 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(133, 1, 17, 0.85)",
+    backgroundColor: theme.colors.bgPrimaryHeavy,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 10,
     borderWidth: 2,
-    borderColor: "rgba(133, 1, 17, 0.95)",
+    borderColor: theme.colors.primary,
   },
   paymentInfoContent: {
     flex: 1,
   },
   paymentInfoLabel: {
     fontSize: 13,
-    color: "rgba(0, 0, 0, 0.7)",
+    color: theme.colors.black,
     marginBottom: 4,
     fontWeight: "600",
     textTransform: "uppercase",
@@ -1640,15 +1637,15 @@ const styles = StyleSheet.create({
   paymentInfoValue: {
     fontSize: 17,
     fontWeight: "800",
-    color: "#000",
-    textShadowColor: "rgba(255, 255, 255, 0.5)",
+    color: theme.colors.textSecondary,
+    textShadowColor: theme.colors.textShadowWhite,
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
   paymentInfoDivider: {
     width: 2,
     height: 50,
-    backgroundColor: "rgba(133, 1, 17, 0.3)",
+    backgroundColor: theme.colors.bgPrimaryLight,
     marginHorizontal: 16,
     borderRadius: 1,
   },
@@ -1661,11 +1658,11 @@ const styles = StyleSheet.create({
     padding: 12,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(255,215,0,0.3)",
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: theme.colors.borderGoldMedium,
+    backgroundColor: theme.colors.bgWhiteLight,
     ...Platform.select({
       ios: {
-        shadowColor: "#000",
+        shadowColor: theme.colors.black,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.25,
         shadowRadius: 12,
@@ -1679,12 +1676,12 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 40,
-    backgroundColor: "rgba(255,215,0,0.25)",
+    backgroundColor: theme.colors.bgGoldMedium,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "rgba(255,215,0,0.3)",
+    borderColor: theme.colors.borderGoldMedium,
   },
   emptyStateImage: {
     width: 150,
@@ -1694,16 +1691,16 @@ const styles = StyleSheet.create({
   emptyStateTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#fff",
+    color: COLORS.white,
     textAlign: "center",
     marginBottom: 8,
-    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowColor: theme.colors.textShadowBlack,
     textShadowOffset: { width: 1, height: 2 },
     textShadowRadius: 4,
   },
   emptyStateSubtitle: {
     fontSize: 14,
-    color: "rgba(255,255,255,0.8)",
+    color: theme.colors.bgWhiteVeryHeavy,
     textAlign: "center",
     marginBottom: 24,
     lineHeight: 20,
@@ -1711,13 +1708,13 @@ const styles = StyleSheet.create({
   emptyStateButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#ffd700",
+    backgroundColor: COLORS.gold,
     paddingVertical: 14,
     paddingHorizontal: 28,
     borderRadius: 16,
     ...Platform.select({
       ios: {
-        shadowColor: "#ffd700",
+        shadowColor: COLORS.gold,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -1728,7 +1725,7 @@ const styles = StyleSheet.create({
     }),
   },
   emptyStateButtonText: {
-    color: "#1a1a2e",
+    color: theme.colors.blueDark,
     fontSize: 16,
     fontWeight: "700",
     marginLeft: 8,
@@ -1746,23 +1743,23 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     padding: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.7)",
+    backgroundColor: theme.colors.bgWhiteHeavy,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
+    borderColor: theme.colors.borderWhiteLight,
   },
   enhancedInfoIconContainer: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "rgba(133, 1, 17, 0.85)",
+    backgroundColor: theme.colors.bgPrimaryHeavy,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
   },
   enhancedInfoLabel: {
     fontSize: 11,
-    color: "#000000",
+    color: theme.colors.textSecondary,
     marginBottom: 4,
     fontWeight: "600",
     textAlign: "center",
@@ -1770,16 +1767,16 @@ const styles = StyleSheet.create({
   enhancedInfoValue: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#000000",
+    color: theme.colors.textSecondary,
     textAlign: "center",
   },
   smartTimelineContainer: {
-    backgroundColor: "rgba(255, 255, 255, 0.7)",
+    backgroundColor: theme.colors.bgWhiteHeavy,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
+    borderColor: theme.colors.borderWhiteLight,
   },
   timelineHeader: {
     flexDirection: "row",
@@ -1790,7 +1787,7 @@ const styles = StyleSheet.create({
   timelineTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#000000",
+    color: theme.colors.textSecondary,
   },
   timelineContent: {
     flexDirection: "row",
@@ -1805,7 +1802,7 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: "#850111",
+    backgroundColor: theme.colors.primary,
     marginBottom: 8,
   },
   timelineInfo: {
@@ -1813,20 +1810,20 @@ const styles = StyleSheet.create({
   },
   timelineLabel: {
     fontSize: 10,
-    color: "#000000",
+    color: theme.colors.textSecondary,
     marginBottom: 2,
     textAlign: "center",
   },
   timelineValue: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#000000",
+    color: theme.colors.textSecondary,
     textAlign: "center",
   },
   timelineConnector: {
     flex: 1,
     height: 2,
-    backgroundColor: "rgba(208, 32, 32, 0.3)",
+    backgroundColor: theme.colors.bgErrorLight,
     marginHorizontal: 8,
   },
 });

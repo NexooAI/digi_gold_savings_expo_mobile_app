@@ -14,6 +14,7 @@ import { useFirstLaunch } from "@/common/hooks/useFirstLaunch";
 import { LinearGradient } from 'expo-linear-gradient';
 import { t } from "@/i18n";
 import useGlobalStore from "@/store/global.store";
+import { theme } from "@/constants/theme";
 
 const { width, height } = Dimensions.get("window");
 
@@ -21,15 +22,15 @@ const { width, height } = Dimensions.get("window");
 const staticSlides = [
   {
     id: "1",
-    image: require("../../assets/images/intro_1.png"),
+    image: theme.images.intro.intro1,
   },
   {
     id: "2",
-    image: require("../../assets/images/intro_2.png"),
+    image: theme.images.intro.intro2,
   },
   {
     id: "3",
-    image: require("../../assets/images/intro_3.png"),
+    image: theme.images.intro.intro3,
   },
 ];
 
@@ -79,7 +80,7 @@ export default function Intro() {
           resizeMode="cover"
         >
           <LinearGradient
-            colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.7)']}
+            colors={[theme.colors.bgImageOverlayMedium, theme.colors.bgImageOverlay]}
             style={styles.overlay}
           />
         </ImageBackground>
@@ -178,7 +179,7 @@ export default function Intro() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: theme.colors.black,
   },
   slide: {
     width,
@@ -205,18 +206,18 @@ const styles = StyleSheet.create({
   indicator: {
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#ffc90c",
+    backgroundColor: theme.colors.secondary,
     marginHorizontal: 5,
   },
   buttonContainer: {
     paddingHorizontal: 20,
   },
   button: {
-    backgroundColor: "#ffc90c",
+    backgroundColor: theme.colors.secondary,
     paddingVertical: 15,
     borderRadius: 25,
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: theme.colors.shadowBlack,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -226,10 +227,10 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   getStartedButton: {
-    backgroundColor: "#7c0a12",
+    backgroundColor: theme.colors.redDark,
   },
   buttonText: {
-    color: "#fff",
+    color: theme.colors.white,
     fontSize: 18,
     fontWeight: "bold",
   },

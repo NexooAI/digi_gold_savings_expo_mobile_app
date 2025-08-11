@@ -23,6 +23,7 @@ import * as SecureStore from "expo-secure-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Crypto from "expo-crypto";
 import { theme } from "@/constants/theme";
+import { COLORS } from "@/constants/colors";
 import { LinearGradient } from "expo-linear-gradient";
 import { t } from "@/i18n";
 // import { useAuth } from "@/contexts/AuthContext";
@@ -52,10 +53,10 @@ const hashMPIN = async (mpin: string): Promise<void> => {
 // Security Strength Component
 const SecurityStrength = ({ mpin }: { mpin: string }) => {
   const getStrengthColor = () => {
-    if (mpin.length === 0) return '#666';
-    if (mpin.length < 4) return '#ff4444';
-    if (mpin.length === 4) return '#4CAF50';
-    return '#4CAF50';
+    if (mpin.length === 0) return COLORS.grey;
+    if (mpin.length < 4) return COLORS.error;
+    if (mpin.length === 4) return COLORS.success;
+    return COLORS.success;
   };
 
   const getStrengthText = () => {
@@ -174,7 +175,7 @@ const MpinInput: React.FC<MpinInputProps> = ({
           style={styles.clearButton}
           onPress={handleClear}
         >
-          <Ionicons name="close-circle" size={20} color="#ff4444" />
+          <Ionicons name="close-circle" size={20} color={COLORS.error} />
         </TouchableOpacity>
       )}
     </View>
@@ -302,13 +303,13 @@ export default function MpinSetup() {
   return (
     <SafeAreaView style={registerStyles.container}>
       <ImageBackground
-        source={theme.image.bg_image}
+        source={theme.images.auth.loginBg}
         style={registerStyles.backgroundImage}
       >
         {/* Dark overlay for background */}
         <View style={registerStyles.darkOverlay} />
         <LinearGradient
-          colors={["rgba(32, 1, 1, 0.55)", "rgba(167, 0, 0, 0)", "rgba(118, 1, 1, 0)"]}
+          colors={[theme.colors.bgPrimaryMedium, theme.colors.transparent, theme.colors.transparent]}
           style={registerStyles.gradient}
         >
           <KeyboardAvoidingView
@@ -327,7 +328,7 @@ export default function MpinSetup() {
             >
               <View style={styles.logoContainer}>
                 <Image
-                  source={theme.image.transparentLogo}
+                  source={require('../../../assets/images/logo_trans.png')}
                   style={styles.logo}
                   resizeMode="contain"
                 />
@@ -338,17 +339,17 @@ export default function MpinSetup() {
                   {/* Base fog layer */}
                   <LinearGradient
                     colors={[
-                      "rgba(6, 2, 2, 0.78)",
-                      "rgba(34, 0, 0, 0.35)",
-                      "rgba(31, 3, 3, 0.54)",
+                      theme.colors.bgPrimaryHeavy,
+                      theme.colors.bgPrimaryLight,
+                      theme.colors.bgPrimaryMedium,
                     ]}
                     style={StyleSheet.absoluteFill}
                   />
                   {/* Top fog highlight */}
                   <LinearGradient
                     colors={[
-                      "rgba(10, 2, 2, 0.38)",
-                      "rgba(76, 63, 63, 0.74)",
+                      theme.colors.bgPrimaryLight,
+                      theme.colors.text.mediumGrey,
                     ]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 0, y: 0.5 }}
@@ -357,8 +358,8 @@ export default function MpinSetup() {
                   {/* Bottom fog highlight */}
                   <LinearGradient
                     colors={[
-                      "rgba(0, 0, 0, 0.44)",
-                      "rgba(0, 0, 0, 0.28)",
+                      theme.colors.bgBlackMedium,
+                      theme.colors.bgBlackLight,
                     ]}
                     start={{ x: 0, y: 0.5 }}
                     end={{ x: 0, y: 1 }}
@@ -422,7 +423,7 @@ export default function MpinSetup() {
 
                     {error ? (
                       <View style={styles.errorContainer}>
-                        <Ionicons name="alert-circle" size={20} color="#ff4444" />
+                        <Ionicons name="alert-circle" size={20} color={COLORS.error} />
                         <Text style={styles.errorText}>{error}</Text>
                       </View>
                     ) : null}
@@ -466,7 +467,7 @@ export default function MpinSetup() {
                       disabled={!!error || loading}
                     >
                       <LinearGradient
-                        colors={["#ffc90c", "#ffd700"]}
+                        colors={[COLORS.secondary, COLORS.gold]}
                         style={registerStyles.gradientButton}
                       >
                         <Text style={registerStyles.loginButtonText}>
@@ -494,7 +495,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   label: {
-    color: "#ffffff",
+            color: COLORS.white,
     fontSize: 16,
     marginBottom: 15,
     textAlign: "center",
@@ -509,7 +510,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   errorText: {
-    color: "#ff4444",
+            color: COLORS.error,
     fontSize: 14,
     marginLeft: 8,
   },
@@ -580,7 +581,7 @@ const styles = StyleSheet.create({
   strengthBar: {
     width: '80%',
     height: 8,
-    backgroundColor: '#444',
+    backgroundColor: COLORS.darkGrey,
     borderRadius: 4,
     overflow: 'hidden',
     marginBottom: 5,
@@ -601,18 +602,18 @@ const styles = StyleSheet.create({
   progressBar: {
     width: '80%',
     height: 8,
-    backgroundColor: '#444',
+    backgroundColor: COLORS.darkGrey,
     borderRadius: 4,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
     borderRadius: 4,
-    backgroundColor: '#ffd700',
+    backgroundColor: COLORS.gold,
   },
   progressText: {
     marginTop: 5,
-    color: '#fff',
+    color: COLORS.white,
     fontSize: 12,
   },
   // Success Modal Styles
@@ -622,7 +623,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: COLORS.blackOverlay,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,
@@ -633,7 +634,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     elevation: 10,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -648,13 +649,13 @@ const styles = StyleSheet.create({
   successTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: COLORS.white,
     textAlign: 'center',
     marginBottom: 10,
   },
   successSubtitle: {
     fontSize: 16,
-    color: '#ffffff',
+    color: COLORS.white,
     textAlign: 'center',
     marginBottom: 25,
     lineHeight: 22,
@@ -666,7 +667,7 @@ const styles = StyleSheet.create({
   featuresTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: COLORS.white,
     marginBottom: 15,
     textAlign: 'center',
   },
@@ -678,7 +679,7 @@ const styles = StyleSheet.create({
   },
   featureText: {
     fontSize: 14,
-    color: '#ffffff',
+    color: theme.colors.white,
     marginLeft: 12,
     flex: 1,
   },
@@ -690,13 +691,13 @@ const styles = StyleSheet.create({
   referralLabel: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: theme.colors.white,
     marginBottom: 10,
   },
   referralCodeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: theme.colors.overlayLight,
     paddingHorizontal: 15,
     paddingVertical: 10,
     borderRadius: 25,
@@ -704,7 +705,7 @@ const styles = StyleSheet.create({
   referralCode: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: theme.colors.white,
     marginRight: 10,
   },
   copyButton: {
@@ -722,6 +723,6 @@ const styles = StyleSheet.create({
   getStartedText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000000',
+            color: COLORS.black,
   },
 });

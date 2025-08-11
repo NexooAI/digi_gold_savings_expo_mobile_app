@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 // AppHeader is now handled by the layout wrapper
 import { theme } from "@/constants/theme";
+import { COLORS } from "@/constants/colors";
 
 // Types
 interface Notification {
@@ -40,11 +41,11 @@ const NotificationItem = React.memo(({
 
   const getCategoryColor = (category: Notification['category']) => {
     switch (category) {
-      case 'offer': return '#FF5722';
-      case 'transaction': return '#2196F3';
-      case 'reminder': return '#4CAF50';
-      case 'alert': return '#FFC107';
-      default: return '#2196F3';
+      case 'offer': return COLORS.red;
+      case 'transaction': return COLORS.blue;
+      case 'reminder': return COLORS.green;
+      case 'alert': return COLORS.warning;
+      default: return COLORS.blue;
     }
   };
 
@@ -66,10 +67,10 @@ const NotificationItem = React.memo(({
         onPress={() => onPress(item.id)}
         style={{
           flexDirection: 'row',
-          backgroundColor: isUnread ? '#FFF7F0' : '#F6F6F6',
+          backgroundColor: isUnread ? COLORS.orangeLight : COLORS.grayLight,
           borderRadius: 12,
           marginBottom: 14,
-          shadowColor: isUnread ? getCategoryColor(item.category) : '#000',
+          shadowColor: isUnread ? getCategoryColor(item.category) : COLORS.black,
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: isUnread ? 0.18 : 0.08,
           shadowRadius: 6,
@@ -113,7 +114,7 @@ const NotificationItem = React.memo(({
                 <Text style={{ 
                   fontSize: 16, 
                   fontWeight: isUnread ? 'bold' : '600', 
-                  color: '#222',
+                  color: COLORS.textDark,
                   flex: 1,
                   marginRight: 8,
                   flexWrap: 'wrap',
@@ -129,12 +130,12 @@ const NotificationItem = React.memo(({
                     alignSelf: 'flex-start',
                   }}
                 >
-                  <Ionicons name="close" size={18} color="#9E9E9E" />
+                  <Ionicons name="close" size={18} color={COLORS.gray} />
                 </TouchableOpacity>
               </View>
               <Text style={{ 
                 fontSize: 14, 
-                color: '#555', 
+                color: COLORS.textSecondary, 
                 lineHeight: 20,
                 marginRight: 8,
                 flexWrap: 'wrap',
@@ -149,10 +150,10 @@ const NotificationItem = React.memo(({
                 marginRight: 8,
               }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                  <Ionicons name="time-outline" size={14} color="#9E9E9E" />
+                  <Ionicons name="time-outline" size={14} color={COLORS.gray} />
                   <Text style={{ 
                     fontSize: 12, 
-                    color: '#888', 
+                    color: COLORS.textLight, 
                     marginLeft: 6,
                     flexWrap: 'wrap',
                   }}>
@@ -466,7 +467,7 @@ export default function NotificationsScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f9fafb' }}>
       <ImageBackground
-        source={theme.image.menu_bg}
+        source={require('../../../../assets/images/menu_bg.png')}
         resizeMode="repeat"
         style={{ flex: 1 }}
         imageStyle={{

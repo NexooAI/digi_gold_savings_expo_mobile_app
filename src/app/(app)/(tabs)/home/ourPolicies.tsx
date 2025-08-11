@@ -110,7 +110,7 @@ export default function OurPolicy() {
         >
           <View className="relative">
             <ImageBackground
-              source={theme.image.gold_pattern}
+              source={theme.images.navigation.goldPattern}
               className="h-64 justify-end p-6"
               style={{ marginTop: 20 }}
             >

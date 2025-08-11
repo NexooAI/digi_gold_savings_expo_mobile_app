@@ -29,6 +29,7 @@ import { t } from "@/i18n";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { theme } from "@/constants/theme";
+import { COLORS } from "@/constants/colors";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import AuthGuard from "@/components/AuthGuard";
@@ -477,7 +478,7 @@ const ProfileScreen = () => {
                     style={styles.cancelButton}
                     onPress={handleEditToggle}
                   >
-                    <Icon name="close" size={20} color="#666" />
+                    <Icon name="close" size={20} color={COLORS.gray} />
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.saveFormButton}
@@ -502,7 +503,7 @@ const ProfileScreen = () => {
                     />
                   ) : (
                     <View style={styles.editImagePlaceholder}>
-                      <Icon name="person" size={40} color="#666" />
+                      <Icon name="person" size={40} color={COLORS.gray} />
                     </View>
                   )}
                   <View style={styles.editImageOverlay}>
@@ -528,7 +529,7 @@ const ProfileScreen = () => {
                       value={editData.firstName}
                       onChangeText={(value) => updateEditField('firstName', value)}
                       placeholder="Enter first name"
-                      placeholderTextColor="#999"
+                      placeholderTextColor={COLORS.text.lightGrey}
                     />
                   </View>
                   <View style={styles.formFieldHalf}>
@@ -538,7 +539,7 @@ const ProfileScreen = () => {
                       value={editData.lastName}
                       onChangeText={(value) => updateEditField('lastName', value)}
                       placeholder="Enter last name"
-                      placeholderTextColor="#999"
+                      placeholderTextColor={COLORS.text.lightGrey}
                     />
                   </View>
                 </View> */}
@@ -550,7 +551,7 @@ const ProfileScreen = () => {
                     value={editData.name}
                     onChangeText={(value) => updateEditField("name", value)}
                     placeholder={t('enterFullName')}
-                    placeholderTextColor="#999"
+                    placeholderTextColor={COLORS.text.lightGrey}
                   />
                 </View>
 

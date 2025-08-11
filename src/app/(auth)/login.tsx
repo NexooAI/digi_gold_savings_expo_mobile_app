@@ -27,6 +27,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { theme } from "@/constants/theme";
+import { COLORS } from "@/constants/colors";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { t } from "@/i18n";
@@ -34,6 +35,8 @@ import { registerStyles } from "../../_styles/registerStyles";
 // import { useAuth } from "@/contexts/AuthContext";
 import LanguageSwitcher from "@/contexts/LanguageSwitcher";
 import { AppLocale } from "@/i18n";
+
+
 
 const { width } = Dimensions.get("window");
 const logoWidth = width * 0.3;
@@ -64,7 +67,7 @@ const DebugModal = ({
           <View style={styles.debugModalHeader}>
             <Text style={styles.debugModalTitle}>🔍 Debug - Local Storage</Text>
             <TouchableOpacity onPress={onClose} style={styles.debugCloseButton}>
-              <Ionicons name="close" size={24} color="#333" />
+              <Ionicons name="close" size={24} color={COLORS.dark} />
             </TouchableOpacity>
           </View>
           
@@ -81,7 +84,7 @@ const DebugModal = ({
               <Ionicons 
                 name={isRefreshing ? "refresh" : "refresh-outline"} 
                 size={16} 
-                color={isRefreshing ? "#999" : "#007AFF"} 
+                color={isRefreshing ? COLORS.grey : COLORS.blue} 
               />
               <Text style={[
                 styles.debugActionButtonText,
@@ -135,7 +138,7 @@ const InvalidMobileModal = ({
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <View style={styles.modalIconContainer}>
-              <Ionicons name="alert-circle" size={32} color="#ff6b35" />
+              <Ionicons name="alert-circle" size={32} color={COLORS.secondary} />
             </View>
             <Text style={styles.modalTitle}>{t("invalidMobile")}</Text>
             <Text style={styles.modalSubtitle}>{mobileNumber}</Text>
@@ -148,19 +151,19 @@ const InvalidMobileModal = ({
 
             <View style={styles.modalDetails}>
               <View style={styles.detailRow}>
-                <Ionicons name="information-circle" size={16} color="#666" />
+                <Ionicons name="information-circle" size={16} color={COLORS.mediumGrey} />
                 <Text style={styles.detailText}>
                   {t("invalidMobileDetail1")}
                 </Text>
               </View>
               <View style={styles.detailRow}>
-                <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+                <Ionicons name="checkmark-circle" size={16} color={COLORS.success} />
                 <Text style={styles.detailText}>
                   {t("invalidMobileDetail2")}
                 </Text>
               </View>
               <View style={styles.detailRow}>
-                <Ionicons name="star" size={16} color="#FFD700" />
+                <Ionicons name="star" size={16} color={COLORS.gold} />
                 <Text style={styles.detailText}>
                   {t("invalidMobileDetail3")}
                 </Text>
@@ -241,11 +244,11 @@ const ErrorAlert = ({
       ]}
     >
       <View style={registerStyles.errorContent}>
-        <Ionicons name="alert-circle" size={24} color="#fff" />
+        <Ionicons name="alert-circle" size={24} color={COLORS.white} />
         <Text style={registerStyles.errorMessage}>{message}</Text>
       </View>
       <TouchableOpacity onPress={onClose} style={registerStyles.closeButton}>
-        <Ionicons name="close" size={20} color="#fff" />
+        <Ionicons name="close" size={20} color={COLORS.white} />
       </TouchableOpacity>
     </Animated.View>
   );
@@ -342,10 +345,10 @@ const SimpleLanguageSwitcher = () => {
       }}
     >
       <Image
-        source={theme.image.translate}
-        style={{ width: 20, height: 20, marginRight: 8, tintColor: '#ffffff' }}
+                    source={theme.images.translate.malayalam}
+                  style={{ width: 20, height: 20, marginRight: 8, tintColor: COLORS.white }}
       />
-      <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: 'bold' }}>
+              <Text style={{ color: COLORS.white, fontSize: 14, fontWeight: 'bold' }}>
         {getLanguageDisplayName()}
       </Text>
     </TouchableOpacity>
@@ -940,10 +943,10 @@ export default function Login() {
 
   return (
     <SafeAreaView style={registerStyles.container}>
-      <ImageBackground
-        source={theme.image.bg_image}
-        style={registerStyles.backgroundImage}
-      >
+              <ImageBackground
+          source={theme.images.auth.loginBg}
+          style={registerStyles.backgroundImage}
+        >
         {/* Dark overlay for background */}
         <View style={registerStyles.darkOverlay} />
         <LinearGradient
@@ -969,8 +972,8 @@ export default function Login() {
               borderColor: 'rgba(255, 255, 255, 0.3)',
             }}
           >
-            <Ionicons name="bug" size={20} color="#ffffff" />
-            <Text style={{ color: '#ffffff', fontSize: 12, fontWeight: 'bold', marginLeft: 4 }}>
+                    <Ionicons name="bug" size={20} color={COLORS.white} />
+        <Text style={{ color: COLORS.white, fontSize: 12, fontWeight: 'bold', marginLeft: 4 }}>
               DEBUG
             </Text>
           </TouchableOpacity> */}
@@ -986,7 +989,7 @@ export default function Login() {
             <ScrollView contentContainerStyle={[registerStyles.scrollViewContent, { flexGrow: 1 }]} keyboardShouldPersistTaps="handled">
               <View style={registerStyles.logoContainer}>
                 <Image
-                  source={theme.image.transparentLogo}
+                  source={theme.images.auth.logo}
                   style={registerStyles.logo}
                   resizeMode="contain"
                 />
@@ -1129,9 +1132,9 @@ export default function Login() {
                             <Ionicons
                               name="alert-circle"
                               size={20}
-                              color="#ff6b6b"
+                              color={COLORS.errorLight}
                             />
-                            <Text style={[registerStyles.timerText, { color: "#ff6b6b" }]}>
+                            <Text style={[registerStyles.timerText, { color: COLORS.errorLight }]}>
                               {t("resendLimitReached")}
                             </Text>
                           </View>
@@ -1217,7 +1220,7 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     overflow: "hidden",
     elevation: 8,
-    shadowColor: "#000",
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -1227,7 +1230,7 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    borderBottomColor: COLORS.lightGrey,
   },
   modalIconContainer: {
     marginBottom: 12,
@@ -1235,13 +1238,13 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#333",
+    color: COLORS.textDark,
     textAlign: "center",
   },
   modalSubtitle: {
     fontSize: 16,
     fontWeight: "500",
-    color: "#666",
+    color: COLORS.mediumGrey,
     textAlign: "center",
     marginTop: 4,
   },
@@ -1250,13 +1253,13 @@ const styles = StyleSheet.create({
   },
   modalMessage: {
     fontSize: 16,
-    color: "#666",
+    color: COLORS.mediumGrey,
     textAlign: "center",
     marginBottom: 20,
     lineHeight: 24,
   },
   modalDetails: {
-    backgroundColor: "#f8f9fa",
+    backgroundColor: theme.colors.additional.formBg,
     borderRadius: 12,
     padding: 16,
   },
@@ -1267,7 +1270,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 14,
-    color: "#555",
+    color: COLORS.mediumGrey,
     marginLeft: 8,
     flex: 1,
     lineHeight: 20,
@@ -1275,7 +1278,7 @@ const styles = StyleSheet.create({
   modalButtonContainer: {
     flexDirection: "row",
     borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
+    borderTopColor: COLORS.borderWhite,
   },
   modalButton: {
     flex: 1,
@@ -1284,40 +1287,40 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   cancelButton: {
-    backgroundColor: "#f8f9fa",
+    backgroundColor: theme.colors.additional.formBg,
     borderRightWidth: 0.5,
-    borderRightColor: "#f0f0f0",
+    borderRightColor: theme.colors.additional.formBorder,
   },
   createButton: {
-    backgroundColor: "#ff6b35",
+    backgroundColor: theme.colors.additional.buttonOrange,
     borderLeftWidth: 0.5,
-    borderLeftColor: "#f0f0f0",
+    borderLeftColor: theme.colors.additional.formBorder,
   },
   cancelButtonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#666",
+    color: theme.colors.additional.formText,
   },
   createButtonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "white",
+    color: theme.colors.white,
   },
   debugModalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    backgroundColor: theme.colors.overlayDark,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
   },
   debugModalContainer: {
-    backgroundColor: "white",
+    backgroundColor: theme.colors.white,
     borderRadius: 16,
     width: "100%",
     maxWidth: 400,
     overflow: "hidden",
     elevation: 8,
-    shadowColor: "#000",
+    shadowColor: theme.colors.shadowBlack,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -1329,12 +1332,12 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    borderBottomColor: theme.colors.additional.formBorder,
   },
   debugModalTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#333",
+    color: theme.colors.additional.formTextDark,
   },
   debugCloseButton: {
     padding: 8,
@@ -1344,7 +1347,7 @@ const styles = StyleSheet.create({
   },
   debugEmptyText: {
     fontSize: 16,
-    color: "#666",
+    color: theme.colors.additional.formText,
     textAlign: "center",
     paddingVertical: 20,
   },

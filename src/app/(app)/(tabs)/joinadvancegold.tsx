@@ -8,6 +8,7 @@ import useGlobalStore from '@/store/global.store';
 import { Slider } from '@miblanchard/react-native-slider';
 // AppHeader is now handled by the layout wrapper
 import { formatGoldWeight } from '@/utils/imageUtils';
+import { theme } from '@/constants/theme';
 
 const ADVANCE_PERCENTS = [5, 10, 20, 30];
 
@@ -76,7 +77,7 @@ export default function JoinAdvanceGold() {
       {/* Header is now handled by the layout wrapper */}
       
       <LinearGradient
-        colors={['#1a1a2e', '#16213e', '#0f3460']}
+        colors={[theme.colors.bgBlackHeavy, theme.colors.bgBlackMedium, theme.colors.bgBlackLight]}
         style={styles.gradientBackground}
       >
         <ScrollView contentContainerStyle={styles.content}>
@@ -89,7 +90,7 @@ export default function JoinAdvanceGold() {
           {/* Amount Input + Slider */}
           <View style={styles.cardContainer}>
             <View style={styles.cardHeader}>
-              <Ionicons name="cash" size={24} color="#FFD700" />
+              <Ionicons name="cash" size={24} color={theme.colors.gold} />
               <Text style={styles.cardTitle}>Investment Amount</Text>
             </View>
             <View style={styles.inputGroup}>
@@ -99,7 +100,7 @@ export default function JoinAdvanceGold() {
                 value={amount}
                 onChangeText={val => setAmount(val.replace(/[^0-9.]/g, ''))}
                 placeholder="Enter amount"
-                placeholderTextColor="#8B8B8B"
+                placeholderTextColor={theme.colors.additional.formTextLight}
                 maxLength={8}
               />
               <Slider
@@ -109,9 +110,9 @@ export default function JoinAdvanceGold() {
                 step={1000}
                 onValueChange={(val: number[]) => setAmount(String(Math.round(val[0])))}
                 containerStyle={{marginTop: 12}}
-                thumbTintColor="#FFD700"
-                minimumTrackTintColor="#FFD700"
-                maximumTrackTintColor="#4A4A4A"
+                thumbTintColor={theme.colors.gold}
+                minimumTrackTintColor={theme.colors.gold}
+                maximumTrackTintColor={theme.colors.additional.formTextMedium}
                 thumbStyle={styles.sliderThumb}
                 trackStyle={styles.sliderTrack}
               />
@@ -121,7 +122,7 @@ export default function JoinAdvanceGold() {
           {/* Gold Grams Input + Slider */}
           <View style={styles.cardContainer}>
             <View style={styles.cardHeader}>
-              <Ionicons name="scale" size={24} color="#FFD700" />
+              <Ionicons name="scale" size={24} color={theme.colors.gold} />
               <Text style={styles.cardTitle}>Gold Weight</Text>
             </View>
             <View style={styles.inputGroup}>
@@ -134,7 +135,7 @@ export default function JoinAdvanceGold() {
                   if (!isNaN(grams)) setGoldGrams(grams);
                 }}
                 placeholder="Enter grams"
-                placeholderTextColor="#8B8B8B"
+                placeholderTextColor={theme.colors.additional.formTextLight}
                 maxLength={8}
               />
               <Slider
@@ -144,9 +145,9 @@ export default function JoinAdvanceGold() {
                 step={0.5}
                 onValueChange={(val: number[]) => setGoldGrams(Number(val[0]))}
                 containerStyle={{marginTop: 12}}
-                thumbTintColor="#FFD700"
-                minimumTrackTintColor="#FFD700"
-                maximumTrackTintColor="#4A4A4A"
+                thumbTintColor={theme.colors.gold}
+                minimumTrackTintColor={theme.colors.gold}
+                maximumTrackTintColor={theme.colors.additional.formTextMedium}
                 thumbStyle={styles.sliderThumb}
                 trackStyle={styles.sliderTrack}
               />
@@ -156,7 +157,7 @@ export default function JoinAdvanceGold() {
           {/* Advance % Selector */}
           <View style={styles.cardContainer}>
             <View style={styles.cardHeader}>
-              <Ionicons name="trending-up" size={24} color="#FFD700" />
+              <Ionicons name="trending-up" size={24} color={theme.colors.gold} />
               <Text style={styles.cardTitle}>Advance Percentage</Text>
             </View>
             <View style={styles.percentGrid}>
@@ -167,7 +168,7 @@ export default function JoinAdvanceGold() {
                   onPress={() => setAdvancePercent(p)}
                 >
                   <LinearGradient
-                    colors={advancePercent === p ? ['#FFD700', '#FFA500'] : ['#2A2A2A', '#3A3A3A']}
+                    colors={advancePercent === p ? [theme.colors.gold, theme.colors.primary] : [theme.colors.bgBlackMedium, theme.colors.bgBlackLight]}
                     style={styles.percentGradient}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}

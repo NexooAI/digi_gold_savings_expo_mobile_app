@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { theme } from "../../constants/theme";
 
 const { width } = Dimensions.get("window");
 
@@ -24,11 +25,11 @@ interface FlashOfferProps {
 
 const FlashOffer: React.FC<FlashOfferProps> = ({
   fallbackMessages = ["🎉 Welcome to Digital Gold Savings!"],
-  textColor = "#fff",
+  textColor = theme.colors.white,
   duration = 8000,
   onPress,
-  iconColor = "#fff",
-  backgroundGradient = ["#850111", "#2e0406"],
+  iconColor = theme.colors.white,
+  backgroundGradient = [theme.colors.primary, theme.colors.textDark],
 }) => {
   const translateX = useRef(new Animated.Value(width)).current;
   const [newsMessages, setNewsMessages] = useState<string[]>(fallbackMessages);
@@ -186,7 +187,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   counterText: {
-    color: "#fff",
+    color: theme.colors.white,
     fontSize: 12,
     fontWeight: "500",
   },

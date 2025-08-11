@@ -18,6 +18,7 @@ import {
 import { useFocusEffect, useRouter, useLocalSearchParams } from "expo-router";
 import PhoneInput from "../components/PhoneInputs";
 import { theme } from "@/constants/theme";
+import { COLORS } from "@/constants/colors";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
@@ -68,20 +69,20 @@ const SimpleLanguageSwitcher = () => {
         top: Platform.OS === 'ios' ? 60 : 40,
         right: 20,
         zIndex: 1000,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backgroundColor: theme.colors.overlayDark,
         padding: 12,
         borderRadius: 25,
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.3)',
+        borderColor: theme.colors.overlayLight,
       }}
     >
       <Image
-        source={theme.image.translate}
-        style={{ width: 20, height: 20, marginRight: 8, tintColor: '#ffffff' }}
+                    source={theme.images.translate.malayalam}
+        style={{ width: 20, height: 20, marginRight: 8, tintColor: COLORS.white }}
       />
-      <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: 'bold' }}>
+      <Text style={{ color: COLORS.white, fontSize: 14, fontWeight: 'bold' }}>
         {getLanguageDisplayName()}
       </Text>
     </TouchableOpacity>
@@ -98,11 +99,11 @@ const ErrorAlert = ({
 }) => (
   <View style={registerStyles.errorAlert}>
     <View style={registerStyles.errorContent}>
-      <Ionicons name="alert-circle" size={24} color="#fff" />
+              <Ionicons name="alert-circle" size={24} color={COLORS.white} />
       <Text style={registerStyles.errorMessage}>{message}</Text>
     </View>
     <TouchableOpacity onPress={onClose} style={registerStyles.closeButton}>
-      <Ionicons name="close" size={24} color="#fff" />
+              <Ionicons name="close" size={24} color={COLORS.white} />
     </TouchableOpacity>
   </View>
 );
@@ -343,7 +344,7 @@ export default function Register() {
   return (
     <SafeAreaView style={registerStyles.container}>
       <ImageBackground
-        source={theme.image.bg_image}
+        source={theme.images.auth.loginBg}
         style={registerStyles.backgroundImage}
       >
         {/* Dark overlay for background */}
@@ -369,7 +370,7 @@ export default function Register() {
             >
               <View style={registerStyles.logoContainer}>
                 <Image
-                  source={theme.image.transparentLogo}
+                  source={theme.images.auth.logo}
                   style={registerStyles.logo}
                   resizeMode="contain"
                 />
@@ -429,7 +430,7 @@ export default function Register() {
                           disabled={loading}
                         >
                           <LinearGradient
-                            colors={["#ffc90c", "#ffd700"]}
+                            colors={[COLORS.secondary, COLORS.gold]}
                             style={registerStyles.gradientButton}
                           >
                             <Text style={registerStyles.loginButtonText}>
@@ -512,7 +513,7 @@ export default function Register() {
                           disabled={loading || pins.includes("")}
                         >
                           <LinearGradient
-                            colors={["#ffc90c", "#ffd700"]}
+                            colors={[COLORS.secondary, COLORS.gold]}
                             style={registerStyles.gradientButton}
                           >
                             <Text style={registerStyles.loginButtonText}>

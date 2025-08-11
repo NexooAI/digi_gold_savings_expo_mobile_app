@@ -9,6 +9,7 @@ import {
   FlatList,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { theme } from '../../constants/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const ITEM_HEIGHT = 200;
@@ -134,10 +135,10 @@ const ImageSlider = ({ images = [] }: ImageSliderProps): React.ReactElement => {
       {images.length > 1 && (
         <>
           <TouchableOpacity style={styles.prevButton} onPress={handlePrev}>
-            <MaterialIcons name="chevron-left" size={20} color="white" />
+            <MaterialIcons name="chevron-left" size={20} color={theme.colors.white} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-            <MaterialIcons name="chevron-right" size={20} color="white" />
+            <MaterialIcons name="chevron-right" size={20} color={theme.colors.white} />
           </TouchableOpacity>
         </>
       )}
@@ -152,7 +153,7 @@ const ImageSlider = ({ images = [] }: ImageSliderProps): React.ReactElement => {
                 {
                   width: index === activeIndex ? 20 : 8,
                   backgroundColor: index === activeIndex
-                    ? '#fff'
+                    ? theme.colors.white
                     : 'rgba(255,255,255,0.5)',
                 },
               ]}
@@ -167,7 +168,7 @@ const ImageSlider = ({ images = [] }: ImageSliderProps): React.ReactElement => {
 const styles = StyleSheet.create({
   container: {
     height: ITEM_HEIGHT,
-    backgroundColor: '#000',
+    backgroundColor: theme.colors.black,
     borderRadius: 12,
     overflow: 'hidden',
     marginVertical: 10,

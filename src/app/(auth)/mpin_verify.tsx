@@ -25,6 +25,7 @@ import * as SecureStore from "expo-secure-store";
 import * as Crypto from "expo-crypto";
 import useGlobalStore from "@/store/global.store";
 import { theme } from "@/constants/theme";
+import { COLORS } from "@/constants/colors";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import Icon from "@expo/vector-icons/MaterialIcons";
@@ -70,20 +71,20 @@ const SimpleLanguageSwitcher = () => {
         top: Platform.OS === 'ios' ? 60 : 40,
         right: 20,
         zIndex: 1000,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backgroundColor: theme.colors.overlayDark,
         padding: 12,
         borderRadius: 25,
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.3)',
+        borderColor: theme.colors.overlayLight,
       }}
     >
       <Image
-        source={theme.image.translate}
-        style={{ width: 20, height: 20, marginRight: 8, tintColor: '#ffffff' }}
+        source={theme.images.translate.malayalam}
+        style={{ width: 20, height: 20, marginRight: 8, tintColor: COLORS.white }}
       />
-      <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: 'bold' }}>
+      <Text style={{ color: COLORS.white, fontSize: 14, fontWeight: 'bold' }}>
         {getLanguageDisplayName()}
       </Text>
     </TouchableOpacity>
@@ -134,29 +135,29 @@ const CustomModal = ({
           background: 'rgba(133, 1, 17, 0.95)',
           border: theme.colors.primary,
           icon: 'error',
-          iconColor: '#ffffff'
+          iconColor: COLORS.white
         };
-      case 'success':
-        return {
-          background: 'rgba(76, 175, 80, 0.95)',
-          border: theme.colors.success,
-          icon: 'check-circle',
-          iconColor: '#ffffff'
-        };
-      case 'warning':
-        return {
-          background: 'rgba(255, 201, 12, 0.95)',
-          border: theme.colors.secondary,
-          icon: 'warning',
-          iconColor: '#000000'
-        };
-      default:
-        return {
-          background: 'rgba(133, 1, 17, 0.95)',
-          border: theme.colors.primary,
-          icon: 'error',
-          iconColor: '#ffffff'
-        };
+              case 'success':
+          return {
+            background: 'rgba(76, 175, 80, 0.95)',
+            border: theme.colors.success,
+            icon: 'check-circle',
+            iconColor: COLORS.white
+          };
+              case 'warning':
+          return {
+            background: 'rgba(255, 201, 12, 0.95)',
+            border: theme.colors.secondary,
+            icon: 'warning',
+            iconColor: COLORS.black
+          };
+              default:
+          return {
+            background: 'rgba(133, 1, 17, 0.95)',
+            border: theme.colors.primary,
+            icon: 'error',
+            iconColor: COLORS.white
+          };
     }
   };
 
@@ -204,7 +205,7 @@ const CustomModal = ({
               >
                 <Text style={[
                   styles.modalCancelButtonText,
-                  { color: type === 'warning' ? theme.colors.white : '#ffffff' }
+                  { color: type === 'warning' ? theme.colors.white : COLORS.white }
                 ]}>
                   {t("cancel") || "Cancel"}
                 </Text>
@@ -222,7 +223,7 @@ const CustomModal = ({
             >
               <Text style={[
                 styles.modalButtonText,
-                { color: type === 'warning' ? '#ffffff' : theme.colors.textDark }
+                { color: type === 'warning' ? COLORS.white : theme.colors.textDark }
               ]}>
                 {showCancelButton ? (t("logout") || "Logout") : "OK"}
               </Text>
@@ -655,7 +656,7 @@ export default function MpinVerify() {
   if (initializing) {
     return (
       <ImageBackground
-        source={theme.image.bg_image}
+        source={theme.images.auth.loginBg}
         style={styles.backgroundImage}
       >
         <LinearGradient
@@ -665,7 +666,7 @@ export default function MpinVerify() {
           <View style={styles.container}>
             <View style={styles.logoContainer}>
               <Image
-                source={theme.image.transparentLogo}
+                source={require('../../../assets/images/logo_trans.png')}
                 style={[styles.logo, { width: logoWidth }]}
                 resizeMode="contain"
               />
@@ -681,7 +682,7 @@ export default function MpinVerify() {
 
   return (
     <ImageBackground
-      source={theme.image.bg_image}
+      source={theme.images.auth.loginBg}
       style={styles.backgroundImage}
     >
       <LinearGradient
@@ -696,7 +697,7 @@ export default function MpinVerify() {
             <View style={styles.container}>
               <View style={styles.logoContainer}>
                 <Image
-                  source={theme.image.transparentLogo}
+                  source={require('../../../assets/images/logo_trans.png')}
                   style={[styles.logo, { width: logoWidth }]}
                   resizeMode="contain"
                 />
@@ -742,7 +743,7 @@ export default function MpinVerify() {
                     
                     {isLocked && (
                       <View style={styles.lockdownContainer}>
-                        <Icon name="lock" size={20} color="#ff6b6b" />
+                        <Icon name="lock" size={20} color={COLORS.red} />
                         <Text style={styles.lockdownText}>
                           Account locked for {Math.floor(lockdownTimer / 60)}:{(lockdownTimer % 60).toString().padStart(2, '0')}
                         </Text>
@@ -797,8 +798,8 @@ export default function MpinVerify() {
                         }}
                         disabled={loading || isLocked}
                       >
-                        <Icon name="visibility" size={20} color={isLocked ? "#cccccc" : "#ffffff"} />
-                        <Text style={[styles.viewMpinButtonText, isLocked && { color: "#cccccc" }]}>{t("View_MPIN")}</Text>
+                        <Icon name="visibility" size={20} color={isLocked ? COLORS.grey : COLORS.white} />
+                        <Text style={[styles.viewMpinButtonText, isLocked && { color: COLORS.grey }]}>{t("View_MPIN")}</Text>
                       </TouchableOpacity>
                       
                       <TouchableOpacity
@@ -809,8 +810,8 @@ export default function MpinVerify() {
                         }}
                         disabled={loading || isLocked}
                       >
-                        <Icon name="clear" size={20} color={isLocked ? "#cccccc" : "#ffffff"} />
-                        <Text style={[styles.clearButtonText, isLocked && { color: "#cccccc" }]}>{t("clear")}</Text>
+                        <Icon name="clear" size={20} color={isLocked ? COLORS.grey : COLORS.white} />
+                        <Text style={[styles.clearButtonText, isLocked && { color: COLORS.grey }]}>{t("clear")}</Text>
                       </TouchableOpacity>
                     </View>
 
@@ -861,7 +862,7 @@ export default function MpinVerify() {
                           setShowModal(true);
                         }}
                       >
-                        <Icon name="logout" size={20} color={theme.colors.error || "#ff4444"} />
+                        <Icon name="logout" size={20} color={theme.colors.error || COLORS.red} />
                         <Text style={styles.logoutLink}>
                           {t("logout") || "Logout"}
                         </Text>
@@ -941,7 +942,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    color: "#ffffff",
+    color: COLORS.white,
     fontSize: 18,
     fontWeight: "600",
     textAlign: "center",
@@ -962,7 +963,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...Platform.select({
       ios: {
-        shadowColor: "#000",
+        shadowColor: COLORS.black,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.3,
         shadowRadius: 12,
@@ -970,7 +971,7 @@ const styles = StyleSheet.create({
       },
       android: {
         elevation: 12,
-        shadowColor: "#000",
+        shadowColor: COLORS.black,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.3,
         shadowRadius: 12,
@@ -983,14 +984,14 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   mpinTitle: {
-    color: "#ffffff",
+    color: COLORS.white,
     fontSize: 28,
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
   },
   mpinSubtitle: {
-    color: "#ffffff",
+    color: COLORS.white,
     fontSize: 16,
     marginBottom: 30,
     textAlign: "center",
@@ -1015,23 +1016,23 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     textAlign: "center",
     fontSize: 24,
-    color: "#000000",
-    backgroundColor: "#ffffff",
+    color: COLORS.black,
+    backgroundColor: COLORS.white,
   },
   otpInputEmpty: {
     borderColor: "rgba(174, 28, 28, 0.2)",
-    backgroundColor: "#ffffff",
-    color: "#000000",
+    backgroundColor: COLORS.white,
+    color: COLORS.black,
   },
   otpInputFilled: {
     borderColor: theme.colors.secondary,
-    backgroundColor: "#ffffff",
-    color: "#000000",
+    backgroundColor: COLORS.white,
+    color: COLORS.black,
   },
   otpInputDisabled: {
-    borderColor: "#cccccc",
-    backgroundColor: "#f5f5f5",
-    color: "#999999",
+    borderColor: COLORS.grey,
+    backgroundColor: COLORS.lightGrey,
+    color: COLORS.textGrey,
   },
   inputDot: {
     position: "absolute",
@@ -1098,7 +1099,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   logoutLink: {
-    color: theme.colors.error || "#ff4444",
+    color: COLORS.error,
     marginLeft: 8,
     fontSize: 16,
     fontWeight: "600",
@@ -1113,10 +1114,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: "#ff6b6b",
+    borderColor: COLORS.errorLight,
   },
   lockdownText: {
-    color: "#ff6b6b",
+    color: COLORS.errorLight,
     fontSize: 14,
     fontWeight: "600",
     marginLeft: 8,
@@ -1125,7 +1126,7 @@ const styles = StyleSheet.create({
   // Modal styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: COLORS.blackOverlay,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
@@ -1139,7 +1140,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: COLORS.black,
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.3,
         shadowRadius: 20,
@@ -1155,13 +1156,13 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: COLORS.white,
     textAlign: 'center',
     marginBottom: 12,
   },
   modalMessage: {
     fontSize: 16,
-    color: '#ffffff',
+    color: COLORS.white,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 24,
@@ -1212,7 +1213,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(40, 167, 69, 0.5)',
   },
   viewMpinButtonText: {
-    color: '#ffffff',
+    color: COLORS.white,
     fontSize: 14,
     fontWeight: '600',
     marginLeft: 4,
@@ -1228,7 +1229,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(220, 53, 69, 0.5)',
   },
   clearButtonText: {
-    color: '#ffffff',
+    color: COLORS.white,
     fontSize: 14,
     fontWeight: '600',
     marginLeft: 4,

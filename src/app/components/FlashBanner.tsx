@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, Image } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { theme } from '../../constants/theme';
 
 interface FlashBannerProps {
   message?: string;
@@ -22,7 +24,7 @@ const FlashBanner: React.FC<FlashBannerProps> = ({ message, children, onClose, i
   return (
     <View style={styles.overlay}>
       <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-        <Ionicons name="close" size={32} color="#fff" />
+        <Ionicons name="close" size={32} color={theme.colors.white} />
       </TouchableOpacity>
       {children ? children : (
         <Image 
@@ -59,7 +61,7 @@ const styles = StyleSheet.create({
   message: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#5a000b',
+    color: theme.colors.redDarker,
     textAlign: 'center',
     marginVertical: 10,
   },

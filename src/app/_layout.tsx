@@ -224,7 +224,7 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: theme.colors.overlayDark,
     justifyContent: "center",
     alignItems: "center",
     zIndex: 999,

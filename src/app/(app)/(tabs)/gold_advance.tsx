@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from 'src/constants/colors';
 
 export default function GoldAdvanceScreen() {
   const router = useRouter();
@@ -18,37 +19,37 @@ export default function GoldAdvanceScreen() {
     {
       percentage: '5%',
       days: 30,
-      color: '#4ECB71', // Red corner
+      color: COLORS.green,
       minPayment: '5%',
       details: 'Pay 5% of the total amount as advance and get 30 days to complete your purchase at the best rate.',
-      gradient: ['#FF6B6B', '#FF8E8E'] as const,
+      gradient: [COLORS.errorLight, COLORS.errorLight] as const,
       icon: 'flash',
     },
     {
       percentage: '10%',
       days: 60,
-      color: '#FFD93D', // Green corner
+      color: COLORS.gold,
       minPayment: '10%',
       details: 'Pay 10% of the total amount as advance and get 60 days to complete your purchase at the best rate.',
-      gradient: ['#4ECB71', '#6EDB91'] as const,
+      gradient: [COLORS.green, COLORS.greenLight] as const,
       icon: 'trending-up',
     },
     {
       percentage: '20%',
       days: 90,
-      color: '#FF6B6B', // Yellow corner
+      color: COLORS.errorLight,
       minPayment: '20%',
       details: 'Pay 20% of the total amount as advance and get 90 days to complete your purchase at the best rate.',
-      gradient: ['#FFD93D', '#FFE55C'] as const,
+      gradient: [COLORS.gold, COLORS.goldLight] as const,
       icon: 'star',
     },
     {
       percentage: '30%',
       days: 120,
-      color: '#FF6B6B', // Blue corner
+      color: COLORS.errorLight,
       minPayment: '30%',
       details: 'Pay 30% of the total amount as advance and get 120 days to complete your purchase at the best rate.',
-      gradient: ['#4A90E2', '#6BA0F2'] as const,
+      gradient: [COLORS.blue, COLORS.blue] as const,
       icon: 'diamond',
     },
   ];
@@ -82,7 +83,7 @@ export default function GoldAdvanceScreen() {
       
       {/* Animated Background */}
       <LinearGradient
-        colors={['#FFF8DC', '#F7E9C4', '#E7D4A4']}
+        colors={[COLORS.cardBackgroundLight, COLORS.cardBackgroundMedium, COLORS.cardBackgroundMedium]}
         style={styles.backgroundGradient}
       />
       
@@ -117,7 +118,7 @@ export default function GoldAdvanceScreen() {
               >
                 <View style={[styles.cornerTag, { backgroundColor: option.color }]}> 
                   <Text style={styles.cornerText}>
-                    <Ionicons name="calendar" size={12} color="#fff" /> {option.days} DAYS
+                    <Ionicons name="calendar" size={12} color={COLORS.white} /> {option.days} DAYS
                   </Text>
                 </View>
                 <TouchableOpacity
@@ -128,19 +129,19 @@ export default function GoldAdvanceScreen() {
                   }}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Ionicons name="information-circle-outline" size={24} color="#fff" />
+                  <Ionicons name="information-circle-outline" size={24} color={COLORS.white} />
                 </TouchableOpacity>
                 <View style={styles.iconRow}>
-                  <Ionicons name={option.icon as any} size={32} color="#fff" style={{ marginRight: 12 }} />
+                  <Ionicons name={option.icon as any} size={32} color={COLORS.white} style={{ marginRight: 12 }} />
                   <Text style={styles.percentageText}>{option.percentage}</Text>
                 </View>
               </LinearGradient>
               <View style={styles.cardBody}>
                 <Text style={styles.cardText}>
-                  <Ionicons name="wallet" size={16} color="#C69749" /> Pay Minimum {option.minPayment}
+                  <Ionicons name="wallet" size={16} color={COLORS.brown} /> Pay Minimum {option.minPayment}
                 </Text>
                 <Text style={styles.cardText}>
-                  <Ionicons name="time" size={16} color="#C69749" /> Get {option.days} days of advance period
+                  <Ionicons name="time" size={16} color={COLORS.brown} /> Get {option.days} days of advance period
                 </Text>
                 <Text style={styles.rateText}>
                   Avail the rate of Gold at the time of booking or at the purchase, whichever is less
@@ -166,7 +167,7 @@ export default function GoldAdvanceScreen() {
                     activeOpacity={0.85}
                   >
                     <LinearGradient
-                      colors={['#C69749', '#E7B872']}
+                      colors={[COLORS.brown, COLORS.brownLight]}
                       style={styles.buttonGradient}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
@@ -190,12 +191,12 @@ export default function GoldAdvanceScreen() {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <LinearGradient
-                colors={['#C69749', '#E7B872']}
+                colors={[COLORS.brown, COLORS.brownLight]}
                 style={styles.modalHeader}
               >
                 <Text style={styles.modalTitle}>Advance Option Details</Text>
                 <TouchableOpacity onPress={handleCloseModal} style={styles.closeButton}>
-                  <Ionicons name="close" size={24} color="#fff" />
+                  <Ionicons name="close" size={24} color={COLORS.white} />
                 </TouchableOpacity>
               </LinearGradient>
               {selectedOption && (
@@ -217,7 +218,7 @@ export default function GoldAdvanceScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF8DC',
+    backgroundColor: COLORS.cardBackgroundLight,
   },
   backgroundGradient: {
     position: 'absolute',
@@ -249,16 +250,16 @@ const styles = StyleSheet.create({
   mainTitle: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#8B4513',
+    color: COLORS.brown,
     textAlign: 'center',
     marginBottom: 8,
-    textShadowColor: 'rgba(139, 69, 19, 0.3)',
+    textShadowColor: COLORS.brownOverlay,
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
   subtitle: {
     fontSize: 16,
-    color: '#8B4513',
+    color: COLORS.brown,
     textAlign: 'center',
     marginBottom: 16,
     fontStyle: 'italic',
@@ -266,23 +267,23 @@ const styles = StyleSheet.create({
   decorativeLine: {
     width: 60,
     height: 3,
-    backgroundColor: '#C69749',
+    backgroundColor: COLORS.brown,
     borderRadius: 2,
   },
   cardsContainer: {
     gap: 24,
   },
   cardWrapper: {
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: COLORS.whiteOverlay,
     borderRadius: 20,
     overflow: 'hidden',
     elevation: 12,
-    shadowColor: '#C69749',
+    shadowColor: COLORS.brown,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
     shadowRadius: 16,
     borderWidth: 2,
-    borderColor: '#E7B872',
+    borderColor: COLORS.brownLight,
     marginBottom: 20,
     transform: [{ scale: 1 }],
   },
@@ -312,7 +313,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   cornerText: {
-    color: '#FFFFFF',
+    color: COLORS.white,
     fontSize: 12,
     fontWeight: 'bold',
     letterSpacing: 1,
@@ -320,27 +321,27 @@ const styles = StyleSheet.create({
   percentageText: {
     fontSize: 52,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: COLORS.white,
     textAlign: 'center',
     fontFamily: 'serif',
-    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowColor: COLORS.blackOverlay,
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
   cardBody: {
     padding: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.white,
   },
   cardText: {
     fontSize: 16,
-    color: '#2C1810',
+    color: COLORS.textDarkBrown,
     marginBottom: 10,
     textAlign: 'center',
     lineHeight: 22,
   },
   rateText: {
     fontSize: 14,
-    color: '#666666',
+    color: COLORS.textMediumGrey,
     textAlign: 'center',
     marginTop: 12,
     marginBottom: 20,
@@ -356,7 +357,7 @@ const styles = StyleSheet.create({
   moreButton: {
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#C69749',
+    borderColor: COLORS.brown,
     paddingVertical: 12,
     paddingHorizontal: 20,
     marginTop: 8,
@@ -364,7 +365,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   moreButtonText: {
-    color: '#C69749',
+    color: COLORS.brown,
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
@@ -375,7 +376,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   buttonText: {
-    color: '#fff',
+    color: COLORS.white,
     fontSize: 16,
     fontWeight: 'bold',
     letterSpacing: 2,
@@ -387,23 +388,23 @@ const styles = StyleSheet.create({
     top: 12,
     left: 12,
     zIndex: 2,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: COLORS.whiteOverlay,
     borderRadius: 20,
     padding: 4,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: COLORS.blackOverlay,
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.white,
     borderRadius: 20,
     width: '85%',
     maxHeight: '70%',
     elevation: 15,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
@@ -419,7 +420,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#fff',
+    color: COLORS.white,
     flex: 1,
   },
   closeButton: {
@@ -430,7 +431,7 @@ const styles = StyleSheet.create({
   },
   modalDetail: {
     fontSize: 16,
-    color: '#2C1810',
+    color: COLORS.textDarkBrown,
     marginBottom: 12,
     textAlign: 'left',
     width: '100%',

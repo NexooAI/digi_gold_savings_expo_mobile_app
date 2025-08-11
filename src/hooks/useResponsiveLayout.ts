@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Dimensions, PixelRatio, Platform } from 'react-native';
+import { theme } from '../constants/theme';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -97,21 +98,21 @@ export const useResponsiveLayout = () => {
   // Responsive shadows
   const shadows = {
     small: {
-      shadowColor: '#000',
+      shadowColor: theme.colors.shadowBlack,
       shadowOffset: { width: 0, height: scale(1) },
       shadowOpacity: 0.1,
       shadowRadius: scale(2),
       elevation: scale(2),
     },
     medium: {
-      shadowColor: '#000',
+      shadowColor: theme.colors.shadowBlack,
       shadowOffset: { width: 0, height: scale(2) },
       shadowOpacity: 0.15,
       shadowRadius: scale(4),
       elevation: scale(4),
     },
     large: {
-      shadowColor: '#000',
+      shadowColor: theme.colors.shadowBlack,
       shadowOffset: { width: 0, height: scale(4) },
       shadowOpacity: 0.2,
       shadowRadius: scale(8),

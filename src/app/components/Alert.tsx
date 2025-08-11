@@ -8,12 +8,13 @@ import {
   Platform,
   Alert as RNAlert,
 } from "react-native";
+import { theme } from "../../constants/theme";
 
 type AlertProps = {
   visible: boolean;
   title?: string;
   message: string;
-  type?: "success" | "error" | "info";
+  type?: "success" | "error" | "info" | "warning";
   buttons?: Array<{
     text: string;
     onPress: () => void;
@@ -47,11 +48,15 @@ const CustomAlert = ({
   const getIcon = () => {
     switch (type) {
       case "success":
-        return <Ionicons name="checkmark-circle" size={32} color="#00cc44" />;
+        return <Ionicons name="checkmark-circle" size={32} color={theme.colors.success} />;
       case "error":
-        return <Ionicons name="close-circle" size={32} color="#ff4444" />;
+        return <Ionicons name="close-circle" size={32} color={theme.colors.error} />;
+      case "warning":
+        return <Ionicons name="warning" size={32} color={theme.colors.warning} />;
+      case "info":
+        return <Ionicons name="information-circle" size={32} color={theme.colors.info} />;
       default:
-        return <Ionicons name="information-circle" size={32} color="#7b0006" />;
+        return <Ionicons name="information-circle" size={32} color={theme.colors.info} />;
     }
   };
 
@@ -125,7 +130,9 @@ const CustomAlert = ({
                 <Text
                   style={[
                     styles.buttonText,
-                    button.style === "destructive" && styles.destructiveText,
+                    button.style === "destructive" && styles.destructiveButtonText,
+                    button.style === "cancel" && styles.cancelButtonText,
+                    button.style === "default" && styles.defaultButtonText,
                   ]}
                 >
                   {button.text}
@@ -142,94 +149,115 @@ const CustomAlert = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
   },
   container: {
-    backgroundColor: "white",
-    borderRadius: 12,
-    width: "80%",
+    backgroundColor: theme.colors.white,
+    borderRadius: 20,
+    padding: 20,
+    margin: 20,
+    maxWidth: 400,
+    minWidth: 300,
+    shadowColor: theme.colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   header: {
-    flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    marginBottom: 20,
   },
   title: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginLeft: 12,
-    color: "#7b0006",
+    fontSize: 20,
+    fontWeight: "bold",
+    color: theme.colors.textDark,
+    textAlign: "center",
+    marginTop: 10,
   },
   content: {
     padding: 16,
   },
   message: {
     fontSize: 16,
-    color: "#555",
+    color: theme.colors.textDarkGrey,
     lineHeight: 24,
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    borderTopWidth: 1,
-    borderTopColor: "#eee",
-  },
-  button: {
-    padding: 16,
-    minWidth: 80,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#7b0006",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  destructiveButton: {
-    backgroundColor: "#ffe6e6",
-  },
-  destructiveText: {
-    color: "#ff4444",
-  },
-  cancelButton: {
-    backgroundColor: "#f5f5f5",
   },
   paymentDetailsContainer: {
     marginTop: 16,
     borderTopWidth: 1,
-    borderTopColor: "#eee",
+    borderTopColor: theme.colors.borderLight,
     paddingTop: 12,
   },
   paymentRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 6,
+    marginBottom: 8,
   },
   paymentLabel: {
     flex: 2,
     fontWeight: "600",
-    color: "#444",
+    color: theme.colors.textMediumGrey,
   },
   paymentValue: {
     flex: 3,
     fontSize: 16,
-    color: "#000",
+    color: theme.colors.textSecondary,
   },
   copyButton: {
     flex: 1,
-    backgroundColor: "#7b0006",
+    backgroundColor: theme.colors.primary,
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 6,
+    borderRadius: 8,
     alignItems: "center",
   },
   copyButtonText: {
-    color: "white",
+    color: theme.colors.white,
     fontWeight: "600",
     fontSize: 14,
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    gap: 10,
+  },
+  button: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 44,
+  },
+  defaultButton: {
+    backgroundColor: theme.colors.primary,
+  },
+  destructiveButton: {
+    backgroundColor: theme.colors.error,
+  },
+  cancelButton: {
+    backgroundColor: theme.colors.textLightGrey,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  defaultButtonText: {
+    color: theme.colors.white,
+  },
+  destructiveButtonText: {
+    color: theme.colors.white,
+  },
+  cancelButtonText: {
+    color: theme.colors.textDark,
   },
 });
 

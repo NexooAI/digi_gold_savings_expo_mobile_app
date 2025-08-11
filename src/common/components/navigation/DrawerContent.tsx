@@ -14,6 +14,7 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import useGlobalStore from "@/store/global.store";
 import { theme } from "@/constants/theme";
+import COLORS from "../../../constants/colors";
 import { t } from "../../../i18n";
 import * as SecureStore from "expo-secure-store";
 // import { useAuth } from "../../../../contexts/AuthContext";
@@ -37,7 +38,7 @@ const DrawerMenuItem = ({ label, iconName, onPress, disabled }: DrawerMenuItemPr
     <Ionicons
       name={iconName}
       size={24}
-      color={disabled ? "#666" : theme.colors.primary}
+      color={disabled ? theme.colors.textMediumGrey : theme.colors.primary}
       style={styles.icon}
     />
     <Text style={[styles.menuItemText, disabled && styles.disabledText]}>
@@ -213,7 +214,7 @@ export function CustomDrawerContent(props: CustomDrawerContentProps) {
           <Ionicons
             name="log-out-outline"
             size={24}
-            color={isNavigating ? "#aaa" : "white"}
+            color={isNavigating ? theme.colors.textLightGrey : theme.colors.white}
             style={styles.logoutIcon}
           />
           <Text
@@ -230,10 +231,10 @@ export function CustomDrawerContent(props: CustomDrawerContentProps) {
 // Styles remain mostly the same with these additions:
 const styles = StyleSheet.create({
   disabledText: {
-    color: "#666",
+    color: theme.colors.textMediumGrey,
   },
   disabledLogout: {
-    backgroundColor: "#555",
+    backgroundColor: theme.colors.textLightGrey,
   },
   contentContainer: {
     flexGrow: 1,
@@ -244,7 +245,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     backgroundColor: theme.colors.primary,
     borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
+    borderBottomColor: theme.colors.borderLight,
     borderTopRightRadius: 10,
   },
   headerTitle: {
@@ -266,7 +267,7 @@ const styles = StyleSheet.create({
   },
   menuItemText: {
     fontSize: 16,
-    color: "#333",
+    color: theme.colors.textDarkGrey,
   },
   sectionHeader: {
     fontSize: 18,
@@ -282,7 +283,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: 16,
-    backgroundColor: "#fff",
+    backgroundColor: theme.colors.white,
   },
   logoutButton: {
     flexDirection: "row",
@@ -297,7 +298,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   logoutText: {
-    color: "white",
+    color: theme.colors.white,
     fontSize: 16,
     fontWeight: "bold",
   },

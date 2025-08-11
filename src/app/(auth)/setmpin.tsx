@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { theme } from "@/constants/theme";
+import { COLORS } from "@/constants/colors";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import api from "@/services/api";
@@ -190,7 +191,7 @@ export default function SetMpinPage() {
 
   return (
     <ImageBackground
-      source={theme.image.bg_image}
+              source={theme.images.auth.loginBg}
       style={styles.backgroundImage}
     >
       <LinearGradient
@@ -200,11 +201,11 @@ export default function SetMpinPage() {
         {showError && (
           <View style={styles.errorAlert}>
             <View style={styles.errorContent}>
-              <Ionicons name="alert-circle" size={24} color="#fff" />
+              <Ionicons name="alert-circle" size={24} color={COLORS.white} />
               <Text style={styles.errorMessage}>{errorMessage}</Text>
             </View>
             <TouchableOpacity onPress={() => setShowError(false)} style={styles.closeButton}>
-              <Ionicons name="close" size={20} color="#fff" />
+              <Ionicons name="close" size={20} color={COLORS.white} />
             </TouchableOpacity>
           </View>
         )}
@@ -263,7 +264,7 @@ export default function SetMpinPage() {
               </TouchableOpacity>
               {matchError && (
                 <View style={styles.errorContainer}>
-                  <Ionicons name="alert-circle" size={20} color="#ff4444" />
+                  <Ionicons name="alert-circle" size={20} color={COLORS.red} />
                   <Text style={styles.errorText}>{t("mpinMismatchError")}</Text>
                 </View>
               )}
@@ -274,7 +275,7 @@ export default function SetMpinPage() {
                 disabled={loading || !mpinValid || !confirmValid || matchError}
               >
                 <LinearGradient
-                  colors={['#ffc90c', '#ffd700']}
+                  colors={[COLORS.secondary, COLORS.gold]}
                   style={styles.gradientButton}
                 >
                   <View style={styles.buttonContent}>

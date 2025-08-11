@@ -151,7 +151,7 @@ export default function CustomBottomBar() {
   return (
     <View style={[containerStyle, { paddingHorizontal: responsiveStyles.containerPadding }]}>
       <LinearGradient
-        colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.98)']}
+        colors={[theme.colors.bgWhiteVeryHeavy, theme.colors.white]}
         style={styles.gradientContainer}
       >
         {tabs.map((tab, index) => {
@@ -175,7 +175,7 @@ export default function CustomBottomBar() {
                   <Ionicons
                     name={isActive ? tab.iconActive : tab.icon}
                     size={responsiveStyles.iconSize}
-                    color={isActive ? "#B31313" : "#888"}
+                    color={isActive ? theme.colors.redBurgundyLight : theme.colors.textLightGrey}
                   />
                   {tab.badge && (
                     <Animated.View
@@ -196,7 +196,7 @@ export default function CustomBottomBar() {
                   style={[
                     styles.label,
                     { 
-                      color: isActive ? "#B31313" : "#888",
+                      color: isActive ? theme.colors.redBurgundyLight : theme.colors.textLightGrey,
                       fontSize: responsiveStyles.labelFontSize,
                     },
                   ]}
@@ -225,13 +225,13 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     borderRadius: 25,
-    shadowColor: "#000",
+    shadowColor: theme.colors.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 15,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
+    borderColor: theme.colors.borderWhiteLight,
   },
   tab: {
     flex: 1,
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -8,
     right: -8,
-    backgroundColor: "#FF4444",
+    backgroundColor: theme.colors.error,
     borderRadius: 12,
     minWidth: 20,
     height: 20,
@@ -274,12 +274,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 4,
     borderWidth: 2,
-    borderColor: "#fff",
+    borderColor: theme.colors.white,
   },
   badgeText: {
     fontSize: 10,
     fontWeight: "bold",
-    color: "#fff",
+    color: theme.colors.white,
   },
   activeIndicator: {
     position: "absolute",
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     right: 0,
     width: 'auto',
     height: 3,
-    backgroundColor: "#B31313",
+    backgroundColor: theme.colors.redBurgundyLight,
     borderRadius: 2,
     marginLeft: 'auto',
     marginRight: 'auto',

@@ -430,7 +430,7 @@ export default function AboutUs() {
           ]}
         >
           <ImageBackground
-            source={theme.image.store_image}
+            source={theme.images.store.storeIcon}
             style={styles.backgroundImage}
             imageStyle={styles.backgroundImageStyle}
           >

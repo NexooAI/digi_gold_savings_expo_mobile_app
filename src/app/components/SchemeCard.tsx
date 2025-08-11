@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { theme } from '../../constants/theme';
 
 type SchemeCardProps = {
   schemeName: string;
@@ -41,9 +42,10 @@ const SchemeCard: React.FC<SchemeCardProps> = ({
 }) => {
   return (
     <LinearGradient
-      // Adjust colors for your "golden" look
-      colors={["#F9C942", "#EAA73B"]}
+      colors={[theme.colors.goldLight, theme.colors.goldDark]}
       style={styles.cardContainer}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
     >
       {/* Top Row: Scheme Name + Active Status */}
       <View style={styles.topRow}>
@@ -138,7 +140,7 @@ const styles = StyleSheet.create({
     padding: 15,
     marginVertical: 10,
     // iOS shadow
-    shadowColor: "#000",
+    shadowColor: theme.colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
@@ -153,31 +155,31 @@ const styles = StyleSheet.create({
   schemeTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#fff",
+    color: theme.colors.white,
   },
   statusContainer: {
     flexDirection: "row",
     alignItems: "center",
   },
   statusDot: {
-    color: "#bbb",
+    color: theme.colors.textLightGrey,
     marginRight: 4,
   },
   activeDot: {
-    color: "#00cc44",
+    color: theme.colors.success,
   },
   statusText: {
-    color: "#fff",
+    color: theme.colors.white,
     fontSize: 14,
   },
   name: {
     fontSize: 18,
-    color: "#fff",
+    color: theme.colors.white,
     marginBottom: 2,
   },
   accountNo: {
     fontSize: 14,
-    color: "#fff",
+    color: theme.colors.white,
     marginBottom: 8,
   },
   infoRow: {
@@ -190,16 +192,16 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    color: "#fff",
+    color: theme.colors.white,
     fontWeight: "600",
   },
   value: {
     fontSize: 14,
-    color: "#fff",
+    color: theme.colors.white,
     marginTop: 2,
   },
   payButton: {
-    backgroundColor: "#9B0751",
+    backgroundColor: theme.colors.primary,
     paddingVertical: 10,
     paddingHorizontal: 20,
     alignSelf: "flex-end",
@@ -207,7 +209,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   payButtonText: {
-    color: "#fff",
+    color: theme.colors.white,
     fontWeight: "bold",
   },
 });

@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { theme } from '@/constants/theme';
+import { COLORS } from 'src/constants/colors';
 import { t } from '@/i18n';
 import useGlobalStore from '@/store/global.store';
 
@@ -47,7 +48,7 @@ export default function NotFoundScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.white,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
@@ -65,14 +66,14 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 16,
-    color: '#666',
+    color: COLORS.textMediumGrey,
     textAlign: 'center',
     marginBottom: 20,
     paddingHorizontal: 20,
   },
   missingPath: {
     fontSize: 14,
-    color: '#666',
+    color: COLORS.textMediumGrey,
     textAlign: 'center',
     marginBottom: 30,
   },
@@ -85,7 +86,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 30,
     borderRadius: 25,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -95,7 +96,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   buttonText: {
-    color: '#fff',
+    color: COLORS.white,
     fontSize: 16,
     fontWeight: 'bold',
   },

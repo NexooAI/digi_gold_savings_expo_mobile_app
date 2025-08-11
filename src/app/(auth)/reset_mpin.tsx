@@ -98,7 +98,7 @@ export default function ResetMpin() {
 
   return (
     <ImageBackground
-      source={theme.image.bg_new}
+              source={theme.images.auth.newBg}
       style={styles.backgroundImage}
     >
       <SafeAreaView style={styles.container}>

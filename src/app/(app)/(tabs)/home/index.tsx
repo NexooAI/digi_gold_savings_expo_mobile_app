@@ -42,6 +42,7 @@ import api from "@/services/api";
 import NetInfo from "@react-native-community/netinfo";
 import { ScaledSheet, moderateScale } from "react-native-size-matters";
 import { theme } from "@/constants/theme";
+import { COLORS } from "src/constants/colors";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import FlashBanner from "@/app/components/FlashBanner";
 import { Ionicons } from "@expo/vector-icons";
@@ -73,30 +74,30 @@ const dummyData = {
     gold: {
       price: "7,315",
       purity: "24K",
-      image: require("../../../../../assets/images/gold.png"),
+      image: theme.images.products.gold,
     },
     silver: {
       price: "101.00",
       purity: "999",
-      image: require("../../../../../assets/images/silver.png"),
+      image: theme.images.products.silver,
     },
   },
   sliderImages: [
-    require("../../../../../assets/images/slider1.png"),
-    require("../../../../../assets/images/slider2.png"),
-    require("../../../../../assets/images/slider3.png"),
+    theme.images.banners.slider1,
+    theme.images.banners.slider2,
+    theme.images.banners.slider3,
   ],
 };
 
 const banners: Banner[] = [
   {
     id: 2,
-    image: require("../../../../../assets/images/banner.png"),
+    image: theme.images.banners.banner,
     schemeUrl: "/(app)/(tabs)/home/schemes",
   },
   {
     id: 3,
-    image: require("../../../../../assets/images/banner2.png"),
+    image: theme.images.banners.banner2,
     schemeUrl: "/(app)/(tabs)/home/schemes",
   },
 ];
@@ -106,11 +107,11 @@ const defaultStatusImages: Collection[] = [
   {
     id: 1,
     name: t("goldCollection"),
-    thumbnail: require("../../../../../assets/images/status1.jpg"),
+    thumbnail: theme.images.status.status1,
     status_images: [
-      require("../../../../../assets/images/status1.jpg"),
-      require("../../../../../assets/images/status2.jpg"),
-      require("../../../../../assets/images/status3.jpg"),
+      theme.images.status.status1,
+      theme.images.status.status2,
+      theme.images.status.status3,
     ],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -118,11 +119,11 @@ const defaultStatusImages: Collection[] = [
   {
     id: 2,
     name: t("silverCollection"),
-    thumbnail: require("../../../../../assets/images/status2.jpg"),
+    thumbnail: theme.images.status.status2,
     status_images: [
-      require("../../../../../assets/images/status2.jpg"),
-      require("../../../../../assets/images/status3.jpg"),
-      require("../../../../../assets/images/status4.jpg"),
+      theme.images.status.status2,
+      theme.images.status.status3,
+      theme.images.status.status4,
     ],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -130,11 +131,11 @@ const defaultStatusImages: Collection[] = [
   {
     id: 3,
     name: t("diamondCollection"),
-    thumbnail: require("../../../../../assets/images/status3.jpg"),
+    thumbnail: theme.images.status.status3,
     status_images: [
-      require("../../../../../assets/images/status3.jpg"),
-      require("../../../../../assets/images/status4.jpg"),
-      require("../../../../../assets/images/status5.jpg"),
+      theme.images.status.status3,
+      theme.images.status.status4,
+      theme.images.status.status5,
     ],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -142,11 +143,11 @@ const defaultStatusImages: Collection[] = [
   {
     id: 4,
     name: t("platinumCollection"),
-    thumbnail: require("../../../../../assets/images/status4.jpg"),
+    thumbnail: theme.images.status.status4,
     status_images: [
-      require("../../../../../assets/images/status4.jpg"),
-      require("../../../../../assets/images/status5.jpg"),
-      require("../../../../../assets/images/status1.jpg"),
+      theme.images.status.status4,
+      theme.images.status.status5,
+      theme.images.status.status1,
     ],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -154,11 +155,11 @@ const defaultStatusImages: Collection[] = [
   {
     id: 5,
     name: t("exclusiveCollection"),
-    thumbnail: require("../../../../../assets/images/status5.jpg"),
+    thumbnail: theme.images.status.status5,
     status_images: [
-      require("../../../../../assets/images/status5.jpg"),
-      require("../../../../../assets/images/status1.jpg"),
-      require("../../../../../assets/images/status2.jpg"),
+      theme.images.status.status5,
+      theme.images.status.status1,
+      theme.images.status.status2,
     ],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -978,7 +979,7 @@ export default function Home2() {
         <View style={styles.statusItemWrapper}>
           <View style={[
             styles.statusImageContainer,
-            { borderColor: viewedCollections[item.id] ? '#ccc' : '#00FF00' } // green if not viewed, gray if viewed
+            { borderColor: viewedCollections[item.id] ? COLORS.primary : COLORS.success } // green if not viewed, gray if viewed
           ]}>
             <Image
               source={getImageSource(item.thumbnail) ?? undefined}
@@ -1002,14 +1003,14 @@ export default function Home2() {
   if (isLoading) {
     return (
       <>
-        <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
+        <StatusBar backgroundColor={COLORS.errorDark} barStyle="light-content" />
         <ImageBackground
-          source={require("../../../../../assets/images/bg_new.jpg")}
+          source={theme.images.auth.newBg}
           style={styles.backgroundImage}
           resizeMode="contain"
         >
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#FFD700" />
+            <ActivityIndicator size="large" color={COLORS.secondary} />
             <Text style={styles.loadingText}>{t("loading")}</Text>
           </View>
         </ImageBackground>
@@ -1021,14 +1022,14 @@ export default function Home2() {
   if (!user || !user.id) {
     return (
       <>
-        <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
+        <StatusBar backgroundColor={COLORS.errorDark} barStyle="light-content" />
         <ImageBackground
-          source={require("../../../../../assets/images/bg_new.jpg")}
+          source={theme.images.auth.newBg}
           style={styles.backgroundImage}
           resizeMode="contain"
         >
           <View style={styles.loadingContainer}>
-            <Ionicons name="person-circle-outline" size={60} color="#FFD700" />
+            <Ionicons name="person-circle-outline" size={60} color={COLORS.secondary} />
             <Text style={styles.loadingText}>Please login to view your dashboard</Text>
             <TouchableOpacity
               style={styles.loginButton}
@@ -1044,15 +1045,15 @@ export default function Home2() {
 
   return (
     <AuthGuard>
-      <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
+      <StatusBar backgroundColor={COLORS.errorDark} barStyle="light-content" />
       <ImageBackground
-        source={require("../../../../../assets/images/bg_new.jpg")}
+        source={theme.images.auth.newBg}
         style={styles.backgroundImage}
         resizeMode="contain"
       >
         {showFlashBanner && (
           <FlashBanner
-            imageSource={require("../../../../../assets/images/flashbanner.png")}
+            imageSource={theme.images.banners.flashBanner}
             onClose={handleCloseBanner}
           />
         )}
@@ -1106,7 +1107,7 @@ export default function Home2() {
               ) : (
                 <View style={styles.rateWarningContainer}>
                   <View style={styles.rateWarningContent}>
-                    <Ionicons name="warning" size={24} color="#FFD700" />
+                    <Ionicons name="warning" size={24} color={COLORS.secondary} />
                     <View style={styles.rateWarningTextContainer}>
                       <Text style={styles.rateWarningTitle}>{t('liveRatesUnavailable')}</Text>
                       <Text style={styles.rateWarningSubtitle}>{t('pleaseTryAgainLater')}</Text>
@@ -1151,7 +1152,7 @@ export default function Home2() {
             <View style={styles.mainContent}>
               {isSliderLoading ? (
                 <View style={styles.sliderLoadingContainer}>
-                  <ActivityIndicator size="large" color="#FFD700" />
+                  <ActivityIndicator size="large" color={COLORS.secondary} />
                 </View>
               ) : (
                 <ImageSlider images={sliderImages} />
@@ -1165,7 +1166,7 @@ export default function Home2() {
                 // ]}
                 fallbackMessages={flashNews}
                 onPress={() => { if (__DEV__) { console.log("Flash news tapped"); } }}
-                textColor="#ffffff"
+                textColor={COLORS.white}
               />
               <UserInfoCard
                 userName={user?.name}
@@ -1218,7 +1219,7 @@ export default function Home2() {
                 <View style={styles.hallmarkImagesContainer}>
                   <View style={styles.hallmarkImageWrapper}>
                     <Image
-                      source={require("../../../../../assets/images/halmark1.jpg")}
+                      source={theme.images.hallmarks.hallmark1}
                       style={styles.hallmarkImage}
                       resizeMode="contain"
                     />
@@ -1226,7 +1227,7 @@ export default function Home2() {
                   </View>
                   <View style={styles.hallmarkImageWrapper}>
                     <Image
-                      source={require("../../../../../assets/images/halmark2.jpg")}
+                      source={theme.images.hallmarks.hallmark2}
                       style={styles.hallmarkImage}
                       resizeMode="contain"
                     />
@@ -1278,7 +1279,7 @@ const styles = StyleSheet.create({
   },
   mainContainer: {
     flex: 1,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    backgroundColor: theme.colors.bgWhiteLight,
   },
   headerWrapper: {
     width: "100%",
@@ -1317,7 +1318,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     textAlign: "center",
-    color: "#FFFFFF",
+    color: COLORS.white,
     fontSize: moderateScale(14),
     paddingVertical: moderateScale(20),
   },
@@ -1337,11 +1338,11 @@ const styles = StyleSheet.create({
     paddingRight: 30,
   },
   bannerCard: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.white,
     borderRadius: 20,
     marginHorizontal: 5,
     marginBottom: 8,
-    shadowColor: '#FFD700',
+    shadowColor: COLORS.secondary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 12,
@@ -1373,14 +1374,14 @@ const styles = StyleSheet.create({
   },
   aboutSchemesButton: {
     flex: 1,
-    backgroundColor: '#fffbe6',
+    backgroundColor: COLORS.overlayLight,
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: theme.colors.primary,
-    shadowColor: '#FFD700',
+    shadowColor: COLORS.secondary,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
@@ -1547,11 +1548,11 @@ const styles = StyleSheet.create({
     height: STATUS_IMAGE_SIZE,
     borderRadius: STATUS_BORDER_RADIUS,
     borderWidth: 2,
-    borderColor: "#850111",
+    borderColor: COLORS.error,
     padding: 2,
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.white,
     marginBottom: 6,
-    shadowColor: "#000",
+    shadowColor: COLORS.black,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -1567,11 +1568,11 @@ const styles = StyleSheet.create({
   },
   statusItemName: {
     fontSize: 12,
-    color: "#850111",
+    color: COLORS.error,
     textAlign: "center",
     width: STATUS_IMAGE_SIZE,
     fontWeight: "600",
-    textShadowColor: "rgba(255, 255, 255, 0.5)",
+    textShadowColor: COLORS.overlayLight,
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 1,
   },
@@ -1579,10 +1580,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: COLORS.overlayLight,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
+    borderColor: COLORS.overlayMedium,
   },
   languageIcon: {
     fontSize: 16,
@@ -1591,14 +1592,14 @@ const styles = StyleSheet.create({
   headerLanguageText: {
     fontSize: 12,
     fontWeight: "bold",
-    color: "#FFFFFF",
+    color: COLORS.white,
   },
   sliderLoadingContainer: {
     width: "100%",
     height: 200,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.1)",
+    backgroundColor: COLORS.overlay,
     borderRadius: 8,
     marginVertical: 10,
   },
@@ -1618,22 +1619,22 @@ const styles = StyleSheet.create({
   sectionHeaderLine: {
     height: 1.5,
     width: 20,
-    backgroundColor: "#FFD700",
+    backgroundColor: COLORS.secondary,
     marginHorizontal: 5,
   },
   sectionHeaderText: {
     fontSize: moderateScale(16),
     fontWeight: "700",
-    color: "#850111",
+    color: COLORS.error,
     textTransform: "uppercase",
     letterSpacing: 0.3,
-    textShadowColor: "rgba(0, 0, 0, 0.1)",
+    textShadowColor: COLORS.overlay,
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 1,
   },
   sectionHeaderSubtext: {
     fontSize: moderateScale(11),
-    color: "#666",
+    color: COLORS.mediumGrey,
     marginTop: 4,
     textAlign: "center",
     fontStyle: "italic",
@@ -1652,7 +1653,7 @@ const styles = StyleSheet.create({
   videoTitle: {
     fontSize: moderateScale(16),
     fontWeight: "700",
-    color: "#850111",
+    color: COLORS.error,
     textTransform: "uppercase",
     letterSpacing: 0.3,
     marginRight: 10,
@@ -1660,13 +1661,13 @@ const styles = StyleSheet.create({
   videoHeaderLine: {
     flex: 1,
     height: 1.5,
-    backgroundColor: "#FFD700",
+    backgroundColor: COLORS.secondary,
   },
   videoWrapper: {
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.white,
     borderRadius: 20,
     padding: 2,
-    shadowColor: "#000",
+    shadowColor: COLORS.black,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -1677,7 +1678,7 @@ const styles = StyleSheet.create({
   },
   rateWarningContainer: {
     width: "90%",
-    backgroundColor: "rgba(133, 1, 17, 0.9)",
+    backgroundColor: COLORS.error,
     borderRadius: 16,
     padding: 16,
     marginVertical: 10,
@@ -1694,18 +1695,18 @@ const styles = StyleSheet.create({
   rateWarningTitle: {
     fontSize: moderateScale(16),
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: COLORS.white,
     marginBottom: 4,
   },
   rateWarningSubtitle: {
     fontSize: moderateScale(12),
-    color: "rgba(255, 255, 255, 0.7)",
+    color: COLORS.overlayLight,
   },
   rateWarningRates: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    backgroundColor: COLORS.overlay,
     borderRadius: 12,
     padding: 12,
   },
@@ -1715,33 +1716,33 @@ const styles = StyleSheet.create({
   },
   rateWarningRateLabel: {
     fontSize: moderateScale(12),
-    color: "rgba(255, 255, 255, 0.7)",
+    color: COLORS.overlayLight,
     marginBottom: 4,
   },
   rateWarningRateValue: {
     fontSize: moderateScale(18),
     fontWeight: "bold",
-    color: "#FFFFFF",
+    color: COLORS.white,
   },
   rateWarningDivider: {
     width: 1,
     height: 30,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: COLORS.overlayLight,
     marginHorizontal: 12,
   },
   debugButton: {
     flexDirection: "row",
     alignItems: "center",
     padding: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: COLORS.overlayLight,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
+    borderColor: COLORS.overlayMedium,
   },
   debugButtonText: {
     fontSize: 12,
     fontWeight: "bold",
-    color: "#FFFFFF",
+    color: COLORS.white,
     marginLeft: 4,
   },
   viewDetailsContainer: {
@@ -1761,7 +1762,7 @@ const styles = StyleSheet.create({
   viewDetailsText: {
     fontSize: moderateScale(10),
     fontWeight: "bold",
-    color: "#850111",
+    color: COLORS.error,
     textAlign: "center",
   },
   doubleArrowContainer: {
@@ -1784,31 +1785,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.10,
     shadowRadius: 2,
     elevation: 3,
   },
   goldRatePurity: {
-    color: '#FFF8E1',
+    color: COLORS.overlayLight,
     fontWeight: 'bold',
     fontSize: 14,
     textAlign: 'center',
     letterSpacing: 1,
     marginLeft: 8,
-    marginRight: 2,
   },
   liveDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#2ecc40',
+    backgroundColor: COLORS.success,
     borderWidth: 1,
-    borderColor: '#fff',
+    borderColor: COLORS.white,
   },
   goldRateTitle: {
-    color: '#FFF8E1',
+    color: COLORS.tan,
     fontSize: 12,
     fontWeight: '600',
     marginTop: 2,
@@ -1824,14 +1824,14 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   goldRatePrice: {
-    color: '#FFF8E1',
+    color: COLORS.tan,
     fontWeight: '700',
     fontSize: 18,
     textAlign: 'center',
     letterSpacing: 0.5,
   },
   goldRateUpdatedAt: {
-    color: '#FFF8E1BB',
+    color: COLORS.tan + 'BB',
     fontSize: 10,
     marginTop: 2,
     textAlign: 'center',
@@ -1841,22 +1841,22 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: theme.colors.bgBlackLight,
   },
   loginButton: {
-    backgroundColor: '#FFD700',
+    backgroundColor: COLORS.gold,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
     marginTop: 16,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
   },
   loginButtonText: {
-    color: '#850111',
+    color: COLORS.error,
     fontSize: moderateScale(16),
     fontWeight: '700',
     textAlign: 'center',
@@ -1876,13 +1876,13 @@ const styles = StyleSheet.create({
   hallmarkHeaderLine: {
     flex: 1,
     height: 1.5,
-    backgroundColor: "#FFD700",
+    backgroundColor: COLORS.gold,
     marginHorizontal: 5,
   },
   hallmarkHeaderText: {
     fontSize: moderateScale(16),
     fontWeight: "700",
-    color: "#850111",
+    color: COLORS.error,
     textTransform: "uppercase",
     letterSpacing: 0.3,
     textAlign: "center",
@@ -1904,7 +1904,7 @@ const styles = StyleSheet.create({
   },
   hallmarkImageLabel: {
     fontSize: moderateScale(10),
-    color: "#666",
+    color: COLORS.mediumGrey,
     textAlign: "center",
     fontStyle: "italic",
   },
@@ -1922,18 +1922,18 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    backgroundColor: theme.colors.bgWhiteLight,
     borderWidth: 1,
-    borderColor: "rgba(255, 215, 0, 0.3)",
+    borderColor: theme.colors.borderGoldMedium,
   },
   poweredByText: {
     fontSize: moderateScale(12),
-    color: "#666",
+    color: COLORS.mediumGrey,
     marginRight: 4,
   },
   poweredByLink: {
     fontSize: moderateScale(12),
-    color: "#FFD700",
+    color: COLORS.gold,
     fontWeight: "600",
     textDecorationLine: "underline",
   },

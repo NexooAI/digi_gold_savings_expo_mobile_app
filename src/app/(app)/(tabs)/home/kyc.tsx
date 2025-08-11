@@ -457,7 +457,7 @@ export default function KycForm() {
   return (
     <View style={styles.container}>
       <ImageBackground
-        source={theme.image.bg_image}
+        source={theme.images.auth.loginBg}
         style={styles.backgroundImage}
         resizeMode="cover"
       >

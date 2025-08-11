@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import useGlobalStore from '@/store/global.store';
 import * as SecureStore from 'expo-secure-store';
 import { theme } from '@/constants/theme';
+import { COLORS } from 'src/constants/colors';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -153,10 +154,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#000",
+    backgroundColor: COLORS.black,
   },
   loadingText: {
-    color: "#fff",
+    color: COLORS.white,
     marginTop: 20,
     fontSize: 16,
     fontWeight: "600",

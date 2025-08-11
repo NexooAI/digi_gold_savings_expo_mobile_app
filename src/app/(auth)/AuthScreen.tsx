@@ -7,6 +7,7 @@ import {
   Alert,
   StyleSheet,
 } from "react-native";
+import { COLORS } from "src/constants/colors";
 import * as LocalAuthentication from "expo-local-authentication";
 import * as SecureStore from "expo-secure-store";
 
@@ -144,21 +145,21 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 16,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: COLORS.backgroundSecondary,
   },
   title: {
     fontSize: 26,
     marginBottom: 20,
-    color: "#333",
+    color: COLORS.textDarkGrey,
   },
   subtitle: {
     fontSize: 20,
     marginVertical: 10,
-    color: "#333",
+    color: COLORS.textDarkGrey,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: COLORS.border,
     borderRadius: 5,
     width: "80%",
     padding: 10,
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   button: {
-    backgroundColor: "#007AFF",
+    backgroundColor: COLORS.info,
     padding: 15,
     borderRadius: 5,
     marginTop: 10,
@@ -175,7 +176,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   buttonText: {
-    color: "white",
+    color: COLORS.white,
     fontWeight: "bold",
     fontSize: 16,
   },

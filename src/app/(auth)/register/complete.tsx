@@ -155,7 +155,7 @@ export default function CompleteRegistration() {
 
   return (
     <ImageBackground
-      source={theme.image.bg_image}
+              source={theme.images.auth.loginBg}
       style={styles.backgroundImage}
     >
       <LinearGradient

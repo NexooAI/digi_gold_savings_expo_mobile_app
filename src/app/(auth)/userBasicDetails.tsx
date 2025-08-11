@@ -50,11 +50,11 @@ const ErrorAlert = ({ message, onClose }: { message: string; onClose: () => void
   return (
     <View style={styles.errorAlert}>
       <View style={styles.errorContent}>
-        <Ionicons name="alert-circle" size={24} color="#fff" />
+        <Ionicons name="alert-circle" size={24} color={theme.colors.white} />
         <Text style={styles.errorMessage}>{message}</Text>
       </View>
       <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-        <Ionicons name="close" size={20} color="#fff" />
+        <Ionicons name="close" size={20} color={theme.colors.white} />
       </TouchableOpacity>
     </View>
   );
@@ -646,7 +646,7 @@ export default function BasicDetailsForm() {
 
   return (
     <ImageBackground
-      source={theme.image.bg_image}
+              source={theme.images.auth.loginBg}
       style={styles.backgroundImage}
     >
       <LinearGradient
@@ -673,7 +673,7 @@ export default function BasicDetailsForm() {
             {/* App Logo above the form card */}
             <View style={styles.logoContainerNew}>
               <Image
-                source={theme.image.transparentLogo}
+                source={theme.images.auth.logo}
                 style={styles.logoNew}
               />
             </View>

@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { theme } from '../../constants/theme';
 
 const { width } = Dimensions.get("window");
 
@@ -201,14 +202,14 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   goldGlow: {
-    shadowColor: "#FFD700",
+    shadowColor: theme.colors.gold,
     borderWidth: 2,
-    borderColor: "#FFD700",
+    borderColor: theme.colors.gold,
   },
   silverGlow: {
-    shadowColor: "#C0C0C0",
+    shadowColor: theme.colors.silver,
     borderWidth: 2,
-    borderColor: "#C0C0C0",
+    borderColor: theme.colors.silver,
   },
   imageContainer: {
     position: "absolute",
@@ -250,16 +251,16 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#4CAF50',
+    backgroundColor: theme.colors.success,
   },
   liveText: {
     fontSize: 10,
-    color: '#4CAF50',
+    color: theme.colors.success,
     fontWeight: 'bold',
   },
   type: {
     fontSize: 14,
-    color: "#555",
+    color: theme.colors.textMediumGrey,
     fontWeight: "bold",
   },
   singleType: {
@@ -268,7 +269,7 @@ const styles = StyleSheet.create({
   rate: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#ff6f00",
+    color: theme.colors.warning,
   },
   singleRate: {
     fontSize: 32,
@@ -276,7 +277,7 @@ const styles = StyleSheet.create({
   },
   lastUpdated: {
     fontSize: 10,
-    color: "#777",
+    color: theme.colors.textLightGrey,
   },
   singleLastUpdated: {
     fontSize: 12,
