@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing, StatusBar } from 'react-native';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -105,6 +105,7 @@ export default function PaymentSuccess() {
 
   return (
     <SafeAreaView style={styles.container}>
+              <StatusBar barStyle="dark-content" backgroundColor="#f8f9ff" translucent={false} />
       <Animated.View style={[
         styles.content, 
         { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }

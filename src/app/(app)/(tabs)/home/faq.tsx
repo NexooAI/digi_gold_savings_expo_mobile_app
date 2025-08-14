@@ -306,7 +306,7 @@ export default function FAQScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.container}
       >
-        <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
+        <StatusBar backgroundColor="#5a000b" barStyle="light-content" translucent={false} />
         
         <LinearGradient
           colors={['#f8f9fa', '#ffffff']}

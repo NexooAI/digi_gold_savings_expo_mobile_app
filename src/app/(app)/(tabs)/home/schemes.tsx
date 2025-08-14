@@ -15,6 +15,8 @@ import {
   Image,
   Alert,
   Modal,
+  StatusBar,
+  SafeAreaView,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
@@ -620,7 +622,8 @@ export default function SchemeList() {
   );
 
   return (
-    <View style={styles.container} {...(currentPanResponder?.panHandlers || {})}>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={theme.colors.primary} />
       <View style={styles.mainBackground}>
         {/* Only show tabs if there are available schemes */}
         {availableTabs.length > 0 && (
@@ -710,7 +713,7 @@ export default function SchemeList() {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 

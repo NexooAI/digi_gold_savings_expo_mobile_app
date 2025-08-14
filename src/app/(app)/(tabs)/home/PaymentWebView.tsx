@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { View, Modal, StyleSheet, Alert } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Modal, StyleSheet, Alert, Text, TouchableOpacity } from "react-native";
 import { WebView } from "react-native-webview";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { usePaymentSocket } from "@/hooks/usePaymentSocket";
@@ -10,6 +10,8 @@ let errorTimeout: NodeJS.Timeout | null = null;
 export default function PaymentWebView() {
   const params = useLocalSearchParams();
   const router = useRouter();
+  const [showExitModal, setShowExitModal] = useState(false);
+  
   const { socket, handleCancel } = usePaymentSocket({
     onPaymentSuccess: (data) => {
       // Disconnect socket before navigation
@@ -120,6 +122,38 @@ export default function PaymentWebView() {
     orderId: params.orderId as string,
   });
 
+  // Handle back button press
+  const handleBackPress = () => {
+    setShowExitModal(true);
+  };
+
+  // Handle exit confirmation
+  const handleExitConfirm = () => {
+    // Disconnect socket
+    if (socket && socket.connected) {
+      socket.disconnect();
+    }
+    
+    // Navigate to paymentNewOverView page
+    router.replace({
+      pathname: "/(tabs)/home/paymentNewOverView",
+      params: {
+        userDetails: params.userDetails,
+        amount: params.amount,
+        schemeName: params.schemeName,
+        schemeId: params.schemeId,
+        chitId: params.chitId,
+        paymentFrequency: params.paymentFrequency,
+        schemeType: params.schemeType,
+      },
+    });
+  };
+
+  // Handle exit cancellation
+  const handleExitCancel = () => {
+    setShowExitModal(false);
+  };
+
   // Cleanup socket on component unmount
   useEffect(() => {
     return () => {
@@ -130,75 +164,89 @@ export default function PaymentWebView() {
   }, [socket]);
 
   return (
-    <Modal visible={true} animationType="slide" presentationStyle="fullScreen">
-      <View style={styles.container}>
-        {/* <WebView
-          source={{ uri: params.url as string }}
-          style={{ flex: 1 }}
-          onNavigationStateChange={(navState) => {
-            console.log("Payment Navigation State:", {
-              url: navState.url,
-              title: navState.title,
-              loading: navState.loading,
-              canGoBack: navState.canGoBack,
-            });
+    <>
+      <Modal visible={true} animationType="slide" presentationStyle="fullScreen">
+        <View style={styles.container}>
+          {/* Header with back button */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
+              <Text style={styles.backButtonText}>← Back</Text>
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Payment</Text>
+            <View style={styles.placeholder} />
+          </View>
+          
+          <WebView
+            source={{ uri: params.url as string }}
+            style={{ flex: 1 }}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            originWhitelist={["*"]}
+            startInLoadingState={true}
+            allowsInlineMediaPlayback={true}
+            sharedCookiesEnabled={true}
+            thirdPartyCookiesEnabled={true}
+            cacheEnabled={true}
+            incognito={false}
+            onNavigationStateChange={(navState) => {
+              console.log("Payment Navigation State:", {
+                url: navState.url,
+                title: navState.title,
+                loading: navState.loading,
+                canGoBack: navState.canGoBack,
+              });
 
-            const url = navState.url.toLowerCase();
-            // Only trigger cancel if explicitly cancelled or failed
-            if (
-              url.includes("/cancel") ||
-              url.includes("/error") ||
-              url.includes("/failed") ||
-              (url.includes("payment") && url.includes("status=failed"))
-            ) {
-              //console.log("Payment cancelled/failed detected:", url);
-              // Disconnect socket before handling cancel
-              if (socket && socket.connected) {
-                socket.disconnect();
+              const currentUrl = navState.url.toLowerCase();
+              if (
+                currentUrl.includes("/cancel") ||
+                currentUrl.includes("/error") ||
+                currentUrl.includes("/failed") ||
+                (currentUrl.includes("payment") &&
+                  currentUrl.includes("status=failed"))
+              ) {
+                if (socket && socket.connected) {
+                  socket.disconnect();
+                }
+                handleCancel();
               }
-              handleCancel();
-            }
-          }}
-        /> */}
-         <WebView
-      source={{ uri: params.url as string }}
-      style={{ flex: 1 }}
-      javaScriptEnabled={true}
-      domStorageEnabled={true}
-      originWhitelist={["*"]}
-      startInLoadingState={true}
-      allowsInlineMediaPlayback={true}
-      sharedCookiesEnabled={true}
-      thirdPartyCookiesEnabled={true}
-      cacheEnabled={true}
-      incognito={false}
-      onNavigationStateChange={(navState) => {
-        console.log("Payment Navigation State:", {
-          url: navState.url,
-          title: navState.title,
-          loading: navState.loading,
-          canGoBack: navState.canGoBack,
-        });
+            }}
+            onError={(err) => console.log("WebView Error:", err)}
+            onHttpError={(e) => console.log("HTTP error:", e.nativeEvent)}
+          />
+        </View>
+      </Modal>
 
-        const currentUrl = navState.url.toLowerCase();
-        if (
-          currentUrl.includes("/cancel") ||
-          currentUrl.includes("/error") ||
-          currentUrl.includes("/failed") ||
-          (currentUrl.includes("payment") &&
-            currentUrl.includes("status=failed"))
-        ) {
-          if (socket && socket.connected) {
-            socket.disconnect();
-          }
-          handleCancel();
-        }
-      }}
-      onError={(err) => console.log("WebView Error:", err)}
-      onHttpError={(e) => console.log("HTTP error:", e.nativeEvent)}
-    />
-      </View>
-    </Modal>
+      {/* Exit Confirmation Modal */}
+      <Modal
+        visible={showExitModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleExitCancel}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Cancel Payment?</Text>
+            <Text style={styles.modalMessage}>
+              Are you sure you want to cancel this payment? This action cannot be undone.
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={handleExitCancel}
+              >
+                <Text style={styles.cancelButtonText}>No, Continue</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.confirmButton]}
+                onPress={handleExitConfirm}
+              >
+                <Text style={styles.confirmButtonText}>Yes, Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 }
 
@@ -206,5 +254,99 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+  },
+  backButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: "#007AFF",
+    fontWeight: "500",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#000",
+  },
+  placeholder: {
+    width: 60,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 24,
+    marginHorizontal: 32,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#000",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginHorizontal: 8,
+  },
+  cancelButton: {
+    backgroundColor: "#f0f0f0",
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  confirmButton: {
+    backgroundColor: "#FF3B30",
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#666",
+    textAlign: "center",
+  },
+  confirmButtonText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#fff",
+    textAlign: "center",
   },
 });

@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  StatusBar,
 } from "react-native";
 import {
   SafeAreaView,
@@ -125,6 +126,7 @@ export default function KnowProduct() {
         className="flex-1 bg-white"
         style={{ paddingTop: insets.top }}
       >
+        <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={false} />
         {/* Header is now handled by the layout wrapper */}
 
         {/* Scrollable Content */}

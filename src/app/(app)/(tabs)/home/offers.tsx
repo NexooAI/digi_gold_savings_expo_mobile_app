@@ -176,7 +176,7 @@ export default function Offers() {
         visible={modalVisible}
         onRequestClose={closeOfferModal}
       >
-        <StatusBar backgroundColor="rgba(0,0,0,0.5)" barStyle="light-content" />
+        <StatusBar backgroundColor="rgba(0,0,0,0.5)" barStyle="light-content" translucent={false} />
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             {selectedOffer && (

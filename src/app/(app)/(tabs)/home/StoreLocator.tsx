@@ -10,6 +10,7 @@ import {
   Platform,
   Animated,
   useWindowDimensions,
+  StatusBar,
 } from "react-native";
 import {
   SafeAreaView,
@@ -98,6 +99,7 @@ const StoreLocator = () => {
       style={{ flex: 1, backgroundColor: "#fff" }}
     >
       <SafeAreaView style={{ flex: 1 }}>
+        <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={false} />
         {/* Animated Header */}
         {/* Header is now handled by the layout wrapper */}
 

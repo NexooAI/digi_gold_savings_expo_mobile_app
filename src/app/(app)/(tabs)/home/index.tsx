@@ -24,6 +24,7 @@ import {
   Easing,
   ListRenderItem,
   Linking,
+  SafeAreaView,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -1002,7 +1003,7 @@ export default function Home2() {
   if (isLoading) {
     return (
       <>
-        <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
+        <StatusBar backgroundColor="#5a000b" barStyle="light-content" translucent={false} />
         <ImageBackground
           source={require("../../../../../assets/images/bg_new.jpg")}
           style={styles.backgroundImage}
@@ -1021,7 +1022,7 @@ export default function Home2() {
   if (!user || !user.id) {
     return (
       <>
-        <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
+        <StatusBar backgroundColor="#5a000b" barStyle="light-content" translucent={false} />
         <ImageBackground
           source={require("../../../../../assets/images/bg_new.jpg")}
           style={styles.backgroundImage}
@@ -1044,7 +1045,7 @@ export default function Home2() {
 
   return (
     <AuthGuard>
-      <StatusBar backgroundColor="#5a000b" barStyle="light-content" />
+      <StatusBar backgroundColor="#5a000b" barStyle="light-content" translucent={false} />
       <ImageBackground
         source={require("../../../../../assets/images/bg_new.jpg")}
         style={styles.backgroundImage}
@@ -1056,7 +1057,7 @@ export default function Home2() {
             onClose={handleCloseBanner}
           />
         )}
-        <View style={styles.mainContainer}>
+        <SafeAreaView style={styles.mainContainer}>
 
           <ScrollView
             contentContainerStyle={styles.scrollContent}
@@ -1264,7 +1265,7 @@ export default function Home2() {
             })()}
             onClose={handleStatusClose}
           />
-        </View>
+        </SafeAreaView>
       </ImageBackground>
     </AuthGuard>
   );

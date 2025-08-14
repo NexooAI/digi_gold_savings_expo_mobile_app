@@ -7,6 +7,7 @@ import {
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
+  StatusBar,
 } from "react-native";
 import {
   SafeAreaView,
@@ -120,6 +121,7 @@ const StoreLocator = () => {
         style={{ flex: 1 }}
       >
         <SafeAreaView style={{ flex: 1 }}>
+          <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={false} />
 
         <ScrollView
           contentContainerStyle={{ paddingHorizontal: 16 }}

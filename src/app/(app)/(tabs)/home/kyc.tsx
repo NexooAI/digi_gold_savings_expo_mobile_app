@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   StyleSheet,
   Keyboard,
   ImageBackground,
+  StatusBar,
 } from "react-native";
 import {
   SafeAreaView,
@@ -456,6 +457,7 @@ export default function KycForm() {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent={false} />
       <ImageBackground
         source={theme.image.bg_image}
         style={styles.backgroundImage}
