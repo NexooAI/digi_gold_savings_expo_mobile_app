@@ -175,12 +175,13 @@ export default function PaymentNewOverView() {
       const payload: PaymentInitPayload | any = {
         userId: userDetails.userId || user?.id,
         amount: currentAmount,
-        // amount:1,
+        accountNo: userDetails.accountNo,
         investmentId: userDetails.investmentId,
         schemeId: params?.schemeId,
         userEmail: userDetails?.email || user?.email,
         userMobile: userDetails?.mobile || user?.mobile,
         userName: userDetails?.accountname,
+        
         // Ensure backend-required identifiers are present
         chitId:
           userDetails?.chitId ||

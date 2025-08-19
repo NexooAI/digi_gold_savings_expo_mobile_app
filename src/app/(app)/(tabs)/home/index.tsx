@@ -25,6 +25,7 @@ import {
   ListRenderItem,
   Linking,
   SafeAreaView,
+  Modal,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -94,11 +95,37 @@ const banners: Banner[] = [
     id: 2,
     image: require("../../../../../assets/images/banner.png"),
     schemeUrl: "/(app)/(tabs)/home/schemes",
+    schemeType: "flexi"
   },
   {
     id: 3,
     image: require("../../../../../assets/images/banner2.png"),
     schemeUrl: "/(app)/(tabs)/home/schemes",
+    schemeType: "monthly"
+  },
+  {
+    id: 4,
+    image: require("../../../../../assets/images/slider1.png"),
+    schemeUrl: "/(app)/(tabs)/home/schemes",
+    schemeType: "weekly"
+  },
+  {
+    id: 5,
+    image: require("../../../../../assets/images/slider2.png"),
+    schemeUrl: "/(app)/(tabs)/home/schemes",
+    schemeType: "daily"
+  },
+  {
+    id: 6,
+    image: require("../../../../../assets/images/slider3.png"),
+    schemeUrl: "/(app)/(tabs)/home/schemes",
+    schemeType: "flexi"
+  },
+  {
+    id: 7,
+    image: require("../../../../../assets/images/slider4.png"),
+    schemeUrl: "/(app)/(tabs)/home/schemes",
+    schemeType: "monthly"
   },
 ];
 
@@ -199,6 +226,7 @@ interface Banner {
   id: number;
   image: any;
   schemeUrl: string;
+  schemeType: string;
 }
 
 interface Collection {
@@ -431,8 +459,9 @@ const AnimatedGoldRate: React.FC<{ goldRate: string; updatedAt?: string }> = ({ 
 interface BannerCardProps {
   item: Banner;
   router: ReturnType<typeof useRouter>;
+  onAboutSchemesPress: (schemeType: string) => void;
 }
-const BannerCard: React.FC<BannerCardProps> = ({ item, router }) => {
+const BannerCard: React.FC<BannerCardProps> = ({ item, router, onAboutSchemesPress }) => {
   const joinNowScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -472,7 +501,7 @@ const BannerCard: React.FC<BannerCardProps> = ({ item, router }) => {
       <View style={styles.bannerButtonRow}>
         <TouchableOpacity
           style={styles.aboutSchemesButton}
-          onPress={() => router.push('/(app)/(tabs)/home/schemes')}
+          onPress={() => onAboutSchemesPress(item.schemeType)}
           activeOpacity={0.85}
           accessibilityLabel={t('aboutSchemes')}
         >
@@ -521,6 +550,90 @@ export default function Home2() {
   const [viewedCollections, setViewedCollections] = useState<{ [id: number]: boolean }>({});
   const [showTotalGold, setShowTotalGold] = useState(true);
   const [localProfilePhoto, setLocalProfilePhoto] = useState<string | null>(null);
+
+  // Schemes modal state
+  const [schemesModalVisible, setSchemesModalVisible] = useState(false);
+  const [selectedSchemeType, setSelectedSchemeType] = useState<string>('');
+
+  // Static schemes data
+  const staticSchemesData = {
+    flexi: {
+      name: "Flexi Gold Saver",
+      type: "Flexi",
+      description: "Save gold whenever you want with our flexible plan. No fixed schedule, save as per your convenience with competitive rates and zero penalties.",
+      benefits: [
+        "No fixed schedule",
+        "Save as per convenience",
+        "Competitive rates",
+        "Free locker facility",
+        "Zero making charges",
+        "Flexible withdrawal options"
+      ],
+      plans: [
+        { amount: "₹100", frequency: "Daily" },
+        { amount: "₹500", frequency: "Weekly" },
+        { amount: "₹1000", frequency: "Monthly" },
+        { amount: "₹5000", frequency: "Quarterly" }
+      ]
+    },
+    monthly: {
+      name: "Gold Plus Monthly",
+      type: "Monthly",
+      description: "Premium monthly gold savings with additional benefits and higher returns. Perfect for systematic investors looking for regular gold accumulation.",
+      benefits: [
+        "Premium returns",
+        "Lower making charges",
+        "Free gold certificate",
+        "Priority customer service",
+        "Systematic investment",
+        "Bonus at maturity"
+      ],
+      plans: [
+        { amount: "₹500", frequency: "Monthly" },
+        { amount: "₹1000", frequency: "Monthly" },
+        { amount: "₹2000", frequency: "Monthly" },
+        { amount: "₹5000", frequency: "Monthly" }
+      ]
+    },
+    weekly: {
+      name: "Weekly Gold Builder",
+      type: "Weekly",
+      description: "Weekly contribution plan for systematic gold investment with bonus at maturity. Build your gold portfolio week by week.",
+      benefits: [
+        "Higher weekly returns",
+        "Flexible withdrawal options",
+        "24K purity guaranteed",
+        "Free gold certification",
+        "Weekly compounding",
+        "Early maturity benefits"
+      ],
+      plans: [
+        { amount: "₹200", frequency: "Weekly" },
+        { amount: "₹500", frequency: "Weekly" },
+        { amount: "₹1000", frequency: "Weekly" },
+        { amount: "₹2000", frequency: "Weekly" }
+      ]
+    },
+    daily: {
+      name: "Daily Gold Saver",
+      type: "Daily",
+      description: "Save a small amount daily to accumulate gold over time with guaranteed returns. Perfect for building a daily savings habit.",
+      benefits: [
+        "Low daily commitment",
+        "Regular savings habit",
+        "No lock-in period",
+        "Zero making charges",
+        "Daily compounding",
+        "Guaranteed returns"
+      ],
+      plans: [
+        { amount: "₹50", frequency: "Daily" },
+        { amount: "₹100", frequency: "Daily" },
+        { amount: "₹200", frequency: "Daily" },
+        { amount: "₹500", frequency: "Daily" }
+      ]
+    }
+  };
 
   // Refs
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -684,6 +797,14 @@ export default function Home2() {
       setShowTotalGold(false);
     }
   }, [user]);
+
+
+
+  // Open schemes modal
+  const openSchemesModal = useCallback((schemeType: string) => {
+    setSelectedSchemeType(schemeType);
+    setSchemesModalVisible(true);
+  }, []);
 
   // Data fetching - Single API call
   const fetchHomeData = useCallback(async (isRefreshing = false) => {
@@ -959,7 +1080,7 @@ export default function Home2() {
 
   // Render functions
   const renderBanner: ListRenderItem<Banner> = useCallback(
-    ({ item }) => <BannerCard item={item} router={router} />, [router]
+    ({ item }) => <BannerCard item={item} router={router} onAboutSchemesPress={openSchemesModal} />, [router, openSchemesModal]
   );
 
   const renderStatusItem = useCallback(
@@ -1265,6 +1386,88 @@ export default function Home2() {
             })()}
             onClose={handleStatusClose}
           />
+
+          {/* Schemes Modal */}
+          <Modal
+            visible={schemesModalVisible}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setSchemesModalVisible(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>
+                    {selectedSchemeType && staticSchemesData[selectedSchemeType as keyof typeof staticSchemesData] 
+                      ? staticSchemesData[selectedSchemeType as keyof typeof staticSchemesData].name 
+                      : t('schemes.title')
+                    }
+                  </Text>
+                  <TouchableOpacity 
+                    onPress={() => setSchemesModalVisible(false)} 
+                    style={styles.closeButton}
+                  >
+                    <Ionicons name="close" size={24} color={theme.colors.primary} />
+                  </TouchableOpacity>
+                </View>
+                
+                <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+                  {selectedSchemeType && staticSchemesData[selectedSchemeType as keyof typeof staticSchemesData] ? (
+                    (() => {
+                      const scheme = staticSchemesData[selectedSchemeType as keyof typeof staticSchemesData];
+                      return (
+                        <View style={styles.schemeItem}>
+                          <View style={styles.schemeHeader}>
+                            <Text style={styles.schemeName}>{scheme.name}</Text>
+                            <View style={styles.schemeTypeContainer}>
+                              <Text style={styles.schemeType}>{scheme.type}</Text>
+                            </View>
+                          </View>
+                          
+                          <Text style={styles.schemeDescription} numberOfLines={4}>
+                            {scheme.description}
+                          </Text>
+                          
+                          <View style={styles.benefitsContainer}>
+                            <Text style={styles.benefitsTitle}>{t('schemes.keyBenefits')}:</Text>
+                            {scheme.benefits.map((benefit: string, benefitIndex: number) => (
+                              <Text key={benefitIndex} style={styles.benefitItem}>
+                                • {benefit}
+                              </Text>
+                            ))}
+                          </View>
+                          
+                          <View style={styles.chitsContainer}>
+                            <Text style={styles.chitsTitle}>{t('schemes.availablePlans')}:</Text>
+                            {scheme.plans.map((plan: any, planIndex: number) => (
+                              <View key={planIndex} style={styles.chitItem}>
+                                <Text style={styles.chitAmount}>{plan.amount}</Text>
+                                <Text style={styles.chitFrequency}>{plan.frequency}</Text>
+                              </View>
+                            ))}
+                          </View>
+                          
+                          <TouchableOpacity
+                            style={styles.joinSchemeButton}
+                            onPress={() => {
+                              setSchemesModalVisible(false);
+                              router.push('/(app)/(tabs)/home/schemes');
+                            }}
+                          >
+                            <Text style={styles.joinSchemeButtonText}>{t('schemes.joinNow')}</Text>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    })()
+                  ) : (
+                    <View style={styles.emptySchemesContainer}>
+                      <Text style={styles.emptySchemesText}>Scheme details not available</Text>
+                    </View>
+                  )}
+                </ScrollView>
+              </View>
+            </View>
+          </Modal>
         </SafeAreaView>
       </ImageBackground>
     </AuthGuard>
@@ -1937,5 +2140,187 @@ const styles = StyleSheet.create({
     color: "#FFD700",
     fontWeight: "600",
     textDecorationLine: "underline",
+  },
+  
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    width: "90%",
+    maxHeight: "80%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+    backgroundColor: "#f8f9fa",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  modalTitle: {
+    fontSize: moderateScale(18),
+    fontWeight: "700",
+    color: "#850111",
+  },
+  closeButton: {
+    padding: 4,
+  },
+  modalLoadingContainer: {
+    padding: 40,
+    alignItems: "center",
+  },
+  modalLoadingText: {
+    marginTop: 12,
+    fontSize: moderateScale(14),
+    color: "#666",
+  },
+  modalBody: {
+    padding: 24,
+  },
+  schemeItem: {
+    backgroundColor: "#f8f9fa",
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  schemeHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  schemeName: {
+    fontSize: moderateScale(18),
+    fontWeight: "700",
+    color: "#850111",
+    flex: 1,
+    marginBottom: 4,
+  },
+  schemeType: {
+    fontSize: moderateScale(12),
+    color: "#666",
+    backgroundColor: "#e9ecef",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  schemeTypeContainer: {
+    backgroundColor: "#e9ecef",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  schemeDescription: {
+    fontSize: moderateScale(15),
+    color: "#333",
+    lineHeight: 22,
+    marginBottom: 16,
+    textAlign: "justify",
+  },
+  benefitsContainer: {
+    marginBottom: 12,
+  },
+  benefitsTitle: {
+    fontSize: moderateScale(16),
+    fontWeight: "600",
+    color: "#850111",
+    marginBottom: 12,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  benefitItem: {
+    fontSize: moderateScale(14),
+    color: "#555",
+    marginBottom: 6,
+    paddingLeft: 12,
+    lineHeight: 18,
+  },
+  chitsContainer: {
+    marginBottom: 16,
+  },
+  chitsTitle: {
+    fontSize: moderateScale(16),
+    fontWeight: "600",
+    color: "#850111",
+    marginBottom: 12,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  chitItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#dee2e6",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  chitAmount: {
+    fontSize: moderateScale(16),
+    fontWeight: "700",
+    color: "#850111",
+  },
+  chitFrequency: {
+    fontSize: moderateScale(13),
+    color: "#666",
+    fontWeight: "500",
+  },
+  joinSchemeButton: {
+    backgroundColor: "#FFD700",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  joinSchemeButtonText: {
+    color: "#850111",
+    fontSize: moderateScale(15),
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  emptySchemesContainer: {
+    padding: 40,
+    alignItems: "center",
+  },
+  emptySchemesText: {
+    fontSize: moderateScale(15),
+    color: "#666",
+    textAlign: "center",
+    fontStyle: "italic",
   },
 }); 

@@ -29,74 +29,6 @@ export const usePaymentSocket = ({
   const socketRef = useRef<Socket | null>(null);
   const isPaymentCompleted = useRef(false);
 
-  // const handlePaymentSuccess = async (data: any) => {
-  //   try {
-  //     //console.log("Processing successful payment:", data);
-  //     // console.log('parseduserDetails' ,parsedUserDetails)
-  //     const paymentPayload:any = {
-  //       "investmentId": parsedUserDetails.data?.data?.id || parsedUserDetails.id || parsedUserDetails.investmentId ||'',
-  //       "userId": parsedUserDetails.data?.data?.userId || parsedUserDetails.userId || '',
-  //       "paymentAmount": data.paymentResponse.amount,
-  //       "paymentMethod": data.paymentResponse.txn_detail.txn_flow_type,
-  //       "schemeId": parsedUserDetails.data?.data?.schemeId || parsedUserDetails.schemeId || '',
-  //       "chitId": parsedUserDetails.data?.data?.chitId || parsedUserDetails.chitId || '',
-  //       "transactionId": data.paymentResponse.txn_id,
-  //       "orderId": data.orderId,
-  //       "isManual": "no",
-  //       "utr_reference_number": ""
-  //     };
-
-  //     //console.log("Payment payload:", paymentPayload);
-  //     const paymentResult = await paymentService.createPayment(paymentPayload);
-  //     //console.log("Payment result:", paymentResult);
-
-  //     const paymentId = paymentResult?.data?.paymentId || 0;
-
-  //     const transactionPayload = {
-  //       userId: parsedUserDetails.data?.data?.userId || parsedUserDetails.userId || '',
-  //       investmentId: parsedUserDetails.data?.data?.id || parsedUserDetails.id || parsedUserDetails.investmentId ||'',
-  //       schemeId: parsedUserDetails.data?.data?.schemeId || parsedUserDetails.schemeId || '',
-  //       chitId: parsedUserDetails.data?.data?.chitId || parsedUserDetails.chitId || '',
-  //       accountNumber: parsedUserDetails.data?.data?.accountNo || parsedUserDetails.accountNo || parsedUserDetails.accNo ||'',
-  //       paymentId,
-  //       orderId: data?.paymentResponse?.order_id || '',
-  //       amount: data?.paymentResponse?.amount || '',
-  //       currency: data?.paymentResponse?.currency || 'INR',
-  //       paymentMethod: data?.paymentResponse?.payment_method || '',
-  //       signature: '000',
-  //       paymentStatus: data?.paymentResponse?.payment_gateway_response?.resp_message || 'Success',
-  //       paymentDate: data?.paymentResponse?.date_created || '',
-  //       status: data?.paymentResponse?.status || 'CHARGED',
-  //       gatewayTransactionId: data?.paymentResponse?.txn_id || '',
-  //       "gatewayresponse": JSON.stringify(data?.paymentResponse),
-  //       "isManual":"no",
-  //       "utr_reference_number":""
-  //     };
-
-  //     //console.log("Transaction payload:", transactionPayload);
-  //     await paymentService.createTransaction(transactionPayload);
-
-  //     // Update investment status
-  //     const investmentPayload = {
-  //       userId: parsedUserDetails.data?.data?.userId || parsedUserDetails.userId || '',
-  //       schemeId: parsedUserDetails.data?.data?.schemeId || parsedUserDetails.schemeId || '',
-  //       chitId: parsedUserDetails.data?.data?.chitId || parsedUserDetails.chitId || '',
-  //       accountName: parsedUserDetails?.data?.data?.accountName || parsedUserDetails.accountName || parsedUserDetails.accountname ||'',
-  //       accountNo: parsedUserDetails.data?.data?.accountNo || parsedUserDetails.accountNo || parsedUserDetails.accNo || '',
-  //       paymentStatus: 'PAID',
-  //       paymentAmount: data?.paymentResponse?.amount || '',
-  //     };
-
-  //     //console.log("Investment payload:", investmentPayload);
-  //     const investmentId = parsedUserDetails.data?.data?.id || parsedUserDetails.id || parsedUserDetails.investmentId  || '';
-  //     await api.put(`/investments/${investmentId}`, investmentPayload);
-
-  //     return true;
-  //   } catch (error) {
-  //     console.error("Error in handlePaymentSuccess:", error);
-  //     throw error;
-  //   }
-  // };
 
   useEffect(() => {
     // Initialize socket connection
@@ -128,11 +60,12 @@ export const usePaymentSocket = ({
         // Emit store_payment_metadata after successful connection
         const paymentMetadata = {
           orderId: currentOrderId,
-          investmentId: parsedUserDetails?.data?.data?.id || parsedUserDetails?.id || parsedUserDetails?.investmentId || 0,
-          userId: parsedUserDetails?.data?.data?.userId || parsedUserDetails?.userId || 0,
-          schemeId: parsedUserDetails?.data?.data?.schemeId || parsedUserDetails?.schemeId || 0,
-          chitId: parsedUserDetails?.data?.data?.chitId || parsedUserDetails?.chitId || 0,
-          amount: parsedUserDetails?.data?.data?.amount || parsedUserDetails?.amount || 500,
+          userMobile: parsedUserDetails?.data?.data?.mobile || parsedUserDetails?.mobile || parsedUserDetails?.userMobile,
+          investmentId: parsedUserDetails?.data?.data?.id || parsedUserDetails?.id || parsedUserDetails?.investmentId,
+          userId: parsedUserDetails?.data?.data?.userId || parsedUserDetails?.userId ,
+          schemeId: parsedUserDetails?.data?.data?.schemeId || parsedUserDetails?.schemeId ,
+          chitId: parsedUserDetails?.data?.data?.chitId || parsedUserDetails?.chitId ,
+          amount: parsedUserDetails?.data?.data?.amount || parsedUserDetails?.amount,
           isManual: "no",
           utr_reference_number: "",
           accountNumber: parsedUserDetails?.data?.data?.accountNo || parsedUserDetails?.accountNo || parsedUserDetails?.accNo || "",

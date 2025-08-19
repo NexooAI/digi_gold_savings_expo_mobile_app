@@ -16,6 +16,7 @@ import { useNavigation, useRouter, usePathname } from "expo-router";
 import theme from "src/constants/theme";
 import useGlobalStore from "@/store/global.store";
 import { AppLocale, t } from "@/i18n";
+import { moderateScale } from "react-native-size-matters";
 
 const { width } = Dimensions.get("window");
 
@@ -31,6 +32,97 @@ interface TransactionDetails {
   status: 'success' | 'failure';
   date?: string;
 }
+
+// Utility function to safely navigate back
+const safeNavigateBack = (router: any, navigation: any, pathname: string) => {
+  // Check if pathname exists
+  if (!pathname) {
+    console.log('safeNavigateBack: No pathname available, using router fallback');
+    try {
+      if ((router as any).back) {
+        (router as any).back();
+        return true;
+      }
+    } catch (error) {
+      console.log('safeNavigateBack: Router back failed:', error);
+    }
+    
+    // Final fallback to home
+    try {
+      router.replace('/(app)/(tabs)/home');
+      return true;
+    } catch (finalError) {
+      console.log('safeNavigateBack: All navigation attempts failed:', finalError);
+      return false;
+    }
+  }
+  // Check if we're on the home screen or root tab
+  const isOnHomeScreen = pathname === '/(app)/(tabs)/home' || 
+                        pathname === '/(app)/(tabs)/' || 
+                        pathname === '/(app)/(tabs)';
+  
+  if (isOnHomeScreen) {
+    console.log('safeNavigateBack: Already on home screen, ignoring back navigation');
+    return false;
+  }
+
+  // Check if navigation object exists and has required methods
+  if (!navigation || typeof navigation !== 'object') {
+    console.log('safeNavigateBack: Navigation object not available, using router fallback');
+    try {
+      if ((router as any).back) {
+        (router as any).back();
+        return true;
+      }
+    } catch (error) {
+      console.log('safeNavigateBack: Router back failed:', error);
+    }
+    
+    // Final fallback to home
+    try {
+      router.replace('/(app)/(tabs)/home');
+      return true;
+    } catch (finalError) {
+      console.log('safeNavigateBack: All navigation attempts failed:', finalError);
+      return false;
+    }
+  }
+
+  // Try navigation.goBack first
+  try {
+    if ((navigation as any)?.canGoBack?.()) {
+      (navigation as any).goBack();
+      return true;
+    }
+  } catch (error) {
+    console.log('safeNavigateBack: Navigation goBack failed:', error);
+  }
+
+  // Try router.back as fallback
+  try {
+    if ((router as any).back) {
+      (router as any).back();
+      return true;
+    }
+  } catch (error) {
+    console.log('safeNavigateBack: Router back failed:', error);
+  }
+
+  // Final fallback: Go to home
+  try {
+    router.replace('/(app)/(tabs)/home');
+    return true;
+  } catch (error) {
+    console.log('safeNavigateBack: Router replace to home failed:', error);
+    try {
+      (navigation as any).navigate('(tabs)', { screen: 'home' });
+      return true;
+    } catch (navError) {
+      console.log('safeNavigateBack: Navigation to home failed:', navError);
+      return false;
+    }
+  }
+};
 
 interface AppHeaderProps {
   showBackButton?: boolean;
@@ -99,38 +191,22 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         try {
           router.replace(backRoute as any);
           return;
-        } catch {}
+        } catch (error) {
+          console.log('AppHeader: Router replace to backRoute failed:', error);
+        }
       } else {
         // Otherwise treat it as a route name for the current navigator
         try {
           (navigation as any).navigate(backRoute as any);
           return;
-        } catch {}
+        } catch (error) {
+          console.log('AppHeader: Navigation to backRoute failed:', error);
+        }
       }
     }
 
-    // If we can go back via navigation, do so
-    try {
-      if ((navigation as any)?.canGoBack?.()) {
-        (navigation as any).goBack();
-        return;
-      }
-    } catch {}
-
-    // Try router back as a secondary option
-    try {
-      (router as any).back?.();
-      return;
-    } catch {}
-
-    // Final fallback: Go to home tab explicitly
-    try {
-      router.replace('/(app)/(tabs)/home');
-    } catch {
-      try {
-        (navigation as any).navigate('(tabs)', { screen: 'home' });
-      } catch {}
-    }
+    // Use the safe navigation utility
+    safeNavigateBack(router, navigation, pathname);
   };
 
   const handleLanguageChange = async (currentLang: AppLocale) => {
@@ -235,9 +311,12 @@ Need help? Contact our support team! 📞`;
     }
   };
 
+  // Automatically hide back button on home screen
+  const shouldShowBackButton = showBackButton && pathname && !(pathname === '/(app)/(tabs)/home' || pathname === '/(app)/(tabs)/' || pathname === '/(app)/(tabs)');
+
   return (
     <View style={styles.container}>
-        {showBackButton && (
+        {shouldShowBackButton && (
           <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
             <Ionicons
               name="arrow-back-outline"

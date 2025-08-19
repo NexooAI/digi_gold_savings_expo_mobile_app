@@ -3,6 +3,7 @@ import { View, Modal, StyleSheet, Alert, Text, TouchableOpacity } from "react-na
 import { WebView } from "react-native-webview";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { usePaymentSocket } from "@/hooks/usePaymentSocket";
+import { safeNavigateBack } from "@/utils/navigationUtils";
 // import your socket library here if needed
 
 let errorTimeout: NodeJS.Timeout | null = null;
@@ -60,7 +61,7 @@ export default function PaymentWebView() {
                 {
                   text: "OK",
                   onPress: () => {
-                    router.back();
+                    safeNavigateBack();
                   },
                 },
               ]
@@ -79,7 +80,7 @@ export default function PaymentWebView() {
           {
             text: "OK",
             onPress: () => {
-              router.back();
+              safeNavigateBack();
             },
           },
         ]
@@ -97,19 +98,7 @@ export default function PaymentWebView() {
           {
             text: "OK",
             onPress: () => {
-              router.back()
-              // router.replace({
-              //   pathname: "/(tabs)/home/paymentNewOverView",
-              //   params: {
-              //     userDetails: params.userDetails,
-              //     amount: params.amount,
-              //     schemeName: params.schemeName,
-              //     schemeId: params.schemeId,
-              //     chitId: params.chitId,
-              //     paymentFrequency: params.paymentFrequency,
-              //     schemeType: params.schemeType,
-              //   },
-              // });
+              safeNavigateBack();
             },
           },
         ]
