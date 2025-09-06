@@ -59,7 +59,7 @@ class ApiLogger {
 
   private safeParseRequestData(data: any): any {
     if (!data) return undefined;
-    
+
     try {
       if (typeof data === 'object') {
         return data;
@@ -183,7 +183,7 @@ const checkNetworkState = async () => {
 
 const isPublicEndpoint = (url: string | undefined): boolean => {
   if (!url) return false;
-  
+
   const publicEndpoints = [
     '/auth/login',
     '/auth/register',
@@ -205,7 +205,7 @@ const checkTokenValidity = async () => {
     if (!token) {
       token = await SecureStore.getItem("accessToken");
     }
-    
+
     if (!token || typeof token !== 'string' || token.trim() === '') {
       console.log('No valid token found, but not logging out automatically');
       // Don't automatically logout - let the user continue
@@ -222,7 +222,7 @@ const checkTokenValidity = async () => {
     try {
       const tokenData = JSON.parse(atob(tokenParts[1]));
       const expirationTime = tokenData.exp * 1000;
-      
+
       if (Date.now() >= expirationTime) {
         const refreshToken = await SecureStore.getItem("refreshToken");
         if (refreshToken) {
@@ -231,12 +231,12 @@ const checkTokenValidity = async () => {
             const newToken = response.data.token;
             const newAccessToken = response.data.accessToken;
             const newRefreshToken = response.data.refreshtoken;
-            
+
             await SecureStore.setItem("token", newToken);
             await SecureStore.setItem("accessToken", newAccessToken);
             await SecureStore.setItem("refreshToken", newRefreshToken);
             await SecureStore.setItem("authToken", newToken);
-            
+
             return newToken;
           } catch (error) {
             console.log('Token refresh failed, but not logging out automatically');
@@ -295,30 +295,30 @@ const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> => {
     const startTime = Date.now();
-    
+
     // Log the request
     apiLogger.logRequest(config, startTime);
-    
+
     LoadingService.show();
-    
+
     // Store start time for response logging
     (config as any).startTime = startTime;
-    
+
     // Add authentication token
     try {
       let token = await SecureStore.getItemAsync("token");
       console.log('🔑 Token from SecureStore (token):', token);
-      
+
       if (!token) {
         token = await SecureStore.getItemAsync("accessToken");
         console.log('🔑 Token from SecureStore (accessToken):', token);
       }
-      
+
       if (!token) {
         token = await SecureStore.getItemAsync("authToken");
         console.log('🔑 Token from SecureStore (authToken):', token);
       }
-      
+
       if (token) {
         config.headers = config.headers || new axios.AxiosHeaders();
         config.headers.Authorization = `Bearer ${token}`;
@@ -413,11 +413,11 @@ export const userAPI = {
       // Extract file extension from URI
       const uriParts = fileUri.split('.');
       const fileExtension = uriParts[uriParts.length - 1]?.toLowerCase() || 'jpg';
-      
+
       // Determine MIME type based on extension
       let mimeType = 'image/jpeg';
       let fileName = 'profile.jpg';
-      
+
       if (fileExtension === 'png') {
         mimeType = 'image/png';
         fileName = 'profile.png';
@@ -428,7 +428,7 @@ export const userAPI = {
         mimeType = 'image/webp';
         fileName = 'profile.webp';
       }
-      
+
       const formData = new FormData();
       formData.append('file', {
         uri: fileUri,
@@ -457,12 +457,33 @@ export const userAPI = {
   },
 
   updateFcmTokenWithCompleteData: async (payload: any, userId: number | string, deviceType: string) => {
-    return apiClient.post('/notifications/token',{
+    return apiClient.post('/notifications/token', {
       // ...payload,
       token: payload?.deviceToken,
       userId: userId,
       device_type: deviceType
     });
+  },
+
+  deactivateUser: async (userId: number | string) => {
+    return apiClient.post(`/deactivateUser/${userId}`);
+  },
+
+  // Notifications API
+  getNotifications: async (userId: number | string) => {
+    return apiClient.get(`/notifications/${userId}`);
+  },
+
+  markNotificationAsRead: async (notificationId: string) => {
+    return apiClient.put(`/notifications/${notificationId}`);
+  },
+
+  deleteNotification: async (notificationId: string) => {
+    return apiClient.delete(`/notifications/${notificationId}`);
+  },
+
+  markAllNotificationsAsRead: async () => {
+    return apiClient.put('/notifications/mark-all-read');
   }
 };
 

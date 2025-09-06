@@ -349,6 +349,11 @@
   "logoutError": "வெளியேறுதல் பிழை",
   "logout_confirmation_message": "நீங்கள் வெளியேற விரும்புகிறீர்களா என்பதை உறுதிப்படுத்துகிறீர்களா?",
   "logout_confirmation_title": "வெளியேறுதல் உறுதிப்படுத்தல்",
+  "deleteAccount": "கணக்கை நீக்கு",
+  "deleteAccount_confirmation_title": "கணக்கு நீக்கம் உறுதிப்படுத்தல்",
+  "deleteAccount_confirmation_message": "உங்கள் கணக்கை நீக்க விரும்புகிறீர்களா? இந்த செயலை மாற்ற முடியாது மற்றும் உங்கள் அனைத்து தரவுகளும் நிரந்தரமாக இழக்கப்படும்.",
+  "deleteAccountSuccess": "கணக்கு வெற்றிகரமாக நீக்கப்பட்டது",
+  "deleteAccountError": "கணக்கை நீக்குவதில் தோல்வி. தயவுசெய்து மீண்டும் முயற்சிக்கவும்",
   "malayalam": "മലയാളം",
   "maps": "",
   "maturesOn": "முடிவடையும் தேதி",
@@ -735,5 +740,13 @@
   "yourGoldPortfolio": "உங்கள் தங்கப் போர்ட்ஃபோலியோ",
   "yourPrivacyMatters": "உங்கள் தனியுரிமை முக்கியம்",
   "yourReferralCode": "",
-  "your_referral_code": "உங்கள் பரிந்துரை குறியீடு"
+  "your_referral_code": "உங்கள் பரிந்துரை குறியீடு",
+  "investmentActiveError": "முதலீடு செயலில் உள்ளதால் பயனர் கணக்கை செயலிழக்கச் செய்ய முடியாது",
+  "investmentActiveErrorTitle": "கணக்கை நீக்க முடியாது",
+  "investmentActiveErrorSubtitle": "உங்களுக்கு செயலில் உள்ள முதலீடுகள் இருப்பதால் உங்கள் கணக்கை செயலிழக்கச் செய்ய முடியாது.",
+  "contactCustomerSupport": "உதவிக்காக தயவுசெய்து வாடிக்கையாளர் ஆதரவை தொடர்பு கொள்ளவும்:",
+  "supportPhone": "தொலைபேசி: +91 63842 26384",
+  "supportEmail": "மின்னஞ்சல்: dcjewellerstcr@gmail.com",
+  "supportWhatsApp": "WhatsApp ஆதரவு",
+  "userNotFoundError": "பயனர் கண்டுபிடிக்கப்படவில்லை. தயவுசெய்து உங்கள் கணக்கு விவரங்களைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்."
 }

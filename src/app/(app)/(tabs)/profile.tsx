@@ -18,9 +18,7 @@ import {
   KeyboardAvoidingView,
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-import {
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Icon from "@expo/vector-icons/MaterialIcons";
 import * as ImagePicker from "expo-image-picker";
 // AppHeader is now handled by the layout wrapper
@@ -42,7 +40,12 @@ const ProfileScreen = () => {
   const [editing, setEditing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [localProfilePhoto, setLocalProfilePhoto] = useState<string | null>(null);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [showCustomerSupportModal, setShowCustomerSupportModal] =
+    useState(false);
+  const [localProfilePhoto, setLocalProfilePhoto] = useState<string | null>(
+    null
+  );
   const [editData, setEditData] = useState({
     name: user?.name || "",
     email: user?.email || "",
@@ -103,8 +106,6 @@ const ProfileScreen = () => {
     ).start();
   }, []);
 
-
-
   const handleLogout = () => {
     setShowLogoutModal(true);
   };
@@ -123,28 +124,140 @@ const ProfileScreen = () => {
     setShowLogoutModal(false);
   };
 
-  const handleImageUpload = async () => {
+  const handleDeleteAccount = () => {
+    setShowDeleteAccountModal(true);
+  };
+
+  const confirmDeleteAccount = async () => {
     try {
-      // Check network connectivity first
-      const checkNetwork = await fetch('https://www.google.com', { 
-        method: 'HEAD'
-      }).catch(() => null);
-      
-      if (!checkNetwork) {
+      if (!user?.id) {
         Alert.alert(
-          t("networkError") || "Network Error",
-          t("checkInternetConnection") || "Please check your internet connection and try again."
+          t("errorTitle") || "Error",
+          t("userIDNotFoundPleaseLoginAgain") ||
+            "User ID not found. Please login again."
         );
         return;
       }
 
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const response = await userAPI.deactivateUser(user.id);
+      console.log("response", response);
+      if (response.data.success) {
+        Alert.alert(
+          t("success") || "Success",
+          t("deleteAccountSuccess") || "Account deleted successfully",
+          [
+            {
+              text: t("ok") || "OK",
+              onPress: async () => {
+                // Clear user data and redirect to login
+                await AsyncStorage.removeItem("userData");
+                await AsyncStorage.removeItem("token");
+                logout();
+                router.replace("/(auth)/login");
+                setShowDeleteAccountModal(false);
+              },
+            },
+          ]
+        );
+      } else {
+        // Check if it's the specific investment active error
+        if (
+          response.data.message ===
+          "Investment is active so user acccount cannot be deactivated"
+        ) {
+          setShowCustomerSupportModal(true);
+        } else {
+          Alert.alert(
+            t("errorTitle") || "Error",
+            t("deleteAccountError") ||
+              "Failed to delete account. Please try again."
+          );
+        }
+      }
+    } catch (error: any) {
+      console.error("Delete account error:", error);
+
+      // Check for specific error status codes
+      if (error.response?.status === 404) {
+        console.log("error.message", error);
+        if (
+          error.message ===
+          "Investment is active so user acccount cannot be deactivated"
+        ) {
+          setShowCustomerSupportModal(true);
+        } else {
+          Alert.alert(
+            t("errorTitle") || "Error",
+            t("deleteAccountError") ||
+              "Failed to delete account. Please try again."
+          );
+        }
+      } else {
+        Alert.alert(
+          t("errorTitle") || "Error",
+          t("deleteAccountError") ||
+            "Failed to delete account. Please try again."
+        );
+      }
+    }
+  };
+
+  const cancelDeleteAccount = () => {
+    setShowDeleteAccountModal(false);
+  };
+
+  const handlePhoneCall = () => {
+    // You can implement phone call functionality here
+    // For now, just show an alert
+    Alert.alert(
+      t("contactUs") || "Contact Us",
+      t("supportPhone") || "Phone: +91 63842 26384"
+    );
+  };
+
+  const handleEmail = () => {
+    // You can implement email functionality here
+    // For now, just show an alert
+    Alert.alert(
+      t("contactUs") || "Contact Us",
+      t("supportEmail") || "Email: dcjewellerstcr@gmail.com"
+    );
+  };
+
+  const handleWhatsApp = () => {
+    // You can implement WhatsApp functionality here
+    // For now, just show an alert
+    Alert.alert(
+      t("contactUs") || "Contact Us",
+      t("supportWhatsApp") || "WhatsApp Support"
+    );
+  };
+
+  const handleImageUpload = async () => {
+    try {
+      // Check network connectivity first
+      const checkNetwork = await fetch("https://www.google.com", {
+        method: "HEAD",
+      }).catch(() => null);
+
+      if (!checkNetwork) {
+        Alert.alert(
+          t("networkError") || "Network Error",
+          t("checkInternetConnection") ||
+            "Please check your internet connection and try again."
+        );
+        return;
+      }
+
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       console.log("permissionResult", permissionResult);
-      
+
       if (!permissionResult.granted) {
         Alert.alert(
           t("permissionRequired") || "Permission Required",
-          t("pleaseAllowAccessToPhotoLibrary") || "Please allow access to photo library to upload profile image."
+          t("pleaseAllowAccessToPhotoLibrary") ||
+            "Please allow access to photo library to upload profile image."
         );
         return;
       }
@@ -158,17 +271,20 @@ const ProfileScreen = () => {
       });
 
       console.log("Image picker result:", result);
-      
+
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const selectedAsset = result.assets[0];
         console.log("Selected asset:", selectedAsset);
 
         // Validate file size (max 5MB)
-        const fileSizeInMB = selectedAsset.fileSize ? selectedAsset.fileSize / (1024 * 1024) : 0;
+        const fileSizeInMB = selectedAsset.fileSize
+          ? selectedAsset.fileSize / (1024 * 1024)
+          : 0;
         if (fileSizeInMB > 5) {
           Alert.alert(
             t("fileTooLarge") || "File Too Large",
-            t("imageSizeShouldBeLessThan5MB") || "Image size should be less than 5MB. Please select a smaller image."
+            t("imageSizeShouldBeLessThan5MB") ||
+              "Image size should be less than 5MB. Please select a smaller image."
           );
           return;
         }
@@ -176,66 +292,79 @@ const ProfileScreen = () => {
         // Check if user ID exists
         if (!user?.id) {
           Alert.alert(
-            t("errorTitle") || "Error", 
-            t("userIDNotFoundPleaseLoginAgain") || "User ID not found. Please login again."
+            t("errorTitle") || "Error",
+            t("userIDNotFoundPleaseLoginAgain") ||
+              "User ID not found. Please login again."
           );
           return;
         }
-        
+
         // Set local loading state
         setIsUploading(true);
-        
+
         try {
           console.log("Uploading image for user ID:", user.id);
           console.log("Image URI:", selectedAsset.uri);
-          
-          const uploadResponse = await userAPI.uploadProfileImage(user.id, selectedAsset.uri);
+
+          const uploadResponse = await userAPI.uploadProfileImage(
+            user.id,
+            selectedAsset.uri
+          );
           console.log("Upload response:", uploadResponse);
-          
+
           const responseData = uploadResponse.data;
-          
+
           if (responseData.success && responseData.url) {
             // Construct the full URL with base URL prefix
             const fullImageUrl = `${theme.baseUrl}${responseData.url}`;
             console.log("Full image URL:", fullImageUrl);
-            
+
             // Update local storage with the new profile photo
             try {
               const userData = await AsyncStorage.getItem("userData");
               if (userData) {
                 const parsedUser = JSON.parse(userData);
                 parsedUser.profile_photo = responseData.url;
-                await AsyncStorage.setItem("userData", JSON.stringify(parsedUser));
+                await AsyncStorage.setItem(
+                  "userData",
+                  JSON.stringify(parsedUser)
+                );
                 console.log("Updated local storage with new profile photo");
               }
             } catch (error) {
               console.error("Error updating local storage:", error);
             }
-            
+
             // Update user profile with the uploaded image URL
             updateUser({ ...user, profile_photo: responseData.url });
-            
+
             Alert.alert(
-              t("successTitle") || "Success", 
-              t("profileImageUpdatedSuccessfully") || "Profile image updated successfully!"
+              t("successTitle") || "Success",
+              t("profileImageUpdatedSuccessfully") ||
+                "Profile image updated successfully!"
             );
           } else {
             console.error("Upload failed - Response data:", responseData);
             Alert.alert(
-              t("uploadFailed") || "Upload Failed", 
-              responseData.message || t("failedToUploadProfileImagePleaseTryAgain") || "Failed to upload profile image. Please try again."
+              t("uploadFailed") || "Upload Failed",
+              responseData.message ||
+                t("failedToUploadProfileImagePleaseTryAgain") ||
+                "Failed to upload profile image. Please try again."
             );
           }
         } catch (error: any) {
-          console.error('Profile image upload error:', error);
-          
+          console.error("Profile image upload error:", error);
+
           // Provide more specific error messages
-          let errorMessage = t("failedToUploadProfileImagePleaseCheckInternet") || "Failed to upload profile image. Please check your internet connection.";
-          
+          let errorMessage =
+            t("failedToUploadProfileImagePleaseCheckInternet") ||
+            "Failed to upload profile image. Please check your internet connection.";
+
           if (error.response) {
-            console.error('Error response:', error.response.data);
+            console.error("Error response:", error.response.data);
             if (error.response.status === 413) {
-              errorMessage = "File size too large. Please select a smaller image.";
+              errorMessage =
+                "File size too large. Please select a smaller image.";
             } else if (error.response.status === 401) {
               errorMessage = "Session expired. Please login again.";
             } else if (error.response.status === 500) {
@@ -243,16 +372,14 @@ const ProfileScreen = () => {
             } else if (error.response.data?.message) {
               errorMessage = error.response.data.message;
             }
-          } else if (error.code === 'NETWORK_ERROR') {
-            errorMessage = "Network error. Please check your internet connection.";
-          } else if (error.code === 'TIMEOUT') {
+          } else if (error.code === "NETWORK_ERROR") {
+            errorMessage =
+              "Network error. Please check your internet connection.";
+          } else if (error.code === "TIMEOUT") {
             errorMessage = "Request timeout. Please try again.";
           }
-          
-          Alert.alert(
-            t("uploadError") || "Upload Error", 
-            errorMessage
-          );
+
+          Alert.alert(t("uploadError") || "Upload Error", errorMessage);
         } finally {
           // Reset loading state
           setIsUploading(false);
@@ -261,11 +388,12 @@ const ProfileScreen = () => {
         console.log("Image selection was canceled or no assets selected");
       }
     } catch (error) {
-      console.error('Unexpected error in handleImageUpload:', error);
+      console.error("Unexpected error in handleImageUpload:", error);
       setIsUploading(false);
       Alert.alert(
         t("errorTitle") || "Error",
-        t("anUnexpectedError") || "An unexpected error occurred. Please try again."
+        t("anUnexpectedError") ||
+          "An unexpected error occurred. Please try again."
       );
     }
   };
@@ -276,7 +404,7 @@ const ProfileScreen = () => {
       console.log("user", user);
       if (!user?.id) {
         Alert.alert(
-          t("errorTitle") || "Error", 
+          t("errorTitle") || "Error",
           "User ID not found. Please login again."
         );
         return;
@@ -290,7 +418,10 @@ const ProfileScreen = () => {
       };
 
       // Call the API to update profile
-      const response = await apiWithLoader.user.updateProfile(Number(user.id), profileData);
+      const response = await apiWithLoader.user.updateProfile(
+        Number(user.id),
+        profileData
+      );
 
       if (response && response.data) {
         // Update local storage with the new profile data
@@ -302,7 +433,10 @@ const ProfileScreen = () => {
               ...parsedUser,
               ...profileData,
             };
-            await AsyncStorage.setItem("userData", JSON.stringify(updatedUserData));
+            await AsyncStorage.setItem(
+              "userData",
+              JSON.stringify(updatedUserData)
+            );
           }
         } catch (error) {
           console.error("Error updating local storage:", error);
@@ -314,18 +448,21 @@ const ProfileScreen = () => {
           ...profileData, // Use the data returned from API
         });
         setEditing(false);
-        Alert.alert(t("successTitle") || "Success", t("profileUpdatedSuccessfully"));
+        Alert.alert(
+          t("successTitle") || "Success",
+          t("profileUpdatedSuccessfully")
+        );
       } else {
         // Handle API error response
         Alert.alert(
-          t("errorTitle") || "Error", 
+          t("errorTitle") || "Error",
           t("failedToUpdateProfilePleaseTryAgain")
         );
       }
     } catch (error) {
-      console.error('Profile update error:', error);
+      console.error("Profile update error:", error);
       Alert.alert(
-        t("errorTitle") || "Error", 
+        t("errorTitle") || "Error",
         t("failedToUpdateProfilePleaseCheckInternet")
       );
     }
@@ -348,7 +485,8 @@ const ProfileScreen = () => {
           setEditData({
             name: parsedUser.name || user?.name || "",
             email: parsedUser.email || user?.email || "",
-            mobile: parsedUser.mobile?.toString() || user?.mobile?.toString() || "",
+            mobile:
+              parsedUser.mobile?.toString() || user?.mobile?.toString() || "",
           });
         } else {
           // Fallback to global state if local storage is empty
@@ -434,45 +572,45 @@ const ProfileScreen = () => {
 
   return (
     <AuthGuard>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
-          <View style={styles.backgroundImage}>
-            <LinearGradient
-              colors={[
-                theme.colors.primary + "E6",
-                theme.colors.support_container[1] + "E6",
-                theme.colors.support_container[2] + "E6",
-              ]}
-              style={StyleSheet.absoluteFill}
-            />
+        <View style={styles.backgroundImage}>
+          <LinearGradient
+            colors={[
+              theme.colors.primary + "E6",
+              theme.colors.support_container[1] + "E6",
+              theme.colors.support_container[2] + "E6",
+            ]}
+            style={StyleSheet.absoluteFill}
+          />
 
-            {/* Header is now handled by the layout wrapper */}
+          {/* Header is now handled by the layout wrapper */}
 
-            <Animated.View
-              style={[
-                styles.waveEffect,
-                { transform: [{ rotate: waveInterpolation }] },
-              ]}
-            />
+          <Animated.View
+            style={[
+              styles.waveEffect,
+              { transform: [{ rotate: waveInterpolation }] },
+            ]}
+          />
 
-            <ScrollView
-              contentContainerStyle={{
-                flexGrow: 1,
-                paddingBottom: bottomPadding,
-                paddingHorizontal: 16,
-              }}
-              showsVerticalScrollIndicator={false}
-            >
-          {/* Floating Profile Section */}
-          {editing ? (
-            // Edit Profile Form
-            <View style={styles.editFormContainer}>
-              <View style={styles.editFormHeader}>
-                <Text style={styles.editFormTitle}>{t('editProfile')}</Text>
-                {/* <View style={styles.editFormActions}>
+          <ScrollView
+            contentContainerStyle={{
+              flexGrow: 1,
+              paddingBottom: bottomPadding,
+              paddingHorizontal: 16,
+            }}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Floating Profile Section */}
+            {editing ? (
+              // Edit Profile Form
+              <View style={styles.editFormContainer}>
+                <View style={styles.editFormHeader}>
+                  <Text style={styles.editFormTitle}>{t("editProfile")}</Text>
+                  {/* <View style={styles.editFormActions}>
                   <TouchableOpacity
                     style={styles.cancelButton}
                     onPress={handleEditToggle}
@@ -486,10 +624,10 @@ const ProfileScreen = () => {
                     <Icon name="check" size={20} color="white" />
                   </TouchableOpacity>
                 </View> */}
-              </View>
+                </View>
 
-              {/* Profile Image Edit */}
-              {/* <View style={styles.editImageSection}>
+                {/* Profile Image Edit */}
+                {/* <View style={styles.editImageSection}>
                 <TouchableOpacity
                   onPress={handleImageUpload}
                   style={styles.editImageContainer}
@@ -518,9 +656,9 @@ const ProfileScreen = () => {
                 </Text>
               </View> */}
 
-              {/* Edit Form Fields */}
-              <View style={styles.editFormFields}>
-                {/* <View style={styles.formRow}>
+                {/* Edit Form Fields */}
+                <View style={styles.editFormFields}>
+                  {/* <View style={styles.formRow}>
                   <View style={[styles.formFieldHalf, { marginRight: 10 }]}>
                     <Text style={styles.formLabel}>First Name</Text>
                     <TextInput
@@ -543,157 +681,180 @@ const ProfileScreen = () => {
                   </View>
                 </View> */}
 
-                <View style={styles.formField}>
-                  <Text style={styles.formLabel}>{t('fullName')}</Text>
-                  <TextInput
-                    style={styles.formInput}
-                    value={editData.name}
-                    onChangeText={(value) => updateEditField("name", value)}
-                    placeholder={t('enterFullName')}
-                    placeholderTextColor="#999"
-                  />
-                </View>
+                  <View style={styles.formField}>
+                    <Text style={styles.formLabel}>{t("fullName")}</Text>
+                    <TextInput
+                      style={styles.formInput}
+                      value={editData.name}
+                      onChangeText={(value) => updateEditField("name", value)}
+                      placeholder={t("enterFullName")}
+                      placeholderTextColor="#999"
+                    />
+                  </View>
 
-                <View style={styles.formField}>
-                  <Text style={styles.formLabel}>{t('emailAddress')}</Text>
-                  <TextInput
-                    style={styles.formInput}
-                    value={editData.email}
-                    onChangeText={(value) => updateEditField("email", value)}
-                    placeholder={t('enterEmailAddress')}
-                    placeholderTextColor="#999"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
-                </View>
+                  <View style={styles.formField}>
+                    <Text style={styles.formLabel}>{t("emailAddress")}</Text>
+                    <TextInput
+                      style={styles.formInput}
+                      value={editData.email}
+                      onChangeText={(value) => updateEditField("email", value)}
+                      placeholder={t("enterEmailAddress")}
+                      placeholderTextColor="#999"
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                    />
+                  </View>
 
-                <View style={styles.formField}>
-                  <Text style={styles.formLabel}>{t('mobileNumber')}</Text>
-                  <TextInput
-                    style={styles.formInput}
-                    value={editData.mobile}
-                    onChangeText={(value) => updateEditField("mobile", value)}
-                    placeholder={t('enterMobileNumber')}
-                    placeholderTextColor="#999"
-                    keyboardType="phone-pad"
-                    editable={false}
-                  />
-                </View>
+                  <View style={styles.formField}>
+                    <Text style={styles.formLabel}>{t("mobileNumber")}</Text>
+                    <TextInput
+                      style={styles.formInput}
+                      value={editData.mobile}
+                      onChangeText={(value) => updateEditField("mobile", value)}
+                      placeholder={t("enterMobileNumber")}
+                      placeholderTextColor="#999"
+                      keyboardType="phone-pad"
+                      editable={false}
+                    />
+                  </View>
 
-                <View style={styles.formActions}>
-                  <TouchableOpacity
-                    style={styles.cancelFormButton}
-                    onPress={() => setEditing(!editing)}
-                  >
-                    <Text style={styles.cancelFormButtonText}>{t('cancel')}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.saveMainButton}
-                    onPress={handleSave}
-                  >
-                    <Text style={styles.saveMainButtonText}>{t('save')}</Text>
-                  </TouchableOpacity>
+                  <View style={styles.formActions}>
+                    <TouchableOpacity
+                      style={styles.cancelFormButton}
+                      onPress={() => setEditing(!editing)}
+                    >
+                      <Text style={styles.cancelFormButtonText}>
+                        {t("cancel")}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.saveMainButton}
+                      onPress={handleSave}
+                    >
+                      <Text style={styles.saveMainButtonText}>{t("save")}</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
-            </View>
-          ) : (
-            // ID Card Style Profile View
-            <View style={styles.idCardContainer}>
-              <LinearGradient
-                colors={[
-                  theme.colors.primary,
-                  theme.colors.support_container[1],
-                  theme.colors.support_container[2],
-                ]}
-                style={styles.idCardGradient}
-              >
-                {/* ID Card Header */}
-                <View style={styles.idCardHeader}>
-                  <View style={styles.idCardLogo}>
-                    <Icon name="verified" size={24} color="white" />
-                  </View>
-                                  <Text style={styles.idCardTitle}>{t('dcJewellers')}</Text>
-                <Text style={styles.idCardSubtitle}>{t('digitalIdCard')}</Text>
-                </View>
-
-                {/* ID Card Content */}
-                <View style={styles.idCardContent}>
-                  <View style={styles.idCardLeft}>
-                    <TouchableOpacity 
-                      onPress={handleImageUpload} 
-                      activeOpacity={0.8} 
-                      disabled={isUploading}
-                      style={styles.idCardImageContainer}
-                    >
-                      {getProfileImageSource() ? (
-                        <Image
-                          source={getProfileImageSource()}
-                          style={styles.idCardImage}
-                        />
-                      ) : (
-                        <View style={styles.idCardImagePlaceholder}>
-                          <Icon name="person" size={40} color="white" />
-                        </View>
-                      )}
-                      {!isUploading && (
-                        <View style={styles.idCardImageOverlay}>
-                          <Icon name="edit" size={16} color="white" />
-                        </View>
-                      )}
-                      {isUploading && (
-                        <View style={styles.idCardImageOverlay}>
-                          <ActivityIndicator size="small" color="white" />
-                        </View>
-                      )}
-                    </TouchableOpacity>
+            ) : (
+              // ID Card Style Profile View
+              <View style={styles.idCardContainer}>
+                <LinearGradient
+                  colors={[
+                    theme.colors.primary,
+                    theme.colors.support_container[1],
+                    theme.colors.support_container[2],
+                  ]}
+                  style={styles.idCardGradient}
+                >
+                  {/* ID Card Header */}
+                  <View style={styles.idCardHeader}>
+                    <View style={styles.idCardLogo}>
+                      <Icon name="verified" size={24} color="white" />
+                    </View>
+                    <Text style={styles.idCardTitle}>{t("dcJewellers")}</Text>
+                    <Text style={styles.idCardSubtitle}>
+                      {t("digitalIdCard")}
+                    </Text>
                   </View>
 
-                  <View style={styles.idCardRight}>
-                    <View style={styles.idCardInfoRow}>
-                      <Text style={styles.idCardLabel}>{t('nameLabel')}</Text>
-                      <Text style={styles.idCardValue}>{user?.name || t('notProvided')}</Text>
+                  {/* ID Card Content */}
+                  <View style={styles.idCardContent}>
+                    <View style={styles.idCardLeft}>
+                      <TouchableOpacity
+                        onPress={handleImageUpload}
+                        activeOpacity={0.8}
+                        disabled={isUploading}
+                        style={styles.idCardImageContainer}
+                      >
+                        {getProfileImageSource() ? (
+                          <Image
+                            source={getProfileImageSource()}
+                            style={styles.idCardImage}
+                          />
+                        ) : (
+                          <View style={styles.idCardImagePlaceholder}>
+                            <Icon name="person" size={40} color="white" />
+                          </View>
+                        )}
+                        {!isUploading && (
+                          <View style={styles.idCardImageOverlay}>
+                            <Icon name="edit" size={16} color="white" />
+                          </View>
+                        )}
+                        {isUploading && (
+                          <View style={styles.idCardImageOverlay}>
+                            <ActivityIndicator size="small" color="white" />
+                          </View>
+                        )}
+                      </TouchableOpacity>
                     </View>
-                    
-                    <View style={styles.idCardInfoRow}>
-                      <Text style={styles.idCardLabel}>{t('emailLabel')}</Text>
-                      <Text style={styles.idCardValue}>{user?.email || t('notProvided')}</Text>
-                    </View>
-                    
-                    <View style={styles.idCardInfoRow}>
-                      <Text style={styles.idCardLabel}>{t('mobileLabel')}</Text>
-                      <Text style={styles.idCardValue}> {user?.mobile || t('notProvided')}</Text>
-                    </View>
-                    
-                    <View style={styles.idCardInfoRow}>
-                      <Text style={styles.idCardLabel}>{t('userIdLabel')}</Text>
-                      <Text style={styles.idCardValue}>{user?.id || t('na')}</Text>
-                    </View>
-                  </View>
-                </View>
 
-                {/* ID Card Footer */}
-                <View style={styles.idCardFooter}>
-                  <View style={styles.idCardFooterLeft}>
-                    <Text style={styles.idCardFooterText}>{t('validUntilLifetime')}</Text>
-                  </View>
-                  <View style={styles.idCardFooterRight}>
-                    <TouchableOpacity
-                      style={styles.editIdCardButton}
-                      onPress={handleEditToggle}
-                    >
-                      <Icon name="edit" size={16} color="white" />
-                      <Text style={styles.editIdCardButtonText}>{t('edit')}</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </LinearGradient>
-            </View>
-          )}
+                    <View style={styles.idCardRight}>
+                      <View style={styles.idCardInfoRow}>
+                        <Text style={styles.idCardLabel}>{t("nameLabel")}</Text>
+                        <Text style={styles.idCardValue}>
+                          {user?.name || t("notProvided")}
+                        </Text>
+                      </View>
 
-          {/* Main Content */}
-          <View style={styles.contentContainer}>
-            {/* Personal Info Card */}
-            {/* <View style={styles.card}>
+                      <View style={styles.idCardInfoRow}>
+                        <Text style={styles.idCardLabel}>
+                          {t("emailLabel")}
+                        </Text>
+                        <Text style={styles.idCardValue}>
+                          {user?.email || t("notProvided")}
+                        </Text>
+                      </View>
+
+                      <View style={styles.idCardInfoRow}>
+                        <Text style={styles.idCardLabel}>
+                          {t("mobileLabel")}
+                        </Text>
+                        <Text style={styles.idCardValue}>
+                          {" "}
+                          {user?.mobile || t("notProvided")}
+                        </Text>
+                      </View>
+
+                      <View style={styles.idCardInfoRow}>
+                        <Text style={styles.idCardLabel}>
+                          {t("userIdLabel")}
+                        </Text>
+                        <Text style={styles.idCardValue}>
+                          {user?.id || t("na")}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* ID Card Footer */}
+                  <View style={styles.idCardFooter}>
+                    <View style={styles.idCardFooterLeft}>
+                      <Text style={styles.idCardFooterText}>
+                        {t("validUntilLifetime")}
+                      </Text>
+                    </View>
+                    <View style={styles.idCardFooterRight}>
+                      <TouchableOpacity
+                        style={styles.editIdCardButton}
+                        onPress={handleEditToggle}
+                      >
+                        <Icon name="edit" size={16} color="white" />
+                        <Text style={styles.editIdCardButtonText}>
+                          {t("edit")}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </LinearGradient>
+              </View>
+            )}
+
+            {/* Main Content */}
+            <View style={styles.contentContainer}>
+              {/* Personal Info Card */}
+              {/* <View style={styles.card}>
               <View style={styles.cardHeader}>
                 <Icon
                   name="person-outline"
@@ -727,164 +888,184 @@ const ProfileScreen = () => {
               </View>
             </View> */}
 
-            {/* Referral Card */}
-            <View style={[styles.card, styles.referralCard]}>
-              <LinearGradient
-                colors={[
-                  "rgba(255, 201, 12, 0.1)",
-                  "rgba(255, 201, 12, 0.05)",
-                  "rgba(255, 255, 255, 0.9)",
-                ]}
-                style={styles.referralCardGradient}
-              >
-                <View style={styles.cardHeader}>
-                  <Icon
-                    name="card-giftcard"
-                    size={24}
-                    color={theme.colors.primary}
-                  />
-                  <Text style={styles.cardTitle}>{t("referral_rewards")}</Text>
-                </View>
+              {/* Referral Card */}
+              <View style={[styles.card, styles.referralCard]}>
+                <LinearGradient
+                  colors={[
+                    "rgba(255, 201, 12, 0.1)",
+                    "rgba(255, 201, 12, 0.05)",
+                    "rgba(255, 255, 255, 0.9)",
+                  ]}
+                  style={styles.referralCardGradient}
+                >
+                  <View style={styles.cardHeader}>
+                    <Icon
+                      name="card-giftcard"
+                      size={24}
+                      color={theme.colors.primary}
+                    />
+                    <Text style={styles.cardTitle}>
+                      {t("referral_rewards")}
+                    </Text>
+                  </View>
 
-                <View style={styles.referralContent}>
-                  <Text style={styles.referralText}>
-                    {t("your_referral_code")}
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.referralCodeContainer}
-                    onPress={handleCopyReferralCode}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.referralCodeLeft}>
-                      <Text style={styles.referralCodeLabel}>{t('yourCode')}</Text>
-                      <Text style={styles.referralCode}>
-                        {user?.referralCode|| 'N/A'}
-                      </Text>
-                    </View>
-                    <View style={styles.copyIconContainer}>
-                      <Icon
-                        name="content-copy"
-                        size={20}
-                        color={theme.colors.primary}
-                      />
-                    </View>
-                  </TouchableOpacity>
-
-                  <View style={styles.rewardsContainer}>
-                    <View style={styles.rewardsLeft}>
-                      <Icon
-                        name="stars"
-                        size={28}
-                        color={theme.colors.secondary}
-                      />
-                      <View style={styles.rewardsTextContainer}>
-                        <Text style={styles.rewardsLabel}>
-                          {t("total_rewards")}
+                  <View style={styles.referralContent}>
+                    <Text style={styles.referralText}>
+                      {t("your_referral_code")}
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.referralCodeContainer}
+                      onPress={handleCopyReferralCode}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.referralCodeLeft}>
+                        <Text style={styles.referralCodeLabel}>
+                          {t("yourCode")}
                         </Text>
-                        <Text style={styles.rewardsValue}>
-                          {user?.rewards || 0} {t('points')}
+                        <Text style={styles.referralCode}>
+                          {user?.referralCode || "N/A"}
                         </Text>
                       </View>
-                    </View>
-                    {/* <TouchableOpacity style={styles.rewardsButton}>
+                      <View style={styles.copyIconContainer}>
+                        <Icon
+                          name="content-copy"
+                          size={20}
+                          color={theme.colors.primary}
+                        />
+                      </View>
+                    </TouchableOpacity>
+
+                    <View style={styles.rewardsContainer}>
+                      <View style={styles.rewardsLeft}>
+                        <Icon
+                          name="stars"
+                          size={28}
+                          color={theme.colors.secondary}
+                        />
+                        <View style={styles.rewardsTextContainer}>
+                          <Text style={styles.rewardsLabel}>
+                            {t("total_rewards")}
+                          </Text>
+                          <Text style={styles.rewardsValue}>
+                            {user?.rewards || 0} {t("points")}
+                          </Text>
+                        </View>
+                      </View>
+                      {/* <TouchableOpacity style={styles.rewardsButton}>
                       <Text style={styles.rewardsButtonText}>View</Text>
                     </TouchableOpacity> */}
+                    </View>
                   </View>
-                </View>
+
+                  <TouchableOpacity
+                    style={styles.inviteButton}
+                    activeOpacity={0.8}
+                    onPress={handleShareApp}
+                  >
+                    <Icon
+                      name="person-add"
+                      size={20}
+                      color="white"
+                      style={{ marginRight: 8 }}
+                    />
+                    <Text style={styles.inviteButtonText}>
+                      {t("inviteFriendsEarn")}
+                    </Text>
+                  </TouchableOpacity>
+                </LinearGradient>
+              </View>
+
+              {/* Settings Card */}
+              <View style={styles.card}>
+                <TouchableOpacity
+                  style={styles.settingItem}
+                  onPress={handleChangeKYC}
+                >
+                  <View
+                    style={[styles.settingIcon, { backgroundColor: "#E3F2FD" }]}
+                  >
+                    <Icon
+                      name="verified-user"
+                      size={24}
+                      color={theme.colors.primary}
+                    />
+                  </View>
+                  <Text style={styles.settingText}>{t("changeKYC")}</Text>
+                  <Icon name="chevron-right" size={24} color="#9E9E9E" />
+                </TouchableOpacity>
+
+                <View style={styles.divider} />
 
                 <TouchableOpacity
-                  style={styles.inviteButton}
-                  activeOpacity={0.8}
-                  onPress={handleShareApp}
+                  style={styles.settingItem}
+                  onPress={handleChangeMPIN}
                 >
-                  <Icon
-                    name="person-add"
-                    size={20}
-                    color="white"
-                    style={{ marginRight: 8 }}
-                  />
-                  <Text style={styles.inviteButtonText}>
-                    {t('inviteFriendsEarn')}
+                  <View
+                    style={[styles.settingIcon, { backgroundColor: "#E8F5E9" }]}
+                  >
+                    <Icon name="lock" size={24} color="#4CAF50" />
+                  </View>
+                  <Text style={styles.settingText}>{t("changeMPIN")}</Text>
+                  <Icon name="chevron-right" size={24} color="#9E9E9E" />
+                </TouchableOpacity>
+
+                <View style={styles.divider} />
+
+                <TouchableOpacity
+                  style={styles.settingItem}
+                  onPress={toggleLanguage}
+                >
+                  <View
+                    style={[styles.settingIcon, { backgroundColor: "#FFF3E0" }]}
+                  >
+                    <Icon
+                      name="language"
+                      size={24}
+                      color={theme.colors.primary}
+                    />
+                  </View>
+                  <Text style={styles.settingText}>{t("language")}</Text>
+                  <Text style={styles.settingValue}>
+                    {language === "en" ? t("english") : t("malayalam")}
+                  </Text>
+                  <Icon name="chevron-right" size={24} color="#9E9E9E" />
+                </TouchableOpacity>
+
+                <View style={styles.divider} />
+
+                <TouchableOpacity
+                  style={styles.settingItem}
+                  onPress={handleLogout}
+                >
+                  <View
+                    style={[styles.settingIcon, { backgroundColor: "#FFEBEE" }]}
+                  >
+                    <Icon name="logout" size={24} color="#F44336" />
+                  </View>
+                  <Text style={[styles.settingText, { color: "#F44336" }]}>
+                    {t("logout")}
                   </Text>
                 </TouchableOpacity>
-              </LinearGradient>
+
+                <View style={styles.divider} />
+
+                <TouchableOpacity
+                  style={styles.settingItem}
+                  onPress={handleDeleteAccount}
+                >
+                  <View
+                    style={[styles.settingIcon, { backgroundColor: "#FFEBEE" }]}
+                  >
+                    <Icon name="delete-forever" size={24} color="#D32F2F" />
+                  </View>
+                  <Text style={[styles.settingText, { color: "#D32F2F" }]}>
+                    {t("deleteAccount")}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
-
-            {/* Settings Card */}
-            <View style={styles.card}>
-              <TouchableOpacity
-                style={styles.settingItem}
-                onPress={handleChangeKYC}
-              >
-                <View
-                  style={[styles.settingIcon, { backgroundColor: "#E3F2FD" }]}
-                >
-                  <Icon
-                    name="verified-user"
-                    size={24}
-                    color={theme.colors.primary}
-                  />
-                </View>
-                <Text style={styles.settingText}>{t('changeKYC')}</Text>
-                <Icon name="chevron-right" size={24} color="#9E9E9E" />
-              </TouchableOpacity>
-
-              <View style={styles.divider} />
-
-              <TouchableOpacity
-                style={styles.settingItem}
-                onPress={handleChangeMPIN}
-              >
-                <View
-                  style={[styles.settingIcon, { backgroundColor: "#E8F5E9" }]}
-                >
-                  <Icon name="lock" size={24} color="#4CAF50" />
-                </View>
-                <Text style={styles.settingText}>{t('changeMPIN')}</Text>
-                <Icon name="chevron-right" size={24} color="#9E9E9E" />
-              </TouchableOpacity>
-
-              <View style={styles.divider} />
-
-              <TouchableOpacity
-                style={styles.settingItem}
-                onPress={toggleLanguage}
-              >
-                <View
-                  style={[styles.settingIcon, { backgroundColor: "#FFF3E0" }]}
-                >
-                  <Icon
-                    name="language"
-                    size={24}
-                    color={theme.colors.primary}
-                  />
-                </View>
-                <Text style={styles.settingText}>{t("language")}</Text>
-                <Text style={styles.settingValue}>
-                  {language === "en" ? t('english') : t('malayalam')}
-                </Text>
-                <Icon name="chevron-right" size={24} color="#9E9E9E" />
-              </TouchableOpacity>
-
-              <View style={styles.divider} />
-
-              <TouchableOpacity
-                style={styles.settingItem}
-                onPress={handleLogout}
-              >
-                <View
-                  style={[styles.settingIcon, { backgroundColor: "#FFEBEE" }]}
-                >
-                  <Icon name="logout" size={24} color="#F44336" />
-                </View>
-                <Text style={[styles.settingText, { color: "#F44336" }]}>
-                  {t("logout")}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </ScrollView>
-      </View>
+          </ScrollView>
+        </View>
       </KeyboardAvoidingView>
 
       <Modal
@@ -895,7 +1076,9 @@ const ProfileScreen = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{t("logout_confirmation_title")}</Text>
+            <Text style={styles.modalTitle}>
+              {t("logout_confirmation_title")}
+            </Text>
             <Text style={styles.modalMessage}>
               {t("logout_confirmation_message")}
             </Text>
@@ -911,6 +1094,101 @@ const ProfileScreen = () => {
                 onPress={confirmLogout}
               >
                 <Text style={styles.modalConfirmButtonText}>{t("logout")}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showDeleteAccountModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={cancelDeleteAccount}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>
+              {t("deleteAccount_confirmation_title")}
+            </Text>
+            <Text style={styles.modalMessage}>
+              {t("deleteAccount_confirmation_message")}
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={cancelDeleteAccount}
+              >
+                <Text style={styles.modalCancelButtonText}>{t("cancel")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.modalConfirmButton,
+                  { backgroundColor: "#D32F2F" },
+                ]}
+                onPress={confirmDeleteAccount}
+              >
+                <Text style={styles.modalConfirmButtonText}>
+                  {t("deleteAccount")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Customer Support Modal */}
+      <Modal
+        visible={showCustomerSupportModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowCustomerSupportModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>
+              {t("investmentActiveErrorTitle")}
+            </Text>
+            <Text style={styles.modalMessage}>
+              {t("investmentActiveErrorSubtitle")}
+            </Text>
+            <Text style={styles.modalMessage}>
+              {t("contactCustomerSupport")}
+            </Text>
+
+            {/* Contact Information */}
+            <View style={styles.contactInfoContainer}>
+              <TouchableOpacity
+                style={styles.contactItem}
+                onPress={handlePhoneCall}
+              >
+                <Icon name="phone" size={24} color="#007AFF" />
+                <Text style={styles.contactText}>{t("supportPhone")}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.contactItem}
+                onPress={handleEmail}
+              >
+                <Icon name="email" size={24} color="#007AFF" />
+                <Text style={styles.contactText}>{t("supportEmail")}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.contactItem}
+                onPress={handleWhatsApp}
+              >
+                <Icon name="chat" size={24} color="#25D366" />
+                <Text style={styles.contactText}>{t("supportWhatsApp")}</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalConfirmButton}
+                onPress={() => setShowCustomerSupportModal(false)}
+              >
+                <Text style={styles.modalConfirmButtonText}>{t("ok")}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1468,7 +1746,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     borderRadius: 15,
     padding: 5,
-    
   },
   idCardRight: {
     width: "100%",
@@ -1583,6 +1860,25 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 14,
     fontWeight: "bold",
+  },
+  contactInfoContainer: {
+    marginVertical: 20,
+    paddingHorizontal: 20,
+  },
+  contactItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    backgroundColor: "#F5F5F5",
+    borderRadius: 8,
+  },
+  contactText: {
+    color: "#333",
+    fontSize: 16,
+    marginLeft: 15,
+    fontWeight: "500",
   },
 });
 

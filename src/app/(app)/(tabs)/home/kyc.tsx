@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,7 +11,6 @@ import {
   StyleSheet,
   Keyboard,
   ImageBackground,
-  StatusBar,
 } from "react-native";
 import {
   SafeAreaView,
@@ -97,6 +96,18 @@ interface FormData {
   nominee_relationship: string;
 }
 
+interface PincodeData {
+  Name: string;
+  District: string;
+  State: string;
+  Circle: string;
+  Division: string;
+  Region: string;
+  Block: string;
+  Country: string;
+  Pincode: string;
+}
+
 interface FormDatePickerProps {
   label: string;
   value: string;
@@ -127,6 +138,8 @@ export default function KycForm() {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [kycId, setKycId] = useState<string | null>(null);
+  const [pincodeData, setPincodeData] = useState<PincodeData[]>([]);
+  const [isLoadingPincode, setIsLoadingPincode] = useState(false);
 
   const navBarHeight = 56; // Typical bottom nav bar height
 
@@ -176,7 +189,6 @@ export default function KycForm() {
             nominee_name: kycData.nominee_name || "",
             nominee_relationship: kycData.nominee_relationship || "",
           });
-
         }
       } catch (e) {
         console.error("Error fetching KYC:", e);
@@ -184,6 +196,89 @@ export default function KycForm() {
     };
     fetchKyc();
   }, [user?.id]);
+
+  // Function to fetch pincode data
+  const fetchPincodeData = async (pincode: string) => {
+    if (pincode.length !== 6) return;
+
+    setIsLoadingPincode(true);
+    try {
+      const response = await fetch(
+        `https://api.postalpincode.in/pincode/${pincode}`
+      );
+      const data = await response.json();
+
+      if (
+        data &&
+        data[0] &&
+        data[0].Status === "Success" &&
+        data[0].PostOffice
+      ) {
+        setPincodeData(data[0].PostOffice);
+        // Auto-fill district and state from first result
+        if (data[0].PostOffice.length > 0) {
+          const firstResult = data[0].PostOffice[0];
+          setFormData((prev) => ({
+            ...prev,
+            district: firstResult.District,
+            state: firstResult.State,
+            country: firstResult.Country,
+          }));
+        }
+      } else {
+        setPincodeData([]);
+        Alert.alert("Invalid Pincode", "Please enter a valid 6-digit pincode");
+      }
+    } catch (error) {
+      console.error("Error fetching pincode data:", error);
+      Alert.alert("Error", "Failed to fetch pincode data. Please try again.");
+    } finally {
+      setIsLoadingPincode(false);
+    }
+  };
+
+  // Handle pincode change
+  const handlePincodeChange = (text: string) => {
+    handleChange("pincode", text);
+
+    // Clear city when pincode changes
+    if (text.length === 6) {
+      setFormData((prev) => ({
+        ...prev,
+        city: "",
+        district: "",
+        state: "",
+      }));
+      fetchPincodeData(text);
+    } else if (text.length < 6) {
+      setPincodeData([]);
+      setFormData((prev) => ({
+        ...prev,
+        city: "",
+        district: "",
+        state: "",
+      }));
+    }
+
+    // Clear errors when pincode is being entered
+    if (errors.pincode) {
+      setErrors((prev) => ({ ...prev, pincode: "" }));
+    }
+  };
+
+  // Handle city selection
+  const handleCitySelection = (cityName: string) => {
+    const selectedCityData = pincodeData.find((city) => city.Name === cityName);
+    if (selectedCityData) {
+      setFormData((prev) => ({
+        ...prev,
+        city: selectedCityData.Name,
+        district: selectedCityData.District,
+        state: selectedCityData.State,
+        country: selectedCityData.Country,
+      }));
+    }
+  };
 
   // Update the FormDatePicker component with proper types
   const FormDatePicker: React.FC<FormDatePickerProps> = ({
@@ -324,12 +419,14 @@ export default function KycForm() {
         const today = new Date();
         const age = today.getFullYear() - dobDate.getFullYear();
         const monthDiff = today.getMonth() - dobDate.getMonth();
-        
+
         // Adjust age if birthday hasn't occurred this year
-        const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < dobDate.getDate()) 
-          ? age - 1 
-          : age;
-        
+        const actualAge =
+          monthDiff < 0 ||
+          (monthDiff === 0 && today.getDate() < dobDate.getDate())
+            ? age - 1
+            : age;
+
         if (actualAge < 18) {
           newErrors.dob = "You must be at least 18 years old to proceed";
         }
@@ -457,7 +554,6 @@ export default function KycForm() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent={false} />
       <ImageBackground
         source={theme.image.bg_image}
         style={styles.backgroundImage}
@@ -469,7 +565,7 @@ export default function KycForm() {
         />
         <SafeAreaView style={styles.safeArea}>
           {/* Header */}
-          <View style={styles.header}>
+          {/* <View style={styles.header}>
             <TouchableOpacity
               onPress={() => router.back()}
               style={styles.backButton}
@@ -478,7 +574,7 @@ export default function KycForm() {
               <Ionicons name="arrow-back" size={24} color="#FFC857" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Know Your Customer</Text>
-          </View>
+          </View> */}
 
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -503,6 +599,126 @@ export default function KycForm() {
                   </Text>
                 </View>
                 <View style={styles.formContent}>
+                  {/* Pincode */}
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Pincode</Text>
+                    <View style={styles.pincodeContainer}>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Enter your 6-digit pincode"
+                        placeholderTextColor="gray"
+                        keyboardType="number-pad"
+                        value={formData.pincode}
+                        onChangeText={handlePincodeChange}
+                        maxLength={6}
+                      />
+                      {isLoadingPincode && (
+                        <View style={styles.loadingIndicator}>
+                          <Text style={styles.loadingText}>Loading...</Text>
+                        </View>
+                      )}
+                    </View>
+                    {errors.pincode && (
+                      <Text style={styles.errorText}>{errors.pincode}</Text>
+                    )}
+                    {formData.pincode.length === 6 &&
+                      pincodeData.length === 0 &&
+                      !isLoadingPincode && (
+                        <Text style={styles.helpText}>
+                          No cities found for this pincode. Please verify the
+                          pincode.
+                        </Text>
+                      )}
+                    {formData.pincode.length === 6 &&
+                      pincodeData.length > 0 && (
+                        <Text style={styles.helpText}>
+                          {pincodeData.length} cities found. Select one to
+                          auto-fill address details.
+                        </Text>
+                      )}
+                  </View>
+                  {/* City */}
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>City</Text>
+                    {pincodeData.length > 0 ? (
+                      <RNPickerSelect
+                        onValueChange={handleCitySelection}
+                        onDonePress={() => {}}
+                        placeholder={{ label: "Select your city", value: "" }}
+                        value={formData.city}
+                        items={pincodeData.map((city) => ({
+                          label: city.Name,
+                          value: city.Name,
+                        }))}
+                        style={pickerSelectStyles}
+                        useNativeAndroidPickerStyle={false}
+                      />
+                    ) : (
+                      <TextInput
+                        style={[styles.input, styles.disabledInput]}
+                        placeholder="Enter pincode first to select city"
+                        value={formData.city}
+                        editable={false}
+                      />
+                    )}
+                    {errors.city && (
+                      <Text style={styles.errorText}>{errors.city}</Text>
+                    )}
+                  </View>
+                  {/* District */}
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>District</Text>
+                    <TextInput
+                      style={[styles.input, styles.disabledInput]}
+                      placeholder={
+                        formData.pincode.length === 6
+                          ? "Will be auto-filled when city is selected"
+                          : "Enter pincode first"
+                      }
+                      value={formData.district}
+                      editable={false}
+                    />
+                    {errors.district && (
+                      <Text style={styles.errorText}>{errors.district}</Text>
+                    )}
+                  </View>
+                  {/* State (Auto-filled) */}
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>State</Text>
+                    <TextInput
+                      style={[styles.input, styles.disabledInput]}
+                      placeholder={
+                        formData.pincode.length === 6
+                          ? "Will be auto-filled when city is selected"
+                          : "Enter pincode first"
+                      }
+                      value={formData.state}
+                      editable={false}
+                    />
+                    {errors.state && (
+                      <Text style={styles.errorText}>{errors.state}</Text>
+                    )}
+                  </View>
+                  {/* Country (Default to India) */}
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Country</Text>
+                    <TextInput
+                      style={[styles.input, styles.disabledInput]}
+                      placeholder="Country"
+                      value={formData.country}
+                      editable={false}
+                    />
+                    {errors.country && (
+                      <Text style={styles.errorText}>{errors.country}</Text>
+                    )}
+                  </View>
+                  {/* Manual Address Fields */}
+                  <View style={styles.formGroup}>
+                    <Text style={styles.sectionSubtitle}>
+                      Enter these details manually:
+                    </Text>
+                  </View>
+
                   {/* Door Number */}
                   <View style={styles.formGroup}>
                     <Text style={styles.label}>Door No.</Text>
@@ -543,82 +759,6 @@ export default function KycForm() {
                     />
                     {errors.area && (
                       <Text style={styles.errorText}>{errors.area}</Text>
-                    )}
-                  </View>
-                  {/* City */}
-                  <View style={styles.formGroup}>
-                    <Text style={styles.label}>City</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Enter your city"
-                      placeholderTextColor="gray"
-                      value={formData.city}
-                      onChangeText={(text) => handleChange("city", text)}
-                    />
-                    {errors.city && (
-                      <Text style={styles.errorText}>{errors.city}</Text>
-                    )}
-                  </View>
-                  {/* District */}
-                  <View style={styles.formGroup}>
-                    <Text style={styles.label}>District</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Enter your district"
-                      placeholderTextColor="gray"
-                      value={formData.district}
-                      onChangeText={(text) => handleChange("district", text)}
-                    />
-                    {errors.district && (
-                      <Text style={styles.errorText}>{errors.district}</Text>
-                    )}
-                  </View>
-                  {/* State (Dropdown) */}
-                  <View style={styles.formGroup}>
-                    <Text style={styles.label}>State</Text>
-                    <RNPickerSelect
-                      onValueChange={(value) => handleChange("state", value)}
-                      onDonePress={() => {}}
-                      placeholder={{ label: "Select your state", value: "" }}
-                      value={formData.state}
-                      items={indianStates.map((state) => ({
-                        label: state,
-                        value: state,
-                      }))}
-                      style={pickerSelectStyles}
-                      useNativeAndroidPickerStyle={false}
-                    />
-                    {errors.state && (
-                      <Text style={styles.errorText}>{errors.state}</Text>
-                    )}
-                  </View>
-                  {/* Country (Default to India) */}
-                  <View style={styles.formGroup}>
-                    <Text style={styles.label}>Country</Text>
-                    <TextInput
-                      style={[styles.input, styles.disabledInput]}
-                      placeholder="Country"
-                      value={formData.country}
-                      editable={false}
-                    />
-                    {errors.country && (
-                      <Text style={styles.errorText}>{errors.country}</Text>
-                    )}
-                  </View>
-                  {/* Pincode */}
-                  <View style={styles.formGroup}>
-                    <Text style={styles.label}>Pincode</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Enter your 6-digit pincode"
-                      placeholderTextColor="gray"
-                      keyboardType="number-pad"
-                      value={formData.pincode}
-                      onChangeText={(text) => handleChange("pincode", text)}
-                      maxLength={6}
-                    />
-                    {errors.pincode && (
-                      <Text style={styles.errorText}>{errors.pincode}</Text>
                     )}
                   </View>
                 </View>
@@ -705,6 +845,28 @@ export default function KycForm() {
                     Nominee Details
                   </Text>
                 </View>
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>Nominee Relationship</Text>
+                  <RNPickerSelect
+                    onValueChange={(value) =>
+                      handleChange("nominee_relationship", value)
+                    }
+                    onDonePress={() => {}}
+                    placeholder={{ label: "Select relationship", value: "" }}
+                    value={formData.nominee_relationship}
+                    items={nomineeRelationship.map((id) => ({
+                      label: id.name,
+                      value: id.value,
+                    }))}
+                    style={pickerSelectStyles}
+                    useNativeAndroidPickerStyle={false}
+                  />
+                  {errors.nominee_relationship && (
+                    <Text style={styles.errorText}>
+                      {errors.nominee_relationship}
+                    </Text>
+                  )}
+                </View>
                 <View style={styles.formContent}>
                   <View style={styles.formGroup}>
                     <Text style={styles.label}>Nominee Name</Text>
@@ -723,28 +885,6 @@ export default function KycForm() {
                       </Text>
                     )}
                   </View>
-                  <View style={styles.formGroup}>
-                    <Text style={styles.label}>Nominee Relationship</Text>
-                    <RNPickerSelect
-                      onValueChange={(value) =>
-                        handleChange("nominee_relationship", value)
-                      }
-                      onDonePress={() => {}}
-                      placeholder={{ label: "Select relationship", value: "" }}
-                      value={formData.nominee_relationship}
-                      items={nomineeRelationship.map((id) => ({
-                        label: id.name,
-                        value: id.value,
-                      }))}
-                      style={pickerSelectStyles}
-                      useNativeAndroidPickerStyle={false}
-                    />
-                    {errors.nominee_relationship && (
-                      <Text style={styles.errorText}>
-                        {errors.nominee_relationship}
-                      </Text>
-                    )}
-                  </View>
                 </View>
               </View>
 
@@ -756,7 +896,7 @@ export default function KycForm() {
                   activeOpacity={0.9}
                 >
                   <LinearGradient
-                    colors={["#850111", "#5a000b", "#2e0406"]}
+                    colors={[theme.colors.primary, theme.colors.primary]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.gradientButton}
@@ -828,7 +968,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: "rgba(133, 1, 17, 0.9)",
+    backgroundColor: theme.colors.primary,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 200, 87, 0.3)",
   },
@@ -900,6 +1040,36 @@ const styles = StyleSheet.create({
   disabledInput: {
     backgroundColor: "#F5F5F5",
     color: "#666",
+  },
+  pincodeContainer: {
+    position: "relative",
+  },
+  loadingIndicator: {
+    position: "absolute",
+    right: 14,
+    top: 14,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  loadingText: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  helpText: {
+    color: "#666",
+    fontSize: 12,
+    marginTop: 6,
+    fontStyle: "italic",
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#666",
+    marginBottom: 8,
+    fontStyle: "italic",
   },
   errorText: {
     color: "#FF3B30",

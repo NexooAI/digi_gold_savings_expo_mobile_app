@@ -27,7 +27,12 @@ interface DrawerMenuItemProps {
   disabled?: boolean;
 }
 
-const DrawerMenuItem = ({ label, iconName, onPress, disabled }: DrawerMenuItemProps) => (
+const DrawerMenuItem = ({
+  label,
+  iconName,
+  onPress,
+  disabled,
+}: DrawerMenuItemProps) => (
   <TouchableOpacity
     style={[styles.menuItem, disabled && styles.disabledMenuItem]}
     onPress={onPress}
@@ -131,12 +136,12 @@ export function CustomDrawerContent(props: CustomDrawerContentProps) {
 
         {/* Explore & Benefits Section */}
         {/* <Text style={styles.sectionHeader}>Explore & Benefits</Text> */}
-        {/* <DrawerMenuItem
+        <DrawerMenuItem
           label={t("offers")}
           iconName="flash-outline"
           onPress={() => handleNavigation("/(tabs)/home/offers")}
           disabled={isNavigating}
-        /> */}
+        />
         <DrawerMenuItem
           label={t("referAndEarn")}
           iconName="gift-outline"
